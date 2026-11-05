@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -49,6 +50,19 @@ func s3Config(t *testing.T) filestore.S3Config {
 	} else if !ok {
 		if err := client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{}); err != nil {
 			t.Fatalf("making the test bucket: %v", err)
+		}
+	}
+	// The storage answers before it stores: SeaweedFS takes writes once
+	// its volumes are up, a moment after it starts serving. Wait for a
+	// write to go through.
+	for deadline := time.Now().Add(30 * time.Second); ; time.Sleep(500 * time.Millisecond) {
+		_, err := client.PutObject(ctx, cfg.Bucket, "ready-probe", strings.NewReader("ok"), 2, minio.PutObjectOptions{})
+		if err == nil {
+			_ = client.RemoveObject(ctx, cfg.Bucket, "ready-probe", minio.RemoveObjectOptions{})
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("the test storage takes no writes: %v", err)
 		}
 	}
 	return cfg
