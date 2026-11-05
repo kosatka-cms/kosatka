@@ -142,7 +142,9 @@ jobs:
       - run: go test -tags dbintegration -count=1 -timeout 30m -coverpkg=./... -coverprofile=cover-all.out ./...
       - name: The storages' logs
         if: failure()
-        run: docker compose -f docker-compose.test.yml logs s3 azure | tail -200
+        run: |
+          docker compose -f docker-compose.test.yml logs --no-color s3 | head -150
+          docker compose -f docker-compose.test.yml logs --no-color s3 azure | tail -50
       - name: Coverage
         run: |
           summary=$(./scripts/coverage_summary.sh cover-all.out "Unit and integration tests")
