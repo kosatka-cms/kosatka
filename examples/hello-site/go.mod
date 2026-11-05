@@ -12,7 +12,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	entgo.io/ent v0.14.6 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.3 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.24.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.13.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.8.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/internal v0.1.0 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	github.com/zclconf/go-cty-yaml v1.2.0 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297 // indirect
 	golang.org/x/image v0.47.0 // indirect
