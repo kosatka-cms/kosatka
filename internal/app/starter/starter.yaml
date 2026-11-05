@@ -1,0 +1,136 @@
+# What a new site starts with (app install), before any content of its
+# own. Everything here is an ordinary record the site edits or deletes in
+# the admin. Labels, descriptions and titles are English: they are
+# translated into the site's language on install (i18n-extract puts them
+# in the translation catalogs). Names are machine names; a reference
+# (a field's storage, an image style, a text format) is by name.
+
+# The site's look and front page until changed in the admin (Appearance,
+# Site information).
+site:
+  theme: kosatka
+  logo: /static/images/kosatka-logo.svg
+  front_page_view: frontpage
+
+# The image styles of the article's image: a card in lists (the front
+# page) and the picture on its page.
+image_styles:
+  - name: article_card
+    label: Article card
+    width: 720
+    height: 405
+    mode: fill
+    anchor: focal
+    hidpi: true
+  - name: article_wide
+    label: Article picture
+    width: 1200
+    height: 675
+    mode: fill
+    anchor: focal
+    hidpi: true
+
+# The fields the content types share.
+field_storages:
+  - name: field_body
+    type: text
+  - name: field_image
+    type: image
+
+# An article - dated news-like content with comments, listed on the
+# front page (promoted by default) - and a page for static content
+# (about, contacts). Both have the body (rich text in Basic HTML or Plain
+# text, shown as the content's body); the article also has an image (on
+# its page above the body, a card on the front page).
+content_types:
+  - name: article
+    label: Article
+    description: "Time-sensitive content: news, announcements, posts. Shown on the front page."
+    comments: open
+    show_submitted: true
+    promote: true
+    revisions: true
+    fields:
+      - storage: field_body
+        label: Body
+        widget: textarea
+        text_formats: [basic_html, plain_text]
+        show_on_detail: true
+        renders_in_body: true
+        # In the form the image comes first, the body last (the demo puts
+        # the section and the tags before them).
+        sort_order: 40
+        display_order: 10
+      - storage: field_image
+        label: Image
+        show_on_detail: true
+        detail_image_style: article_wide
+        list_image_style: article_card
+        sort_order: 30
+        display_order: 0
+  - name: page
+    label: Page
+    description: Static content, such as an "About us" page.
+    comments: hidden
+    revisions: true
+    fields:
+      - storage: field_body
+        label: Body
+        widget: textarea
+        text_formats: [basic_html, plain_text]
+        show_on_detail: true
+        renders_in_body: true
+        sort_order: 0
+        display_order: 10
+
+views:
+  # The front page feed: the published content promoted to the front page,
+  # the sticky first, then the newest, as cards (image, title, date, the
+  # start of the body), 10 a page.
+  - name: frontpage
+    label: Front page
+    display_type: block
+    style: list
+    pager: true
+    page_size: 10
+    fields:
+      - storage: field_image
+        image_style: article_card
+        link_to: content
+      - builtin: title
+        link_to: content
+      - builtin: created_at
+        date_format: medium
+      - storage: field_body
+        trim_length: 220
+    filters:
+      - {builtin: promote, operator: eq, value: "1"}
+      - {builtin: status, operator: eq, value: "1"}
+      - {builtin: on_moderation, operator: eq, value: "0"}
+    sorts:
+      - {builtin: sticky, direction: desc}
+      - {builtin: created_at, direction: desc}
+  # A term's page (any vocabulary): the published content with the term,
+  # newest first, 10 a page. Without it a term's page is empty.
+  - name: taxonomy_term
+    label: Term pages
+    display_type: term
+    style: list
+    pager: true
+    page_size: 10
+    filters:
+      - {builtin: has_current_term, operator: eq, value: "", contextual: true}
+      - {builtin: status, operator: eq, value: "1"}
+      - {builtin: on_moderation, operator: eq, value: "0"}
+    sorts:
+      - {builtin: created_at, direction: desc}
+
+# The main menu - a Home link, the site adds its pages - in the header of
+# the site's theme.
+menus:
+  - name: main
+    label: Main navigation
+    region: header
+    links:
+      - title: Home
+        url: /

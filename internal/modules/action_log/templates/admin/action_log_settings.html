@@ -1,0 +1,66 @@
+{{/* admin/action_log_settings.html - the log's settings
+     (Controller.Settings): how long entries are kept, the addresses, the
+     groups recorded (the core's and the enabled modules'), in the admin's
+     setting rows; Save at the top and the bottom. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="action-log-settings" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "saved" (t "Saved.")) "Fallback" (t "Error while saving."))}}
+<p><a href="/admin/reports/action-log">&larr; {{t "Action log"}}</a></p>
+
+<form method="post" action="/admin/reports/action-log/settings" id="action-log-settings" class="admin-settings admin-settings--form">
+    <section class="admin-settings-group" aria-labelledby="al-keep">
+        <h2 class="admin-settings-title" id="al-keep">{{t "Keeping"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="keep_days" class="admin-setting-label">{{t "Keep entries"}}</label>
+                    <span class="admin-setting-help">{{t "Older entries are deleted by a background job once an hour."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="keep_days" name="keep_days" class="form-select">
+                        {{$keep := .settings.KeepDays}}
+                        {{range .keepChoices}}<option value="{{.}}"{{if eq . $keep}} selected{{end}}>{{if eq . 0}}{{t "Forever"}}{{else}}{{plural . "@count day" "@count days"}}{{end}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="log_ip" class="admin-setting-label">{{t "Keep the IP address"}}</label>
+                    <span class="admin-setting-help">{{t "Helps to see where a hijacked account acted from. It's personal data: mention it in the privacy policy."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="log_ip" name="log_ip" value="1" class="form-check-input"{{if .settings.LogIP}} checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group" aria-labelledby="al-what">
+        <h2 class="admin-settings-title" id="al-what">{{t "What to record"}}</h2>
+        <div class="admin-settings-card">
+            {{range .groups}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="group_{{.Name}}" class="admin-setting-label">{{t .Label}}</label>
+                    {{with .Description}}<span class="admin-setting-help">{{t .}}</span>{{end}}
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="group_{{.Name}}" name="groups" value="{{.Name}}" class="form-check-input"{{if .On}} checked{{end}}>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

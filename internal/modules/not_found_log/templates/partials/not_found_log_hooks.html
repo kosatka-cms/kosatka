@@ -1,0 +1,6 @@
+{{/* redirects_tabs_not_found_log - the Redirects page's "Not found (404)"
+     tab (.notFoundCount - the new paths, the module's page data); the log's
+     own page marks it current. */}}
+{{define "redirects_tabs_not_found_log"}}
+<li class="nav-item"><a class="nav-link{{if .notFoundCurrent}} active{{end}}" href="/admin/config/redirects/not-found"{{if .notFoundCurrent}} aria-current="page"{{end}}>{{t "Not found (404)"}}{{with .notFoundCount}} <span class="admin-nav-count">{{.}}</span>{{end}}</a></li>
+{{end}}

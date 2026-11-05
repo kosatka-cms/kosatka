@@ -1,0 +1,87 @@
+version: "2"
+
+# Run by ./scripts/check.sh when golangci-lint is installed (golangci-lint run ./...
+# over the engine module: examples/ are Go modules of their own).
+
+run:
+  # The integration tests too (they build only with this tag).
+  build-tags:
+    - dbintegration
+
+linters:
+  default: standard
+  # Besides the standard set (errcheck, govet, ineffassign, staticcheck,
+  # unused). Not enabled on purpose: goconst (the repeated strings are
+  # i18n.T keys, which i18n-extract reads as literals, and template data
+  # keys), gocyclo, gosec, unparam, prealloc.
+  enable:
+    - unconvert   # needless type conversions
+    - whitespace  # blank lines at the start/end of a block
+    - predeclared # names shadowing Go's predeclared identifiers
+    - nolintlint  # malformed or unneeded //nolint directives
+    - revive      # Go style (rules below)
+    - errorlint     # errors compared with errors.Is/As, wrapped with %w
+    - sqlclosecheck # sql rows/statements closed with defer
+    - rowserrcheck  # rows.Err() checked after the loop
+    - bodyclose     # HTTP response bodies closed
+    - copyloopvar   # loop variable copies Go 1.22+ doesn't need
+    - usestdlibvars # http.MethodGet etc. instead of literals
+    - misspell      # common English misspellings in comments and strings
+  settings:
+    revive:
+      # revive's defaults without package-comments and unused-parameter
+      # (parameters a signature requires: handlers, interfaces, hooks).
+      # exported - a doc comment starting with the name on every exported
+      # name, everywhere - without its stutter check (ratelimit.
+      # RateLimitMiddleware): renaming the API for it isn't worth it.
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: exported
+          arguments: [disableStutteringCheck]
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: var-declaration
+        - name: var-naming
+  exclusions:
+    paths:
+      - "(^|/)ent/generated/"
+    rules:
+      # Login error messages are user-facing sentences shown verbatim on the
+      # login form, so the trailing period is intended.
+      - path: internal/domain/service/auth.go
+        linters:
+          - staticcheck
+        text: "ST1005"
+      # The smoke tests' request helpers (post, postFiles, postMultipart)
+      # close the body before returning the response; bodyclose can't see
+      # it through them.
+      - path: internal/app/.*_smoke_integration_test\.go
+        linters:
+          - bodyclose
+      # The fixture is a reader's report of a typo: the typo is the point.
+      - path: internal/modules/error_reports/error_reports_render_test\.go
+        linters:
+          - misspell
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    paths:
+      - "(^|/)ent/generated/"

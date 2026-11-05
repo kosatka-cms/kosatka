@@ -1,0 +1,461 @@
+/* The user menu (desktop drop-down and the mobile panel app.js builds);
+   mind the media queries. A theme styles its own main menu. */
+
+/* User menu */
+
+/* Desktop menu */
+.desktop-user-menu {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    padding-right: 15px;
+}
+
+/* Guest menu */
+.user-menu-guest {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-menu-link {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.user-menu-link:hover {
+    color: #07acdb;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-menu-separator {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+}
+
+/* Authenticated user menu */
+.user-menu-logged {
+    position: relative;
+}
+
+.user-menu-dropdown {
+    position: relative;
+}
+
+.user-menu-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    padding: 6px 15px 6px 6px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.user-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-menu-toggle.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+}
+
+.user-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #000;
+}
+
+.user-menu-dropdown .user-name {
+    color: #FFF;
+}
+
+.dropdown-arrow {
+    transition: transform 0.2s ease;
+}
+
+.user-menu-toggle.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Dropdown */
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.user-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+    color: #0066aa;
+}
+
+.dropdown-item svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 4px 0;
+}
+
+/* "Create content" submenu in user-dropdown */
+.dropdown-create-toggle {
+    width: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dropdown-create-toggle-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dropdown-create-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: #666;
+}
+
+.dropdown-create-submenu.is-open .dropdown-create-chevron,
+.mobile-create-submenu.is-open .mobile-create-chevron {
+    transform: rotate(180deg);
+}
+
+.dropdown-create-items {
+    display: none;
+    background-color: #f8f9fa;
+    padding: 4px 0;
+}
+
+.dropdown-create-submenu.is-open .dropdown-create-items {
+    display: block;
+}
+
+.dropdown-item.dropdown-subitem {
+    padding-left: 40px;
+    font-size: 13px;
+}
+
+.dropdown-item.dropdown-subitem:hover {
+    background-color: #eceff1;
+}
+
+.mobile-create-submenu {
+    margin-bottom: 3px;
+}
+
+/* The mobile menu's "Create content" button: the panel's action look
+   (.mobile-user-menu-action), its label left and the chevron right. */
+.mobile-create-toggle {
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+    justify-content: space-between;
+}
+
+.mobile-create-toggle-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mobile-create-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: #6c757d;
+}
+
+.mobile-create-items {
+    display: none;
+    padding-left: 12px;
+}
+
+.mobile-create-submenu.is-open .mobile-create-items {
+    display: block;
+}
+
+.logout-item {
+    color: #d32f2f;
+}
+
+.logout-item:hover {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+/* Mobile user menu (embedded in the main menu) */
+.mobile-user-menu {
+    clear: both;
+    display: none;
+}
+
+.mobile-user-menu-panel {
+    background-color: #eceff1;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    margin: 4px 0 12px;
+}
+
+.mobile-user-menu-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6c757d;
+    margin-bottom: 10px;
+    padding-left: 2px;
+    font-weight: 600;
+}
+
+/* Uniform menu rows: icon + text */
+.mobile-user-menu-panel .mobile-user-menu-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background: #fff;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.mobile-user-menu-panel .mobile-user-menu-action svg {
+    flex-shrink: 0;
+    color: #495057;
+}
+
+.mobile-user-menu-panel a.mobile-user-menu-action:hover,
+.mobile-user-menu-panel button.mobile-user-menu-action:hover {
+    background: #f8f9fa;
+    color: #212529;
+    border-color: #ced4da;
+}
+
+.mobile-user-menu-panel .logout-item.mobile-user-menu-action {
+    color: #c62828;
+    border-color: rgba(198, 40, 40, 0.35);
+}
+
+.mobile-user-menu-panel .logout-item.mobile-user-menu-action svg {
+    color: #c62828;
+}
+
+.mobile-user-menu-panel .logout-item.mobile-user-menu-action:hover {
+    background: #ffebee;
+    color: #b71c1c;
+    border-color: rgba(198, 40, 40, 0.45);
+}
+
+.mobile-user-menu .user-menu-guest {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0;
+}
+
+.mobile-user-menu-panel .user-menu-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background: #fff;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.mobile-user-menu-panel .user-menu-link:hover {
+    background: #f8f9fa;
+    color: #212529;
+    border-color: #ced4da;
+}
+
+.mobile-user-menu .user-menu-separator {
+    display: none;
+}
+
+.mobile-user-menu-panel .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    color: #212529;
+}
+
+.mobile-user-menu-panel .user-info .user-info-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: #212529;
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+.mobile-user-menu-panel .user-info .user-info-profile-link:hover {
+    color: #0d6efd;
+}
+
+.mobile-user-menu-panel .user-info .user-info-profile-link:hover .user-name {
+    text-decoration: underline;
+}
+
+.mobile-user-menu-panel .user-info .user-name {
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.mobile-user-menu-panel .user-info .user-info-logout {
+    font-size: 14px;
+    font-weight: 500;
+    color: #c62828;
+    text-decoration: none;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    align-self: center;
+    white-space: nowrap;
+}
+
+.mobile-user-menu-panel .user-info .user-info-logout:hover {
+    color: #b71c1c;
+    text-decoration: underline;
+}
+
+.mobile-user-menu .user-info .user-avatar-small {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mobile-user-menu-panel .dropdown-divider {
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 8px 4px;
+    height: 1px;
+}
+
+.mobile-user-menu-panel .mobile-create-items .dropdown-item.dropdown-subitem {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    font-size: 14px;
+    padding-left: 14px;
+    margin-bottom: 3px;
+}
+
+.mobile-user-menu-panel .mobile-create-items .dropdown-item.dropdown-subitem:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .desktop-user-menu {
+        display: none !important;
+    }
+
+    .mobile-user-menu {
+        display: block;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-user-menu {
+        display: none !important;
+    }
+}

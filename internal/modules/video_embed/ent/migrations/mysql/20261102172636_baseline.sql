@@ -1,0 +1,4 @@
+-- Create "video_embeds" table
+CREATE TABLE `video_embeds` (`id` int unsigned NOT NULL AUTO_INCREMENT, `url_hash` varchar(64) NOT NULL, `url` text NOT NULL, `provider` varchar(32) NOT NULL, `title` varchar(512) NOT NULL DEFAULT '', `thumbnail_url` text NOT NULL, `thumbnail_file` varchar(255) NOT NULL DEFAULT '', `width` int NOT NULL DEFAULT 0, `height` int NOT NULL DEFAULT 0, `status` varchar(16) NOT NULL DEFAULT 'ok', `fetched_at` datetime NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `video_embeds_url_hash` (`url_hash`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Create "video_embed_settings" table
+CREATE TABLE `video_embed_settings` (`id` int unsigned NOT NULL AUTO_INCREMENT, `providers` varchar(255) NOT NULL DEFAULT '', `click_to_play` bool NOT NULL DEFAULT true, `local_previews` bool NOT NULL DEFAULT true, PRIMARY KEY (`id`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;

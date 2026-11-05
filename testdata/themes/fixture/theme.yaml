@@ -1,0 +1,30 @@
+# The tests' theme: one of each thing a theme may have or override - its
+# own regions, an .ico favicon, a stylesheet, a layout, a
+# header with a region's menu block, a block placeholder, teasers, a
+# field template, a View template, a node page. The engine's tests of
+# those mechanisms render it (zzUseFixtureTheme); it isn't a theme to use.
+name: Fixture
+description: The engine's tests' theme.
+favicon: /static/themes/fixture/favicon.ico
+default_region: sidebar
+regions:
+  - id: sidebar
+    label: Sidebar
+  - id: header_logo
+    label: Header logo
+  - id: header_search
+    label: Search (header)
+  - id: header_usermenu
+    label: User menu (header)
+  - id: header_nav
+    label: Navigation (header)
+  - id: content_top
+    label: Content top
+  - id: content_bottom
+    label: Content bottom
+  - id: content_inline
+    label: Inside content
+  - id: main_bottom
+    label: Below the content
+  - id: footer
+    label: Footer

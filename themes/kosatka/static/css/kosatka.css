@@ -1,0 +1,895 @@
+/* The kosatka theme: the sea - "foam" (light) and "deep" (dark,
+   [data-bs-theme="dark"], the "scheme" setting's default) - over the
+   engine's base.css. Each scheme's shades follow its --kosatka-accent
+   (the theme's settings on the Appearance page set it; color-mix), so
+   one colour re-tints it. It styles the engine's own markup, so every
+   list, card and page of any site gets
+   the look: no field names of a particular site are assumed. Field
+   classes it reads: item-field-name-<machine name> of the builtin View
+   fields (title, created_at, view_count, comment_count) and the field types
+   (item-field-image, item-field-taxonomy). */
+
+:root {
+    --kosatka-accent: #0e7490;
+    --kosatka-accent-hover: color-mix(in srgb, var(--kosatka-accent) 78%, #000);
+    --kosatka-radius: 1.25rem;
+    --kosatka-shadow: 0 1px 2px rgba(6, 19, 31, .05), 0 14px 34px -20px color-mix(in srgb, var(--kosatka-accent) 45%, transparent);
+    --k-surface: #ffffff;
+    /* The engine's cards (the content form's) take the theme's surface,
+       the dark scheme's too (--k-surface follows it). */
+    --kosatka-surface: var(--k-surface);
+    --k-glass: rgba(255, 255, 255, .78);
+    --k-chip: color-mix(in srgb, var(--kosatka-accent) 11%, #fff);
+    --k-chip-ink: color-mix(in srgb, var(--kosatka-accent) 80%, #000);
+    --k-dot: color-mix(in srgb, var(--kosatka-accent) 9%, transparent);
+    --k-glow: color-mix(in srgb, var(--kosatka-accent) 35%, transparent);
+    --k-deep: #041422;
+    --k-on-accent: #ffffff;
+    --k-font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+    --k-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --bs-body-bg: #f2f8fb;
+    --bs-body-color: #06131f;
+    --bs-secondary-color: #4a6272;
+    --bs-border-color: #d6e6ee;
+    --bs-tertiary-bg: #e8f3f7;
+    --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* The engine's components' accents (profile.css, …). */
+    --kosatka-tint: var(--k-chip);
+    --kosatka-tint-strong: color-mix(in srgb, var(--kosatka-accent) 18%, #fff);
+    --kosatka-line: #d6e6ee;
+    --kosatka-link: var(--kosatka-accent);
+    --kosatka-highlight: color-mix(in srgb, var(--kosatka-accent) 85%, #fff);
+    --kosatka-profile-header-bg: linear-gradient(135deg, #062033, var(--kosatka-accent));
+}
+
+/* :root[…], not [data-bs-theme="dark"] alone: it outweighs a :root
+   colour set by the theme's settings (themeSettingsStyle). */
+:root[data-bs-theme="dark"] {
+    --kosatka-accent: #22d3ee;
+    --kosatka-accent-hover: color-mix(in srgb, var(--kosatka-accent) 65%, #fff);
+    --kosatka-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 18px 40px -22px color-mix(in srgb, var(--kosatka-accent) 35%, transparent);
+    --k-surface: #0a1726;
+    --k-glass: rgba(4, 12, 22, .78);
+    --k-chip: color-mix(in srgb, var(--kosatka-accent) 12%, transparent);
+    --k-chip-ink: color-mix(in srgb, var(--kosatka-accent) 60%, #fff);
+    --k-dot: color-mix(in srgb, var(--kosatka-accent) 7%, transparent);
+    --k-glow: color-mix(in srgb, var(--kosatka-accent) 35%, transparent);
+    --k-on-accent: #03202b;
+    --bs-body-bg: #040b14;
+    --bs-body-color: #e6f3f8;
+    --bs-secondary-color: #91abbd;
+    --bs-border-color: #17304a;
+    --bs-tertiary-bg: #0a1726;
+    --kosatka-tint: color-mix(in srgb, var(--kosatka-accent) 10%, transparent);
+    --kosatka-tint-strong: color-mix(in srgb, var(--kosatka-accent) 18%, transparent);
+    --kosatka-line: #17304a;
+    --kosatka-link: var(--kosatka-accent-hover);
+    --kosatka-highlight: var(--kosatka-accent);
+    --kosatka-profile-header-bg: linear-gradient(135deg, #020814, #0b3a52);
+}
+
+/* An editor's text (TinyMCE: theme_editor_css on a .node-content
+   body): a field's white, no grid of dots. */
+.mce-content-body {
+    margin: 1rem;
+    background: #fff;
+    background-image: none;
+}
+
+/* The page: a faint grid of dots, like a depth chart. */
+body {
+    background-color: var(--bs-body-bg);
+    background-image: radial-gradient(var(--k-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+h1, h2, h3, h4,
+.site-name {
+    font-family: var(--k-font-head);
+    letter-spacing: -.02em;
+}
+
+.container-content h1 {
+    font-weight: 700;
+    letter-spacing: -.03em;
+}
+
+/* Bootstrap in the sea's colours, through its variables: links (tabs,
+   the pager, text links that use them), every button's pill shape and
+   focus ring, the primary and outline-primary in the accent, the
+   secondary as a chip; the other kinds keep their meaning's colours. */
+:root {
+    --bs-link-color: var(--kosatka-link);
+    --bs-link-hover-color: var(--kosatka-accent-hover);
+}
+
+.btn {
+    --bs-btn-border-radius: 999px;
+    --bs-btn-font-weight: 600;
+    --bs-btn-focus-box-shadow: 0 0 0 .25rem var(--k-glow);
+}
+
+.btn-sm {
+    --bs-btn-border-radius: 999px;
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--k-chip);
+    --bs-btn-border-color: var(--k-chip);
+    --bs-btn-color: var(--k-chip-ink);
+    --bs-btn-hover-bg: var(--kosatka-tint-strong);
+    --bs-btn-hover-border-color: var(--kosatka-tint-strong);
+    --bs-btn-hover-color: var(--k-chip-ink);
+    --bs-btn-active-bg: var(--kosatka-tint-strong);
+    --bs-btn-active-border-color: var(--kosatka-tint-strong);
+    --bs-btn-active-color: var(--k-chip-ink);
+    --bs-btn-disabled-bg: var(--k-chip);
+    --bs-btn-disabled-border-color: var(--k-chip);
+    --bs-btn-disabled-color: var(--k-chip-ink);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--kosatka-accent);
+    --bs-btn-border-color: var(--kosatka-accent);
+    --bs-btn-hover-bg: var(--kosatka-accent);
+    --bs-btn-hover-border-color: var(--kosatka-accent);
+    --bs-btn-hover-color: var(--k-on-accent);
+    --bs-btn-active-bg: var(--kosatka-accent-hover);
+    --bs-btn-active-border-color: var(--kosatka-accent-hover);
+    --bs-btn-active-color: var(--k-on-accent);
+    --bs-btn-disabled-color: var(--kosatka-accent);
+    --bs-btn-disabled-border-color: var(--kosatka-accent);
+}
+
+/* Badges: pills; the primary one in the accent (Bootstrap's text-bg-*
+   colours take an rgb triplet, the accent can't be one: a rule). */
+.badge {
+    --bs-badge-border-radius: 999px;
+}
+
+.text-bg-primary {
+    background-color: var(--kosatka-accent) !important;
+    color: var(--k-on-accent) !important;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--kosatka-accent);
+    --bs-btn-border-color: var(--kosatka-accent);
+    --bs-btn-color: var(--k-on-accent);
+    --bs-btn-hover-bg: var(--kosatka-accent-hover);
+    --bs-btn-hover-border-color: var(--kosatka-accent-hover);
+    --bs-btn-hover-color: var(--k-on-accent);
+    --bs-btn-active-bg: var(--kosatka-accent-hover);
+    --bs-btn-active-border-color: var(--kosatka-accent-hover);
+    --bs-btn-active-color: var(--k-on-accent);
+    --bs-btn-disabled-bg: var(--kosatka-accent);
+    --bs-btn-disabled-border-color: var(--kosatka-accent);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--kosatka-accent);
+    box-shadow: 0 0 0 .2rem var(--k-chip);
+}
+
+.form-check-input:checked {
+    border-color: var(--kosatka-accent);
+    background-color: var(--kosatka-accent);
+}
+
+::selection {
+    background: color-mix(in srgb, var(--kosatka-accent) 30%, transparent);
+}
+
+:focus-visible {
+    outline: 2px solid var(--kosatka-accent);
+    outline-offset: 2px;
+}
+
+/* Header: glass that stays on top. */
+.k-header {
+    background: var(--k-glass);
+    backdrop-filter: saturate(1.4) blur(14px);
+}
+
+.k-header .site-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    box-shadow: 0 0 0 1px var(--k-glow), 0 6px 18px var(--k-glow);
+}
+
+.k-header .site-name {
+    font-size: 1.375rem;
+}
+
+.k-header .site-header-region .block-menu ul.menu {
+    gap: .25rem;
+}
+
+.k-header .site-header-region .block-menu a {
+    display: inline-block;
+    padding: .375rem .75rem;
+    border-radius: 999px;
+}
+
+.k-header .site-header-region .block-menu a:hover,
+.k-header .site-header-region .block-menu .active > a {
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+}
+
+/* The language switcher in the header: a segmented control in the
+   header buttons' frame (the colour scheme switch's), the page's language
+   a chip like the menu's current item. */
+.k-header .language-switcher .nav {
+    flex-wrap: nowrap;
+    gap: 2px;
+    height: 40px;
+    padding: 3px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    background: var(--k-surface);
+}
+
+.k-header .language-switcher .nav-link {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 .625rem;
+    border-radius: 9px;
+    color: var(--bs-secondary-color);
+    font-family: var(--k-font-head);
+    font-size: .8125rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+.k-header .language-switcher .nav-link:hover {
+    color: var(--kosatka-accent);
+}
+
+.k-header .language-switcher .nav-link.active {
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+}
+
+.k-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-left: auto;
+}
+
+.k-header-actions .site-account {
+    margin-left: 0;
+}
+
+.k-scheme-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    background: var(--k-surface);
+    color: var(--bs-body-color);
+}
+
+.k-scheme-switch:hover {
+    border-color: var(--kosatka-accent);
+    color: var(--kosatka-accent);
+}
+
+.k-scheme-switch .k-icon-sun,
+[data-bs-theme="dark"] .k-scheme-switch .k-icon-moon {
+    display: none;
+}
+
+[data-bs-theme="dark"] .k-scheme-switch .k-icon-sun {
+    display: block;
+}
+
+.site-account .site-account-primary {
+    border-radius: 12px;
+    color: var(--k-on-accent);
+}
+
+[data-bs-theme="dark"] .site-account .site-account-primary,
+[data-bs-theme="dark"] .site-account .site-account-primary:hover {
+    color: var(--k-on-accent);
+}
+
+/* A signed-in user's menu (the engine's user_menu block, rendered for a
+   signed-in user only, so shown at once, not by app.js): a pill with the
+   avatar, the name and the unread count; its panel under it. The header
+   has no burger, so the menu stays on a phone too, the name hidden. */
+/* Shown on a phone too: menu.css hides the desktop menu there. */
+.k-header .desktop-user-menu {
+    display: block !important;
+}
+
+.k-header .desktop-user-menu {
+    height: auto;
+    padding-right: 0;
+}
+
+.k-header .user-menu-toggle {
+    gap: .5rem;
+    padding: .25rem .75rem .25rem .25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background: var(--k-surface);
+    color: var(--bs-body-color);
+    font-size: .9375rem;
+    font-weight: 600;
+}
+
+.k-header .user-menu-toggle:hover,
+.k-header .user-menu-toggle.active {
+    border-color: var(--kosatka-accent);
+    background: var(--k-surface);
+}
+
+.k-header .user-avatar-small {
+    width: 28px;
+    height: 28px;
+    border: 0;
+}
+
+.k-header .user-menu-dropdown .user-name {
+    max-width: 10rem;
+    color: inherit;
+}
+
+.k-header .user-dropdown-menu {
+    top: calc(100% + .5rem);
+    min-width: 260px;
+    padding: .375rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    background: var(--k-surface);
+    box-shadow: 0 14px 34px rgba(16, 32, 43, .16);
+}
+
+.k-header .user-dropdown-menu .dropdown-item {
+    padding: .5625rem .75rem;
+    border-radius: 8px;
+    color: var(--bs-body-color);
+    font-size: .9375rem;
+}
+
+.k-header .user-dropdown-menu .dropdown-item:hover {
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+}
+
+.k-header .user-dropdown-menu .dropdown-item .badge {
+    margin-left: auto !important;
+}
+
+.k-header .user-dropdown-menu .dropdown-divider {
+    margin: .25rem;
+    background: var(--bs-border-color);
+}
+
+@media (max-width: 575.98px) {
+    .k-header .user-menu-dropdown .user-name {
+        display: none;
+    }
+}
+
+/* The View lists with pictures: one item under another. Where the list is
+   wide enough (a container query: not the sidebar, not a phone) an item
+   is a row - its picture on the left, the fields beside it; a sticky item
+   ("at the top of lists") leads as a card, the picture across it, a large
+   title. Narrower, every item is a card, the picture on top. The fields
+   flow in rows: each takes a whole row except the date and the counters,
+   which share the last one in monospace, with icons. */
+.item-list:has(> .view-list-item .item-field-image) {
+    --k-row-picture: 15rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.125rem;
+    container-type: inline-size;
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item {
+    position: relative;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: .5rem 1rem;
+    padding-bottom: 1.25rem;
+    border-radius: 22px;
+    background: var(--k-surface);
+    box-shadow: var(--kosatka-shadow);
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--kosatka-accent) 45%, transparent), 0 22px 44px -24px var(--k-glow);
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item > .item-field {
+    flex: 1 0 100%;
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item > .item-field-image {
+    margin-bottom: .5rem;
+}
+
+.view-list-item .item-field-name-title a {
+    font-family: var(--k-font-head);
+    font-size: 1.3125rem;
+    letter-spacing: -.01em;
+}
+
+@container (min-width: 34rem) {
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) {
+        gap: .375rem 1rem;
+        min-height: 10.5rem;
+        padding: 1.125rem 1.375rem 1.125rem calc(var(--k-row-picture) + 1.375rem);
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) > .item-field {
+        padding: 0;
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) > .item-field.item-field-image {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: var(--k-row-picture);
+        margin: 0;
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) > .item-field-image a,
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) > .item-field-image picture {
+        display: block;
+        height: 100%;
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) > .item-field-image img {
+        height: 100%;
+        aspect-ratio: auto;
+        object-fit: cover;
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:not(.view-list-item-sticky) .item-field-name-title a {
+        font-size: 1.1875rem;
+    }
+}
+
+/* The sticky card: a wider picture, a large title. */
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item-sticky .item-field-image img {
+    aspect-ratio: 21 / 8;
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item-sticky .item-field-name-title a {
+    font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+    letter-spacing: -.03em;
+}
+
+/* A term field shown as badges (a View field's "badges" format): over the
+   card's picture, on glass. */
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item > .item-field-taxonomy:has(> ul.links) {
+    position: absolute;
+    top: .875rem;
+    left: .875rem;
+    z-index: 1;
+    flex: none;
+    padding: 0;
+}
+
+.view-list-item .item-field-taxonomy ul.links {
+    margin: 0;
+}
+
+.item-list:has(> .view-list-item .item-field-image) .item-field-taxonomy .taxonomy_term a {
+    padding: .25rem .75rem;
+    border: 1px solid rgba(165, 243, 252, .4);
+    background: rgba(4, 18, 30, .45);
+    backdrop-filter: blur(6px);
+    color: #e6fbff;
+    font-weight: 600;
+}
+
+/* A term field shown as links: chips with a "#". */
+.view-list-item .item-field-taxonomy > .item-field-value {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+    font-size: 0;
+}
+
+.view-list-item .item-field-taxonomy > .item-field-value a,
+.item-characteristic a[href] {
+    display: inline-block;
+    padding: .125rem .625rem;
+    border-radius: 999px;
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+    font-size: .8125rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.view-list-item .item-field-taxonomy > .item-field-value a::before {
+    content: "#";
+    opacity: .6;
+}
+
+/* A term field with its label: the label before the chips. */
+.view-list-item > .item-field-taxonomy:has(> .item-field-label) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .375rem;
+}
+
+.view-list-item .item-field-label {
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+}
+
+/* The author, the date and the counters: one monospace row. */
+.view-list-item > .item-field-name-author,
+.view-list-item > .item-field-name-created_at,
+.view-list-item > .item-field-name-view_count,
+.view-list-item > .item-field-name-comment_count {
+    flex: 0 0 auto !important;
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    color: var(--bs-secondary-color);
+    font-family: var(--k-font-mono);
+    font-size: .8125rem;
+}
+
+.view-list-item > .item-field-name-author,
+.view-list-item > .item-field-name-created_at,
+.view-list-item > .item-field-name-view_count,
+.view-list-item > .item-field-name-comment_count {
+    order: 10;
+    margin-top: .25rem;
+}
+
+.view-list-item .item-field-name-view_count .item-field-label,
+.view-list-item .item-field-name-comment_count .item-field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+.view-list-item .item-field-name-view_count::before,
+.view-list-item .item-field-name-comment_count::before {
+    content: "";
+    width: 15px;
+    height: 15px;
+    background: currentColor;
+    -webkit-mask: var(--k-icon) center / contain no-repeat;
+    mask: var(--k-icon) center / contain no-repeat;
+}
+
+.view-list-item .item-field-name-view_count {
+    --k-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");
+}
+
+.view-list-item .item-field-name-comment_count {
+    --k-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z'/%3E%3C/svg%3E");
+}
+
+/* The sidebar: cards of glass. */
+.sidebar .block {
+    border-radius: 22px;
+    background: var(--k-surface);
+    box-shadow: var(--kosatka-shadow);
+}
+
+.sidebar .block h2,
+.sidebar .block .block-title {
+    font-size: 1.125rem;
+}
+
+/* A system block's title on top of its card (base.css): one card of
+   glass, the shadow cut where the two meet. */
+.sidebar h2:has(+ .block) {
+    border-radius: 22px 22px 0 0;
+    background: var(--k-surface);
+    box-shadow: var(--kosatka-shadow);
+    clip-path: inset(-3rem -3rem 0 -3rem);
+    font-size: 1.125rem;
+}
+
+.sidebar h2 + .block {
+    margin-top: -1px; /* no hairline where they meet on a fractional pixel */
+    border-radius: 0 0 22px 22px;
+    clip-path: inset(0 -3rem -3rem -3rem);
+}
+
+/* The "Poll" block (the polls module's) in the sidebar: the question and
+   its results, compact. */
+.sidebar .poll-block-question {
+    margin-bottom: .75rem;
+    font-size: 1.0625rem;
+    line-height: 1.35;
+}
+
+.sidebar .poll-block-question a {
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.sidebar .poll-block-question a:hover {
+    color: var(--kosatka-accent);
+}
+
+/* A poll's result bars (its page and its block) in the sea's accent. */
+.poll-result-bar-bg {
+    border-radius: 999px;
+    background: var(--k-chip);
+}
+
+.poll-result-bar-fill {
+    border-radius: 999px;
+    background: var(--kosatka-accent);
+}
+
+.sidebar .poll-block .poll-results h4 {
+    font-size: .875rem;
+    color: var(--bs-secondary-color);
+}
+
+.sidebar .poll-block .poll-result-meta {
+    font-size: .875rem;
+}
+
+/* The random quote (the quotes module's block): a card too, the quote in
+   the heading font with a line of the sea. */
+.sidebar .block-quotes {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid var(--kosatka-accent);
+    border-radius: 22px;
+    background: var(--k-surface);
+    box-shadow: var(--kosatka-shadow);
+}
+
+.sidebar .block-quotes .quote-text {
+    font-family: var(--k-font-head);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+}
+
+.sidebar .block-quotes .quote-text p:last-child {
+    margin-bottom: .5rem;
+}
+
+.sidebar .block-quotes .quotes-author {
+    color: var(--bs-secondary-color);
+    font-family: var(--k-font-mono);
+    font-size: .8125rem;
+}
+
+.sidebar .view-list-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .25rem .75rem;
+    padding: .625rem 0;
+}
+
+.sidebar .view-list-item:last-child {
+    border-bottom: 0;
+}
+
+.sidebar .view-list-item .item-field-name-title a {
+    font-family: var(--bs-body-font-family);
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.sidebar .view-list-item > .item-field-name-view_count {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.search-form {
+    border-radius: 999px;
+    background: var(--k-surface);
+    box-shadow: var(--kosatka-shadow);
+}
+
+.search-form .search-btn {
+    color: var(--k-on-accent);
+}
+
+/* A content page. */
+.article-meta {
+    font-family: var(--k-font-mono);
+    font-size: .8125rem;
+}
+
+.dynamic-field-image img,
+img.dynamic-field-image {
+    border-radius: 24px;
+    box-shadow: var(--kosatka-shadow);
+}
+
+.node-content {
+    font-size: 1.0625rem;
+}
+
+.node-content > p:first-child {
+    font-size: 1.25rem;
+    line-height: 1.55;
+}
+
+.node-content h2,
+.node-content h3 {
+    margin-top: 2rem;
+}
+
+.node-content blockquote {
+    margin: 1.75rem 0;
+    padding: 1.125rem 1.375rem;
+    border-radius: 18px;
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+    font-family: var(--k-font-head);
+    font-size: 1.25rem;
+    line-height: 1.4;
+}
+
+.node-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+.node-content code {
+    padding: .125rem .4rem;
+    border-radius: 7px;
+    background: var(--k-chip);
+    color: var(--k-chip-ink);
+    font-family: var(--k-font-mono);
+    font-size: .875em;
+}
+
+.item-characteristic {
+    border: 1px solid var(--bs-border-color);
+    background: var(--k-surface);
+}
+
+.node-actions .action-link {
+    border-radius: 10px;
+    background: var(--k-surface);
+}
+
+/* Comments: cards with a glow; a reply moves in. */
+.comment-wrapper .message {
+    border-radius: 18px;
+    background: var(--k-surface);
+    box-shadow: 0 12px 30px -24px var(--k-glow);
+}
+
+.comment-wrapper .message .user-picture img {
+    width: 42px;
+    height: 42px;
+    box-shadow: 0 0 0 2px var(--k-chip);
+}
+
+.comment-wrapper .message-title .date,
+.comment-wrapper .message-title .reply-to {
+    font-family: var(--k-font-mono);
+    font-size: .75rem;
+}
+
+.comment-wrapper .message-title .reply-to {
+    color: var(--kosatka-accent);
+}
+
+/* Paging: pills. */
+.pagination .pager a,
+.pagination .pager .pager-current {
+    border-radius: 999px;
+    font-family: var(--k-font-mono);
+}
+
+.pagination .pager-current {
+    color: var(--k-on-accent);
+}
+
+/* Footer: the deep, under a wave. */
+.k-footer {
+    position: relative;
+    margin-top: 4rem;
+    padding: 0 0 2.5rem;
+    border-top: 0;
+    background: var(--k-deep);
+    color: #b6e6f1;
+}
+
+.k-footer-wave {
+    display: block;
+    width: 100%;
+    height: 60px;
+    margin-bottom: 1.25rem;
+    background: var(--bs-body-bg);
+    fill: var(--k-deep);
+}
+
+.k-footer a {
+    color: #b6e6f1;
+}
+
+.k-footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.k-footer .site-footer-credit {
+    font-family: var(--k-font-mono);
+    color: #b6e6f1;
+}
+
+body:has(> .site-header) > .k-footer {
+    margin-top: auto;
+}
+
+/* A menu in the footer: one row of links. */
+.k-footer .site-footer-region .block {
+    margin-bottom: 1rem;
+}
+
+.k-footer .site-footer-region ul.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.k-footer .site-footer-region ul.menu ul {
+    display: none;
+}
+
+.k-footer .site-footer-region ul.menu a {
+    color: #b6e6f1;
+    text-decoration: none;
+}
+
+.k-footer .site-footer-region ul.menu a:hover {
+    color: #eefbff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item {
+        transition: none;
+    }
+
+    .item-list:has(> .view-list-item .item-field-image) > .view-list-item:hover {
+        transform: none;
+    }
+}
+
+/* A node's galleries (the galleries module's row with gaps): the
+   previews rounded like the rest. */
+.node-gallery .content-image-link img {
+    border-radius: .875rem;
+}
+
+.node-gallery .content-image-link:hover img {
+    box-shadow: 0 0 0 3px var(--k-chip);
+}

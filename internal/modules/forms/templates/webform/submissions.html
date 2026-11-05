@@ -1,0 +1,65 @@
+{{/* webform/submissions.html - a form's submissions (WebformController.
+     Submissions): newest first, a column per element, a page at a time;
+     the CSV export link. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}{{attach "forms"}}
+{{$wf := .webform}}
+<section class="webform-submissions">
+    <p>
+        <a href="{{$wf.Node.URL}}">← {{$wf.Node.Title}}</a>
+        {{if .total}} · <a href="/node/{{$wf.Node.ID}}/form/analysis">{{t "Analysis"}}</a> · <a href="/node/{{$wf.Node.ID}}/form/submissions.csv">{{t "Download CSV"}}</a>{{end}}
+    </p>
+    {{with .deletedCount}}<div class="alert alert-success">{{plural . "@count submission deleted." "@count submissions deleted."}}</div>{{end}}
+    <p class="text-muted">{{plural .total "@count submission" "@count submissions"}}</p>
+
+    {{if .submissions}}
+    {{if .canDeleteSubmissions}}<form method="post" action="/node/{{$wf.Node.ID}}/form/submissions/delete" class="webform-submissions-delete">
+    <input type="hidden" name="page" value="{{.page}}">{{end}}
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-top">
+            <thead>
+                <tr>
+                    {{if $.canDeleteSubmissions}}<th><input type="checkbox" class="form-check-input webform-select-all" aria-label="{{t "Select all"}}"></th>{{end}}
+                    <th>#</th>
+                    <th>{{t "Date"}}</th>
+                    <th>{{t "User"}}</th>
+                    {{range $wf.Elements}}<th>{{.Label}}</th>{{end}}
+                </tr>
+            </thead>
+            <tbody>
+                {{range $s := .submissions}}
+                <tr>
+                    {{if $.canDeleteSubmissions}}<td><input type="checkbox" class="form-check-input" name="ids" value="{{$s.ID}}" aria-label="{{t "Select"}}"></td>{{end}}
+                    <td><a href="/node/{{$wf.Node.ID}}/form/submissions/{{$s.ID}}">{{$s.ID}}</a>{{if $.canDeleteSubmissions}}<div><button type="submit" name="only" value="{{$s.ID}}" class="btn btn-link btn-sm p-0 text-danger" data-confirm="{{t "Delete this submission?"}}">{{t "Delete"}}</button></div>{{end}}</td>
+                    <td class="text-nowrap">{{date $s.CreatedAt "datetime"}}</td>
+                    <td>{{if $s.UserSlug}}<a href="/{{$s.UserSlug}}">{{$s.Username}}</a>{{else}}<span class="text-muted">{{t "Guest"}}</span>{{end}}<div class="small text-muted">{{$s.RemoteIP}}</div>{{with $s.SourceURL}}<div class="small"><a href="{{.}}" title="{{t "Sent from the page:"}} {{.}}">{{.}}</a></div>{{end}}</td>
+                    {{range $el := $wf.Elements}}<td class="webform-text">{{if eq (print .Type) "consent"}}{{if index $s.Values .ID}}{{t "Yes"}}{{end}}{{else if eq (print .Type) "file"}}{{range $i, $v := index $s.Values .ID}}{{if $i}}<br>{{end}}<a href="/node/{{$wf.Node.ID}}/form/file?sid={{$s.ID}}&amp;eid={{$el.ID}}&amp;d={{$i}}">{{$el.FileName $v}}</a>{{end}}{{else}}{{range $i, $v := index $s.Values .ID}}{{if $i}}<br>{{end}}{{$v}}{{end}}{{end}}</td>{{end}}
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .canDeleteSubmissions}}
+    <button type="submit" class="btn btn-outline-danger btn-sm mb-3" data-confirm="{{t "Delete the selected submissions?"}}">{{t "Delete selected"}}</button>
+    </form>
+    {{end}}
+    <nav class="d-flex gap-3">
+        {{if gt .page 1}}<a href="?page={{sub .page 1}}">← {{t "Newer"}}</a>{{end}}
+        {{if .hasNext}}<a href="?page={{add .page 1}}">{{t "Older"}} →</a>{{end}}
+    </nav>
+    {{if .canDeleteSubmissions}}
+    <form method="post" action="/node/{{$wf.Node.ID}}/form/submissions/purge" class="webform-submissions-purge d-flex flex-wrap align-items-center gap-2 mt-4">
+        <label for="purge-days">{{t "Delete submissions older than"}}</label>
+        <input type="number" id="purge-days" name="days" min="1" value="365" required class="form-control form-control-sm" style="width: 6rem">
+        <span>{{t "days"}}</span>
+        <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="{{t "Delete every submission older than this, with its files? This can't be undone."}}">{{t "Delete"}}</button>
+    </form>
+    {{end}}
+    {{end}}
+</section>
+{{end}}

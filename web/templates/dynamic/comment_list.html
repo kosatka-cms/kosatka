@@ -1,0 +1,125 @@
+{{/* comment_list.html - page for a base_entity=="comment" View
+     (DynamicContentController.renderCommentViewPage): the comment
+     counterpart of dynamic/list.html, simpler (no glossary; AJAX
+     pagination only in a View block). Columns/cards come from the display's fields
+     (views.BuildCommentFieldInstances/BuildCommentListItems). Supports the same
+     list/grid/table styles; grid reuses dynamic/list.html's .list-grid
+     card markup, without images. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{/* dynamic_comment_field_value - one field's rendered value. Expects
+     dict "Field" (entity.FieldInstanceDef-shaped) "Value" (string, from
+     commentFieldValue) "Date" (time.Time for a date field, shown in the
+     field's date format if set). Comment fields are only text or date. */}}
+{{define "dynamic_comment_field_value"}}
+{{if eq (print .Field.FieldType) "date"}}<span class="item-field-value">{{if .Date.IsZero}}{{.Value}}{{else if .Field.DateFormat}}{{(fieldDate (siteTime .Date) .Field.DateFormat).Formatted}}{{else}}{{date .Date "datetime"}}{{end}}</span>
+{{else}}<span class="item-field-value">{{.Value}}</span>
+{{end}}
+{{end}}
+
+{{define "content"}}
+{{if .customCSS}}<style>{{.customCSS | safeCSS}}</style>{{end}}
+{{if .viewUnpublished}}
+<div class="alert alert-warning">{{t "Draft - this page is not published, visible only to moderators/admins."}}</div>
+{{end}}
+
+{{if .headerText}}<div class="view-text view-header-text">{{.headerText | rawHTML}}</div>{{end}}
+
+{{/* isViewBlock+viewID - per-View container id for comment View blocks;
+     see the #view-list-container comment in dynamic/list.html. A paged
+     block (paginationAjax) has its pager inside, and its page links swap
+     comment_list_body in (app.js). */}}
+<div id="{{if .isViewBlock}}view-list-container-block-{{.viewID}}{{else}}view-list-container{{end}}"{{if .paginationAjax}} data-ajax-pagination="1"{{end}}>
+{{template "comment_list_body" .}}
+</div>
+
+{{if .footerText}}<div class="view-text view-footer-text">{{.footerText | rawHTML}}</div>{{end}}
+
+{{if and .showPagination (not .themeListHTML) (not .paginationAjax)}}{{template "pagination.html" .}}{{end}}
+{{end}}
+
+{{/* comment_list_body - the list (and a paged block's pager): the
+     container's content, re-rendered alone for a block's page
+     (CacheService.ViewBlockPage). */}}
+{{define "comment_list_body"}}
+    {{if .themeListHTML}}
+    {{/* The View's theme template (ViewDisplayDef.ThemeTemplate), with
+         its own pager - see showPagination below. */}}
+    {{.themeListHTML}}
+    {{else if not .listFieldsHead}}
+    <p class="text-muted">{{t "Add at least one field (the \"Fields\" card on the view page) for the list to be displayed."}}</p>
+    {{else if eq .displayStyle "table"}}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    {{range .listFieldsHead}}<th>{{.Label}}</th>{{end}}
+                </tr>
+            </thead>
+            <tbody>
+                {{range $item := .items}}
+                <tr>
+                    {{range $i, $field := $item.Fields}}
+                    <td>
+                        {{if eq $i 0}}
+                        <a href="/comment/{{$item.Comment.ID}}#comment-{{$item.Comment.ID}}">{{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}</a>
+                        {{else}}
+                        {{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}
+                        {{end}}
+                    </td>
+                    {{end}}
+                </tr>
+                {{else}}
+                <tr><td colspan="{{len .listFieldsHead}}">{{t "No comments found."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{else if eq .displayStyle "grid"}}
+    {{/* Grid - same .list-grid/.list-grid-item/.item-field-* markup as
+         dynamic/list.html, so comment cards match node cards; comments
+         have no image fields. */}}
+    <div class="list-grid list-grid-fields">
+        {{range $item := .items}}
+        <div class="list-grid-item">
+            {{range $i, $field := $item.Fields}}
+            <div class="item-field item-field-{{$field.FieldType}} item-field-name-{{$field.MachineName}}{{if eq $i 0}} item-field-title{{end}}">
+                {{if $field.ShowLabelInList}}<span class="item-field-label">{{$field.Label}}:</span>{{end}}
+                {{if eq $i 0}}
+                <a href="/comment/{{$item.Comment.ID}}#comment-{{$item.Comment.ID}}">{{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}</a>
+                {{else}}
+                {{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <p>{{t "No comments found."}}</p>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="item-list">
+        <ul>
+            {{range $item := .items}}
+            <li class="comment-list-item">
+                {{range $i, $field := $item.Fields}}
+                {{if eq $i 0}}
+                <a href="/comment/{{$item.Comment.ID}}#comment-{{$item.Comment.ID}}">{{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}</a>
+                {{else}} -
+                {{template "dynamic_comment_field_value" (dict "Field" $field "Value" (index $item.Values $field.ID) "Date" (index $item.Dates $field.ID))}}
+                {{end}}
+                {{end}}
+            </li>
+            {{else}}
+            <li>{{t "No comments found."}}</li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+    {{if and .paginationAjax (not .themeListHTML)}}{{template "pagination.html" .}}{{end}}
+{{end}}
+

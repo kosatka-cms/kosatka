@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/text-formats" "BackLabel" (t "Text formats")
+    "Heading" (t "Delete format \"@label\"?" "@label" .format.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/text-formats/%v/delete" .format.ID)
+    "Submit" (t "Yes, delete format"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">machine_name: <code>{{.format.MachineName}}</code>. {{t "Values already saved with this format will keep displaying as is; fields where it was allowed will stop offering it."}}</p>
+{{end}}

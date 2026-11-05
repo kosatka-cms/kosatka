@@ -1,0 +1,73 @@
+{{/* admin/url-aliases/index.html - the nodes' addresses (URLAliasList):
+     the tabs (url_alias_tabs), the filters (a part of the address
+     .filterQ, the type; applied as one changes), on a table card the
+     address, the node and its type, whether it follows its type's
+     pattern. The patterns tab - patterns.html, the rebuild - rebuild.html. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .total "@count address" "@count addresses"}}</span>
+{{end}}
+
+{{define "page_body"}}
+{{template "url_alias_tabs" "addresses"}}
+{{template "content" .}}
+{{end}}
+
+{{/* url_alias_tabs - the URL aliases' tabs over the page, the current one
+     named (addresses, patterns, rebuild). */}}
+{{define "url_alias_tabs"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{{if eq . "addresses"}} active" aria-current="page{{end}}" href="/admin/config/url-aliases">{{t "Addresses"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if eq . "patterns"}} active" aria-current="page{{end}}" href="/admin/config/url-aliases/patterns">{{t "Patterns"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if eq . "rebuild"}} active" aria-current="page{{end}}" href="/admin/config/url-aliases/rebuild">{{t "Rebuild"}}</a></li>
+</ul>
+{{end}}
+
+{{define "content"}}
+<form method="get" action="/admin/config/url-aliases" class="admin-filters" data-autosubmit>
+    <div class="admin-filter admin-filter--wide">
+        <label for="alias-q" class="admin-filter-label">{{t "Address contains"}}</label>
+        <input type="search" id="alias-q" name="q" value="{{.filterQ}}" class="form-control">
+    </div>
+    <div class="admin-filter">
+        <label for="alias-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="alias-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .contentTypes}}
+            <option value="{{.}}" {{if and $.filterType (eq $.filterType (toString .))}}selected{{end}}>{{or (index $.typeLabels (toString .)) (toString .)}}</option>
+            {{end}}
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+    {{if or .filterQ .filterType}}<a href="/admin/config/url-aliases" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Address"}}</th>
+                    <th>{{t "Title"}}</th>
+                    <th>{{t "Address source"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .nodes}}
+                <tr>
+                    <td><a href="{{.URL}}"><code>{{.URL}}</code></a></td>
+                    <td><span class="admin-table-title">{{.Title}}</span><span class="admin-table-sub">{{or (index $.typeLabels (toString .Type)) (toString .Type)}}</span></td>
+                    <td>{{if .PathAuto}}<span class="admin-pill admin-pill--ok">{{t "by the pattern"}}</span>{{else}}<span class="admin-pill">{{t "by hand"}}</span>{{end}}</td>
+                    <td class="text-end"><a href="{{nodeEditPath .Type .ID}}" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a></td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{t "No addresses"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

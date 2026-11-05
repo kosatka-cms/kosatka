@@ -1,0 +1,55 @@
+{{/* The complaints module's parts of the core's pages (moduleHook). A
+     Report link (data-complain: what, data-complain-id, data-complain-about -
+     the window's line of what it is) opens the complaint's window
+     (complaints.js) made of the page's #complaint-dialog; a page without
+     it (the viewer may not report) has the links removed. */}}
+
+{{/* comment_links_complaints - "Report" under a comment of someone
+     else's, for a signed-in visitor. */}}
+{{define "comment_links_complaints"}}
+{{if and .currentUser (not .Held) (ne .currentUser.ID .Comment.CreatedBy)}}
+<li class="comment-complain">
+    <a href="#" class="complaints-link" data-complain="comment" data-complain-id="{{.Comment.ID}}"
+       data-complain-about="{{if .Comment.Author}}{{.Comment.Author.Username}}{{else}}{{t "Guest"}}{{end}}: &quot;{{plainPreview .Comment.Content 80}}&quot;">{{t "Report"}}</a>
+</li>
+{{end}}
+{{end}}
+
+{{/* node_links_complaints - "Report this content" under a content item
+     (.moduleNode.complaints, Controller.NodePage). */}}
+{{define "node_links_complaints"}}
+{{with .moduleNode}}{{with .complaints}}
+<p class="node-module-links-link complaints-node-link">
+    <a href="#" class="complaints-link" data-complain="node" data-complain-id="{{.ID}}" data-complain-about="&quot;{{.Title}}&quot;">{{t "Report this content"}}</a>
+</p>
+{{end}}{{end}}
+{{end}}
+
+{{/* page_end_complaints - the complaint's window as a <template>
+     (.complaintsReasons, Controller.PageData): the reasons, a note
+     (needed for .complaintsOther), the window's words; data-comments -
+     comments may be reported. */}}
+{{define "page_end_complaints"}}
+{{with .complaintsReasons}}{{attach "complaints"}}
+<template id="complaint-dialog" data-comments="{{if $.complaintsComments}}1{{end}}" data-other="{{$.complaintsOther}}"
+          data-title-node="{{t "Report content"}}" data-title-comment="{{t "Report a comment"}}"
+          data-send="{{t "Send"}}" data-cancel="{{t "Cancel"}}"
+          data-need-reason="{{t "Choose a reason."}}" data-need-note="{{t "Say what is wrong."}}"
+          data-failed="{{t "Could not send the complaint. Please try again later."}}">
+    <form class="complaints-form" novalidate>
+        <p class="complaints-about"></p>
+        <fieldset class="complaints-reasons">
+            <legend class="visually-hidden">{{t "Reason"}}</legend>
+            {{range .}}
+            <label class="complaints-reason"><input type="radio" name="reason" value="{{.}}"> {{t .}}</label>
+            {{end}}
+        </fieldset>
+        <label class="complaints-note-label">{{t "Details"}} <span class="complaints-optional">{{t "(optional)"}}</span>
+            <textarea name="note" class="form-control" rows="3" maxlength="1000"></textarea>
+        </label>
+        <p class="complaints-error" role="alert" hidden></p>
+        <p class="complaints-hint">{{t "Only the moderators see the complaint. The author won't know who complained."}}</p>
+    </form>
+</template>
+{{end}}
+{{end}}

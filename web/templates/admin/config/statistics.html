@@ -1,0 +1,45 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "When enabled, viewing published content on the site sends a request that counts the view: in all, today and by day (the Popular content report)."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="statistics-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Settings saved."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="post" action="/admin/config/statistics" id="statistics-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="view_counting_enabled" class="admin-setting-label">{{t "Count content views"}}</label>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" class="form-check-input" id="view_counting_enabled" name="view_counting_enabled" value="1" {{if .viewCountingEnabled}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="daily_views_keep_days" class="admin-setting-label">{{t "Keep views by day"}}</label>
+                <span class="admin-setting-help">{{t "The views of each day count the content's views over 7 and 30 days: the Popular content report and the Views' sorts. Older days are deleted; the total stays."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select id="daily_views_keep_days" name="daily_views_keep_days" class="form-select">
+                    {{range .viewDaysKeepOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

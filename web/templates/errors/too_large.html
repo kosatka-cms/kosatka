@@ -1,0 +1,18 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{/* The engine's 413 page: a form sent with more than the site reads
+     (BodyLimitMiddleware). A theme can replace it with its own
+     errors/too_large.html. */}}
+{{define "content"}}
+<div class="page-content nf-404">
+    <h1 class="article-title">{{t "The request is too large"}}</h1>
+    <div class="nf-404-body">
+        <p>{{t "The form was not sent: the files attached to it are too large. Attach smaller files and send it again."}}</p>
+    </div>
+    <p>{{with .back}}<a href="{{.}}">{{t "Back to the form"}}</a>{{else}}<a href="/">{{t "Go to the home page"}}</a>{{end}}</p>
+</div>
+{{end}}

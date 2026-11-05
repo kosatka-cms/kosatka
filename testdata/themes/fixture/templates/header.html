@@ -1,0 +1,13 @@
+{{/* The fixture's header: the document start and the header_nav region,
+     whose menu block is the theme's (menu_block_header_nav). */}}
+{{define "header"}}
+{{template "html_start" .}}
+<header class="fixture-header">
+    {{template "region_blocks" (dict "Region" (region "header_nav") "Ctx" .)}}
+</header>
+{{end}}
+{{define "menu_block_header_nav"}}
+<nav class="fixture-nav" aria-label="{{.Menu.Label}}">
+    {{template "menu_tree_items" (dict "Items" .Items "Remaining" .Remaining "Depth" 0)}}
+</nav>
+{{end}}

@@ -1,0 +1,56 @@
+{{/* user/login.html - the login page (UserController.renderLogin): a card
+     in the middle of a service page (no sidebar): the site's name, the
+     error or notice, the login and the password (shown on a click),
+     "Forgot your password?", the CAPTCHA, the social networks' buttons
+     (by name), registration while it's open. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<div class="auth-card">
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{tc "login page" "Log in"}}</h1>
+        {{with .siteName}}<p class="auth-card-sub">{{t "to the site @site" "@site" .}}</p>{{end}}
+    </div>
+
+    {{if .login_error}}
+    <div class="alert alert-danger" role="alert">{{.login_error}}</div>
+    {{else if .login_notice}}
+    <div class="alert alert-success" role="status">{{.login_notice}}</div>
+    {{end}}
+
+    <form method="POST" action="/login" class="auth-form">
+        {{if .destination}}
+        <input type="hidden" name="destination" value="{{.destination}}">
+        {{end}}
+        <div class="auth-field">
+            <label for="loginIdentity" class="form-label">{{t "Email or username"}}</label>
+            <input type="text" class="form-control" id="loginIdentity" name="login" value="{{.login}}" autocomplete="username" required autofocus>
+        </div>
+        <div class="auth-field">
+            <div class="auth-field-head">
+                <label for="loginPassword" class="form-label">{{t "Password"}}</label>
+                <a href="/user/password" class="auth-link-small">{{t "Forgot your password?"}}</a>
+            </div>
+            <div class="auth-password">
+                <input type="password" class="form-control" id="loginPassword" name="pass" autocomplete="current-password" required>
+                {{template "auth_password_toggle" "loginPassword"}}
+            </div>
+        </div>
+        {{template "recaptcha" (dict "key" .recaptcha_site_key "class" "")}}
+        <button type="submit" class="btn btn-primary auth-submit">{{t "Log in"}}</button>
+    </form>
+
+    {{template "user/social_login.html" .}}
+
+    {{if .registrationOpen}}
+    <p class="auth-card-foot">{{t "No account yet?"}} <a href="/user/register{{with .destination}}?destination={{.}}{{end}}">{{t "Create an account"}}</a></p>
+    {{end}}
+</div>
+</div>
+{{end}}

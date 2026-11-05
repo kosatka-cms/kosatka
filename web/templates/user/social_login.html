@@ -1,0 +1,20 @@
+{{define "user/social_login.html"}}
+{{if .oauth_providers}}
+<div class="oauth-section mt-3 mb-3">
+    <p class="oauth-divider text-muted"><span>{{t "or"}}</span></p>
+    {{/* .oauthCompact (the login card): the buttons side by side, by the
+         network's name (the full words for screen readers). */}}
+    <div class="oauth-buttons {{if $.oauthCompact}}oauth-buttons--row{{else}}d-flex flex-column gap-2{{end}}">
+        {{range .oauth_providers}}
+        <a class="btn btn-outline-secondary oauth-btn oauth-btn-{{.Name}}" href="/auth/{{.Name}}{{if $.destination}}?destination={{urlquery $.destination}}{{end}}"{{if $.oauthCompact}} aria-label="{{t "Log in with @provider" "@provider" .Label}}"{{end}}>
+            <span class="oauth-icon" aria-hidden="true"><img src="/static/images/oauth/{{.Name}}.svg" width="18" height="18" alt=""></span>
+            {{if $.oauthCompact}}{{.Label}}{{else}}{{t "Log in with @provider" "@provider" .Label}}{{end}}
+        </a>
+        {{end}}
+    </div>
+    {{/* The browser's time zone goes with the sign-in (?tz=): a user the
+         sign-in creates gets it, as the registration form does. */}}
+    <script>try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;if(tz){document.querySelectorAll(".oauth-btn").forEach(function(a){a.href+=(a.href.indexOf("?")<0?"?":"&")+"tz="+encodeURIComponent(tz);});}}catch(e){}</script>
+</div>
+{{end}}
+{{end}}

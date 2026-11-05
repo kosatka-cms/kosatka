@@ -1,0 +1,35 @@
+{{/* seo_schema_fields - the schema.org markup's rows of an SEO form
+     (dict "Template" - the scope's entity.SEOTemplate, "Types" -
+     entity.SchemaTypes, "Inherit" - a content type's: "as for all
+     content" and "none" offered, "InheritType" - the default's type):
+     the type, then each type's properties, shown for the type chosen
+     (data-show-when). */}}
+{{define "seo_schema_fields"}}
+{{$tpl := .Template}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="seo-schema-type" class="admin-setting-label">{{t "Schema.org type"}}</label>
+        <span class="admin-setting-help">{{t "What the pages are for search engines (JSON-LD): their name, description, image and address go in by themselves, an article's dates, author and publisher too."}}</span>
+    </div>
+    <div class="admin-setting-control">
+        <select id="seo-schema-type" name="schema_type" class="form-select">
+            {{if .Inherit}}
+            <option value=""{{if eq $tpl.SchemaType ""}} selected{{end}}>{{t "As for all content"}}{{with .InheritType}} ({{.}}){{end}}</option>
+            <option value="none"{{if eq $tpl.SchemaType "none"}} selected{{end}}>{{t "- none -"}}</option>
+            {{else}}
+            <option value=""{{if eq $tpl.SchemaType ""}} selected{{end}}>{{t "- none -"}}</option>
+            {{end}}
+            {{range .Types}}<option value="{{.Name}}"{{if eq $tpl.SchemaType .Name}} selected{{end}}>{{t .Label}} ({{.Name}})</option>{{end}}
+        </select>
+    </div>
+</div>
+{{range $type := .Types}}{{range .Props}}
+<div class="admin-setting" data-show-when="seo-schema-type={{$type.Name}}">
+    <div class="admin-setting-text">
+        <label for="seo-schema-{{$type.Name}}-{{.Name}}" class="admin-setting-label">{{t .Label}} <code>{{.Name}}</code></label>
+        {{with .Hint}}<span class="admin-setting-help">{{t .}}</span>{{end}}
+    </div>
+    <div class="admin-setting-control"><input type="text" id="seo-schema-{{$type.Name}}-{{.Name}}" name="schema_prop.{{$type.Name}}.{{.Name}}" class="form-control font-monospace" value="{{if eq $tpl.SchemaType $type.Name}}{{index $tpl.SchemaProps .Name}}{{end}}"></div>
+</div>
+{{end}}{{end}}
+{{end}}

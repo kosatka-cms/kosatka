@@ -1,0 +1,98 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+<article class="node node-galleries-list">
+    <div class="galleries-actions mb-4">
+        {{if .canEdit}}
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGalleryModal">
+            + {{t "Create new gallery"}}
+        </button>
+        {{end}}
+        <a href="{{.node.URL}}" class="btn btn-info">← {{t "View content"}}</a>
+    </div>
+
+    {{if .galleries}}
+    {{/* The covers take the cover style's proportions (.coverStyle -
+         --gallery-cover-w/h), shown whole; a style taller than wide gives
+         the portrait grid of narrower cards. */}}
+    <div class="galleries-grid{{with .coverStyle}}{{if gt .Height .Width}} galleries-grid--portrait{{end}}{{end}}"{{with .coverStyle}}{{if and .Width .Height}} style="--gallery-cover-w: {{.Width}}; --gallery-cover-h: {{.Height}}"{{end}}{{end}}>
+        {{range .galleries}}
+        <div class="gallery-card" data-gallery-id="{{.ID}}">
+            <div class="gallery-cover">
+                <a href="/galleries/{{.ID}}">
+                {{if .Cover}}
+                <img src="{{.CoverListURI}}" alt="{{if .Title}}{{.Title}}{{else}}{{t "Gallery"}}{{end}}"{{with $.coverStyle}}{{if and .Width .Height}} width="{{.Width}}" height="{{.Height}}"{{end}}{{end}} loading="lazy">
+                {{else}}
+                <div class="no-cover">{{t "No cover"}}</div>
+                {{end}}
+                </a>
+            </div>
+            <div class="gallery-info">
+                <h3>{{if .Title}}{{.Title}}{{else}}{{t "Gallery"}}{{end}}</h3>
+                <p class="gallery-meta">
+                    <span class="gallery-count">{{plural (len .Items) "@count image" "@count images"}}</span>
+                </p>
+                {{if .Description}}
+                <p class="gallery-description">{{.Description}}</p>
+                {{end}}
+            </div>
+            {{if or $.canEdit $.canDelete}}
+            <div class="gallery-actions">
+                {{if $.canEdit}}
+                <a href="/node/{{.NodeID}}/galleries/{{.ID}}/edit" class="btn btn-sm btn-primary">
+                    {{t "Edit"}}
+                </a>
+                {{end}}
+                {{if $.canDelete}}
+                <a href="/node/{{.NodeID}}/galleries/{{.ID}}/delete" class="btn btn-sm btn-danger">
+                    {{t "Delete"}}
+                </a>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="alert alert-info">
+        <p>{{t "This content has no galleries yet. Create the first gallery!"}}</p>
+    </div>
+    {{end}}
+</article>
+
+<div class="modal fade" id="createGalleryModal" tabindex="-1" aria-labelledby="createGalleryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createGalleryModalLabel">{{t "Create new gallery"}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createGalleryForm" data-node-id="{{.node.ID}}">
+                    <div class="mb-3">
+                        <label for="galleryTitle" class="form-label">{{t "Name"}}</label>
+                        <input type="text" class="form-control" id="galleryTitle" name="title" maxlength="255">
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryDescription" class="form-label">{{t "Description"}}</label>
+                        <textarea class="form-control" id="galleryDescription" name="description" rows="3"></textarea>
+                    </div>
+                    {{template "galleries_preview_styles" (dict "Styles" .imageStyles "Small" .defaultSmallStyle "Medium" .defaultMediumStyle "Prefix" "newGallery")}}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                <button type="button" class="btn btn-primary" id="saveGalleryBtn">{{t "Create"}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ moduleCSS "galleries" "gallery-manager" }}">
+<script src="{{ moduleJS "galleries" "gallery-manager" }}"></script>
+{{end}}

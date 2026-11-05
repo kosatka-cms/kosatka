@@ -1,0 +1,9 @@
+{
+  "types": ["article"],
+  "block": "Top rated",
+  "votes": [
+    {"article": 1, "scores": {"ishmael": 5, "queequeg": 4, "starbuck": 5, "captain_nemo": 5, "jim_hawkins": 4}},
+    {"article": 2, "scores": {"ishmael": 4, "starbuck": 3, "long_john_silver": 4}},
+    {"article": 3, "scores": {"queequeg": 5, "captain_nemo": 4, "jim_hawkins": 5, "long_john_silver": 3}}
+  ]
+}

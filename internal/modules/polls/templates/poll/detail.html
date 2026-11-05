@@ -1,0 +1,127 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<div id="content" class="{{template "node_status_class" .}}">
+    {{template "node_moderation_notice" .}}
+    <div id="block-system-main" class="block block-system">
+        <div class="poll-detail">
+            <h3><a href="{{.pollView.Poll.Node.URL}}" title="{{.pollView.Poll.Node.Title}}">{{.pollView.Poll.Node.Title}}</a></h3>
+            <p class="poll-byline">
+                {{if .pollView.Poll.Node.CreatedBy.Slug}}
+                <a href="/{{.pollView.Poll.Node.CreatedBy.Slug}}" class="username">{{.pollView.Poll.Node.CreatedBy.Username}}</a>
+                {{else}}
+                <span class="username">{{.pollView.Poll.Node.CreatedBy.Username}}</span>
+                {{end}}
+                | {{formatDate .pollView.Poll.Node.CreatedAt}}
+            </p>
+
+            {{template "node_actions" .}}
+
+            {{if .pollView.Poll.Description}}
+            <div class="poll-description node-content" style="margin-bottom: 1rem;">
+                {{.pollView.Poll.Description | processContent}}
+            </div>
+            {{end}}
+
+            {{template "poll_widget" .}}
+
+            {{template "social_share.html" .}}
+        </div>
+    </div>
+</div>
+
+{{/* Node.CommentMode "hidden": no comments section (as on other pages). */}}
+{{if ne (print .item.Node.CommentMode) "hidden"}}
+<div class="clearfix">
+    {{template "comments-placeholder" .}}
+</div>
+{{end}}
+{{if .pollView.ShowForm}}{{attach "polls"}}{{end}}
+{{end}}
+
+{{/* poll_widget - the poll's state for the visitor: not started yet or
+     ended, the results, the vote form or why there is none. On the
+     poll's page and in the "Poll" block (poll_block). Takes .pollView,
+     .CSRFToken, .currentUser. polls.js (pollVote) votes without leaving
+     the page: the form, its results and its message are found inside the
+     closest .poll-detail. */}}
+{{define "poll_widget"}}
+{{if .pollView.BeforeStart}}
+<p class="alert alert-info">{{t "The poll has not started yet."}}</p>
+{{else if .pollView.AfterEnd}}
+<p class="alert alert-secondary">{{t "The poll has ended."}}</p>
+{{end}}
+
+<div class="poll-results" id="poll-results-block" style="margin: 1.5rem 0;">
+    <h4>{{t "Results"}} <span id="poll-total-votes-label">({{t "votes:"}} <span id="poll-total-votes" class="poll-total-votes">{{.pollView.TotalVotes}}</span>)</span></h4>
+    <div id="poll-results-rows">
+    {{range .pollView.OptionCounts}}
+    <div class="poll-result-row" data-poll-option-id="{{.ID}}" style="margin-bottom: 0.75rem;">
+        <div class="poll-result-meta" style="display:flex; justify-content: space-between; margin-bottom: 0.25rem;">
+            <span class="poll-result-label">{{.Label}}</span>
+            <span class="poll-result-stats">{{printf "%.1f" .Percent}}% (<span class="poll-result-count">{{.Count}}</span>)</span>
+        </div>
+        <div class="poll-result-bar-bg">
+            <div class="poll-result-bar-fill" style="width: {{printf "%.2f" .Percent}}%;"></div>
+        </div>
+    </div>
+    {{end}}
+    </div>
+</div>
+
+{{if .pollView.ShowForm}}
+<form method="POST" action="/node/{{.pollView.Poll.Node.ID}}/poll/vote" class="poll-vote-form" data-poll-node-id="{{.pollView.Poll.Node.ID}}" style="margin-top:1rem;">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    {{if gt .pollView.Poll.MaxAnswers 1}}
+    <p>{{plural .pollView.Poll.MaxAnswers "Choose up to @count option." "Choose up to @count options."}}</p>
+    {{range .pollView.OptionCounts}}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="options" value="{{.ID}}" id="opt{{.ID}}" {{if .Selected}}checked{{end}}>
+        <label class="form-check-label" for="opt{{.ID}}">{{.Label}}</label>
+    </div>
+    {{end}}
+    {{else}}
+    {{range .pollView.OptionCounts}}
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="options" value="{{.ID}}" id="opt{{.ID}}" {{if .Selected}}checked{{end}}>
+        <label class="form-check-label" for="opt{{.ID}}">{{.Label}}</label>
+    </div>
+    {{end}}
+    {{end}}
+    <div class="poll-vote-actions mt-2">
+        <button type="submit" id="poll-vote-btn" class="btn btn-primary poll-vote-btn">{{t "Vote"}}</button>
+        <p id="poll-vote-loading" class="text-muted small mb-0 mt-2 poll-vote-loading" style="display:none;" role="status" aria-live="polite">
+            <span class="spinner-border spinner-border-sm me-1 align-middle" aria-hidden="true"></span>
+            <span class="align-middle">{{t "Sending…"}}</span>
+        </p>
+    </div>
+</form>
+<p id="poll-vote-ajax-msg" class="text-danger small mt-2 poll-vote-msg" style="display:none;" role="alert"></p>
+{{else if not .pollView.CanVote}}
+{{if not .currentUser}}
+<p>{{t "<a href=\":login\">Log in</a> to take part in the poll." ":login" (printf "/login?destination=%s" (urlquery .pollView.Poll.Node.URL))}}</p>
+{{end}}
+{{else}}
+<p class="text-muted small mt-2">{{t "You have already voted in this poll."}}</p>
+{{end}}
+
+{{if .pollView.Poll.ResultsOnly}}
+<p class="text-muted small">{{t "Mode: results only."}}</p>
+{{end}}
+{{end}}
+
+{{/* poll_block - the poll alone for the "Poll" block
+     (PollController.Embed): its question linking its page, then
+     poll_widget. */}}
+{{define "poll_block"}}
+<div class="poll-detail poll-block-content">
+    <h3 class="poll-block-question"><a href="{{.pollView.Poll.Node.URL}}">{{.pollView.Poll.Node.Title}}</a></h3>
+    {{template "poll_widget" .}}
+</div>
+{{end}}

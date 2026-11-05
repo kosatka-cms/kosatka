@@ -1,0 +1,36 @@
+{{/* block_node_rating - plugin block "node_rating" (the ratings module):
+     the rating of the content page it is on - its average and count, then
+     (ratings.js) the widget with the visitor's own vote loaded from
+     data-endpoint (the page may be cached). Nothing on another page or
+     for content of a type not rated. */}}
+{{define "block_node_rating"}}
+{{with .Ctx.moduleNode}}{{with .ratings}}
+<div class="rating-block" data-rating-endpoint="/node/{{.NodeID}}/rating">
+    <div class="rating-widget">{{template "ratings_total" .Summary}}</div>
+</div>
+{{end}}{{end}}
+{{end}}
+
+{{/* ratings_stars - stars filled to .Fill percent (.Scale of them),
+     for the eye only: the text says the same. */}}
+{{define "ratings_stars"}}
+<span class="rating-stars" aria-hidden="true">
+    <span class="rating-stars-empty">{{range .Scale}}{{template "ratings_star_svg"}}{{end}}</span>
+    <span class="rating-stars-fill" style="width: {{printf "%.1f" .Fill}}%">{{range .Scale}}{{template "ratings_star_svg"}}{{end}}</span>
+</span>
+{{end}}
+
+{{define "ratings_star_svg"}}<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg>{{end}}
+
+{{/* ratings_total - a content item's average and count (Summary or
+     Widget). */}}
+{{define "ratings_total"}}
+{{attach "ratings"}}
+<div class="rating-total">
+    {{if .Count}}<span class="rating-average">{{.Average}}</span>{{end}}
+    <span class="rating-total-detail">
+        {{template "ratings_stars" .}}
+        <span class="rating-count">{{if .Count}}{{plural .Count "@count vote" "@count votes"}}{{else}}{{t "No votes yet"}}{{end}}</span>
+    </span>
+</div>
+{{end}}

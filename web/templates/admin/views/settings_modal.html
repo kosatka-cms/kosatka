@@ -1,0 +1,365 @@
+{{/* view_settings_modal - the Views page's settings modal (page.html). */}}
+{{define "view_settings_modal"}}
+{{/* Settings modal: one modal, split into sections. */}}
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="settingsForm" method="post" action="/admin/config/views/{{.view.ID}}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalTitle">{{t "Page settings"}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="settings-machine-name" class="form-label">{{t "Machine name"}}</label>
+                        <input type="text" id="settings-machine-name" name="machine_name" class="form-control admin-max-md" value="{{.view.MachineName}}" pattern="[a-z][a-z0-9_]*" maxlength="64" required>
+                        <small class="form-text text-muted">{{t "What a text or a template embeds the list by (@tag); the front page feed choosing this display follows a new one, the tags with the old one break." "@tag" (printf "[[view:%s]]" .view.MachineName)}}</small>
+                    </div>
+
+                    <h6 class="fw-semibold mt-3">{{t "General"}}</h6>
+                    <div class="mb-3">
+                        <label for="settings-label" class="form-label">{{t "Name"}}</label>
+                        <input type="text" id="settings-label" name="label" class="form-control admin-max-md" value="{{.view.Label}}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label d-block">{{t "Display type"}}</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_type" id="settings-display-type-page" value="page" {{if eq (print .view.DisplayType) "page"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-type-page">{{t "Page (own URL)"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_type" id="settings-display-type-block" value="block" {{if eq (print .view.DisplayType) "block"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-type-block">{{t "Block (no URL, placed on the Blocks page)"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_type" id="settings-display-type-attachment" value="attachment" {{if eq (print .view.DisplayType) "attachment"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-type-attachment">{{t "Attach to content"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_type" id="settings-display-type-term" value="term" {{if eq (print .view.DisplayType) "term"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-type-term">{{t "Term page"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_type" id="settings-display-type-user-tab" value="user_tab" {{if eq (print .view.DisplayType) "user_tab"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-type-user-tab">{{t "Profile tab"}}</label>
+                        </div>
+                    </div>
+                    {{/* settings-attach-section - DisplayType==attachment only (View attached to
+                         a content page); toggled by toggleSeoAndGridColumns(). Identity fields,
+                         outside the inherited Settings fieldset. */}}
+                    <div id="settings-attach-section" class="border rounded p-3 mb-3">
+                        <div class="mb-3">
+                            {{template "visibility_content_types" (dict "Placement" .view "ContentTypes" .contentTypes "IDPrefix" "settings-attach" "Name" "attach_content_types")}}
+                            <div class="form-text">{{t "On content pages of these types the View is shown after the content text, before the comments."}}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="settings-attach-title" class="form-label">{{t "Title on the page"}}</label>
+                            <input type="text" id="settings-attach-title" name="attach_title" class="form-control admin-max-md" value="{{.view.AttachTitle}}" placeholder="{{.view.Label}}">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="settings-attach-show-title" name="attach_show_title" value="1" {{if .view.AttachShowTitle}}checked{{end}}>
+                                <label class="form-check-label" for="settings-attach-show-title">{{t "Show title"}}</label>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="settings-attach-weight" class="form-label">{{t "Weight"}}</label>
+                            <input type="number" id="settings-attach-weight" name="attach_weight" class="form-control admin-max-xs" value="{{.view.AttachWeight}}">
+                            <div class="form-text">{{t "Order among other attached Views: lower goes higher."}}</div>
+                        </div>
+                    </div>
+                    {{/* settings-term-section - DisplayType==term only: vocabularies whose term
+                         pages list content through this View. Toggled by toggleSeoAndGridColumns(). */}}
+                    {{$termVids := .view.TermVocabularyIDs}}
+                    <div id="settings-term-section" class="border rounded p-3 mb-3">
+                        <div class="mb-3">
+                            <label class="form-label d-block">{{t "Vocabularies"}}</label>
+                            {{range .vocabularies}}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="term_vocabularies" id="settings-term-vocabulary-{{.ID}}" value="{{.ID}}" {{if intContains $termVids .ID}}checked{{end}}>
+                                <label class="form-check-label" for="settings-term-vocabulary-{{.ID}}">{{.Name}}</label>
+                            </div>
+                            {{end}}
+                            <div class="form-text">{{t "On term pages of these vocabularies the content list is rendered by this View (nothing selected - all vocabularies). The term is taken from the page path: add the <code>has_current_term</code> contextual filter."}}</div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="settings-term-weight" class="form-label">{{t "Weight"}}</label>
+                            <input type="number" id="settings-term-weight" name="term_weight" class="form-control admin-max-xs" value="{{.view.AttachWeight}}">
+                            <div class="form-text">{{t "If a vocabulary is selected in several Views, the View with the lower weight is used."}}</div>
+                        </div>
+                    </div>
+                    {{/* settings-user-tab-section - DisplayType==user_tab only (page at
+                         user/%user/<path> shown as a profile tab). Toggled by toggleSeoAndGridColumns(). */}}
+                    <div id="settings-user-tab-section" class="border rounded p-3 mb-3">
+                        <div class="mb-3">
+                            <label for="settings-profile-tab-path" class="form-label">{{t "Tab path"}}</label>
+                            <div class="input-group admin-max-md">
+                                <span class="input-group-text">/{{userPathPrefix}}/&lt;{{t "user"}}&gt;/</span>
+                                <input type="text" id="settings-profile-tab-path" name="profile_tab_path" class="form-control" value="{{.view.ProfileTabPath}}" pattern="[a-z0-9][a-z0-9-]*">
+                            </div>
+                            <div class="form-text">{{t "Latin letters, digits, hyphen; not a built-in tab's path (<code>edit</code>, <code>files</code>) or a module's (<code>messages</code>, <code>notifications</code>). The tab title is the display name. The user is taken from the path: add the <code>created_by</code> contextual filter."}}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label d-block">{{t "Visible to"}}</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="profile_tab_access" id="settings-profile-tab-access-all" value="all" {{if ne (print .view.ProfileTabAccess) "owner"}}checked{{end}}>
+                                <label class="form-check-label" for="settings-profile-tab-access-all">{{t "Everyone"}}</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="profile_tab_access" id="settings-profile-tab-access-owner" value="owner" {{if eq (print .view.ProfileTabAccess) "owner"}}checked{{end}}>
+                                <label class="form-check-label" for="settings-profile-tab-access-owner">{{t "Profile owner and administrators"}}</label>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="settings-profile-tab-weight" class="form-label">{{t "Weight"}}</label>
+                            <input type="number" id="settings-profile-tab-weight" name="profile_tab_weight" class="form-control admin-max-xs" value="{{.view.AttachWeight}}">
+                            <div class="form-text">{{t "Order among the profile's View tabs: lower goes further left. They come after \"View / Edit / Messages\"."}}</div>
+                        </div>
+                    </div>
+                    {{/* Theme template: renders the list with the theme's views/<name>.html
+                         instead of the field grid. Identity field, outside the Settings fieldset. */}}
+                    <div class="mb-3">
+                        <label for="settings-theme-template" class="form-label">{{t "Theme template"}}</label>
+                        <input type="text" id="settings-theme-template" name="theme_template" class="form-control admin-max-md" value="{{.view.ThemeTemplate}}" pattern="[a-z0-9][a-z0-9_]*" placeholder="{{t "empty - display style below"}}">
+                        <div class="form-text">{{t "Name of a template from the theme: the file <code>views/&lt;name&gt;.html</code> in the theme directory with a <code>view_&lt;name&gt;</code> block renders the list instead of the field grid (for content; applied immediately, without publishing). No such file - the View's display style is used."}}</div>
+                    </div>
+                    {{/* settings-url-path-section - hidden (not disabled) for blocks via
+                         toggleSeoAndGridColumns(). Not "required": ViewUpdate clears url_path for
+                         a block and regenerates it from the label if a page's value is empty. */}}
+                    <div class="mb-3" id="settings-url-path-section">
+                        <label for="settings-url-path" class="form-label">{{t "URL (without leading /)"}}</label>
+                        <input type="text" id="settings-url-path" name="url_path" class="form-control admin-max-sm" value="{{.view.URLPath}}">
+                        <div class="form-text">{{t "The path the view is served at. Not used by a block. One segment may be <code>%</code> - the user from the path (by alias), for example <code>posts/%</code> → <code>/posts/username</code>: it is passed to the <code>created_by</code> contextual filter, and <code>%1</code> in the name/meta title is replaced with their name. No such user - 404."}}</div>
+                    </div>
+
+                    {{/* SEO section - DisplayType==page only, toggled by toggleSeoAndGridColumns(). */}}
+                    <div id="settings-seo-section" class="border rounded bg-light p-3 mb-3">
+                        <h6 class="fw-semibold mb-3">SEO</h6>
+                        <div class="mb-3">
+                            <label for="settings-meta-title" class="form-label">{{t "SEO title"}}</label>
+                            <input type="text" id="settings-meta-title" name="meta_title" class="form-control admin-max-md" value="{{.view.MetaTitle}}">
+                            <div class="form-text">{{t "Optional - defaults to \"Name\" above."}}</div>
+                        </div>
+                        <div class="mb-0">
+                            <label for="settings-meta-description" class="form-label">{{t "SEO description"}}</label>
+                            <textarea id="settings-meta-description" name="meta_description" class="form-control admin-max-lg" rows="2">{{.view.MetaDescription}}</textarea>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-semibold mt-4">{{t "Display"}}</h6>
+                    {{/* The "Settings" override section. The fieldset is disabled while inherited
+                         from Default (cascades to all controls, including JS-populated ones).
+                         Identity fields above and Status below are never gated. */}}
+                    {{if not .view.CanEditSettings}}
+                    <div class="alert alert-info py-2 px-3 mb-3 small">{{t "Inherited from Default - override it via the banner above the card on the page to edit it here."}}</div>
+                    {{end}}
+                    <fieldset {{if not .view.CanEditSettings}}disabled{{end}}>
+                    {{/* List display style: "grid"/"list"/"table" mean the same for every
+                         base_entity (see entity.ViewDisplayDef.DisplayStyle); comments simply have
+                         no card image. */}}
+                    <div class="mb-3">
+                        <label class="form-label d-block">{{t "List display"}}</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_style" id="settings-display-style-list" value="list" {{if eq (print .view.DisplayStyle) "list"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-style-list">{{t "List"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_style" id="settings-display-style-grid" value="grid" {{if eq (print .view.DisplayStyle) "grid"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-style-grid">{{t "Grid (cards)"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_style" id="settings-display-style-table" value="table" {{if eq (print .view.DisplayStyle) "table"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-style-table">{{t "Table"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="display_style" id="settings-display-style-carousel" value="carousel" {{if eq (print .view.DisplayStyle) "carousel"}}checked{{end}}>
+                            <label class="form-check-label" for="settings-display-style-carousel">{{t "Carousel"}}</label>
+                        </div>
+                        <div class="form-text">{{t "The table shows columns for the fields from the \"Fields\" card - without selected fields the list/table stays empty."}}</div>
+                    </div>
+                    {{/* overflow_after (see entity.ViewDisplayDef.OverflowAfter) - independent of
+                         display_style, so always visible. 0 = off. */}}
+                    <div class="mb-3">
+                        <label for="settings-overflow-after" class="form-label">{{t "Show the first N in full, the rest as a list"}}</label>
+                        <input type="number" id="settings-overflow-after" name="overflow_after" class="form-control admin-max-xs" value="{{.view.OverflowAfter}}" min="0">
+                        <div class="form-text">{{t "0 - disabled, all content is displayed in the selected style. Fields can be hidden from the compact list of the rest in the field's own settings (\"Fields\" → ✎)."}}</div>
+                        <label for="settings-overflow-header-text" class="form-label mt-2">{{t "Heading above the compact list"}}</label>
+                        <input type="text" id="settings-overflow-header-text" name="overflow_header_text" class="form-control" value="{{.view.OverflowHeaderText}}" placeholder="{{t "for example, \"More on this topic\" - optional"}}">
+                    </div>
+                    {{/* grid_columns - "Grid" style only. */}}
+                    <div class="mb-3{{if ne (print .view.DisplayStyle) "grid"}} d-none{{end}}" id="settings-grid-columns-section">
+                        <label for="settings-grid-columns" class="form-label">{{t "Grid columns"}}</label>
+                        <input type="number" id="settings-grid-columns" name="grid_columns" class="form-control admin-max-xs" value="{{.view.GridColumns}}" min="1">
+                    </div>
+                    {{/* Carousel section - "Carousel" style only (see
+                         entity.ViewDisplayDef.CarouselSlidesPerView). Swiper is initialized from
+                         the container's data attributes by app.js's initViewCarousels. */}}
+                    <div class="mb-3{{if ne (print .view.DisplayStyle) "carousel"}} d-none{{end}}" id="settings-carousel-section">
+                        <label for="settings-carousel-slides-per-view" class="form-label">{{t "Slides per view"}}</label>
+                        <input type="number" id="settings-carousel-slides-per-view" name="carousel_slides_per_view" class="form-control admin-max-xs" value="{{.view.CarouselSlidesPerView}}" min="1">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" id="settings-carousel-autoplay" name="carousel_autoplay" value="1" class="form-check-input" {{if .view.CarouselAutoplay}}checked{{end}}>
+                            <label for="settings-carousel-autoplay" class="form-check-label">{{t "Autoplay"}}</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="settings-carousel-loop" name="carousel_loop" value="1" class="form-check-input" {{if .view.CarouselLoop}}checked{{end}}>
+                            <label for="settings-carousel-loop" class="form-check-label">{{t "Loop"}}</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="settings-carousel-show-navigation" name="carousel_show_navigation" value="1" class="form-check-input" {{if .view.CarouselShowNavigation}}checked{{end}}>
+                            <label for="settings-carousel-show-navigation" class="form-check-label">{{t "Navigation arrows"}}</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="settings-carousel-show-pagination" name="carousel_show_pagination" value="1" class="form-check-input" {{if .view.CarouselShowPagination}}checked{{end}}>
+                            <label for="settings-carousel-show-pagination" class="form-check-label">{{t "Pagination dots"}}</label>
+                        </div>
+                        {{/* carousel_link_field_storage_id - text field whose value makes the whole
+                             slide a link. Reuses the glossary text-field catalog
+                             (.glossaryFieldOptions/.fieldLabels); a plain select, as the list is short. */}}
+                        <div class="mt-2">
+                            <label for="settings-carousel-link-field" class="form-label">{{t "Slide link field"}}</label>
+                            <select name="carousel_link_field_storage_id" id="settings-carousel-link-field" class="form-select admin-max-sm">
+                                <option value="0" {{if not .view.CarouselLinkFieldStorageID}}selected{{end}}>{{t "The content item"}}</option>
+                                {{if .glossaryFieldOptions}}
+                                {{range .glossaryFieldOptions}}
+                                <option value="{{.ID}}" {{if eq $.view.CarouselLinkFieldStorageIDValue .ID}}selected{{end}}>{{index $.fieldLabels .ID}} ({{.MachineName}})</option>
+                                {{end}}
+                                {{end}}
+                            </select>
+                            <div class="form-text">{{t "If selected, the whole slide is wrapped in a link to the value of this text field (for example a URL). The field does not have to be displayed separately on the \"Fields\" tab."}}</div>
+                        </div>
+                        {{/* carousel_effect - Swiper transition style (plain string, see
+                             entity.ViewDisplayDef.CarouselEffect). */}}
+                        <div class="mt-2">
+                            <label class="form-label d-block">{{t "Transition effect"}}</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="carousel_effect" id="settings-carousel-effect-slide" value="slide" {{if ne .view.CarouselEffect "fade"}}checked{{end}}>
+                                <label class="form-check-label" for="settings-carousel-effect-slide">{{t "Slide"}}</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="carousel_effect" id="settings-carousel-effect-fade" value="fade" {{if eq .view.CarouselEffect "fade"}}checked{{end}}>
+                                <label class="form-check-label" for="settings-carousel-effect-fade">{{t "Crossfade (fade)"}}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" id="settings-show-pagination" name="show_pagination" value="1" class="form-check-input" {{if .view.ShowPagination}}checked{{end}}>
+                        <label for="settings-show-pagination" class="form-check-label">{{t "Show pagination"}}</label>
+                        <div class="form-text{{if ne (print .view.DisplayType) "block"}} d-none{{end}}" id="settings-pagination-block-note">{{t "A block's pages load in the block itself, without reloading the page."}}</div>
+                    </div>
+                    {{/* pagination_ajax - only with show_pagination. Off: pager links are plain
+                         ?page=N hrefs (no JS needed). On: ViewPageFallback returns a JSON fragment
+                         for X-Requested-With requests (see app.js's initViewPagination). The admin
+                         preview is always AJAX. */}}
+                    {{/* AJAX pagination - content Views only: renderCommentViewPage supports
+                         plain ?page=N navigation only. */}}
+                    {{if not .view.IsComment}}
+                    <div class="mb-3 form-check{{if eq (print .view.DisplayType) "block"}} d-none{{end}}" id="settings-pagination-ajax-section">
+                        <input type="checkbox" id="settings-pagination-ajax" name="pagination_ajax" value="1" class="form-check-input" {{if .view.PaginationAjax}}checked{{end}}>
+                        <label for="settings-pagination-ajax" class="form-check-label">{{t "AJAX pagination (no page reload)"}}</label>
+                    </div>
+                    {{end}}
+                    <div class="mb-3">
+                        <label for="settings-page-size" class="form-label">{{t "Items per page"}}</label>
+                        <input type="number" id="settings-page-size" name="page_size" class="form-control admin-max-xs" value="{{.view.PageSize}}" min="1">
+                    </div>
+                    {{/* header_text/footer_text (entity.ViewDisplayDef.HeaderText/FooterText) -
+                         rich text rendered before/after the list, independent of Fields, in the
+                         editor (the "text" preset, data-editor-autoload). */}}
+                    <div class="mb-3">
+                        <label for="settings-header-text" class="form-label">{{t "Text before the list"}}</label>
+                        <textarea id="settings-header-text" name="header_text" class="form-control view-text-editor" rows="4" data-editor-autoload data-editor-config="{{json (dict "preset" "text" "height" 200)}}">{{.view.HeaderText}}</textarea>
+                        <div class="form-text">{{t "Optional - any text/images above the content list."}}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="settings-footer-text" class="form-label">{{t "Text after the list"}}</label>
+                        <textarea id="settings-footer-text" name="footer_text" class="form-control view-text-editor" rows="4" data-editor-autoload data-editor-config="{{json (dict "preset" "text" "height" 200)}}">{{.view.FooterText}}</textarea>
+                        <div class="form-text">{{t "Optional - any text/images below the content list, above the pager."}}</div>
+                    </div>
+                    {{/* custom_css - raw CSS embedded as an inline <style> on the display's page.
+                         Deliberately without data-editor-autoload (an editor): must stay a
+                         plain textarea. */}}
+                    <div class="mb-3">
+                        <label for="settings-custom-css" class="form-label">{{t "Custom CSS"}}</label>
+                        <textarea id="settings-custom-css" name="custom_css" class="form-control" rows="6" style="font-family:monospace;">{{.view.CustomCSS}}</textarea>
+                        <div class="form-text">{{t "Optional - any CSS, inserted into &lt;style&gt; on this page. Scope - this display only, but NOT automatically: <code>#view-list-container</code> is the same id on every Views page, so your selectors must be limited to this container manually, for example <code>#view-list-container .list-grid-item:hover .item-field-title</code>."}}</div>
+                    </div>
+                    {{/* row_template - grid/list/carousel card markup with field tokens. Plain
+                         textarea: TinyMCE would mangle tokens and markup. */}}
+                    <div class="mb-3">
+                        <label for="settings-row-template" class="form-label">{{t "Row template"}}</label>
+                        <textarea id="settings-row-template" name="row_template" class="form-control" rows="8" style="font-family:monospace;" placeholder="&lt;a href=&quot;{{"{{"}}url{{"}}"}}&quot; class=&quot;card&quot;&gt;{{"{{"}}field:cover_image{{"}}"}}&lt;h3&gt;{{"{{"}}field:title{{"}}"}}&lt;/h3&gt;&lt;/a&gt;">{{.view.RowTemplate}}</textarea>
+                        <div class="form-text">{{t "Optional - custom card markup for grid, list and carousel (not used in a table). Tokens: <code>{{field:machine_name}}</code> - the value of this View's field, fully rendered (image style, badges, link; empty if the content has no value; \"Hidden\" fields work too), <code>{{url}}</code> - the content URL. Machine names are on the \"Fields\" tab. If \"Link to\" is enabled for a field, its token already contains a link - do not wrap it in your own <code>&lt;a&gt;</code> (nested links break the card). Empty - fields are output one after another, as usual."}}</div>
+                    </div>
+                    {{/* group_by_field/group_date_format - group rows under headings with the
+                         field value (grid/list/table). */}}
+                    <div class="mb-3">
+                        <label for="settings-group-by-field" class="form-label">{{t "Group by field"}}</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <select id="settings-group-by-field" name="group_by_field" class="form-select admin-max-sm">
+                                <option value="">{{t "- no grouping -"}}</option>
+                                {{range .groupFieldOptions}}
+                                <option value="{{.Key}}" {{if eq .Key $.view.GroupByField}}selected{{end}}>{{.Label}} ({{.Key}})</option>
+                                {{end}}
+                            </select>
+                            <select id="settings-group-date-format" name="group_date_format" class="form-select admin-max-sm">
+                                <option value="" {{if eq .view.GroupDateFormat ""}}selected{{end}}>{{t "Date: as in the field"}}</option>
+                                <option value="year" {{if eq .view.GroupDateFormat "year"}}selected{{end}}>{{t "Date: by year"}}</option>
+                                <option value="month" {{if eq .view.GroupDateFormat "month"}}selected{{end}}>{{t "Date: by month"}}</option>
+                                <option value="day" {{if eq .view.GroupDateFormat "day"}}selected{{end}}>{{t "Date: by day"}}</option>
+                            </select>
+                        </div>
+                        <div class="form-text">{{t "Optional - content is grouped by the field value, each group gets a heading (grid, list, table; not used in a carousel). Groups follow the order in which values first appear, within a group - the sort order; grouping works within a page. Date format - for date fields only."}}</div>
+                    </div>
+                    {{/* show_glossary - alphabetical index. RunView adds an in-memory starts_with
+                         filter from ?letter=X (service.glossaryLetterFilter). Independent of
+                         show_pagination. */}}
+                    {{/* Alphabetical index - content Views only: renderCommentViewPage ignores
+                         ShowGlossary. */}}
+                    {{if not .view.IsComment}}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" id="settings-show-glossary" name="show_glossary" value="1" class="form-check-input" {{if .view.ShowGlossary}}checked{{end}}>
+                        <label for="settings-show-glossary" class="form-check-label">{{t "Alphabetical index (A B C…)"}}</label>
+                        <div class="form-text">{{t "An \"A B C…\" bar above the list - clicking a letter filters the list by the first letter of the target field. It is recommended to add a matching sort criterion (\"Sorting\" tab) - otherwise the card order may look unpredictable when switching letters."}}</div>
+                    </div>
+                    {{/* glossary_field_storage_id - which text field the glossary groups by
+                         (empty = node title). Same searchable combobox as filter-target/sort-target,
+                         but selected server-side since it's always visible.
+                         The default option's value is "0", not "": setupFieldCombobox skips
+                         options with a falsy value, and here the default must stay selectable.
+                         ViewUpdate treats both "" and "0" as nil. */}}
+                    <div class="mb-3" id="settings-glossary-field-section">
+                        <label class="form-label">{{t "Index field"}}</label>
+                        <div class="position-relative">
+                            <input type="text" id="glossary-field-storage-search" class="form-control" placeholder="{{t "Search field…"}}">
+                        </div>
+                        <select name="glossary_field_storage_id" id="glossary-field-storage-id" class="d-none">
+                            <option value="0" {{if not .view.GlossaryFieldStorageID}}selected{{end}}>{{t "Title (Node.Title, default)"}}</option>
+                            {{if .glossaryFieldOptions}}
+                            <optgroup label="{{t "Text fields"}}">
+                                {{range .glossaryFieldOptions}}
+                                <option value="{{.ID}}" {{if eq $.view.GlossaryFieldStorageIDValue .ID}}selected{{end}}>{{index $.fieldLabels .ID}} ({{.MachineName}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                        </select>
+                        <div class="form-text">{{t "The field to group/filter letters by - the content title by default."}}</div>
+                    </div>
+                    {{end}}
+                    </fieldset>
+
+                    <h6 class="fw-semibold mt-4">{{t "Status"}}</h6>
+                    <div class="mb-0 form-check">
+                        <input type="checkbox" id="settings-status" name="status" value="1" class="form-check-input" {{if eq .view.Status 1}}checked{{end}}>
+                        <label for="settings-status" class="form-check-label">{{t "Published (page is available)"}}</label>
+                    </div>
+                    {{/* The modules' sections (interfaces.AddFormSection): form_view_<module>. */}}
+                    {{moduleHook "form_view" .}}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

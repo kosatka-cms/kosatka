@@ -1,0 +1,8 @@
+{{/* The fixture's layout: the engine's main column in its own <main>,
+     the modules' page_end hook kept. */}}
+{{template "header" .}}
+<main id="fixture-main" class="container">
+    {{template "main_column" .}}
+</main>
+{{moduleHook "page_end" .}}
+{{template "footer" .}}

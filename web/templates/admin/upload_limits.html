@@ -1,0 +1,22 @@
+{{/* admin_upload_extensions - the allowed file extensions row of an
+     upload's settings (a file field, a text format's file manager, a
+     gallery type). Takes (dict): Value, Placeholder, Help - the hint
+     (empty: the site-wide list applies). */}}
+{{define "admin_upload_extensions"}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="allowed_extensions" class="admin-setting-label">{{t "Allowed file extensions"}}</label>
+        <span class="admin-setting-help">{{or .Help (t "Separated by spaces, without a dot. Empty - the site-wide list of allowed types is used.")}}</span>
+    </div>
+    <div class="admin-setting-control"><input type="text" id="allowed_extensions" name="allowed_extensions" class="form-control" value="{{.Value}}" placeholder="{{.Placeholder}}"></div>
+</div>
+{{end}}
+
+{{/* admin_upload_max_size - the max file size row. Takes (dict): Set -
+     a size is set, Value - it in MB. */}}
+{{define "admin_upload_max_size"}}
+<div class="admin-setting">
+    <div class="admin-setting-text"><label for="max_filesize_mb" class="admin-setting-label">{{t "Max file size (MB)"}}</label></div>
+    <div class="admin-setting-control"><input type="number" id="max_filesize_mb" name="max_filesize_mb" class="form-control admin-max-xs" value="{{if .Set}}{{.Value}}{{end}}" step="0.1" min="0.1" placeholder="{{t "site-wide"}}"></div>
+</div>
+{{end}}

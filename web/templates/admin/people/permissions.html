@@ -1,0 +1,56 @@
+{{/* admin/people/permissions - the roles' permissions (PermissionsPage):
+     on a table card a permission per row, by group, a role per column (the
+     full-access one all checked, fixed); its header sticks to the window's
+     top as the page scrolls; saved over the page and under the table. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+{{$baseRole := ""}}{{range .columns}}{{if .Base}}{{$baseRole = .Role.Label}}{{end}}{{end}}
+<span class="admin-page-meta">{{t "Role permissions. Every logged-in user has the \"@role\" role; its permissions apply together with the permissions of the user's own role. The role with full access has all permissions." "@role" $baseRole}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button form="permissions-form" type="submit" class="btn btn-primary">{{t "Save permissions"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Permissions saved."))
+    "Fallback" (t "Could not save permissions."))}}
+
+<form method="post" action="/admin/people/permissions" id="permissions-form" class="admin-table-card admin-table-card--sticky">
+    {{/* No overflow box around the table: a sticky header would stay
+         inside it. */}}
+    <table class="table admin-table permissions-table">
+        <thead>
+            <tr>
+                <th>{{t "Permission"}}</th>
+                {{range .columns}}<th class="text-center" title="{{.Role.Name}}">{{.Role.Label}}{{if .Base}}<span class="admin-table-sub">{{t "all logged-in users"}}</span>{{end}}</th>{{end}}
+            </tr>
+        </thead>
+        <tbody>
+            {{range .catalog}}
+            <tr class="permissions-group"><th colspan="{{add (len $.columns) 1}}">{{.Label}}</th></tr>
+            {{range $perm := .Permissions}}
+            <tr>
+                <td title="{{$perm.Key}}">{{$perm.Label}}</td>
+                {{range $.columns}}
+                <td class="text-center">
+                    {{if .FullAccess}}<input type="checkbox" class="form-check-input" checked disabled title="{{t "Full access"}}">
+                    {{else}}<input type="checkbox" class="form-check-input" name="grant" value="{{.Role.ID}}|{{$perm.Key}}" {{if index .Role.Permissions $perm.Key}}checked{{end}} aria-label="{{$perm.Label}}: {{.Role.Label}}">{{end}}
+                </td>
+                {{end}}
+            </tr>
+            {{end}}
+            {{end}}
+        </tbody>
+    </table>
+    <div class="admin-table-foot">
+        <span></span>
+        <button type="submit" class="btn btn-primary">{{t "Save permissions"}}</button>
+    </div>
+</form>
+{{end}}

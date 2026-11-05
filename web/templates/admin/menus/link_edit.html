@@ -1,0 +1,50 @@
+{{/* admin/config/menus/{id}/links/{lid}/edit - a menu link (MenuLinkEdit):
+     its current address (a broken one marked) under the title; its name,
+     type and target, whether it is on - as rows; the
+     modules' sections under them. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Current URL:"}} {{if .urlOK}}<code>{{.resolvedURL}}</code>{{else}}<span class="admin-pill admin-pill--warn">{{t "- broken link -"}}</span>{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/menus/{{.menu.ID}}/links/{{.link.ID}}/delete" class="btn btn-outline-danger">{{t "Delete"}}</a>
+<button type="submit" form="menu-link-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "update" (t "Error while saving."))
+    "Warnings" (dict
+        "empty" (t "Enter a title.")))}}
+
+<form method="post" action="/admin/config/menus/{{.menu.ID}}/links/{{.link.ID}}" id="menu-link-form" class="admin-settings menu-link-form">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="field-title" class="admin-setting-label">{{t "Name"}}</label></div>
+            <div class="admin-setting-control"><input id="field-title" type="text" name="title" class="form-control" value="{{.link.Title}}" required></div>
+        </div>
+        {{template "menuLinkTargetFields" (dict "CurrentLinkType" (print .link.LinkType) "CurrentLinkURL" .link.LinkURL "CurrentNodeID" .link.LinkNodeIDValue "CurrentTermID" .link.LinkTermIDValue "CurrentViewID" .link.LinkViewIDValue "Views" .views "Vocabularies" .vocabularies)}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="enabled" class="admin-setting-label">{{tc "masculine" "Enabled"}}</label>
+                <span class="admin-setting-help">{{t "A disabled link (and its whole subtree) is not shown on the public side but is not deleted."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="enabled" name="enabled" value="1" class="form-check-input" {{if .link.Enabled}}checked{{end}}></div>
+        </div>
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection, form
+         "menu_link"): form_menu_link_<module>, from .moduleForms. */}}
+    {{moduleHook "form_menu_link" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+{{end}}

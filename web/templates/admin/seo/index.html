@@ -1,0 +1,185 @@
+{{/* admin/config/seo - the pages' titles and descriptions (SEOPage):
+     content - the default templates (rows, how they apply folded), the
+     types' templates (a table card), the rules by terms (adding on a card,
+     a table card dragged by ☰, the first matching wins); term pages - the
+     shared templates (rows), the vocabularies' (a table card); the
+     tokens. */}}
+{{template "layout.html" .}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Rule deleted."))
+    "Errors" (dict
+        "save" (t "Error while saving the template.")
+        "create" (t "Error while creating the rule.")
+        "delete" (t "Error while deleting the rule.")
+        "reorder" (t "Error while saving the order."))
+    "Warnings" (dict
+        "empty" (t "Select a content type and fill in at least one template.")))}}
+
+<div class="admin-settings">
+<form method="post" action="/admin/config/seo/default" class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Default for all content"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="seo-default-title" class="admin-setting-label">{{t "Title"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-default-title" name="title_template" class="form-control" value="{{.defaultTemplate.TitleTemplate}}" placeholder="{{t "empty - \"Title (alternative title)\""}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="seo-default-desc" class="admin-setting-label">{{t "Description"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-default-desc" name="description_template" class="form-control" value="{{.defaultTemplate.DescriptionTemplate}}" placeholder="{{t "empty - beginning of the content text"}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="seo-default-image" class="admin-setting-label">{{t "Image (og:image)"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-default-image" name="image_template" class="form-control" value="{{.defaultTemplate.ImageTemplate}}" placeholder="{{t "for example [node:field:cover_image]; empty - no image"}}"></div>
+        </div>
+        {{template "seo_schema_fields" (dict "Template" .defaultTemplate "Types" .schemaTypes)}}
+        <div class="admin-setting">
+            <details class="admin-add-more">
+                <summary>{{t "Which template applies"}}</summary>
+                <div class="admin-setting-help">
+<p class="mb-1">{{t "The title and meta description of a content page are built from templates with tokens. The first filled one wins, separately for title and description:"}}</p>
+    <ol class="mb-1">
+        <li>{{t "the content item's own title/description (in the edit form);"}}</li>
+        <li>{{t "the first matching rule from the top;"}}</li>
+        <li>{{t "the content type template;"}}</li>
+        <li>{{t "the default template;"}}</li>
+        <li>{{t "the built-in fallback: \"Title (alternative title)\" and the beginning of the text."}}</li>
+    </ol>
+    <p class="mb-0">{{t "More details: <code>@file</code>." "@file" "docs/guides/urls-and-seo.md"}}</p>
+                </div>
+            </details>
+            <div class="admin-setting-control text-end"><button type="submit" class="btn btn-primary">{{t "Save"}}</button></div>
+        </div>
+    </div>
+</form>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{tc "seo" "Content types"}}</h2>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>{{t "Type"}}</th><th>{{t "Title"}}</th><th>{{t "Description"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr></thead>
+                <tbody>
+                    {{range .types}}
+            <tr>
+                <td><a href="/admin/config/seo/types/{{.Type.ID}}/edit" class="admin-table-title">{{.Type.Label}}</a><span class="admin-table-sub"><code>{{.Type.MachineName}}</code></span></td>
+                <td>{{if .Template.TitleTemplate}}<code>{{.Template.TitleTemplate}}</code>{{else}}<span class="admin-table-muted">{{t "default"}}</span>{{end}}</td>
+                <td>{{if .Template.DescriptionTemplate}}<code>{{.Template.DescriptionTemplate}}</code>{{else}}<span class="admin-table-muted">{{t "default"}}</span>{{end}}</td>
+                <td class="text-nowrap text-end"><a href="/admin/config/seo/types/{{.Type.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a></td>
+            </tr>
+            {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Rules by terms"}}</h2>
+    <div class="admin-settings-card admin-add-card">
+        <form method="post" action="/admin/config/seo/rules" class="admin-add-form">
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Content type"}}</span>
+                <select name="content_type" id="seo-new-type" class="form-select" required>
+                    <option value="">{{t "- content type -"}}</option>
+                    {{range .contentTypes}}<option value="{{.MachineName}}">{{.Label}}</option>{{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Condition"}}</span>
+                <select name="field_storage_id" id="seo-new-field" class="form-select" data-filter-by="seo-new-type">
+                    <option value="">{{t "- any content of the type -"}}</option>
+                    {{range .fields}}<option value="{{.FieldStorageID}}" data-filter-value="{{.ContentType}}">{{.Label}}</option>{{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Title"}}</span>
+                <input type="text" name="title_template" class="form-control">
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Description"}}</span>
+                <input type="text" name="description_template" class="form-control">
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <p class="admin-setting-help">{{t "Custom templates for content of a type with a certain value of a term field (child terms match too). The first matching rule from the top wins; an empty template in a rule falls back to the type template."}} {{t "If a field is selected, the rule page opens after creation; terms are chosen there."}}</p>
+    </div>
+    <form id="seo-reorder-form" method="post" action="/admin/config/seo/rules/reorder" class="admin-table-card">
+        <input type="hidden" name="order" id="seo-order-input" value="">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to change the order"}}</span></th><th>{{t "Type"}}</th><th>{{t "Condition"}}</th><th>{{t "Title"}}</th><th>{{t "Description"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr></thead>
+                <tbody id="seo-tbody" data-sortable data-order-input="seo-order-input">
+                    {{range .rules}}
+                <tr draggable="true" data-rule-id="{{.Rule.ID}}" data-sort-id="{{.Rule.ID}}">
+                    <td class="drag-handle admin-table-drag" title="{{t "Drag to change the order"}}">&#9776;</td>
+                    <td><span class="admin-table-title">{{.TypeLabel}}</span></td>
+                    <td>{{if .Field}}{{.Field}}: {{range $i, $t := .Terms}}{{if $i}}, {{end}}{{$t}}{{else}}<span class="admin-pill admin-pill--warn">{{t "no terms selected"}}</span>{{end}}{{else}}-{{end}}</td>
+                    <td>{{if .Rule.TitleTemplate}}<code>{{.Rule.TitleTemplate}}</code>{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
+                    <td>{{if .Rule.DescriptionTemplate}}<code>{{.Rule.DescriptionTemplate}}</code>{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/seo/rules/{{.Rule.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/seo/rules/{{.Rule.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="6" class="admin-table-empty">{{t "No rules yet"}}</td></tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{if .rules}}
+        <div class="admin-table-foot">
+            <span class="admin-table-foot-hint">{{t "The first matching rule from the top applies - drag a row by ☰ to change the order."}}</span>
+            <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+        </div>
+        {{end}}
+    </form>
+</section>
+
+<form method="post" action="/admin/config/seo/term-default" class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Term pages"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="seo-term-default-title" class="admin-setting-label">{{t "Title (all vocabularies)"}}</label>
+                <span class="admin-setting-help">{{t "Title and description of term pages (<code>/tags/…</code>, <code>/categories/…</code>, etc.): the vocabulary template, otherwise the shared one; empty - the term name. Tokens: <code>[term:title]</code> - the term page title (term field, otherwise the name), <code>[term:name]</code>, <code>[term:description]</code>, <code>[site:name]</code>."}}</span>
+            </div>
+            <div class="admin-setting-control"><input type="text" id="seo-term-default-title" name="title_template" class="form-control" value="{{.termDefaultTemplate.TitleTemplate}}" placeholder="{{t "empty - term name"}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="seo-term-default-desc" class="admin-setting-label">{{t "Description (all vocabularies)"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-term-default-desc" name="description_template" class="form-control" value="{{.termDefaultTemplate.DescriptionTemplate}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"></div>
+            <div class="admin-setting-control text-end"><button type="submit" class="btn btn-primary">{{t "Save"}}</button></div>
+        </div>
+    </div>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>{{t "Vocabulary"}}</th><th>{{t "Title"}}</th><th>{{t "Description"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr></thead>
+                <tbody>
+                    {{range .vocabularies}}
+            <tr>
+                <td><a href="/admin/config/seo/vocabularies/{{.Vocabulary.ID}}/edit" class="admin-table-title">{{.Vocabulary.Name}}</a></td>
+                <td>{{if .Template.TitleTemplate}}<code>{{.Template.TitleTemplate}}</code>{{else}}<span class="admin-table-muted">{{t "shared"}}</span>{{end}}</td>
+                <td>{{if .Template.DescriptionTemplate}}<code>{{.Template.DescriptionTemplate}}</code>{{else}}<span class="admin-table-muted">{{t "shared"}}</span>{{end}}</td>
+                <td class="text-nowrap text-end"><a href="/admin/config/seo/vocabularies/{{.Vocabulary.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a></td>
+            </tr>
+            {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+{{template "seo_tokens_help" .}}
+</div>
+{{end}}

@@ -1,0 +1,194 @@
+{{/* comments-list - a page of the node's published comments, then the
+     viewer's own waiting for approval (.heldComments: on the last page). */}}
+{{define "comments-list"}}
+{{if or .comments .heldComments}}
+{{range .comments}}
+{{template "comment" (dict "Comment" . "currentUser" $.currentUser "CommentMode" $.commentMode "canAdminister" $.canAdministerComments)}}
+{{end}}
+{{range .heldComments}}
+{{template "comment" (dict "Comment" . "currentUser" $.currentUser "CommentMode" $.commentMode "canAdminister" $.canAdministerComments "Held" true)}}
+{{end}}
+{{template "pagination.html" .}}
+{{else}}
+<p>{{t "No comments yet. Be the first!"}}</p>
+{{end}}
+{{end}}
+
+{{define "comments-placeholder"}}
+{{/* .item.Node.CommentMode: "closed" shows existing comments read-only
+     with a notice and no add form; "hidden" never renders this template
+     (see dynamic/page.html); "open" (or empty) shows the add-comment UI.
+     .commentsList - the comments in the page's HTML (comments-list's
+     data; the comment settings' "with the page"); without it they load by
+     ajax (app.js COMMENTS). A type hiding empty comments shows nothing
+     while there are none. */}}
+{{$commentsClosed := eq (print .item.Node.CommentMode) "closed"}}
+{{$list := .commentsList}}
+{{$hide := false}}
+{{with $list}}{{if not (or .comments .heldComments)}}{{with $.contentType}}{{if .HideEmptyComments}}{{$hide = true}}{{end}}{{end}}{{end}}{{end}}
+{{if not $hide}}
+<div id="comments" class="comment-wrapper{{if $list}} comments-loaded{{end}}" data-node-id="{{.item.Node.ID}}" data-node-type="{{.item.Node.Type}}" data-comment-mode="{{.item.Node.CommentMode}}"{{with .contentType}}{{if .HideEmptyComments}} data-hide-empty="1"{{end}}{{end}}{{if $list}} data-loaded="1"{{end}}>
+    <h2 class="title">{{t "Comments"}}</h2>
+    {{/* The modules' actions on the comments (a subscription): their
+         "comments_actions_<module>". */}}
+    {{moduleHook "comments_actions" .}}
+
+    {{if $commentsClosed}}
+    <div class="comments-closed-notice">
+        <p>{{t "Comments on this content are closed."}}</p>
+    </div>
+    {{else if .currentUser}}
+    <div class="add-comment-link mb-4" id="add-comment-link-top">
+        <a href="#comment-form" class="btn btn-primary" data-comment-open>{{t "Add comment"}}</a>
+    </div>
+    {{else}}
+    <div class="auth-notice">
+        <p>{{if registrationOpen}}{{t "<a href=\":login\">Log in</a> or <a href=\":register\">register</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL)) ":register" (printf "/user/register?destination=%s" (urlquery .item.Node.URL))}}{{else}}{{t "<a href=\":login\">Log in</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL))}}{{end}}</p>
+    </div>
+    {{end}}
+    
+    {{if not $list}}
+    <div class="comments-loading">
+        <div class="loading-skeleton">
+            <div class="skeleton-comment">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+            </div>
+            <div class="skeleton-comment">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text"></div>
+                </div>
+            </div>
+            <div class="skeleton-comment">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-header"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+    <div class="comments-content">{{with $list}}{{template "comments-list" .}}{{end}}</div>
+</div>
+
+{{if and .currentUser (not $commentsClosed)}}
+{{/* The comment form: app.js shows it (data-comment-open, data-reply-to)
+     and loads its editor (data-editor-config) - COMMENT FORM there. */}}
+<div id="comment-form" class="comment-form" style="display: none;" data-comment-form data-node-type="{{.item.Node.Type}}">
+    <h3>{{t "Add comment"}}</h3>
+    <form action="/comment/create" method="POST">
+        <input type="hidden" name="nid" value="{{.item.Node.ID}}">
+        <input type="hidden" name="parent_id" id="parent_id" value="0">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        {{botTrap}}
+        
+        <div class="form-group mb-3">
+            <label for="comment-content">{{t "Comment"}} <span class="required">*</span></label>
+            <textarea id="comment-content" name="content" class="form-control comment-editor" data-editor-config="{{json (dict "preset" "comment")}}"></textarea>
+        </div>
+        
+        {{template "recaptcha" (dict "key" (commentCaptcha .currentUser) "class" "mb-3")}}
+
+        <div id="reply-info" class="reply-info" style="display:none;" data-reply-info>
+            <span class="reply-to-text">{{t "Reply to comment by"}} <strong data-reply-author></strong></span>
+            <button type="button" class="cancel-reply-btn" data-cancel-reply aria-label="{{t "Cancel reply"}}">&times;</button>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+            <button type="button" class="btn btn-secondary cancel-reply" data-cancel-reply>{{t "Cancel"}}</button>
+        </div>
+    </form>
+</div>
+{{template "tinymce_user_files.html" .}}
+{{else}}
+<div class="auth-notice-bottom">
+    <p>{{if registrationOpen}}{{t "<a href=\":login\">Log in</a> or <a href=\":register\">register</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL)) ":register" (printf "/user/register?destination=%s" (urlquery .item.Node.URL))}}{{else}}{{t "<a href=\":login\">Log in</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL))}}{{end}}</p>
+</div>
+{{end}}
+{{end}}
+{{end}}
+
+{{/* comment - one comment; .Held - its author's own, waiting for
+     approval (seen by them only): marked, without Reply. */}}
+{{define "comment"}}
+<a id="comment-{{.Comment.ID}}"></a>
+<div class="message js-message good{{if gt .Comment.Depth 0}} comment-depth-{{.Comment.Depth}}{{end}}{{if .Held}} comment-held{{end}}" style="{{if gt .Comment.Depth 0}}--comment-depth: {{.Comment.Depth}};{{end}}">
+
+    <div class="avatar-user js-avatar-user">
+        <div class="user-picture">
+            {{if .Comment.Author}}
+            <a href="/{{.Comment.Author.Slug}}">
+            <img src="{{with .Comment.Author.Avatar.URI}}{{.}}{{else}}{{avatarPlaceholder}}{{end}}"
+                 alt="{{t "Avatar of @name" "@name" .Comment.Author.Username}}"
+                 title="{{t "Avatar of @name" "@name" .Comment.Author.Username}}">
+            </a>
+            {{else}}
+            <img src="{{avatarPlaceholder}}"
+                 alt="{{t "User avatar"}}"
+                 title="{{t "User avatar"}}">
+            {{end}}
+        </div>
+    </div>
+
+    <div class="message-wrap">
+        <div class="message-inner">
+            <div class="message-title">
+                {{if .Comment.Author}}
+                <span class="username"><a href="/{{.Comment.Author.Slug}}">{{.Comment.Author.Username}}</a></span>
+                {{else}}
+                <span class="username">{{t "Guest"}}</span>
+                {{end}}
+                <time class="date">{{date .Comment.CreatedAt "datetime"}}</time>
+                {{if .Comment.ParentID}}
+                <span class="reply-to"> {{t "(Reply to #@id)" "@id" .Comment.ParentID}}</span>
+                {{end}}
+                {{if .Held}}<span class="comment-held-badge">{{t "waiting for approval"}}</span>{{end}}
+            </div>
+
+            <div class="message-content">
+                <div class="comment-body">
+                    {{.Comment.Content | rawHTML}}
+                </div>
+                {{if .Held}}<p class="comment-held-note">{{t "Only you see this comment until it is approved."}}</p>{{end}}
+
+            </div>
+
+            <footer>
+                <ul class="links inline">
+                    {{if and .currentUser (ne .CommentMode "closed") (not .Held)}}
+                    <li class="comment-reply">
+                        <a href="#comment-form" class="reply-btn" data-reply-to="{{.Comment.ID}}" data-author="{{if .Comment.Author}}{{.Comment.Author.Username}}{{else}}{{t "Guest"}}{{end}}">{{t "Reply"}}</a>
+                    </li>
+                    {{end}}
+                    
+                    {{if and .currentUser (or (eq .currentUser.ID .Comment.CreatedBy) .canAdminister)}}
+                    <li class="comment-edit">
+                        <a href="/comment/{{.Comment.ID}}/edit">{{tc "comment" "Edit"}}</a>
+                    </li>
+                    {{end}}
+                    
+                    {{if and .currentUser .canAdminister}}
+                    <li class="comment-delete">
+                        <a href="/comment/{{.Comment.ID}}/delete" class="delete-link">{{t "Delete"}}</a>
+                    </li>
+                    {{end}}
+                    {{/* The modules' links of the comment ("comment_links_<module>":
+                         <li> each; .Comment, .currentUser, .Held). */}}
+                    {{moduleHook "comment_links" .}}
+                </ul>
+            </footer>
+        </div>
+    </div>
+</div>
+{{end}}

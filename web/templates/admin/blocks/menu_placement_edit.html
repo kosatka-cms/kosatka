@@ -1,0 +1,77 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Menu:"}} <strong>{{if .menu}}{{.menu.Label}} ({{.menu.MachineName}}){{else}}{{t "(menu deleted)"}}{{end}}</strong> - {{t "which menu is placed cannot be changed after creation (delete the placement and create a new one if you need a different menu)."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="placement-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" . "Errors" (dict "menu" (t "Error while saving.")))}}
+
+<form method="post" action="/admin/config/blocks/menu/{{.placement.ID}}/edit" id="placement-form" class="admin-settings">
+    <input type="hidden" name="theme" value="{{.blocksTheme}}">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="menu-placement-region" class="admin-setting-label">{{t "Region"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <select id="menu-placement-region" name="region" class="form-select">
+                    {{$currentRegion := .placement.Region}}
+                    {{range .allRegions}}
+                    <option value="{{.}}" {{if eq . $currentRegion}}selected{{end}}>{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="menu-placement-title" class="admin-setting-label">{{t "Title"}}</label>
+                <span class="admin-setting-help">{{if .menu}}{{t "Optional - the menu name is used by default (\"@label\")." "@label" .menu.Label}}{{else}}{{t "Optional - the menu name is used by default."}}{{end}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="menu-placement-title" name="title" class="form-control" value="{{.placement.Title}}" placeholder="{{if .menu}}{{.menu.Label}}{{end}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="menu-placement-show-title" class="admin-setting-label">{{t "Display title"}}</label>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="menu-placement-show-title" name="show_title" value="1" class="form-check-input" {{if .placement.ShowTitle}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="menu-placement-start-level" class="admin-setting-label">{{t "Initial level"}}</label>
+                <span class="admin-setting-help">{{t "Initial visibility level: 1 - the whole tree as is; N&gt;1 - only the current active trail at that level (empty on pages outside it)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="menu-placement-start-level" name="start_level" class="form-control admin-max-xs" min="1" max="10" value="{{.placement.MenuStartLevel}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="menu-placement-levels" class="admin-setting-label">{{t "Number of levels"}}</label>
+                <span class="admin-setting-help">{{t "0 = unlimited. How many nesting levels to show from the initial one."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="menu-placement-levels" name="levels_to_show" class="form-control admin-max-xs" min="0" max="9" value="{{.placement.MenuLevelsToShow}}">
+            </div>
+        </div>
+        {{template "visibility_roles" (dict "Placement" .placement "Roles" .visibilityRoles "IDPrefix" "menu-placement")}}
+        {{template "visibility_scope" (dict "Placement" .placement "ContentTypes" .contentTypes "IDPrefix" "menu-placement")}}
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection): form_block_placement_<module>. */}}
+    {{moduleHook "form_block_placement" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

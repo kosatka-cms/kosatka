@@ -1,0 +1,27 @@
+{{template "layout.html" .}}
+
+{{/* user/logout.html - GET /logout: logging out is a POST (another site
+     can't log a visitor out with a link or an <img>); the menu's links
+     POST from app.js, this page is the fallback without scripts. A card
+     like the login page's. */}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<form method="post" action="/logout" class="auth-card logout-confirm">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Log out"}}</h1>
+        <p class="auth-card-sub">{{t "Log out of your account?"}}</p>
+    </div>
+    <div class="auth-actions">
+        <button type="submit" class="btn btn-primary">{{t "Log out"}}</button>
+        <a href="/" class="btn btn-outline-secondary">{{t "Cancel"}}</a>
+    </div>
+</form>
+</div>
+{{end}}

@@ -1,0 +1,47 @@
+{{template "layout.html" .}}
+
+{{define "content"}}
+<p><a href="/admin/config/content-types">&larr; {{t "All content types"}}</a></p>
+
+{{template "content_type_tabs" .}}
+
+<p><a href="/admin/config/content-types/{{.contentType.ID}}/fields">&larr; {{t "Fields of \"@label\"" "@label" .contentType.Label}}</a></p>
+
+<div class="alert alert-danger">
+    <h5 class="alert-heading">{{t "Delete field \"@label\"?" "@label" .field.Label}}</h5>
+    <p class="mb-1">machine_name: <code>{{.field.MachineName}}</code>, {{t "type:"}} <span class="badge text-bg-secondary">{{.field.FieldType}}</span></p>
+    {{if eq (print .field.FieldType) "group"}}
+        {{if .groupMemberLabels}}
+        <p class="mb-0">
+            <strong>{{plural (len .groupMemberLabels) "Cannot delete now - this group still has @count field:" "Cannot delete now - this group still has @count fields:"}}
+            {{range $i, $label := .groupMemberLabels}}{{if $i}}, {{end}}"{{$label}}"{{end}}.</strong>
+            {{t "First change the \"Group\" of each of them (to \"- no group -\" or another group), then delete the empty group."}}
+        </p>
+        {{else}}
+        <p class="mb-0">{{t "This group has no fields - it can be deleted."}}</p>
+        {{end}}
+    {{else}}
+        {{if gt .fieldValueCount 0}}
+        <p class="mb-0"><strong>{{plural .fieldValueCount "This field already has @count saved value - it will be deleted permanently, with no way to restore it." "This field already has @count saved values - they will be deleted permanently, with no way to restore them."}}</strong></p>
+        {{else}}
+        <p class="mb-0">{{t "This field has no saved values yet."}}</p>
+        {{end}}
+    {{end}}
+    {{with .storageUsage}}
+    {{if gt .Instances 1}}
+    <p class="mb-0 mt-2">{{t "The field stays in the field catalog: other content types use it."}}</p>
+    {{else if .References}}
+    <p class="mb-0 mt-2">{{plural .References "The field stays in the field catalog: @count view or rule still uses it." "The field stays in the field catalog: @count views or rules still use it."}}</p>
+    {{else}}
+    <p class="mb-0 mt-2"><strong>{{t "This is the last content type with the field: it is removed from the field catalog too and can no longer be reused in other types."}}</strong></p>
+    {{end}}
+    {{end}}
+</div>
+
+<form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}/delete">
+    {{if not (and (eq (print .field.FieldType) "group") .groupMemberLabels)}}
+    <button type="submit" class="btn btn-danger">{{t "Yes, delete the field"}}</button>
+    {{end}}
+    <a href="/admin/config/content-types/{{.contentType.ID}}/fields" class="btn btn-secondary">{{t "Cancel"}}</a>
+</form>
+{{end}}

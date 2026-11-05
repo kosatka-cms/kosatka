@@ -1,0 +1,55 @@
+{{/* admin/config/appearance_theme.html - a theme's settings
+     (admin.AppearanceThemeSettings; the settings come from its theme.yaml,
+     entity.ThemeSetting): a colour picker, a list, a text or a switch each,
+     as rows; save (and preview, for a theme not active) or reset. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{if .themeActive}}{{t "The theme is the active one: the changes show on the site at once."}}{{else}}{{t "The theme isn't active: save and preview to see the changes on your site, the visitors keep the active theme."}}{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="theme-settings-form" class="btn btn-primary" name="action" value="save">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "saved" (t "Settings saved.")) "Fallback" (t "Could not save the settings."))}}
+
+<form method="post" id="theme-settings-form" class="admin-settings">
+    <div class="admin-settings-card">
+        {{range .fields}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="setting-{{.ID}}">{{.Label}}</label>
+                {{if and (ne (print .Type) "bool") (ne (print .Type) "select") (ne (print .Type) "text") (ne .Value .Default)}}<span class="admin-setting-help">{{t "default @value" "@value" .Default}}</span>{{end}}
+            </div>
+            {{if eq (print .Type) "bool"}}
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input type="checkbox" class="form-check-input" role="switch" id="setting-{{.ID}}" name="setting_{{.ID}}" value="1" {{if eq .Value "1"}}checked{{end}}>
+            </div>
+            {{else if eq (print .Type) "select"}}
+            <div class="admin-setting-control">
+                <select class="form-select" id="setting-{{.ID}}" name="setting_{{.ID}}">
+                    {{range .Options}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+            {{else if eq (print .Type) "text"}}
+            <div class="admin-setting-control"><input type="text" class="form-control" id="setting-{{.ID}}" name="setting_{{.ID}}" value="{{.Value}}" maxlength="{{.MaxLength}}"></div>
+            {{else}}
+            <div class="admin-setting-control d-flex align-items-center gap-2">
+                <input type="color" class="form-control form-control-color" id="setting-{{.ID}}" name="setting_{{.ID}}" value="{{.Value}}">
+                <code>{{.Value}}</code>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-outline-secondary" name="action" value="reset">{{t "Reset to defaults"}}</button>
+        {{if not .themeActive}}<button type="submit" class="btn btn-outline-primary" name="action" value="preview">{{t "Save and preview"}}</button>{{end}}
+        <button type="submit" class="btn btn-primary" name="action" value="save">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

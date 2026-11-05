@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 840" width="900" height="840" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title>The tables of content items</title>
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; fill: #1f2937; }
+    .head { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; font-weight: 700; fill: #ffffff; }
+    .desc { font-size: 11.5px; font-style: italic; fill: #64748b; }
+    .note { font-size: 11.5px; fill: #64748b; }
+    .group { font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+    .card { font-size: 11px; fill: #64748b; }
+    .end { font-size: 12px; font-weight: 700; fill: #475569; }
+    .edge { stroke: #94a3b8; stroke-width: 1.6; fill: none; }
+    .byname { stroke: #94a3b8; stroke-width: 1.6; stroke-dasharray: 5 4; fill: none; }
+  </style>
+
+  <rect x="0.5" y="0.5" width="899" height="839" rx="14" fill="#f8fafc" stroke="#e2e8f0"/>
+
+  <!-- Types and fields -->
+  <rect x="20" y="20" width="860" height="208" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="36" y="44" class="group" fill="#4263eb">TYPES AND FIELDS</text>
+
+  <g>
+    <rect x="40" y="60" width="200" height="148" rx="6" fill="#ffffff" stroke="#4263eb" stroke-width="1.5"/>
+    <rect x="40" y="60" width="200" height="28" rx="6" fill="#4263eb"/>
+    <rect x="40" y="74" width="200" height="14" fill="#4263eb"/>
+    <text x="52" y="79" class="head">content_types</text>
+    <text x="52" y="106" class="desc">a type made in the admin</text>
+    <text x="52" y="124" class="mono">machine_name</text>
+    <text x="52" y="142" class="mono">label</text>
+    <text x="52" y="160" class="mono">path_pattern</text>
+    <text x="52" y="178" class="mono">view_roles</text>
+    <text x="52" y="196" class="mono">revisions</text>
+  </g>
+
+  <g>
+    <rect x="350" y="60" width="200" height="148" rx="6" fill="#ffffff" stroke="#4263eb" stroke-width="1.5"/>
+    <rect x="350" y="60" width="200" height="28" rx="6" fill="#4263eb"/>
+    <rect x="350" y="74" width="200" height="14" fill="#4263eb"/>
+    <text x="362" y="79" class="head">field_instances</text>
+    <text x="362" y="106" class="desc">a field's place in one type</text>
+    <text x="362" y="124" class="mono">content_type_id</text>
+    <text x="362" y="142" class="mono">field_storage_id</text>
+    <text x="362" y="160" class="mono">label, required</text>
+    <text x="362" y="178" class="mono">widget, display</text>
+    <text x="362" y="196" class="mono">order, group</text>
+  </g>
+
+  <g>
+    <rect x="660" y="60" width="200" height="112" rx="6" fill="#ffffff" stroke="#4263eb" stroke-width="1.5"/>
+    <rect x="660" y="60" width="200" height="28" rx="6" fill="#4263eb"/>
+    <rect x="660" y="74" width="200" height="14" fill="#4263eb"/>
+    <text x="672" y="79" class="head">field_storages</text>
+    <text x="672" y="106" class="desc">the field, shared by types</text>
+    <text x="672" y="124" class="mono">machine_name</text>
+    <text x="672" y="142" class="mono">field_type</text>
+    <text x="672" y="160" class="mono">config</text>
+  </g>
+
+  <!-- content_types 1 - n field_instances n - 1 field_storages -->
+  <line x1="240" y1="124" x2="350" y2="124" class="edge"/>
+  <text x="246" y="117" class="end">1</text>
+  <text x="338" y="117" class="end">n</text>
+  <line x1="660" y1="124" x2="550" y2="124" class="edge"/>
+  <text x="648" y="117" class="end">1</text>
+  <text x="556" y="117" class="end">n</text>
+
+  <!-- nodes.type = content_types.machine_name, by name -->
+  <line x1="215" y1="208" x2="215" y2="310" class="byname"/>
+  <text x="225" y="258" class="note">nodes.type = content_types.machine_name</text>
+  <text x="225" y="274" class="note">(a module's type has no row: by name)</text>
+
+  <!-- Content items -->
+  <text x="40" y="302" class="group" fill="#e8590c">CONTENT ITEMS</text>
+  <g>
+    <rect x="40" y="310" width="220" height="256" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="1.5"/>
+    <rect x="40" y="310" width="220" height="28" rx="6" fill="#e8590c"/>
+    <rect x="40" y="324" width="220" height="14" fill="#e8590c"/>
+    <text x="52" y="329" class="head">nodes</text>
+    <text x="52" y="356" class="mono">id</text>
+    <text x="52" y="374" class="mono">type</text>
+    <text x="52" y="392" class="mono">title, slug</text>
+    <text x="52" y="410" class="mono">status, on_moderation</text>
+    <text x="52" y="428" class="mono">promote, sticky</text>
+    <text x="52" y="446" class="mono">publish_on, unpublish_on</text>
+    <text x="52" y="464" class="mono">view_roles</text>
+    <text x="52" y="482" class="mono">langcode</text>
+    <text x="52" y="500" class="mono">created_by</text>
+    <text x="52" y="518" class="mono">parent_id</text>
+    <text x="250" y="518" class="desc" text-anchor="end">a blocks field's item</text>
+    <text x="52" y="536" class="mono">deleted_at</text>
+    <text x="250" y="536" class="desc" text-anchor="end">in the trash</text>
+    <text x="52" y="554" class="mono">...</text>
+  </g>
+
+  <!-- Values -->
+  <text x="620" y="302" class="group" fill="#0c8599">VALUES</text>
+  <g>
+    <rect x="620" y="310" width="240" height="200" rx="6" fill="#ffffff" stroke="#0c8599" stroke-width="1.5"/>
+    <rect x="620" y="310" width="240" height="28" rx="6" fill="#0c8599"/>
+    <rect x="620" y="324" width="240" height="14" fill="#0c8599"/>
+    <text x="632" y="329" class="head">field_value_&lt;kind&gt;</text>
+    <text x="632" y="356" class="desc">a table per kind of value</text>
+    <text x="632" y="374" class="mono">node_id</text>
+    <text x="632" y="392" class="mono">field_id</text>
+    <text x="632" y="410" class="mono">value</text>
+    <line x1="632" y1="422" x2="848" y2="422" stroke="#e2e8f0"/>
+    <text x="632" y="440" class="note">text, number, bool, date, link,</text>
+    <text x="632" y="457" class="note">user, block, taxonomy*,</text>
+    <text x="632" y="474" class="note">reference*, file*, list*</text>
+    <text x="632" y="496" class="desc">* also _multi, for several values</text>
+  </g>
+
+  <!-- field_storages 1 - n values -->
+  <line x1="760" y1="172" x2="760" y2="310" class="edge"/>
+  <text x="767" y="190" class="end">1</text>
+  <text x="767" y="304" class="end">n</text>
+  <text x="772" y="246" class="note">field_id</text>
+
+  <!-- nodes 1 - n values -->
+  <line x1="260" y1="374" x2="620" y2="374" class="edge"/>
+  <text x="266" y="367" class="end">1</text>
+  <text x="606" y="367" class="end">n</text>
+  <text x="440" y="367" class="note" text-anchor="middle">node_id</text>
+
+  <!-- Legend -->
+  <g>
+    <rect x="320" y="440" width="250" height="96" rx="8" fill="#ffffff" stroke="#e2e8f0"/>
+    <line x1="336" y1="466" x2="376" y2="466" class="edge"/>
+    <text x="332" y="460" class="end" font-size="10">1</text>
+    <text x="372" y="460" class="end" font-size="10">n</text>
+    <text x="388" y="470" class="note">one to many</text>
+    <line x1="336" y1="494" x2="376" y2="494" class="byname"/>
+    <text x="388" y="498" class="note">by name, not a foreign key</text>
+    <text x="336" y="524" class="note">every row below: ON DELETE CASCADE</text>
+  </g>
+
+  <!-- Attached to an item -->
+  <line x1="150" y1="566" x2="150" y2="600" class="edge"/>
+  <text x="157" y="582" class="end">1</text>
+  <rect x="20" y="600" width="860" height="220" rx="10" fill="#f3f0ff" stroke="#d0bfff"/>
+  <text x="36" y="624" class="group" fill="#7048e8">ATTACHED TO AN ITEM</text>
+  <text x="36" y="642" class="note">each row has the item's id and goes with it; n per item unless marked 1 to 1</text>
+
+  <g>
+    <rect x="40" y="658" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="40" y="658" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="40" y="670" width="152" height="12" fill="#7048e8"/>
+    <text x="50" y="675" class="head">taxonomy_index</text>
+    <text x="50" y="703" class="card">terms of its term fields</text>
+  </g>
+  <g>
+    <rect x="212" y="658" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="212" y="658" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="212" y="670" width="152" height="12" fill="#7048e8"/>
+    <text x="222" y="675" class="head">comments</text>
+    <text x="222" y="703" class="card">comments and replies</text>
+  </g>
+  <g>
+    <rect x="384" y="658" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="384" y="658" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="384" y="670" width="152" height="12" fill="#7048e8"/>
+    <text x="394" y="675" class="head">node_revisions</text>
+    <text x="394" y="703" class="card">a snapshot per save</text>
+  </g>
+  <g>
+    <rect x="556" y="658" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="556" y="658" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="556" y="670" width="152" height="12" fill="#7048e8"/>
+    <text x="566" y="675" class="head">search_words</text>
+    <text x="566" y="703" class="card">the search index</text>
+  </g>
+  <g>
+    <rect x="728" y="658" width="132" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="728" y="658" width="132" height="24" rx="6" fill="#7048e8"/>
+    <rect x="728" y="670" width="132" height="12" fill="#7048e8"/>
+    <text x="738" y="675" class="head">node_counter</text>
+    <text x="738" y="703" class="card">total views, 1 to 1</text>
+  </g>
+
+  <g>
+    <rect x="40" y="740" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="40" y="740" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="40" y="752" width="152" height="12" fill="#7048e8"/>
+    <text x="50" y="757" class="head">node_view_days</text>
+    <text x="50" y="785" class="card">views by day</text>
+  </g>
+  <g>
+    <rect x="212" y="740" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="212" y="740" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="212" y="752" width="152" height="12" fill="#7048e8"/>
+    <text x="222" y="757" class="head">page_seo</text>
+    <text x="222" y="785" class="card">meta tags, 1 to 1</text>
+  </g>
+  <g>
+    <rect x="384" y="740" width="152" height="58" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.3"/>
+    <rect x="384" y="740" width="152" height="24" rx="6" fill="#7048e8"/>
+    <rect x="384" y="752" width="152" height="12" fill="#7048e8"/>
+    <text x="394" y="757" class="head">preview_links</text>
+    <text x="394" y="785" class="card">show it unpublished</text>
+  </g>
+  <g>
+    <rect x="556" y="740" width="304" height="58" rx="6" fill="#ffffff" stroke="#868e96" stroke-width="1.3" stroke-dasharray="5 4"/>
+    <rect x="556" y="740" width="304" height="24" rx="6" fill="#868e96"/>
+    <rect x="556" y="752" width="304" height="12" fill="#868e96"/>
+    <text x="566" y="757" class="head">a module's tables</text>
+    <text x="566" y="785" class="card">polls, webforms, gallery_nodes, rating_votes...</text>
+  </g>
+</svg>

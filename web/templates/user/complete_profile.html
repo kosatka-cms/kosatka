@@ -1,0 +1,23 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<p class="text-muted">{{t "Fill in your profile to finish creating your account."}}</p>
+
+{{if .errors.form}}
+<div class="alert alert-danger" role="alert">{{.errors.form}}</div>
+{{end}}
+
+<form method="POST" action="/user/complete-profile">
+    <input type="hidden" name="destination" value="{{.destination}}">
+
+    {{template "required_user_fields" .}}
+
+    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+</form>
+{{end}}

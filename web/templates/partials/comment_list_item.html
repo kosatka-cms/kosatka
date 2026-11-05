@@ -1,0 +1,30 @@
+{{define "profile_comment_card"}}
+{{ $c := index . "Comment" }}
+{{ $showAuthor := index . "ShowAuthor" }}
+{{ $truncate := index . "Truncate" }}
+<div class="profile-comment-item">
+    <div class="profile-comment-meta">
+        <time class="profile-comment-date">{{date $c.CreatedAt "datetime"}}</time>
+        {{if $showAuthor}}
+        <span class="profile-comment-meta-sep">·</span>
+        <span class="profile-comment-author">
+            {{if $c.Author}}
+            <a href="/{{$c.Author.Slug}}">{{$c.Author.Username}}</a>
+            {{else}}
+            <span class="profile-comment-badge">{{t "Guest"}}</span>
+            {{end}}
+        </span>
+        {{end}}
+        {{if $c.Node}}
+        <a href="{{$c.Node.URL}}#comment-{{$c.ID}}" class="profile-comment-material">→ {{$c.Node.Title}}</a>
+        {{end}}
+    </div>
+    <div class="profile-comment-body">
+        {{if $truncate}}
+        {{truncate $c.Content 400}}
+        {{else}}
+        {{$c.Content | rawHTML}}
+        {{end}}
+    </div>
+</div>
+{{end}}

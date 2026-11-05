@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" (printf "/admin/config/menus/%v/links" .menu.ID) "BackLabel" (t "Links of menu \"@menu\"" "@menu" .menu.Label)
+    "Heading" (t "Delete link \"@title\"?" "@title" .link.Title)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/menus/%v/links/%v/delete" .menu.ID .link.ID)
+    "Submit" (t "Yes, delete link"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">{{t "If this link has child links, they will not be deleted - they move up to its own level."}}</p>
+{{end}}

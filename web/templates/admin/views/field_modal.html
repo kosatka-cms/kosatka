@@ -1,0 +1,161 @@
+{{/* view_field_modal - the Views page's field add/edit modal (page.html). */}}
+{{define "view_field_modal"}}
+{{/* Field add/edit modal - target is a <select> ("field:<id>"/"builtin:<name>")
+       when adding; read-only in edit mode (the target never changes). */}}
+<div class="modal fade" id="fieldModal" tabindex="-1" aria-labelledby="fieldModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="fieldForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fieldModalTitle">{{t "Add field"}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3" id="field-storage-select-wrap">
+                        <label class="form-label">{{t "Field"}}</label>
+                        {{/* Searchable combobox, see admin_views.js's setupFieldCombobox. */}}
+                        <div class="position-relative">
+                            <input type="text" id="field-storage-search" class="form-control" placeholder="{{t "Search field…"}}">
+                        </div>
+                        <select name="target" id="field-storage-id" class="d-none">
+                            <option value="">{{t "- field -"}}</option>
+                            <optgroup label="{{t "Built-in"}}">
+                                {{range .fieldBuiltinFields}}
+                                {{$label := index $.fieldBuiltinLabels .}}
+                                <option value="{{printf "builtin:%s" .}}" data-field-type="{{if or (eq (print .) "comment_created_at") (eq (print .) "created_at")}}date{{end}}" data-label="{{$label}}">{{$label}} ({{.}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{if .moduleFields}}
+                            <optgroup label="{{t "Modules"}}">
+                                {{range .moduleFields}}
+                                <option value="{{.Target}}" data-field-type="module" data-label="{{.Label}}">{{.Label}} ({{.Key}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                            <optgroup label="{{t "Fields (shared catalog)"}}">
+                                {{range .fieldOptions}}
+                                {{$label := index $.fieldStorageLabels .ID}}
+                                <option value="{{printf "field:%d" .ID}}" data-field-type="{{.FieldType}}" data-label="{{$label}}">{{$label}} ({{.MachineName}})</option>
+                                {{end}}
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="field-storage-readonly-wrap">
+                        <label class="form-label">{{t "Field"}}</label>
+                        <input type="text" class="form-control" id="field-storage-readonly" readonly>
+                        <div class="form-text">{{t "Cannot be changed for an existing field - delete it and add another one."}}</div>
+                    </div>
+                    {{template "view_module_params" (dict "options" .moduleFields "prefix" "field-param")}}
+                    <div class="mb-3">
+                        <label class="form-label">{{t "Label"}}</label>
+                        <input type="text" name="label" id="field-label" class="form-control" placeholder="{{t "optional"}}">
+                        <div class="form-text">{{t "If empty, the field name is used (see the selection above)."}}</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="show_label" id="field-show-label" value="1" class="form-check-input" checked>
+                        <label for="field-show-label" class="form-check-label">{{t "Show label"}}</label>
+                    </div>
+                    {{/* exclude_from_display - the value is resolved and available as a field
+                         token in another field's Rewrite HTML, but not rendered itself. */}}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="exclude_from_display" id="field-exclude-from-display" value="1" class="form-check-input">
+                        <label for="field-exclude-from-display" class="form-check-label">{{t "Exclude from display (available only as a token in Rewrite HTML)"}}</label>
+                    </div>
+                    {{/* hide_in_overflow (see entity.ViewFieldDef.HideInOverflow) - only matters
+                         when the display's "show first N in detail" setting is set. */}}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="hide_in_overflow" id="field-hide-in-overflow" value="1" class="form-check-input">
+                        <label for="field-hide-in-overflow" class="form-check-label">{{t "Hide in the compact \"rest\" list (see the \"Show the first N in full\" setting above)"}}</label>
+                    </div>
+                    {{/* fallback_field_key - show another field's value when this one is empty.
+                         Same key format as Rewrite HTML field tokens: a field machine_name or a
+                         builtin key (title/content_type). */}}
+                    <div class="mb-3">
+                        <label class="form-label" for="field-fallback-key">{{t "Fallback field"}}</label>
+                        <input type="text" name="fallback_field_key" id="field-fallback-key" class="form-control" placeholder="{{t "for example: title"}}">
+                        <div class="form-text">{{t "If this field's value is empty, the value of the field with this key is shown (machine_name or title/content_type). Optional."}}</div>
+                    </div>
+                    <div class="mb-3 d-none" id="field-image-style-wrap">
+                        <label class="form-label">{{t "Image style"}}</label>
+                        <select name="image_style" id="field-image-style" class="form-select">
+                            <option value="">{{t "- not selected -"}}</option>
+                            {{range .imageStyles}}
+                            <option value="{{.Name}}">{{.Label}}</option>
+                            {{end}}
+                        </select>
+                        {{/* image_display - a field with several images: the first or all. */}}
+                        <label class="form-label mt-2" for="field-image-display">{{t "Images"}}</label>
+                        <select name="image_display" id="field-image-display" class="form-select">
+                            <option value="">{{t "The first"}}</option>
+                            <option value="all">{{t "All (a field with several images)"}}</option>
+                        </select>
+                    </div>
+                    {{/* formatter/layout - a link field: how it shows (links, or a module's
+                         formatter) and how its several values show (entity.FieldLayout). */}}
+                    {{/* layout - a date field: how its several dates show. */}}
+                    <div class="mb-3 d-none" id="field-dates-layout-wrap">
+                        {{template "field_dates_layout_control" (dict "Name" "layout" "ID" "field-dates-layout")}}
+                    </div>
+                    <div class="mb-3 d-none" id="field-formatter-wrap">
+                        {{template "field_formatter_controls" (dict "Formatters" .linkFormatters "FormatterName" "formatter" "FormatterID" "field-formatter" "LayoutName" "layout" "LayoutID" "field-layout")}}
+                    </div>
+                    {{/* date_format - date format for this field in the View (empty = the field's
+                         own format, else the default). */}}
+                    <div class="mb-3 d-none" id="field-date-format-wrap">
+                        <label class="form-label" for="field-date-format">{{t "Date format"}}</label>
+                        <select name="date_format" id="field-date-format" class="form-select">
+                            <option value="">{{t "- field default -"}}</option>
+                            {{range .dateFormats}}
+                            <option value="{{.MachineName}}">{{.Label}} - {{.Pattern}}</option>
+                            {{end}}
+                        </select>
+                        <div class="form-text">{{t "Formats are managed in <a href=\"/admin/config/date-formats\" target=\"_blank\">\"Date formats\"</a>."}}</div>
+                    </div>
+                    <div class="mb-3 d-none" id="field-tag-format-wrap">
+                        <label class="form-label">{{t "Tag format"}}</label>
+                        <select name="tag_format" id="field-tag-format" class="form-select">
+                            {{range .tagFormats}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    {{/* link_to - link the field to the content, or (images only) to the file
+                         (see entity.ViewFieldLinkTarget). Hidden for taxonomy fields, which link
+                         per term (see dynamic/list.html); see toggleFieldTypeSections. */}}
+                    <div class="mb-3" id="field-link-to-wrap">
+                        <label class="form-label">{{t "Link"}}</label>
+                        <select name="link_to" id="field-link-to" class="form-select">
+                            <option value="">{{t "- none -"}}</option>
+                            <option value="content">{{t "To the content"}}</option>
+                            <option value="file" data-image-only="1">{{t "To the original image"}}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{t "Custom CSS class"}}</label>
+                        <input type="text" name="css_class" id="field-css-class" class="form-control" placeholder="{{t "optional"}}">
+                    </div>
+                    {{/* trim_length - a text field as plain text cut to that length (see
+                         entity.ViewFieldDef.TrimLength): a body's start in a list. Hidden for
+                         fields that aren't text (see toggleFieldTypeSections). */}}
+                    <div class="mb-3" id="field-trim-length-wrap">
+                        <label class="form-label">{{t "Trim text (characters)"}}</label>
+                        <input type="number" name="trim_length" id="field-trim-length" class="form-control" min="0" placeholder="{{t "0 - no trimming"}}">
+                        <div class="form-text">{{t "HTML tags are stripped and the text is trimmed to the given length. 0 or empty - no trimming."}}</div>
+                    </div>
+                    {{/* rewrite_html - wraps the already-rendered value via a literal value
+                         token. {{"{{value}}"}} below prints a literal "{{...}}" in Go templates. */}}
+                    <div class="mb-0">
+                        <label class="form-label">{{t "Rewrite HTML"}}</label>
+                        <textarea name="rewrite_html" id="field-rewrite-html" class="form-control" rows="4" placeholder="{{t "optional"}}" style="font-family:monospace;"></textarea>
+                        <div class="form-text">{{t "Optional - wraps the already rendered field value (image/tag badges/link already applied). Insertion point - the {{value}} token, for example: <code>&lt;div class=\"title-overlay\"&gt;{{value}}&lt;/div&gt;</code>. The value of ANOTHER field of the same View (usually one marked \"Exclude from display\") can be inserted with the {{field:&lt;key&gt;}} token, where the key is the machine_name of a generic field or the name of a built-in one (<code>title</code>/<code>content_type</code>), for example: <code>{{value}}&lt;span class=\"date-badge\"&gt;{{field:release_date}}&lt;/span&gt;</code>."}}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

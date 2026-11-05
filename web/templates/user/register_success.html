@@ -1,0 +1,31 @@
+{{/* user/register_success.html - after the sign-up form: check the
+     e-mail (the confirmation link), or the application waits for an
+     administrator (.pendingApproval); a card like the login page's. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<div class="auth-card">
+    {{if .pendingApproval}}
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Application received"}}</h1>
+    </div>
+    <p>{{t "Thank you for registering. Your account is awaiting administrator approval. An email with details has been sent to <strong>@email</strong>." "@email" .email}}</p>
+    <p class="auth-card-muted">{{t "Once your account is approved, you will receive an email with further instructions."}}</p>
+    {{else}}
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Registration is almost complete"}}</h1>
+    </div>
+    <p>{{t "An email with a confirmation link has been sent to <strong>@email</strong>." "@email" .email}}</p>
+    <p>{{t "Follow the link in the email to activate your account."}}</p>
+    <p class="auth-card-muted">{{t "If the email has not arrived, check your spam folder."}}</p>
+    {{end}}
+    <a href="/login" class="btn btn-primary auth-submit">{{t "Log in"}}</a>
+</div>
+</div>
+{{end}}

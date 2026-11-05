@@ -1,0 +1,50 @@
+{{/* menuLinkTargetFields - two settings rows (admin-setting): the link
+     type, and the target field of that type; shared by menus/links.html
+     (adding) and menus/link_edit.html. Takes: CurrentLinkType, CurrentLinkURL (string),
+     CurrentNodeID/CurrentTermID/CurrentViewID (int, 0 = unset), Views
+     (entity.ViewDisplayDefs), Vocabularies (entity.TaxonomyVocabularies).
+     Node/term pickers are type-ahead searches against /api/nodes/search and
+     /api/taxonomy/autocomplete (admin.js, menuLinkForm on .menu-link-form);
+     Views are a short list, so a plain <select>. */}}
+{{define "menuLinkTargetFields"}}
+<div class="admin-setting">
+    <div class="admin-setting-text"><label for="field-link-type" class="admin-setting-label">{{t "Link type"}}</label></div>
+    <div class="admin-setting-control">
+        <select id="field-link-type" name="link_type" class="form-select menu-link-type-select">
+            <option value="url" {{if eq (print .CurrentLinkType) "url"}}selected{{end}}>URL</option>
+            <option value="node" {{if eq (print .CurrentLinkType) "node"}}selected{{end}}>{{t "Node"}}</option>
+            <option value="term" {{if eq (print .CurrentLinkType) "term"}}selected{{end}}>{{t "Term"}}</option>
+            <option value="view" {{if eq (print .CurrentLinkType) "view"}}selected{{end}}>{{tc "views" "View"}}</option>
+        </select>
+    </div>
+</div>
+<div class="admin-setting">
+    <div class="admin-setting-text"><span class="admin-setting-label">{{t "Where it leads"}}</span></div>
+    <div class="admin-setting-control">
+        <div class="menu-link-target-fields" data-for="url" {{if ne (print .CurrentLinkType) "url"}}style="display:none;"{{end}}>
+            <input type="text" name="link_url" class="form-control" aria-label="URL" placeholder="{{t "/path or https://..."}}" value="{{.CurrentLinkURL}}">
+        </div>
+        <div class="menu-link-target-fields position-relative" data-for="node" {{if ne (print .CurrentLinkType) "node"}}style="display:none;"{{end}}>
+            <input type="text" class="form-control menu-link-node-search" aria-label="{{t "Search nodes by title..."}}" placeholder="{{t "Search nodes by title..."}}" autocomplete="off">
+            <input type="hidden" name="link_node_id" class="menu-link-node-id" value="{{if .CurrentNodeID}}{{.CurrentNodeID}}{{end}}">
+            {{if .CurrentNodeID}}<div class="admin-setting-help">{{t "Current ID: @id" "@id" .CurrentNodeID}}</div>{{end}}
+        </div>
+        <div class="menu-link-target-fields position-relative" data-for="term" {{if ne (print .CurrentLinkType) "term"}}style="display:none;"{{end}}>
+            <select class="form-select menu-link-vocabulary-select mb-2" aria-label="{{t "- select a vocabulary -"}}">
+                <option value="">{{t "- select a vocabulary -"}}</option>
+                {{range .Vocabularies}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+            </select>
+            <input type="text" class="form-control menu-link-term-search" aria-label="{{t "Search terms by title..."}}" placeholder="{{t "Search terms by title..."}}" autocomplete="off">
+            <input type="hidden" name="link_term_id" class="menu-link-term-id" value="{{if .CurrentTermID}}{{.CurrentTermID}}{{end}}">
+            {{if .CurrentTermID}}<div class="admin-setting-help">{{t "Current ID: @id" "@id" .CurrentTermID}}</div>{{end}}
+        </div>
+        <div class="menu-link-target-fields" data-for="view" {{if ne (print .CurrentLinkType) "view"}}style="display:none;"{{end}}>
+            <select name="link_view_id" class="form-select" aria-label="{{t "- select a View -"}}">
+                <option value="">{{t "- select a View -"}}</option>
+                {{$currentViewID := .CurrentViewID}}
+                {{range .Views}}<option value="{{.ID}}" {{if eq .ID $currentViewID}}selected{{end}}>{{.Label}} (/{{.URLPath}})</option>{{end}}
+            </select>
+        </div>
+    </div>
+</div>
+{{end}}

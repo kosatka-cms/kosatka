@@ -1,0 +1,155 @@
+{{/* admin/config/mail - how the site sends email (MailPage), the Mail
+     page's first tab (admin_mail_tabs): the settings as rows (sending,
+     Resend, SMTP - only the switch and the log while the server config
+     sets the transport; saved keys never shown), Save over the page and under
+     the form; then a test email. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The site sends email for account confirmation, password reset, account notifications and error reports. Without email these don't work."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="mail-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "admin_mail_tabs" "settings"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "transport" (t "Choose how to send email.")
+        "from" (t "Enter a valid sender address.")
+        "port" (t "The SMTP port must be a number from 1 to 65535.")
+        "resend" (t "Enter the Resend API key.")
+        "smtp" (t "Enter the SMTP server and port.")
+        "log" (t "Choose how long the log keeps an email."))
+    "Fallback" (t "Could not save."))}}
+{{if .testSent}}<div class="alert alert-success">{{t "The test email was sent to @email." "@email" .adminEmail}}</div>{{end}}
+{{if .testError}}<div class="alert alert-danger">{{t "The test email was not sent: @error" "@error" .testError}}</div>{{end}}
+{{with .status}}
+{{if eq .Source "config"}}<div class="alert alert-info">{{t "Email goes through the server configuration: @transport, sender @from. It can't be changed here; the switch and the log below still apply." "@transport" .Transport "@from" .FromAddress}}</div>
+{{else if eq .Source "none"}}<div class="alert alert-warning">{{t "Email is not configured: no email is sent."}}</div>{{end}}
+{{if not .Enabled}}<div class="alert alert-warning">{{t "Email sending is off: no email is sent."}}</div>{{end}}
+{{end}}
+
+<div class="admin-settings">
+<form method="post" action="/admin/config/mail" id="mail-form" class="admin-settings" autocomplete="off">
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Sending"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="mail-enabled" class="admin-setting-label">{{t "Send email"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="mail-enabled" name="enabled" value="1" {{if .settings.Enabled}}checked{{end}}>
+                </div>
+            </div>
+            {{if not .fromConfig}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="mail-from" class="admin-setting-label">{{t "Sender address"}}</label>
+                    <span class="admin-setting-help">{{t "The address must be allowed by the sending service (a verified domain in Resend, or an address the SMTP server accepts)."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="mail-from" name="from_address" class="form-control" value="{{.settings.FromAddress}}" placeholder="Site &lt;noreply@example.com&gt;"></div>
+            </div>
+            {{end}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="mail-log-keep" class="admin-setting-label">{{t "Mail log"}}</label>
+                    <span class="admin-setting-help">{{t "Who got which email and whether it went: the Log tab. The texts aren't kept."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="mail-log-keep" name="log_keep_days" class="form-select">
+                        {{range .logKeepOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            {{if not .fromConfig}}
+            <fieldset class="admin-setting">
+                <legend class="admin-setting-text"><span class="admin-setting-label">{{t "How to send"}}</span></legend>
+                <div class="admin-setting-control admin-setting-control--choices">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" id="mail-transport-resend" name="transport" value="resend" {{if eq .transport "resend"}}checked{{end}}>
+                        <label class="form-check-label" for="mail-transport-resend">Resend</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" id="mail-transport-smtp" name="transport" value="smtp" {{if eq .transport "smtp"}}checked{{end}}>
+                        <label class="form-check-label" for="mail-transport-smtp">SMTP</label>
+                    </div>
+                </div>
+            </fieldset>
+            {{end}}
+        </div>
+    </section>
+
+    {{if not .fromConfig}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">Resend</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="mail-resend-key" class="admin-setting-label">{{t "API key"}}</label>
+                    <span class="admin-setting-help">{{t "Saved keys and passwords are never shown. Leave a field empty to keep it."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="password" id="mail-resend-key" name="resend_api_key" class="form-control font-monospace" autocomplete="new-password" placeholder="{{if .resendKeySaved}}{{t "saved - leave empty to keep it"}}{{end}}"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">SMTP</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="mail-smtp-host" class="admin-setting-label">{{t "Server"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="mail-smtp-host" name="smtp_host" class="form-control" value="{{.settings.SMTPHost}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="mail-smtp-port" class="admin-setting-label">{{t "Port"}}</label></div>
+                <div class="admin-setting-control"><input type="number" id="mail-smtp-port" name="smtp_port" class="form-control admin-max-xs" min="1" max="65535" value="{{if .settings.SMTPPort}}{{.settings.SMTPPort}}{{end}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="mail-smtp-user" class="admin-setting-label">{{t "User"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="mail-smtp-user" name="smtp_user" class="form-control" value="{{.settings.SMTPUser}}" autocomplete="off"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="mail-smtp-password" class="admin-setting-label">{{t "Password"}}</label>
+                    <span class="admin-setting-help">{{t "Saved keys and passwords are never shown. Leave a field empty to keep it."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="password" id="mail-smtp-password" name="smtp_password" class="form-control" autocomplete="new-password" placeholder="{{if .smtpPasswordSaved}}{{t "saved - leave empty to keep it"}}{{end}}"></div>
+            </div>
+        </div>
+    </section>
+
+    {{if .settings.Transport}}
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="mail-clear" class="admin-setting-label">{{t "Delete the saved settings (the server configuration applies)"}}</label></div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="mail-clear" name="clear" value="1">
+            </div>
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<form method="post" action="/admin/config/mail/test" class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Test email"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <span class="admin-setting-help">{{t "Sends a test email to @email (the address in <a href=\":url\">your account</a>) with the settings in use now (save the changes first)." "@email" .adminEmail ":url" "/me/edit"}}</span>
+            </div>
+            <div class="admin-setting-control text-end"><button type="submit" class="btn btn-outline-secondary">{{t "Send a test email"}}</button></div>
+        </div>
+    </div>
+</form>
+</div>
+{{end}}

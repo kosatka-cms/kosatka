@@ -1,0 +1,188 @@
+{{define "admin_header"}}
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+    <title>{{ .pageSEO.Title }}</title>
+    <meta charset="utf-8" />
+    {{template "csrf_head" .}}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {{if .pageSEO.Description }}
+    <meta name="Description" content="{{ .pageSEO.Description }}">
+    {{end}}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{if .pageSEO.Title }}
+    <meta property="og:title" content="{{ .pageSEO.Title }}">
+    {{end}}
+    {{if .pageSEO.Description }}
+    <meta property="og:description" content="{{ .pageSEO.Description }}">
+    {{end}}
+    {{if .pageSEO.OGImage }}
+    <meta property="og:image" content="{{ .pageSEO.OGImage }}">
+    {{end}}
+    {{if .pageSEO.OGURL }}
+    <meta property="og:url" content="{{ .pageSEO.OGURL }}">
+    {{end}}
+    {{if .pageSEO.Canonical }}
+    <link rel="canonical" href="{{ .pageSEO.Canonical }}" />
+    {{end}}
+
+    {{template "site_icon"}}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="{{ staticCSS "bootswatch-cosmo" }}">
+    <link rel="stylesheet" href="{{ staticCSS "menu" }}">
+    {{ moduleStyles }}
+    {{ staticCSSAsync "photoswipe" }}
+    {{ staticCSSAsync "overlays" }}
+    <link rel="stylesheet" href="{{ staticCSS "admin" }}" />
+    {{if .user }}
+    <script>
+        window.USER_DATA = {
+            isLoggedIn: true,
+            username: '{{ .user.Username }}',
+            avatar: '{{if .user.Avatar.URI}}{{ .user.Avatar.URI }}{{else}}{{avatarPlaceholder}}{{end}}',
+            creatableMaterials: {{with index . "creatableMaterials"}}{{.}}{{else}}[]{{end}}
+        };
+    </script>
+    {{end}}
+    <script src="{{jsTranslationsURL}}"></script>
+    <script src="{{ staticJS "app" }}" defer></script>
+    <script src="{{ staticJS "admin" }}" defer></script>
+    <script src="{{ staticJS "admin_bulk" }}" defer></script>
+    {{/* The scripts of the modules the page attaches ({{attach}}). */}}
+    {{ moduleScripts }}
+</head>
+<body class="admin-shell">
+
+{{/* The admin shell: the menu on the left (entity.AdminMenu as the user
+     may see it, the page's section open), and on the right the top bar -
+     the page's breadcrumbs, the site's state, a link to the site, the
+     user menu - over the page (admin/layout.html; admin_footer closes
+     them). It doesn't use the site theme's templates or CSS. */}}
+<div class="admin-app">
+<aside class="admin-sidebar" id="admin-sidebar" aria-label="{{t "Admin menu"}}">
+    <a href="/admin/content" class="admin-brand">
+        <img src="/static/images/kosatka-logo.svg" alt="" width="30" height="30">
+        <span>{{if .siteName}}{{.siteName}}{{else}}Kosatka{{end}}</span>
+    </a>
+    <nav class="admin-nav">
+    {{if .isAdmin}}
+        {{$active := ""}}{{with .adminItem}}{{$active = .Path}}{{end}}
+        {{$open := ""}}{{with .adminSection}}{{$open = .Label}}{{end}}
+        {{$creatable := index . "creatableMaterials"}}
+        {{$user := .user}}
+        {{range .adminMenu}}
+        {{if .Path}}
+        <a href="{{.Path}}" class="admin-nav-link{{if eq .Path $active}} is-active{{end}}"{{if eq .Path $active}} aria-current="page"{{end}}>{{t .Label}}</a>
+        {{else}}
+        <details class="admin-nav-section"{{if eq .Label $open}} open{{end}}>
+            <summary class="admin-nav-link">{{t .Label}}</summary>
+            <div class="admin-nav-items">
+                {{$group := ""}}
+                {{range .Items}}
+                {{if and .Group (ne .Group $group)}}{{$group = .Group}}<div class="admin-nav-group">{{t .Group}}</div>{{end}}
+                <a href="{{.Path}}" class="admin-nav-item{{if eq .Path $active}} is-active{{end}}"{{if eq .Path $active}} aria-current="page"{{end}}>{{t .Label}}{{if .Count}} <span class="admin-nav-count">{{.Count}}</span>{{end}}</a>
+                {{end}}
+                {{if and .CreateContent $user $creatable}}
+                <details class="admin-nav-create">
+                    <summary class="admin-nav-item">{{t "Create content"}}</summary>
+                    {{range $creatable}}<a href="{{.URL}}" class="admin-nav-item admin-nav-subitem">{{.Label}}</a>{{end}}
+                </details>
+                {{end}}
+            </div>
+        </details>
+        {{end}}
+        {{end}}
+    {{else if .canEditNodeSettings}}
+        <a href="/admin/moderation" class="admin-nav-link">{{t "Content awaiting moderation"}}</a>
+    {{end}}
+    </nav>
+</aside>
+
+<div class="admin-app-main">
+<header class="admin-topbar" role="banner">
+    <button type="button" class="admin-sidebar-toggle" aria-controls="admin-sidebar" aria-expanded="false">{{t "Menu"}}</button>
+    {{/* The breadcrumbs: the menu's section and item of the page, the
+         page's own trail (.adminTrail, entity.BreadcrumbItem: a page of
+         something under the item), then the page's title when it is a
+         page under the item. */}}
+    <nav class="admin-crumbs" aria-label="{{t "Breadcrumbs"}}">
+        {{/* The section, unless it is a link itself or named as its item. */}}
+        {{with .adminSection}}{{if and (not .Path) (ne .Label $.adminItem.Label)}}<span>{{t .Label}}</span><span class="admin-crumbs-sep" aria-hidden="true">/</span>{{end}}{{end}}
+        {{with .adminItem}}
+        {{if eq .Path $.currentPath}}<span class="admin-crumbs-current">{{t .Label}}</span>
+        {{else}}<a href="{{.Path}}">{{t .Label}}</a>{{range $.adminTrail}}<span class="admin-crumbs-sep" aria-hidden="true">/</span><a href="{{.URL}}">{{.Label}}</a>{{end}}{{if $.title}}<span class="admin-crumbs-sep" aria-hidden="true">/</span><span class="admin-crumbs-current">{{$.title}}</span>{{end}}{{end}}
+        {{else}}{{if .title}}<span class="admin-crumbs-current">{{.title}}</span>{{end}}{{end}}
+    </nav>
+    <div class="admin-topbar-end">
+        {{if .maintenanceBanner}}<a href="/admin/config/maintenance" class="admin-topbar-pill admin-topbar-pill--warn">{{t "Maintenance mode"}}</a>{{end}}
+        {{/* A theme's preview (middleware.ThemePreviewMiddleware): only this
+             administrator sees the site in it; activate it or leave. */}}
+        {{with .themePreview}}
+        <span class="admin-topbar-pill">{{t "Preview: @name" "@name" (t .Name)}}</span>
+        <form method="post" action="/admin/config/appearance" class="admin-topbar-form">
+            <input type="hidden" name="theme" value="{{.Dir}}">
+            <button type="submit" class="btn btn-sm btn-primary">{{t "Activate"}}</button>
+        </form>
+        <form method="post" action="/admin/config/appearance/preview/stop" class="admin-topbar-form">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Exit preview"}}</button>
+        </form>
+        {{end}}
+        <a href="/" class="admin-topbar-site">{{t "Open the site"}} <span aria-hidden="true">↗</span></a>
+        {{/* The visitor's menu, rendered here like block_user_menu: the
+             script no longer swaps the guest's links for it. */}}
+        <div id="desktop-user-menu" class="desktop-user-menu">
+            {{if not .user}}
+            <div class="user-menu-guest">
+                <a href="/login" class="user-menu-link">{{t "Log in"}}</a>
+                {{if registrationOpen}}<span class="user-menu-separator">|</span>
+                <a href="/user/register" class="user-menu-link">{{t "Register"}}</a>{{end}}
+            </div>
+            {{else}}
+            <div class="user-menu-logged">
+                <div class="user-menu-dropdown">
+                    <button class="user-menu-toggle" id="user-menu-toggle">
+                        <img src="{{with .user.Avatar.URI}}{{.}}{{else}}{{avatarPlaceholder}}{{end}}" alt="{{t "User"}}" class="user-avatar-small">
+                        <span class="user-name">{{.user.Username}}</span>
+                        {{if gt (or .userMenuCount 0) 0}}
+                        <span class="badge bg-danger ms-1">{{.userMenuCount}}</span>
+                        {{end}}
+                        <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                            <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <div class="user-dropdown-menu" id="user-dropdown-menu">
+                        {{$creatable := index . "creatableMaterials"}}
+                        <a href="/me" class="dropdown-item">{{t "My profile"}}</a>
+                        {{moduleHook "admin_user_menu" .}}
+                        {{if $creatable}}
+                        <div class="dropdown-create-submenu">
+                            <button type="button" class="dropdown-item dropdown-create-toggle" id="user-create-submenu-toggle" aria-expanded="false" aria-haspopup="true">
+                                <span class="dropdown-create-toggle-main">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                    {{t "Create content"}}
+                                </span>
+                                <svg class="dropdown-create-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="dropdown-create-items" id="user-create-submenu">
+                                {{range $creatable}}
+                                <a href="{{.URL}}" class="dropdown-item dropdown-subitem">{{.Label}}</a>
+                                {{end}}
+                            </div>
+                        </div>
+                        {{end}}
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item logout-item" id="logout-link">{{t "Log out"}}</a>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</header>
+{{end}}

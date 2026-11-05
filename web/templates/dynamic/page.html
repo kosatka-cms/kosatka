@@ -1,0 +1,205 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{/* factBoxFieldLine - one compact "Label: value" line for a field
+     (dict "Field" <FieldInstanceDef> "Value" <resolved value> "Terms"
+     <resolved taxonomy terms, if any>), shared by ordinary and group
+     sections below. A rich text field gets here only as a group member
+     (ungrouped ones get their own body section, see buildDisplaySections)
+     and is output raw with "| rawHTML" - not "| processContent", which would
+     also resize/lightbox-wrap <img> tags - only when its values are HTML
+     (FieldInstanceDef.RichText). Plain text is escaped. */}}
+{{define "factBoxFieldLine"}}{{renderSuggestion "field_line" (print .Field.FieldType) .}}{{end}}
+
+{{define "content"}}
+{{/* Node page layout: the theme's page/<type>.html (define
+     "page_<type>"), else the theme's page_node (page/node.html), else
+     page_default below. */}}
+{{renderSuggestion "page" .item.Node.Type .}}
+{{end}}
+
+{{/* page_default - the default node page, built from the parts below:
+     the moderation notice, the header (title, actions, submitted line),
+     the fields (node_sections), the footer (in-content region, Views,
+     comments). A theme overrides the whole page with page_node (all
+     types) or page_<type>, or only the fields with node_sections_node /
+     node_sections_<type> - and can use the parts in its own layouts. */}}
+{{define "page_default"}}
+{{template "node_moderation_notice" .}}
+<article class="node{{template "node_status_class" .}}">
+    {{template "node_header" .}}
+    {{renderSuggestion "node_sections" .item.Node.Type .}}
+    {{template "node_footer" .}}
+</article>
+{{end}}
+
+{{/* node_header - the title, the actions, the submitted line (if the
+     type shows it). */}}
+{{define "node_header"}}
+{{template "node_title" .}}
+{{template "node_actions" .}}
+{{if .contentType.ShowSubmitted}}
+{{template "meta.html" .}}
+{{end}}
+{{end}}
+
+{{/* node_title - the title as the type's title display says (original,
+     translation, both). */}}
+{{define "node_title"}}
+{{$titleDisplay := print .contentType.TitleDisplay}}
+{{$translatedFirst := eq $titleDisplay "translated_first"}}
+<h1 class="node-title">
+    {{if $translatedFirst}}
+    {{if .altTitle}}{{.altTitle}}{{else}}{{.item.Node.Title}}{{end}}
+    {{else}}
+    {{.item.Node.Title}}
+    {{if and .altTitle (eq $titleDisplay "original_with_translation")}}
+    ({{.altTitle}})
+    {{end}}
+    {{end}}
+</h1>
+{{if and $translatedFirst .altTitle (ne .altTitle .item.Node.Title)}}
+<h2 class="node-subtitle">{{.item.Node.Title}}</h2>
+{{end}}
+{{end}}
+
+{{/* node_body_value - a body section's value (dict "Field" "Value"
+     "Format"): HTML values (FieldInstanceDef.RichText) through
+     processText (image styles, lightbox, the modules' text filters on for
+     the value's format - "Format", its ID), plain text escaped.
+     Shared with themes that lay out the body sections themselves. */}}
+{{define "node_body_value"}}{{if .Field.RichText}}{{processText (print .Value) (or .Format 0)}}{{else}}{{.Value}}{{end}}{{end}}
+
+{{/* node_sections_default - the fields: node_sections over all of
+     .displaySections, the modules' links after them. */}}
+{{define "node_sections_default"}}{{template "node_sections" (dict "Ctx" . "Sections" .displaySections)}}{{end}}
+
+{{/* node_sections - the fields of a node page (dict "Ctx" <page data>
+     "Sections" <entity.DisplaySections> "Lead" <optional HTML>): one block
+     per section (DynamicContentController.buildDisplaySections), in
+     DisplayOrder. Placement is decided only by order and grouping: a
+     FieldTypeGroup is a boxed ".item-fieldgroup" card, an ungrouped body
+     field is a full-width ".dynamic-field-richtext" section, an image
+     field is a full-width picture, a field a module's formatter shows is
+     a ".dynamic-field-formatted" block, a blocks field a
+     ".dynamic-field-blocks" one (field_blocks, fields/blocks.html; its
+     blocks' own sections are node_sections too, "Block" true: without the
+     modules' links), and other fields are batched with
+     their compact neighbors into an ".item-characteristic" card.
+     Lead - markup a theme floats into the first section (a main picture,
+     say); it carries the modules' links (node_module_links) itself, and
+     with no sections it gets a box of its own. Without Lead the modules'
+     links come after the sections. */}}
+{{define "node_sections"}}
+{{$ctx := .Ctx}}{{$lead := .Lead}}
+{{range $i, $section := .Sections}}
+{{$withLead := and (eq $i 0) $lead}}
+{{if $section.Group}}
+<div class="item-characteristic">
+    <fieldset class="item-fieldgroup">
+        {{if $withLead}}{{$lead}}{{end}}
+        <h4 class="field-list-group-label">{{if $section.Group.ShowLabel}}{{$section.Group.Label}}{{end}}</h4>
+        {{range $section.Fields}}
+        {{$value := index $ctx.item.Values .ID}}
+        {{$terms := index $ctx.taxonomyFieldTerms .ID}}
+        {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
+        {{end}}
+    </fieldset>
+</div>
+{{else if $section.Body}}
+{{if $withLead}}{{$lead}}{{end}}
+<div class="dynamic-field dynamic-field-richtext">
+    {{if $section.Body.ShowLabel}}<h3>{{$section.Body.Label}}</h3>{{end}}
+    <div class="node-content">{{template "node_body_value" (dict "Field" $section.Body "Value" (index $ctx.item.Values $section.Body.ID) "Format" (index $ctx.item.TextFormats $section.Body.ID))}}</div>
+</div>
+{{else if $section.Formatted}}
+{{/* A field a module's formatter shows (a link field's videos): a block
+     of its own (fields/link.html). */}}
+{{if $withLead}}{{$lead}}{{end}}
+<div class="dynamic-field dynamic-field-formatted dynamic-field-name-{{$section.Formatted.MachineName}}">
+    {{if $section.Formatted.ShowLabel}}<h3>{{$section.Formatted.Label}}</h3>{{end}}
+    {{template "field_link" (dict "Field" $section.Formatted "Value" (index $ctx.item.Values $section.Formatted.ID) "Formatter" $section.Formatted.DetailFormatter "Layout" $section.Formatted.DetailLayout)}}
+</div>
+{{else if $section.Blocks}}
+{{if $withLead}}{{$lead}}{{end}}
+<div class="dynamic-field dynamic-field-blocks dynamic-field-name-{{$section.Blocks.MachineName}}">
+    {{if $section.Blocks.ShowLabel}}<h3>{{$section.Blocks.Label}}</h3>{{end}}
+    {{template "field_blocks" (dict "Field" $section.Blocks "Blocks" (index $ctx.blockViews $section.Blocks.ID))}}
+</div>
+{{else if $section.Image}}
+{{if $withLead}}{{$lead}}{{end}}
+{{if $section.Image.Multiple}}
+{{/* Several images: a grid of them, each opening in the lightbox. */}}
+<div class="dynamic-field dynamic-field-images" data-lightbox>
+    {{if $section.Image.ShowLabel}}<h3>{{$section.Image.Label}}</h3>{{end}}
+    <div class="dynamic-field-images-grid">
+    {{range index $ctx.imageFieldItems $section.Image.ID}}
+        <a href="{{.Lightbox.Src}}" class="content-image-link" data-pswp-width="{{.Lightbox.Width}}" data-pswp-height="{{.Lightbox.Height}}"{{with photoSwipeCaption .Alt ""}} data-pswp-caption-html="{{.}}"{{end}}>
+            {{img .Picture (or .Alt $section.Image.Label)}}
+        </a>
+    {{end}}
+    </div>
+</div>
+{{else}}
+{{/* dynamic-field-image-portrait - the picture is taller than wide (a
+     cover, a poster): a theme may set the fields after it beside it. */}}
+{{$portrait := false}}
+{{with index $ctx.imageFieldItems $section.Image.ID}}{{with index . 0}}{{$portrait = gt .Picture.Height .Picture.Width}}{{end}}{{end}}
+<div class="dynamic-field dynamic-field-image{{if $portrait}} dynamic-field-image-portrait{{end}}">
+    {{if $section.Image.ShowLabel}}<h3>{{$section.Image.Label}}</h3>{{end}}
+    {{with index $ctx.imageFieldItems $section.Image.ID}}{{with index . 0}}
+    {{/* The page's main picture is preloaded (PageSEO.PreloadImage). */}}
+    {{img .Picture (or .Alt $section.Image.Label) "class" "dynamic-field-image" "loading" "eager" "fetchpriority" "high"}}
+    {{end}}{{end}}
+</div>
+{{end}}
+{{else}}
+<div class="item-characteristic">
+    {{if $withLead}}{{$lead}}{{end}}
+    {{range $section.Fields}}
+    {{$value := index $ctx.item.Values .ID}}
+    {{$terms := index $ctx.taxonomyFieldTerms .ID}}
+    {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
+    {{end}}
+</div>
+{{end}}
+{{end}}
+{{if $lead}}
+{{if not .Sections}}
+<div class="item-characteristic">
+    <fieldset class="item-fieldgroup">{{$lead}}</fieldset>
+</div>
+{{end}}
+{{else if not .Block}}
+{{template "node_module_links" $ctx}}
+{{end}}
+{{end}}
+
+{{/* node_footer - the in-content block region, the theme's insert for
+     the type, sharing, attached Views, comments. */}}
+{{define "node_footer"}}
+{{/* In-content block region (e.g. a mobile ad); what shows for which
+     types is configured via block placements. */}}
+{{template "region_blocks" (dict "Region" (region "content_inline") "Ctx" .)}}
+
+{{/* Theme insert for a specific type (page/<type>.html, define
+     "page_extra_<type>"). */}}
+{{renderOptional "page_extra" .item.Node.Type .}}
+
+{{template "social_share.html" .}}
+
+{{/* Attached Views and the modules' blocks, ordered by weight; see
+     partials/view_attachments.html. */}}
+{{template "view_attachments" .}}
+
+<div class="clearfix">
+    {{/* Node.CommentMode (see entity.CommentMode): only "hidden" skips the
+         section; "closed" still renders it read-only, like "open". */}}
+    {{if ne (print .item.Node.CommentMode) "hidden"}}
+    {{template "comments-placeholder" .}}
+    {{end}}
+</div>
+{{end}}

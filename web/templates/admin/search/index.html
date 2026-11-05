@@ -1,0 +1,125 @@
+{{/* admin/config/search - the live search (SearchConfigPage): adding a
+     content type to it (a card, how it searches folded in it), on a table
+     card the types searched - each one's limit, label, fields, title,
+     image, edit; dragged by ☰ (the results' order), saved by the card's
+     foot; then the general settings as rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .types) "@count content type in search" "@count content types in search"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "save" (t "Error while saving."))
+    "Warnings" (dict
+        "type" (t "Select a type.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="search-type-add">
+    <h2 class="admin-add-title" id="search-type-add">{{t "Types in search"}}</h2>
+    {{if .available}}
+    <form method="post" action="/admin/config/search/types" class="admin-add-form">
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Type"}}</span>
+            <select name="node_type" class="form-select" required>
+                <option value="">{{t "- type -"}}</option>
+                {{range .available}}<option value="{{.MachineName}}">{{.Label}}</option>{{end}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add to search"}}</button>
+    </form>
+    {{end}}
+    <details class="admin-add-more">
+        <summary>{{t "How it searches"}}</summary>
+        <div class="admin-setting-help">
+            <p>{{t "The live search in the header searches the types listed below. A new content type or a module's type is searched right away; a type removed from the search can be added back above. It searches first by the search fields of each type (up to the limit), then by the title of all types. Results are grouped by type in list order (drag to reorder), at most 50."}}</p>
+            <p class="mb-0">{{t "More details: <code>@file</code>." "@file" "docs/guides/search.md"}}</p>
+        </div>
+    </details>
+</section>
+
+<form id="search-reorder-form" method="post" action="/admin/config/search/types/reorder" class="admin-table-card mb-4">
+    <input type="hidden" name="order" id="search-order-input" value="">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to change the order"}}</span></th>
+                    <th>{{t "Type"}}</th>
+                    <th class="text-end">{{t "Limit"}}</th>
+                    <th>{{t "Search fields"}}</th>
+                    <th>{{t "Title / subtitle"}}</th>
+                    <th>{{t "Image"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="search-tbody" data-sortable data-order-input="search-order-input">
+                {{range .types}}
+                <tr draggable="true" data-type="{{.Def.NodeType}}" data-sort-id="{{.Def.NodeType}}">
+                    <td class="drag-handle admin-table-drag" title="{{t "Drag to change the order"}}">&#9776;</td>
+                    <td><a href="/admin/config/search/types/{{.Def.NodeType}}/edit" class="admin-table-title">{{or .TypeLabel .Def.NodeType}}</a><span class="admin-table-sub">{{with .Def.Label}}{{.}} · {{end}}<code>{{.Def.NodeType}}</code></span></td>
+                    <td class="text-end admin-table-num">{{.Def.Limit}}</td>
+                    <td>{{tc "lowercase" "title"}}{{if and .Def.AllFields .TextFields}}, {{tc "lowercase" "all text fields"}}{{else if not .Def.AllFields}}{{range .Def.MatchFields}}, <code>{{.}}</code>{{end}}{{end}}</td>
+                    <td>{{if .Def.TitleField}}<code>{{.Def.TitleField}}</code>{{else}}{{tc "lowercase" "title"}}{{end}}{{with .Def.SubtitleField}} / <code>{{.}}</code>{{end}}</td>
+                    <td>{{if .Def.ImageField}}<code>{{.Def.ImageField}}</code>{{else}}<span class="admin-table-muted">{{tc "search" "no image"}}</span>{{end}}{{with .Def.ImageStyle}} · <code>{{.}}</code>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/search/types/{{.Def.NodeType}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="7" class="admin-table-empty">{{t "No types are searched"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .types}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "The results are grouped by type in this order - drag a row by ☰ to change it."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</form>
+
+<form method="post" action="/admin/config/search/settings" class="admin-settings admin-settings--form">
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "General settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="search-enabled" class="admin-setting-label">{{t "Live search on the site"}}</label>
+                    <span class="admin-setting-help">{{t "When off, the search block is hidden and the search requests answer 404. Search in admin forms is not affected."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" class="form-check-input" role="switch" id="search-enabled" name="search_enabled" value="1" {{if .searchEnabled}}checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="search-placeholder" class="admin-setting-label">{{t "Image for results without their own"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="search-placeholder" name="placeholder_image" class="form-control" value="{{.settings.PlaceholderImage}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="search-menu" class="admin-setting-label">{{t "Links before a query is entered: menu"}}</label>
+                    <span class="admin-setting-help">{{t "Top-level items of this menu (<a href=\":url\">Menus</a>) are shown under the search field while the query is shorter than 3 characters." ":url" "/admin/config/menus"}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="search-menu" name="categories_menu" class="form-select">
+                        <option value="">{{t "- None -"}}</option>
+                        {{range .menus}}<option value="{{.MachineName}}"{{if eq .MachineName $.settings.CategoriesMenu}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

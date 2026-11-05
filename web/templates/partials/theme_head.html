@@ -1,0 +1,21 @@
+{{/* Theme hooks - the engine's defaults. The active theme replaces this
+     file with its own partials/theme_head.html (paths.ResolveTemplate):
+     theme_head - the theme's stylesheets in <head> (public pages, before
+     the engine's menu/module CSS; the icon is the engine's "site_icon",
+     the theme's theme.yaml "favicon");
+     theme_framework - the Bootstrap build (any Bootstrap 5 CSS: plain or a
+     Bootswatch skin) and its fonts for the public pages, before
+     theme_head (the admin keeps its own); theme_editor_css - the
+     stylesheet URL TinyMCE editors use as content_css. A theme's file
+     defines all three. Without a theme: the engine's neutral look -
+     plain Bootstrap with the system fonts, light or dark as the visitor's
+     system is (Bootstrap's data-bs-theme, set before the page paints),
+     and base.css. */}}
+{{define "theme_framework"}}
+    <script>(function(){var m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)");function a(){document.documentElement.setAttribute("data-bs-theme",m&&m.matches?"dark":"light")}a();if(m&&m.addEventListener){m.addEventListener("change",a)}})();</script>
+    <link rel="stylesheet" href="{{ staticCSS "bootstrap" }}">
+{{end}}
+{{define "theme_head"}}
+    <link rel="stylesheet" href="{{ staticCSS "base" }}">
+{{end}}
+{{define "theme_editor_css"}}{{end}}

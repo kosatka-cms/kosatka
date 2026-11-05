@@ -1,0 +1,155 @@
+{{/* node/edit_webform.html - create/edit a form of the forms module
+     (WebformController): its texts, its elements (questions) and the node
+     settings. Element rows post element_row (their keys, in order) and
+     element_<field>_<key> (form.WebformForm); a new row is a copy of
+     #webform-element-template with a "new…" key. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+<article class="node node-edit webform-edit">
+    <h1 class="node-edit-title">{{.title}}</h1>
+
+    {{if .errors}}
+    <div class="messages error">
+        <h3>{{t "Errors:"}}</h3>
+        <ul>{{range .errors}}<li>{{.}}</li>{{end}}</ul>
+    </div>
+    {{end}}
+
+    <form method="POST" action="{{if .isCreateMode}}/create/form{{else}}/node/{{.webform.Node.ID}}/edit{{end}}" class="node-form node-edit-layout">
+        <div class="node-edit-main">
+        <div class="node-edit-card">
+        <div class="form-group">
+            <label for="title">{{t "Title"}} <span class="required">*</span></label>
+            <input type="text" id="title" name="title" value="{{.form.Title}}" required maxlength="255" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="description">{{t "Text above the form"}}</label>
+            <textarea id="description" name="description" rows="3" class="form-control">{{.form.Description}}</textarea>
+        </div>
+
+        <h3>{{t "Questions"}}</h3>
+        <div id="webform-elements">
+            {{range .form.Elements}}{{template "webform_element_row" (dict "Key" .Key "El" . "Types" $.elementTypes "Error" (index $.errors (print "element_" .Key)))}}{{end}}
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm mb-3" id="webform-add-element">{{t "Add question"}}</button>
+
+        <div class="form-group">
+            <label for="submit_label">{{t "Submit button text"}}</label>
+            <input type="text" id="submit_label" name="submit_label" value="{{.form.SubmitLabel}}" maxlength="128" class="form-control" placeholder="{{t "Send"}}">
+        </div>
+        <div class="form-group">
+            <label for="confirmation">{{t "Message after sending"}}</label>
+            <textarea id="confirmation" name="confirmation" rows="3" class="form-control" placeholder="{{t "Thank you, the form has been sent."}}">{{.form.Confirmation}}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="confirmation_url">{{t "Page after sending"}}</label>
+            <input type="text" id="confirmation_url" name="confirmation_url" value="{{.form.ConfirmationURL}}" maxlength="500" class="form-control" placeholder="/thanks">
+            <div class="form-text">{{t "A path on this site to open after sending instead of the message. Empty - the message on the form's page."}}</div>
+        </div>
+        <div class="form-group">
+            <label for="notify_email">{{t "Notify of submissions"}}</label>
+            <input type="text" id="notify_email" name="notify_email" value="{{.form.NotifyEmail}}" maxlength="500" class="form-control" placeholder="editor@example.com, manager@example.com">
+            <div class="form-text">{{t "E-mail addresses separated by commas; every submission is sent there. Empty - nobody is notified."}}</div>
+        </div>
+        <h3>{{t "Limits"}}</h3>
+        <div class="form-check mb-2">
+            <input type="checkbox" class="form-check-input" id="limit_per_user" name="limit_per_user" value="1" {{if .form.LimitPerUser}}checked{{end}}>
+            <label class="form-check-label" for="limit_per_user">{{t "One submission per user (visitors must log in to send the form)"}}</label>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label for="max_submissions" class="form-label">{{t "Close after so many submissions"}}</label>
+                <input type="number" min="0" id="max_submissions" name="max_submissions" value="{{.form.MaxSubmissions}}" class="form-control" placeholder="{{t "no limit"}}">
+            </div>
+            <div class="col-md-4">
+                <label for="closes_at" class="form-label">{{t "Close at (site time)"}}</label>
+                <input type="datetime-local" id="closes_at" name="closes_at" value="{{.form.ClosesAt}}" class="form-control">
+            </div>
+        </div>
+        <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="closed" name="closed" value="1" {{if .form.Closed}}checked{{end}}>
+            <label class="form-check-label" for="closed">{{t "The form is closed (takes no submissions)"}}</label>
+        </div>
+
+        </div>
+        </div>
+
+        {{/* The state, the save button and the settings. */}}
+        {{template "edit_node_settings.html" .}}
+    </form>
+</article>
+
+<template id="webform-element-template">{{template "webform_element_row" (dict "Key" "__KEY__" "El" nil "Types" .elementTypes)}}</template>
+
+{{/* The questions' editor (webform-editor.js). */}}
+<script src="{{ moduleJS "forms" "webform-editor" }}" defer></script>
+{{end}}
+
+{{/* webform_element_row - one question row of the editor: dict Key (the
+     row's key), El (form.WebformElementInput; nil - a new row), Types,
+     Error. */}}
+{{define "webform_element_row"}}
+<div class="webform-element-row card mb-2">
+    <div class="card-body">
+        <input type="hidden" name="element_row" value="{{.Key}}">
+        {{with .Error}}<div class="text-danger small mb-1">{{.}}</div>{{end}}
+        <div class="row g-2">
+            <div class="col-md-7">
+                <input type="text" name="element_label_{{.Key}}" value="{{with .El}}{{.Label}}{{end}}" class="form-control" placeholder="{{t "Question"}}" maxlength="500">
+            </div>
+            <div class="col-md-3">
+                {{$current := ""}}{{with .El}}{{$current = print .Type}}{{end}}
+                <select name="element_type_{{.Key}}" class="form-select webform-element-type">
+                    {{range .Types}}<option value="{{.}}" {{if eq (print .) $current}}selected{{end}}>{{t .Label}}</option>{{end}}
+                </select>
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="button" class="btn btn-outline-secondary btn-sm webform-element-up" title="{{t "Move up"}}" aria-label="{{t "Move up"}}">↑</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm webform-element-down" title="{{t "Move down"}}" aria-label="{{t "Move down"}}">↓</button>
+                <button type="button" class="btn btn-outline-danger btn-sm webform-element-remove" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">×</button>
+            </div>
+        </div>
+        <input type="text" name="element_description_{{.Key}}" value="{{with .El}}{{.Description}}{{end}}" class="form-control form-control-sm mt-2" placeholder="{{t "Hint under the question (optional)"}}">
+        <div class="webform-element-options mt-2">
+            <textarea name="element_options_{{.Key}}" rows="3" class="form-control form-control-sm" placeholder="{{t "Options, one per line"}}">{{with .El}}{{.Options}}{{end}}</textarea>
+        </div>
+        <div class="webform-element-ext mt-2">
+            <input type="text" name="element_ext_{{.Key}}" value="{{with .El}}{{.Ext}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Allowed extensions, e.g. pdf, docx, jpg (empty - documents and pictures)"}}">
+        </div>
+        <div class="row g-2 mt-2 webform-element-range">
+            <div class="col"><input type="text" inputmode="decimal" name="element_min_{{.Key}}" value="{{with .El}}{{.Min}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Minimum (optional)"}}"></div>
+            <div class="col"><input type="text" inputmode="decimal" name="element_max_{{.Key}}" value="{{with .El}}{{.Max}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Maximum (optional)"}}"></div>
+        </div>
+        <div class="webform-element-link mt-2">
+            <input type="text" name="element_link_{{.Key}}" value="{{with .El}}{{.Link}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Link to the privacy policy, e.g. /privacy (optional)"}}">
+        </div>
+        <div class="row g-2 mt-2 align-items-center webform-element-if">
+            <div class="col-auto small text-muted">{{t "Show only if"}}</div>
+            <div class="col-md-4">
+                <select name="element_if_{{.Key}}" class="form-select form-select-sm webform-element-if-target" data-current="{{with .El}}{{.IfKey}}{{end}}">
+                    <option value="">{{t "- always -"}}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="element_ifvalue_{{.Key}}" value="{{with .El}}{{.IfValue}}{{end}}" class="form-control form-control-sm" placeholder="{{t "has the answer (empty - any answer)"}}">
+            </div>
+        </div>
+        <div class="row g-2 mt-2 align-items-center webform-element-prefill">
+            <div class="col-auto small text-muted"><label for="element_prefill_{{.Key}}">{{t "Fill from the address parameter"}}</label></div>
+            <div class="col-md-4">
+                <input type="text" id="element_prefill_{{.Key}}" name="element_prefill_{{.Key}}" value="{{with .El}}{{.Prefill}}{{end}}" class="form-control form-control-sm" placeholder="{{t "e.g. product (optional)"}}" maxlength="64" pattern="[A-Za-z0-9_\-]+">
+            </div>
+            <div class="col small text-muted">{{t "A link to the form with ?parameter=value answers the question."}}</div>
+        </div>
+        <div class="form-check mt-2 webform-element-required">
+            <input type="checkbox" class="form-check-input" id="element_required_{{.Key}}" name="element_required_{{.Key}}" value="1" {{with .El}}{{if .Required}}checked{{end}}{{end}}>
+            <label class="form-check-label" for="element_required_{{.Key}}">{{t "Required"}}</label>
+        </div>
+    </div>
+</div>
+{{end}}

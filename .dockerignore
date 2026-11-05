@@ -1,0 +1,20 @@
+# Kept out of the image's build context (Dockerfile). .git stays: the
+# build reads the release tag and commit from it.
+config/local.yaml
+*.env
+*.env.local
+/app
+/kosatka
+web/uploads
+/private
+.claude
+.idea
+.cursor
+**/.DS_Store
+cover-*.out
+# The docs site's tools and output (website/ builds on its own) and the
+# example site's binary: hundreds of MB the image never uses.
+website/node_modules
+website/dist
+website/.astro
+/examples/hello-site/kosatka-hello-site

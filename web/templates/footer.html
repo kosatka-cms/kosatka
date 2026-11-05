@@ -1,0 +1,18 @@
+{{/* Default footer (a theme overrides it with its own footer.html): the
+     footer region, its bottom line (the footer_bottom region: the
+     copyright block on a new site), engine scripts and document end
+     (partials/html.html). The admin layout also renders "footer". */}}
+{{define "footer"}}
+<footer class="site-footer">
+    <div class="container">
+        {{if regionHasBlocks "footer" .}}
+        <div class="site-footer-region">
+            {{template "region_blocks" (dict "Region" (region "footer") "Ctx" .)}}
+        </div>
+        {{end}}
+        {{template "region_blocks" (dict "Region" (region "footer_bottom") "Ctx" .)}}
+    </div>
+</footer>
+{{template "html_scripts" .}}
+{{template "html_end" .}}
+{{end}}

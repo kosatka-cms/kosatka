@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/seo" "BackLabel" "SEO"
+    "Heading" (t "Delete the rule?")
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/seo/rules/%v/delete" .rule.ID)
+    "Submit" (t "Yes, delete"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">{{t "Content type:"}} <code>{{.rule.ContentType}}</code>{{with .rule.TitleTemplate}}, {{t "title:"}} <code>{{.}}</code>{{end}}. {{t "Content that matched it will get the templates of the next matching rule or of the type."}}</p>
+{{end}}

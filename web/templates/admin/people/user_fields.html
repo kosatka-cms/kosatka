@@ -1,0 +1,83 @@
+{{/* admin/people/fields - the users' profile fields (UserFieldsPage):
+     adding one (a card over the list), on a table card each field - its
+     name (edited in place), machine name, max length, weight, whether it
+     is required, save, delete. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "User profile fields: shown on the profile page and edited in its form, ordered by weight. A required field is also asked at sign-up and can't be left empty."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if eq .success "created"}}<div class="alert alert-success">{{t "Field added."}}</div>{{end}}
+{{if eq .success "saved"}}<div class="alert alert-success">{{t "Field saved."}}</div>{{end}}
+{{if eq .success "deleted"}}<div class="alert alert-success">{{t "Field deleted together with its values."}}</div>{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "name" (t "The machine name may contain only lowercase Latin letters, digits and \"_\", and must start with a letter.")
+        "label" (t "Enter the field name.")
+        "exists" (t "A field with this machine name already exists.")
+        "max-len" (t "Max length must be from 1 to 65535 characters."))
+    "Fallback" (t "Could not save."))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="user-field-add">
+    <h2 class="admin-add-title" id="user-field-add">{{t "Add field"}}</h2>
+    <form method="post" action="/admin/people/fields" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" placeholder="{{t "Favorite book"}}" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Machine name"}}</span>
+            <input type="text" name="machine_name" class="form-control" placeholder="favorite_book" pattern="[a-z][a-z0-9_]*" required>
+        </label>
+        <label class="admin-filter admin-filter--narrow">
+            <span class="admin-filter-label">{{t "Max length"}}</span>
+            <input type="number" name="max_len" value="255" min="1" max="65535" class="form-control">
+        </label>
+        <div class="form-check">
+            <input type="checkbox" id="field-required" name="required" value="1" class="form-check-input">
+            <label class="form-check-label" for="field-required">{{t "Required"}}</label>
+        </div>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+</section>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Max length"}}</th>
+                    <th>{{t "Weight"}}</th>
+                    <th>{{t "Required"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .fields}}
+                <tr>
+                    <td>
+                        <form method="post" action="/admin/people/fields/{{.ID}}/edit" id="user-field-{{.ID}}"></form>
+                        <input type="text" name="label" value="{{.Label}}" form="user-field-{{.ID}}" class="form-control form-control-sm" aria-label="{{t "Name"}}" required>
+                        <span class="admin-table-sub"><code>{{.MachineName}}</code></span>
+                    </td>
+                    <td><input type="number" name="max_len" value="{{.MaxLen}}" min="1" max="65535" form="user-field-{{.ID}}" class="form-control form-control-sm admin-table-num-input" aria-label="{{t "Max length"}}"></td>
+                    <td><input type="number" name="weight" value="{{.Weight}}" form="user-field-{{.ID}}" class="form-control form-control-sm admin-table-num-input" aria-label="{{t "Weight"}}"></td>
+                    <td><input type="checkbox" name="required" value="1" form="user-field-{{.ID}}" class="form-check-input"{{if .Required}} checked{{end}} title="{{t "Asked at sign-up, can't be left empty"}}" aria-label="{{t "Required"}}"></td>
+                    <td class="text-nowrap text-end">
+                        <button type="submit" form="user-field-{{.ID}}" class="btn btn-sm btn-outline-primary">{{t "Save"}}</button>
+                        <form method="post" action="/admin/people/fields/{{.ID}}/delete" class="d-inline" data-confirm="{{t "Delete field \"@label\" along with its values for all users?" "@label" .Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "No fields yet."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

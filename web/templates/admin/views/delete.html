@@ -1,0 +1,19 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/views" "BackLabel" (t "All views")
+    "Heading" (t "Delete view \"@label\"?" "@label" .view.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/views/%v/delete" .view.ID)
+    "Submit" (t "Yes, delete view"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-1">machine_name: <code>{{.view.MachineName}}</code>, URL: <code>/{{.view.URLPath}}</code></p>
+{{if or .filterCount .fieldCount}}
+<p class="mb-0">
+    <strong>{{t "@filters and @fields will be deleted along with it - this cannot be undone." "@filters" (plural .filterCount "@count filter" "@count filters") "@fields" (plural .fieldCount "@count field" "@count fields")}}</strong>
+</p>
+{{else}}
+<p class="mb-0">{{t "This view has no filters or fields yet."}}</p>
+{{end}}
+{{end}}

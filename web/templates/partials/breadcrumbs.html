@@ -1,0 +1,13 @@
+{{define "breadcrumbs_nav"}}
+{{if .breadcrumbs}}
+<div id="breadcrumbs">
+    <nav class="breadcrumb">
+        {{$last := sub (len .breadcrumbs) 1}}
+        {{range $i, $b := .breadcrumbs}}
+            {{if $b.URL}}<a href="{{localURL $b.URL}}">{{$b.Label}}</a>{{else}}<span>{{$b.Label}}</span>{{end}}
+            {{if lt $i $last}}<span class="separator">»</span>{{end}}
+        {{end}}
+    </nav>
+</div>
+{{end}}
+{{end}}

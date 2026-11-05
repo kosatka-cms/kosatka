@@ -1,0 +1,48 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}{{attach "galleries"}}
+
+
+
+<article class="node">
+    {{if or .canEdit .canDelete}}
+    <div class="node-actions">
+        {{if .canEdit}}
+        <a href="/node/{{.node.ID}}/galleries/{{.gallery.ID}}/edit" class="action-link edit">{{t "Edit"}}</a>
+        {{end}}
+        {{if .canDelete}}
+        <a href="/galleries/{{.gallery.ID}}/delete" class="action-link delete">{{t "Delete"}}</a>
+        {{end}}
+    </div>
+    {{end}}
+
+    
+    {{if .gallery.Description}}
+    <div class="gallery-description mb-4">
+        {{.gallery.Description}}
+    </div>
+    {{end}}
+    
+    <div data-lightbox class="node-gallery{{if .gallery.IsPortrait}} node-gallery--portrait{{end}}"{{with .gallery}}{{if and .PreviewWidth .PreviewHeight}} style="--gallery-thumb-w: {{.PreviewWidth}}; --gallery-thumb-h: {{.PreviewHeight}}"{{end}}{{end}}>
+        <div>
+            {{range .gallery.Items}}
+            {{$lb := lightboxImage .File}}<a href="{{$lb.Src}}" data-pswp-width="{{$lb.Width}}" data-pswp-height="{{$lb.Height}}" class="content-image-link"{{with photoSwipeCaption .GetTitle .GetDescription}} data-pswp-caption-html="{{.}}"{{end}}>
+                {{img .Picture .GetTitle}}
+            </a>
+            {{end}}
+        </div>
+    </div>
+    
+    {{if .node}}
+    <div style="margin-top: 30px;">
+        <a href="{{.node.URL}}" class="btn btn-secondary">← {{t "Back to content"}}</a>
+        <a href="/node/{{.node.ID}}/galleries" class="btn btn-info">{{t "All galleries of this content"}}</a>
+    </div>
+    {{end}}
+</article>
+
+{{end}}

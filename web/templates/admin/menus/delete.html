@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/menus" "BackLabel" (t "All menus")
+    "Heading" (t "Delete menu \"@menu\"?" "@menu" .menu.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/menus/%v/delete" .menu.ID)
+    "Submit" (t "Yes, delete the menu and all its links"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">machine_name: <code>{{.menu.MachineName}}</code>. {{t "All its links (@count) will be deleted along with the menu - subtrees are not moved to another menu." "@count" .linkCount}}</p>
+{{end}}

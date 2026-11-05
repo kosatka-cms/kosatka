@@ -1,0 +1,65 @@
+{{/* block_node_galleries - plugin block "node_galleries" (the galleries
+     module): the galleries of the content page it is on, loaded by the
+     module's script as the block nears the viewport; nothing on another
+     page or for content that can't have galleries. Its "previews" setting -
+     how many previews each gallery shows (0 - a row of its grid). No
+     display:none/hidden, or IntersectionObserver never fires; an empty
+     block has zero height. */}}
+{{define "block_node_galleries"}}
+{{with .Ctx.moduleNode}}{{with .galleries}}{{if .Galleries}}
+{{$previews := $.Placement.PluginSetting "previews"}}
+<div class="node-galleries-lazy-mount" data-endpoint="/api/node/{{$.Ctx.item.Node.ID}}/galleries-embed{{if and $previews (ne $previews "0")}}?previews={{$previews}}{{end}}" data-loaded="0" style="min-height:1px">
+    <div class="node-galleries-sentinel" style="height:1px;width:100%" aria-hidden="true"></div>
+    <div class="node-galleries-inner"></div>
+</div>
+{{end}}{{end}}{{end}}
+{{end}}
+
+{{/* galleries_list - galleries, each with its title and previews (a link to
+     the whole gallery past them), opened in the lightbox: the galleries of
+     a content page (node/galleries_embed.html) and [[gallery:<ID>]] in a
+     text (embedKind). Takes (dict "Galleries" []*Gallery). */}}
+{{define "galleries_list"}}
+{{attach "galleries"}}
+{{range $gallery := .Galleries}}
+{{if gt $gallery.ItemsCount 0}}
+<div data-lightbox class="node-gallery{{if $gallery.IsPortrait}} node-gallery--portrait{{end}}"{{with $gallery}}{{if and .PreviewWidth .PreviewHeight}} style="--gallery-thumb-w: {{.PreviewWidth}}; --gallery-thumb-h: {{.PreviewHeight}}"{{end}}{{end}}>
+    <h3 class="similar-news-section-title">
+        {{if $gallery.Title}}
+            {{$gallery.Title}}
+        {{else}}
+            {{t "Gallery"}}
+        {{end}}
+    </h3>
+    {{$previewLimit := $gallery.PreviewLimit}}
+    {{$regularLimit := sub $previewLimit 1}}
+    <div>
+        {{if gt $gallery.ItemsCount $previewLimit}}
+        {{range $index, $item := $gallery.GetRandomItems $previewLimit}}
+        {{if lt $index $regularLimit}}
+        {{$lb := lightboxImage $item.File}}<a href="{{$lb.Src}}" data-pswp-width="{{$lb.Width}}" data-pswp-height="{{$lb.Height}}" class="content-image-link"{{with photoSwipeCaption $item.GetTitle $item.GetDescription}} data-pswp-caption-html="{{.}}"{{end}}>
+            {{img $item.Picture $item.GetTitle}}
+        </a>
+        {{else}}
+        {{$lb := lightboxImage $item.File}}<a href="{{$lb.Src}}" data-pswp-width="{{$lb.Width}}" data-pswp-height="{{$lb.Height}}" class="content-image-link"{{with photoSwipeCaption $item.GetTitle $item.GetDescription}} data-pswp-caption-html="{{.}}"{{end}} style="display:none"></a>
+        <a href="/galleries/{{$gallery.ID}}" class="content-image-link view-all-gallery" data-lightbox-skip style="position: relative; display: inline-block; text-decoration: none; cursor: pointer;">
+            {{img $item.Picture (t "View all") "style" "filter: brightness(0.5);"}}
+            <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.5em; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none;">
+                                        +{{sub $gallery.ItemsCount $previewLimit}}
+                                    </span>
+        </a>
+        {{end}}
+        {{end}}
+        {{else}}
+        {{range $gallery.Items}}
+        {{$lb := lightboxImage .File}}<a href="{{$lb.Src}}" data-pswp-width="{{$lb.Width}}" data-pswp-height="{{$lb.Height}}" class="content-image-link"{{with photoSwipeCaption .GetTitle .GetDescription}} data-pswp-caption-html="{{.}}"{{end}}>
+            {{img .Picture .GetTitle}}
+        </a>
+        {{end}}
+        {{end}}
+    </div>
+
+</div>
+{{end}}
+{{end}}
+{{end}}

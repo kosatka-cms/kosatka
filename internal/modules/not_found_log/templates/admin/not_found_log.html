@@ -1,0 +1,92 @@
+{{/* admin/not_found_log.html - the 404 log, a tab of the Redirects page
+     (Controller.List): the filter (a part of the path; new, ignored or
+     all), the paths the most asked for first - how many times, when last,
+     where the last visitor came from; a path's redirect form (folded under
+     its row, with the content whose title matches the path's last word) and
+     Ignore / Restore. */}}
+{{template "layout.html" .}}
+
+{{/* The heading is the Redirects page's; .title (the tab) ends the
+     top bar's trail. */}}
+{{define "title"}}<h1 class="article-title">{{t "Redirects"}}</h1>{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/redirects/not-found/settings" class="btn btn-outline-secondary">{{t "Log settings"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{attach "not_found_log"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/config/redirects">{{t "Redirects"}}</a></li>
+    {{moduleHook "redirects_tabs" .}}
+</ul>
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "doneRedirect" (t "Redirect added; the address left the log.")
+        "doneIgnored" (t "The address is ignored.")
+        "doneRestored" (t "The address is back among the new ones."))
+    "Errors" (dict
+        "target" (t "Enter where to redirect (not the address itself).")
+        "redirect" (t "Error adding (this redirect may already exist).")
+        "save" (t "Error while saving."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="get" action="/admin/config/redirects/not-found" class="admin-filters" data-autosubmit aria-label="{{t "Filter"}}">
+    <label class="admin-filter admin-filter--wide"><span class="admin-filter-label">{{t "Address contains"}}</span><input type="search" name="q" value="{{.filter.Q}}" class="form-control"></label>
+    <label class="admin-filter"><span class="admin-filter-label">{{tc "404 log" "Show"}}</span>
+        <select name="status" class="form-select">
+            {{$s := .filter.Status}}
+            <option value="new"{{if eq $s "new"}} selected{{end}}>{{tc "404 log" "New"}}</option>
+            <option value="ignored"{{if eq $s "ignored"}} selected{{end}}>{{t "Ignored"}}</option>
+            <option value="all"{{if eq $s "all"}} selected{{end}}>{{t "All"}}</option>
+        </select>
+    </label>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "404 log" "Show"}}</button></noscript>
+    {{if or .filter.Q (ne .filter.Status "new")}}<a href="/admin/config/redirects/not-found" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+<div class="table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>{{t "Address"}}</th><th class="text-end">{{t "Requests"}}</th><th>{{t "Last"}}</th><th>{{t "Came from"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr>
+        </thead>
+        <tbody>
+            {{range .rows}}
+            <tr>
+                <td class="not-found-path"><code>{{.Path.Path}}</code><span class="admin-table-sub">{{t "first @date" "@date" (formatDate .FirstSeen)}}</span></td>
+                <td class="text-end admin-table-num"><b>{{.Hits}}</b></td>
+                <td class="text-nowrap admin-table-muted">{{formatDate .LastSeen}}</td>
+                <td class="not-found-ref">
+                    {{if .RefURL}}<a href="{{.RefURL}}" rel="noopener noreferrer"{{if not .OwnRef}} target="_blank"{{end}}>{{.RefLabel}}</a>{{if .OwnRef}} <span class="admin-table-muted">{{t "(on this site)"}}</span>{{end}}{{else if .RefLabel}}{{.RefLabel}}{{else}}<span class="admin-table-muted">{{t "direct"}}</span>{{end}}
+                </td>
+                <td class="text-end text-nowrap">
+                    <button type="button" class="btn btn-primary btn-sm" data-not-found-toggle="nf-{{.ID}}" aria-expanded="false" aria-controls="nf-{{.ID}}">{{t "Redirect"}}</button>
+                    <form method="post" action="/admin/config/redirects/not-found/{{.ID}}/{{if .Ignored}}restore{{else}}ignore{{end}}" class="d-inline">
+                        <input type="hidden" name="back" value="{{$.back}}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">{{if .Ignored}}{{t "Restore"}}{{else}}{{t "Ignore"}}{{end}}</button>
+                    </form>
+                </td>
+            </tr>
+            <tr id="nf-{{.ID}}" class="not-found-form-row" hidden>
+                <td colspan="5">
+                    <form method="post" action="/admin/config/redirects/not-found/{{.ID}}/redirect" class="not-found-redirect">
+                        <input type="hidden" name="back" value="{{$.back}}">
+                        <label class="not-found-field admin-filter"><span class="admin-filter-label">{{t "From"}}</span><input type="text" value="{{.Path.Path}}" class="form-control form-control-sm" readonly></label>
+                        <label class="not-found-field not-found-to admin-filter"><span class="admin-filter-label">{{t "To"}}</span><input type="text" name="to" class="form-control form-control-sm" placeholder="{{t "To (e.g. /articles/new-slug)"}}" required></label>
+                        <button type="submit" class="btn btn-primary btn-sm">{{t "Add the redirect"}}</button>
+                        <div class="not-found-suggest" data-not-found-suggest="{{.Path.Path}}" data-label="{{t "Similar content:"}}" hidden></div>
+                    </form>
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="5" class="admin-table-empty">{{t "No addresses."}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{template "admin_list_foot" (dict "Ctx" . "Note" (and .keepDays (t "kept @days days" "@days" .keepDays)))}}
+</div>
+{{end}}

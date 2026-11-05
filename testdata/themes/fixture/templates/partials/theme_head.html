@@ -1,0 +1,10 @@
+{{/* The fixture's theme hooks: a Bootswatch skin instead of Bootstrap,
+     its own stylesheet instead of the engine's base.css, the same for the
+     editors. */}}
+{{define "theme_framework"}}
+    <link rel="stylesheet" href="{{ staticCSS "bootswatch-cosmo" }}">
+{{end}}
+{{define "theme_head"}}
+    <link rel="stylesheet" href="{{ themeCSS "styles" }}">
+{{end}}
+{{define "theme_editor_css"}}{{ themeCSS "styles" }}{{end}}

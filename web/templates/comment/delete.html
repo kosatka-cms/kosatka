@@ -1,0 +1,58 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{t "Delete comment"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<article class="comment-delete node">
+    <h2 class="node-title">{{t "Delete comment"}}</h2>
+    
+    <div class="warning delete-confirm">
+        <p style="font-size: 16px; margin-bottom: 15px;">
+            <strong>{{t "Are you sure you want to delete this comment?"}}</strong>
+        </p>
+        
+        <div class="comment-preview delete-confirm-preview">
+            {{.comment.Content | rawHTML}}
+        </div>
+        
+        <p><strong>{{t "Author:"}}</strong> 
+            {{if .comment.Author}}
+                {{.comment.Author.Username}}
+            {{else}}
+                {{t "Guest"}}
+            {{end}}
+        </p>
+        
+        <p><strong>{{t "Created on:"}}</strong> {{date .comment.CreatedAt "datetime"}}</p>
+        
+        {{if .comment.UpdatedAt}}
+        {{if ne ((siteTime .comment.UpdatedAt).Format "2006-01-02") ((siteTime .comment.CreatedAt).Format "2006-01-02")}}
+        <p><strong>{{t "Last modified:"}}</strong> {{date .comment.UpdatedAt "datetime"}}</p>
+        {{end}}
+        {{end}}
+        
+        {{if gt .replyCount 0}}
+        <p class="error delete-confirm-danger">
+            ⚠️ {{plural .replyCount "Its @count reply will also be deleted." "Its @count replies will also be deleted."}}
+        </p>
+        {{end}}
+    </div>
+    
+    <div class="form-actions mt-4">
+        <form action="/comment/{{.comment.ID}}/delete" method="POST" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <button type="submit" class="btn btn-danger" data-confirm="{{t "Are you sure? This action cannot be undone."}}">{{t "Yes, delete"}}</button>
+        </form>
+        {{if .comment.Node}}
+        <a href="{{.comment.Node.URL}}" class="btn btn-secondary">{{t "Cancel"}}</a>
+        {{else}}
+        <a href="/" class="btn btn-secondary">{{t "Cancel"}}</a>
+        {{end}}
+    </div>
+</article>
+
+{{end}}

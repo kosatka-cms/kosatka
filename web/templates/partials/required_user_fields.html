@@ -1,0 +1,14 @@
+{{/* required_user_fields - the inputs of the required profile fields
+     (/admin/people/fields) in a form creating a user or completing a
+     profile: .signupFields (entity.UserFieldValue: the field and what was
+     submitted), .errors.user_fields - the message of the one to correct. */}}
+{{define "required_user_fields"}}
+{{range .signupFields}}
+<div class="mb-3">
+    <label for="user_field_{{.Field.ID}}" class="form-label">{{.Field.Label}} *</label>
+    <input type="text" class="form-control" id="user_field_{{.Field.ID}}" name="user_field_{{.Field.ID}}"
+           value="{{.Value}}" required{{if .Field.MaxLen}} maxlength="{{.Field.MaxLen}}"{{end}}>
+</div>
+{{end}}
+{{with .errors}}{{with index . "user_fields"}}<div class="invalid-feedback d-block mb-3">{{.}}</div>{{end}}{{end}}
+{{end}}

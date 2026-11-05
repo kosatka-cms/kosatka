@@ -1,0 +1,167 @@
+{{/* admin/config/content-types/{id}/fields/display-detail - how the
+     type's fields show on its content's page
+     (ContentTypeFieldsDetailDisplay): the type's tabs, creating a group for
+     the page (a card), on a table card each field - shown, its label
+     shown, in the article body, how it shows (an image's style, a link's
+     formatter and layout), its group; dragged by ☰
+     (a group with its fields), all saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "content_type_tabs" .}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "invalid" (t "The form names a field or a group that is not this content type's.")
+        "empty-order" (t "Could not save the display order - the list is empty.")
+        "display-update" (t "Error saving the display settings.")
+        "machine-name-taken" (t "A field with this machine_name already exists.")
+        "create" (t "Error creating the group."))
+    "Warnings" (dict
+        "empty" (t "Fill in machine_name and group label.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="detail-group-add">
+    <h2 class="admin-add-title" id="detail-group-add">{{t "Create group for the detail page"}}</h2>
+    <form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields" class="admin-add-form">
+        <input type="hidden" name="field_type" value="group">
+        <input type="hidden" name="usable_in_detail" value="1">
+        <input type="hidden" name="return_to" value="/admin/config/content-types/{{.contentType.ID}}/fields/display-detail">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Group label"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "machine_name (auto, always with field_)"}}</span>
+            <input type="text" name="machine_name" class="form-control">
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Create"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "The group is created as \"Available on the detail page\" right away - it will appear in the \"Group\" select below. machine_name is optional - if left empty, it is generated automatically from the label. Other settings (including \"Available in the form\") are on its own \"Edit\" page."}}</p>
+</section>
+
+{{if not .displayFields}}
+<p class="admin-table-empty">{{t "This type has no fields yet - add them on the \"Fields\" tab."}}</p>
+{{else}}
+<form id="detail-display-form" method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields/display-detail" class="admin-table-card">
+    <input type="hidden" name="order" id="detail-display-order-input" value="">
+    <div class="table-responsive">
+        <table class="table admin-table" id="detail-display-fields-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to reorder"}}</span></th>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Type"}}</th>
+                    <th class="text-center">{{t "Show"}}</th>
+                    <th class="text-center">{{t "Show name"}}</th>
+                    <th class="text-center" title="{{t "A full-width block in the article body instead of the compact specs card - available only for an ungrouped field of type \"Text\""}}">{{t "In article body"}}</th>
+                    <th>{{t "How to show"}}</th>
+                    <th>{{t "Group"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="detail-display-fields-tbody" data-group-sortable data-member-class="display-field-row-member" data-order-input="detail-display-order-input">
+                {{range .displayFields}}
+                {{$currentGroup := .ParentGroupIDValue}}
+                {{/* Only groups usable on the detail page are drag targets: other
+                     groups have no <option> in this page's group selects, so
+                     the membership couldn't be saved. They render as
+                     ordinary rows. */}}
+                {{$isGroupHeader := and (eq (print .FieldType) "group") .UsableInDetail}}
+                {{$isMember := ne $currentGroup 0}}
+                <tr draggable="true" data-sort-id="{{.ID}}" {{if $isGroupHeader}}data-group-header="1"{{end}} {{if $isMember}}data-member-of="{{$currentGroup}}"{{end}} class="display-field-row{{if $isMember}} display-field-row-member{{end}}">
+                    <td class="drag-handle admin-table-drag" title="{{if $isGroupHeader}}{{t "Drag to reorder - moves the whole group"}}{{else if $isMember}}{{t "Drag to reorder or move the field out of the group"}}{{else}}{{t "Drag to reorder or add the field to a group"}}{{end}}">{{if $isMember}}&#8631;{{else}}&#9776;{{end}}</td>
+                    <td><span class="admin-table-title">{{.Label}}</span><span class="admin-table-sub"><code>{{.MachineName}}</code></span></td>
+                    <td><span class="admin-pill">{{.FieldType}}</span></td>
+                    <td class="text-center"><input type="checkbox" name="show_on_detail_{{.ID}}" value="1" {{if .ShowOnDetail}}checked{{end}}></td>
+                    <td class="text-center"><input type="checkbox" name="show_label_{{.ID}}" value="1" {{if .ShowLabel}}checked{{end}}></td>
+                    <td class="text-center">
+                        {{if and (eq (print .FieldType) "text") (not $isMember)}}
+                        <input type="checkbox" name="renders_in_body_{{.ID}}" value="1" {{if .RendersInBody}}checked{{end}}>
+                        {{else}}
+                        <span class="text-muted">&mdash;</span>
+                        {{end}}
+                    </td>
+                    <td>
+                        {{renderSuggestion "field_display" (print .FieldType) (dict "Field" . "ImageStyles" $.imageStyles "LinkFormatters" $.linkFormatters)}}
+                    </td>
+                    <td>
+                        {{if ne (print .FieldType) "group"}}
+                        <select name="parent_group_id_{{.ID}}" class="form-select form-select-sm admin-min-sm" data-group-select aria-label="{{t "Group"}}">
+                            <option value="0">{{t "- no group -"}}</option>
+                            {{range $.fields}}
+                            {{if and (eq (print .FieldType) "group") .UsableInDetail}}
+                            <option value="{{.ID}}" {{if eq .ID $currentGroup}}selected{{end}}>{{.Label}}</option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                        {{else}}
+                        <span class="text-muted">&mdash;</span>
+                        {{end}}
+                    </td>
+                    <td class="text-nowrap text-end">
+                        {{if eq (print .FieldType) "group"}}
+                        <a href="/admin/config/content-types/{{$.contentType.ID}}/fields/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/content-types/{{$.contentType.ID}}/fields/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "Order, visibility and labels of fields on the public detail page. Drag a row to reorder - for a group field (type <code>group</code>) this moves the whole group together with its fields (see the \"Group\" column); an ordinary field can be dragged straight into a group or out of it - membership updates by itself, in sync with the \"Group\" column (choosing in it also moves the row to the right place immediately). The \"Group\" select lists only groups with \"Available on the detail page\" checked (on the group's own edit page) - groups for the edit form do not appear here."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}
+
+{{end}}
+
+{{/* field_display_<type> - how a field of a type shows on the content
+     page, in its row of the "Display" tab (dict "Field" "ImageStyles"
+     "LinkFormatters"): an image's style, the layout of several dates, of
+     links (and their formatter), of blocks; field_display_default - none.
+     ContentTypeFieldsDetailDisplayUpdate reads detail_image_style_<id>,
+     list_image_style_<id>, detail_formatter_<id>, detail_layout_<id>. */}}
+{{define "field_display_image"}}{{$f := .Field}}
+<div class="d-flex flex-column gap-1">
+<label class="small">{{t "On its page"}}
+<select name="detail_image_style_{{$f.ID}}" class="form-select form-select-sm admin-min-sm">
+    <option value="">{{t "- not selected -"}}</option>
+    {{range .ImageStyles}}
+    <option value="{{.Name}}" {{if eq .Name $f.DetailImageStyle}}selected{{end}}>{{.Label}}</option>
+    {{end}}
+</select></label>
+<label class="small">{{t "In lists"}}
+<select name="list_image_style_{{$f.ID}}" class="form-select form-select-sm admin-min-sm">
+    <option value="">{{t "Original"}}</option>
+    {{range .ImageStyles}}
+    <option value="{{.Name}}" {{if eq .Name $f.ListImageStyle}}selected{{end}}>{{.Label}}</option>
+    {{end}}
+</select></label>
+</div>
+{{end}}
+
+{{define "field_display_date"}}{{if .Field.Multiple}}
+{{template "field_dates_layout_control" (dict "Name" (printf "detail_layout_%d" .Field.ID) "ID" (printf "detail-layout-%d" .Field.ID) "Layout" .Field.DetailLayout "Small" true)}}
+{{end}}{{end}}
+
+{{/* A blocks field's items: one after another, or cards in a grid
+     (entity.FieldLayoutGrid); each shows by its field set's display. */}}
+{{define "field_display_blocks"}}
+<select name="detail_layout_{{.Field.ID}}" class="form-select form-select-sm admin-min-sm" aria-label="{{t "Blocks"}}">
+    <option value=""{{if eq (print .Field.DetailLayout) ""}} selected{{end}}>{{t "One after another"}}</option>
+    <option value="grid"{{if eq (print .Field.DetailLayout) "grid"}} selected{{end}}>{{t "Cards in a grid"}}</option>
+</select>
+{{end}}
+
+{{define "field_display_link"}}
+{{template "field_formatter_controls" (dict "Formatters" .LinkFormatters "FormatterName" (printf "detail_formatter_%d" .Field.ID) "FormatterID" (printf "detail-formatter-%d" .Field.ID) "LayoutName" (printf "detail_layout_%d" .Field.ID) "LayoutID" (printf "detail-layout-%d" .Field.ID) "Formatter" .Field.DetailFormatter "Layout" .Field.DetailLayout "Small" true)}}
+{{end}}
+
+{{define "field_display_default"}}{{end}}

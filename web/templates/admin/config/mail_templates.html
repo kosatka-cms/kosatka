@@ -1,0 +1,60 @@
+{{/* admin/config/mail_templates - the site's emails (MailTemplatesPage),
+     the Mail page's "Emails" tab: the core's, then each enabled module's
+     (.groups: mailGroup) - who gets each, when it was last sent (a link
+     to its log), whether it is sent (an optional one's switch submits at
+     once), a link to its text. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The emails the site sends: the text of each, who gets it, whether it is sent."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "admin_mail_tabs" "templates"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Fallback" (t "Could not save."))}}
+{{range .groups}}
+<h2 class="admin-settings-title">{{if .Label}}{{t .Label}}{{else}}{{t "Accounts"}}{{end}}</h2>
+<div class="admin-table-card mb-4">
+    <div class="table-responsive">
+        <table class="table admin-table admin-mail-table">
+            <thead>
+                <tr>
+                    <th>{{tc "mail" "Email"}}</th>
+                    <th>{{t "Who gets it"}}</th>
+                    <th>{{t "Last sent"}}</th>
+                    <th>{{t "Sent"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operation"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Rows}}
+                <tr>
+                    <td>
+                        <a href="/admin/config/mail/templates/{{.Key}}" class="admin-table-title">{{t .Label}}</a>
+                        <span class="admin-table-sub">{{t .Description}}</span>
+                    </td>
+                    <td class="text-nowrap">{{t .Recipient}}</td>
+                    <td class="text-nowrap admin-table-muted">{{if .LastSent.IsZero}}-{{else}}<a href="/admin/config/mail/log?key={{.Key}}">{{date .LastSent "datetime"}}</a>{{end}}</td>
+                    <td>
+                        {{if .Optional}}
+                        <form method="post" action="/admin/config/mail/templates/{{.Key}}/enabled" class="form-check form-switch" data-autosubmit>
+                            <input type="checkbox" role="switch" class="form-check-input" name="on" value="1"{{if .Enabled}} checked{{end}} aria-label="{{t "Send \"@email\"" "@email" (t .Label)}}">
+                            <noscript><button type="submit" class="btn btn-sm btn-outline-primary">{{t "Save"}}</button></noscript>
+                        </form>
+                        {{else}}
+                        <span class="admin-table-muted">{{t "always"}}</span>
+                        {{end}}
+                    </td>
+                    <td class="text-end"><a href="/admin/config/mail/templates/{{.Key}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}
+{{end}}

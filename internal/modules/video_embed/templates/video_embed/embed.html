@@ -1,0 +1,22 @@
+{{/* video_embed - a video in a text (the module's text filter, Filter.Apply)
+     in place of its link: .Video - the link (URL), the player's address
+     (Player), the service's name (Provider), the title and the preview
+     (Title, Preview; "" - the service didn't tell), the proportions (Width,
+     Height; Portrait - taller than wide), ClickToPlay - a preview linking
+     to the video (video_embed.js puts the player there on a click), else
+     the player itself. A theme may have its own (templates/video_embed/
+     embed.html), keeping {{attach}}: the module's styles and script. */}}
+{{define "video_embed"}}{{attach "video_embed"}}{{with .Video}}
+<figure class="video-embed{{if .Portrait}} video-embed--portrait{{end}}" style="--video-embed-w: {{.Width}}; --video-embed-h: {{.Height}}">
+    {{if .ClickToPlay}}
+    <a class="video-embed-play" href="{{.URL}}" data-video-player="{{.Player}}" data-video-title="{{or .Title .Provider}}" target="_blank" rel="noopener">
+        {{with .Preview}}<img class="video-embed-preview" src="{{.}}" alt="" loading="lazy">{{end}}
+        <span class="video-embed-title">{{or .Title .Provider}}</span>
+        <span class="video-embed-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg></span>
+        <span class="visually-hidden">{{if .Title}}{{t "Watch the video: @title" "@title" .Title}}{{else}}{{t "Watch the video"}}{{end}}</span>
+    </a>
+    {{else}}
+    <iframe class="video-embed-player" src="{{.Player}}" title="{{or .Title .Provider}}" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    {{end}}
+</figure>
+{{end}}{{end}}

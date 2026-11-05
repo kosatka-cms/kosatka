@@ -1,0 +1,110 @@
+{{/* admin/people/index.html - the users (Controller.PeopleList), like the
+     content list: the filters (the status, the role; applied as one
+     changes), on a table card a user - their name (the profile), e-mail
+     and registration address, two-factor sign-in, role, status (an
+     invitation not accepted: until when its link works, .invites), times;
+     edit, the modules' buttons (admin_people_actions), approve a pending
+     one, send an invitation again or withdraw it; the checked ones
+     blocked, unblocked or deleted (the bar over the table,
+     admin_bulk.js). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count user" "@count users"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/people/create" class="btn btn-primary">+ {{t "Add user"}}</a>
+{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "created" (t "User created.")))}}
+{{if eq .invited "1"}}<div class="alert alert-success" role="status">{{t "The invitation was sent."}}</div>
+{{else if eq .invited "off"}}<div class="alert alert-warning" role="alert">{{t "Email is off: the account is created, the invitation wasn't sent. Turn email on (Configuration → Mail), then press \"Send again\"."}}</div>
+{{else if eq .invited "nourl"}}<div class="alert alert-warning" role="alert">{{t "The site's address isn't set: the account is created, the invitation wasn't sent (its link needs the address). Set it in Site information, then press \"Send again\"."}}</div>{{end}}
+{{if .inviteCancelled}}<div class="alert alert-success" role="status">{{t "The invitation was withdrawn."}}</div>{{end}}
+{{if eq .approved "1"}}<div class="alert alert-success" role="status">{{t "User approved."}}</div>{{end}}
+
+<form method="get" action="/admin/people" class="admin-filters" data-autosubmit>
+    <input type="hidden" name="sort" value="{{.sort}}">
+    <input type="hidden" name="order" value="{{.order}}">
+    <div class="admin-filter">
+        <label for="filterStatus" class="admin-filter-label">{{t "Status"}}</label>
+        <select name="status" id="filterStatus" class="form-select">
+            <option value="" {{if not .filterStatus}}selected{{end}}>{{t "All"}}</option>
+            <option value="active" {{if eq .filterStatus "active"}}selected{{end}}>{{tc "admin" "Active"}}</option>
+            <option value="pending" {{if eq .filterStatus "pending"}}selected{{end}}>{{t "Pending approval"}}</option>
+            <option value="blocked" {{if eq .filterStatus "blocked"}}selected{{end}}>{{t "Blocked"}}</option>
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="filterRole" class="admin-filter-label">{{t "Role"}}</label>
+        <select name="role" id="filterRole" class="form-select">
+            <option value="" {{if eq .filterRoleID 0}}selected{{end}}>{{t "All"}}</option>
+            {{range .roles}}
+            <option value="{{.ID}}" {{if eq $.filterRoleID .ID}}selected{{end}}>{{.Label}}</option>
+            {{end}}
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+    {{if or .filterStatus .filterRoleID}}<a href="/admin/people" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<form method="post" action="/admin/people/bulk-confirm" id="bulkForm" class="admin-table-card">
+    <div class="admin-bulk-bar" data-bulk-bar hidden>
+        <span class="admin-bulk-count">{{t "Selected:"}} <span data-bulk-count>0</span></span>
+        <button type="submit" name="action" value="block" class="btn btn-sm btn-outline-primary">{{tc "verb" "Block"}}</button>
+        <button type="submit" name="action" value="unblock" class="btn btn-sm btn-outline-primary">{{t "Unblock"}}</button>
+        <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger">{{t "Delete the account, keep the content"}}</button>
+        <button type="submit" name="action" value="delete_with_content" class="btn btn-sm btn-outline-danger">{{t "Delete the account and all its content"}}</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-check"><input type="checkbox" id="selectAll" class="form-check-input" title="{{t "Select all on this page"}}" aria-label="{{t "Select all on this page"}}"></th>
+                    <th>{{t "User"}}</th>
+                    <th>{{t "Role"}}</th>
+                    <th>{{t "Status"}}</th>
+                    <th><a href="{{.sortURLCreated}}">{{t "Created"}}</a>{{if eq .sort "created"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th><a href="{{.sortURLLastAccess}}">{{t "Last access"}}</a>{{if eq .sort "last_access"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .users}}
+                <tr>
+                    <td class="admin-table-check"><input type="checkbox" name="ids" value="{{.ID}}" class="form-check-input bulk-checkbox" aria-label="{{t "Select"}}"></td>
+                    <td>
+                        <a href="/{{.Slug}}" class="admin-table-title">{{.Username}}</a>
+                        {{if $.twoFactor}}{{with index $.twoFactor .ID}}{{if eq . "on"}}<span class="admin-pill admin-pill--ok" title="{{t "Two-factor sign-in is on"}}">2FA</span>{{else}}<span class="admin-pill admin-pill--warn" title="{{t "Required for the role, not turned on"}}">{{t "2FA is off"}}</span>{{end}}{{end}}{{end}}
+                        <span class="admin-table-sub">{{.Email}}{{with userRegistrationIP .Metadata}} · {{.}}{{end}}</span>
+                    </td>
+                    <td>{{if .Role}}{{.Role.Label}}{{else}}-{{end}}</td>
+                    <td>{{with and $.invites (index $.invites .ID)}}{{if .NotSent}}<span class="admin-pill admin-pill--warn">{{t "Invitation not sent"}}</span>{{else if .Expired}}<span class="admin-pill admin-pill--warn">{{t "Invitation expired"}}</span>{{else}}<span class="admin-pill admin-pill--scheduled">{{t "Invited"}}</span><span class="admin-table-sub">{{t "link until @date" "@date" (formatDate .Until)}}</span>{{end}}
+                        {{else}}{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{tc "admin" "Active"}}</span>{{else if eq .Status 2}}<span class="admin-pill admin-pill--warn">{{t "Pending approval"}}</span>{{else}}<span class="admin-pill">{{t "Blocked"}}</span>{{end}}{{end}}</td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                    <td class="text-nowrap admin-table-muted">{{if not .LastActivity.IsZero}}{{formatDate .LastActivity}}{{else}}-{{end}}</td>
+                    <td class="text-end text-nowrap">
+                        {{if eq .Status 2}}<button type="submit" formaction="/admin/people/{{.ID}}/approve" data-bulk-skip class="btn btn-sm btn-success">{{t "Approve"}}</button>{{end}}
+                        {{if and $.invites (index $.invites .ID)}}<button type="submit" formaction="/admin/people/{{.ID}}/invite" data-bulk-skip class="btn btn-sm btn-outline-primary">{{t "Send again"}}</button>
+                        <button type="submit" formaction="/admin/people/{{.ID}}/invite/cancel" data-bulk-skip data-confirm="{{t "Withdraw the invitation? The account, never used, is deleted."}}" class="btn btn-sm btn-outline-secondary">{{t "Withdraw"}}</button>{{end}}
+                        {{/* The modules' buttons for the user (moduleHook
+                             "admin_people_actions": dict "User", "Ctx" - the page's data). */}}
+                        {{moduleHook "admin_people_actions" (dict "User" . "Ctx" $)}}
+                        <a href="/user/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="7" class="admin-table-empty">{{t "No users"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</form>
+{{end}}

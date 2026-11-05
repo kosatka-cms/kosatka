@@ -1,0 +1,111 @@
+# A release, on pushing a vX.Y.Z tag (docs/contributing/releasing.md):
+#   - an archive per Linux architecture (amd64, arm64) in the layout of a
+#     release directory (docs/guides/multisite.md): the binary with the
+#     tag as its version, web/templates and web/static (minified, the
+#     modules' static files exported beside the engine's), themes/,
+#     LICENSE, README.md. The binary is for a Linux with glibc: it links
+#     dynamically (purego: the WebP encoder loads libwebp when the
+#     server has it), the loader glibc's - on Alpine, the image;
+#   - the GitHub release of the tag with the archives, their SHA256SUMS
+#     and notes generated from the merged pull requests;
+#   - the Docker image (Dockerfile) for linux/amd64 and linux/arm64 in
+#     ghcr.io/<owner>/<repository>: tagged X.Y.Z, X.Y and latest. Each
+#     platform's binary is built on it (arm64 under QEMU, slower): built
+#     on Alpine, it gets musl's loader.
+# The tests ran on the commit's pull request and push to main
+# (test.yml); a tag is pushed on main.
+name: release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+# Each job asks for what it writes.
+permissions:
+  contents: read
+
+jobs:
+  archives:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # The pages link the minified CSS and JS (*.min.css, *.min.js, not
+      # in git); the build embeds the modules' ones, so they come first.
+      - run: go install github.com/tdewolff/minify/v2/cmd/minify@v2.24.22
+      - run: ./scripts/minify_css.sh && ./scripts/minify_js.sh
+      - name: Archive
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: "0"
+        run: |
+          dir="kosatka-${GITHUB_REF_NAME}-linux-${GOARCH}"
+          mkdir -p "$dir/web"
+          go build -trimpath -ldflags "-X github.com/kosatka-cms/kosatka/internal/buildinfo.Version=${GITHUB_REF_NAME}" -o "$dir/kosatka" ./cmd/app
+          # The modules' static files, for a web server serving /static/
+          # itself (run on the runner's own platform).
+          GOOS='' GOARCH='' go run ./cmd/app assets export web/static
+          cp -R web/templates web/static "$dir/web/"
+          cp -R themes "$dir/"
+          cp LICENSE README.md "$dir/"
+          tar -czf "$dir.tar.gz" "$dir"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: archive-${{ matrix.arch }}
+          path: kosatka-*.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: archives
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: archive-*
+          merge-multiple: true
+      - run: sha256sum kosatka-*.tar.gz > SHA256SUMS
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes kosatka-*.tar.gz SHA256SUMS
+
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # The whole history: the image's build reads the release from the
+      # tag (git describe), so the context is this checkout with .git.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

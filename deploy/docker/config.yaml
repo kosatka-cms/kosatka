@@ -1,0 +1,21 @@
+# The container's config: every value comes from the environment
+# (docker-compose.yml), the names in the comments; nothing secret here.
+env: prod            # APP_ENV (local - templates re-read on every request)
+port: 3333           # APP_PORT
+public_base_url: ""  # PUBLIC_BASE_URL - or set it in Site information
+page_cache_max_age: 0  # PAGE_CACHE_MAX_AGE - seconds a CDN may keep guests' pages
+trusted_proxies: []  # TRUSTED_PROXIES - the proxies in front (comma-separated addresses or networks) whose X-Forwarded-For counts; empty - loopback
+templates_debug: false  # TEMPLATES_DEBUG - comments naming the template files (docs/themes/templates.md)
+themes_catalog_url: ""  # THEMES_CATALOG_URL - the themes' catalog, an index.json; empty here - Kosatka's, off - none (docs/themes/distribute.md)
+translations_catalog_url: ""  # TRANSLATIONS_CATALOG_URL - the languages to download, an index.json; empty here - Kosatka's, off - none
+db:
+  driver: mysql      # DB_DRIVER (mysql or postgres)
+  host: db           # DB_HOST
+  port: 3306         # DB_PORT
+  scheme: kosatka    # DB_NAME
+  username: kosatka  # DB_USER
+  password: ""       # DB_PASSWORD
+secrets_key: ""      # SECRETS_KEY - seals the secrets kept in the database
+session:
+  secret_key: ""     # SESSION_SECRET_KEY
+  secure: false      # SESSION_SECURE - the session cookies only over HTTPS (true behind one)

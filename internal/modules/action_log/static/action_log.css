@@ -1,0 +1,35 @@
+/* Action log module: the log's page (templates/admin/action_log.html) -
+   the filters and the table are the admin's own (admin-filters,
+   admin-table-card); here the actions' badges and the changes. */
+.action-log-scope {
+    color: var(--admin-muted, #4a6272);
+}
+.action-log-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.action-log-badge--create { background: #e3f4ea; color: #1f6b35; }
+.action-log-badge--change { background: #e6f1f8; color: #0b5c72; }
+.action-log-badge--delete { background: #fbe6e1; color: #8a2a12; }
+.action-log-badge--access { background: #f3eafa; color: #5b2a86; }
+.action-log-badge--login  { background: #eef1f3; color: #33505f; }
+.action-log-badge--fail   { background: #fdf0dc; color: #7a4a07; }
+.action-log-changes {
+    margin-top: 6px;
+}
+.action-log-changes > summary {
+    color: var(--admin-accent, #0e7490);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.action-log-changes .table {
+    margin-top: 6px;
+    font-size: 13px;
+}
+.action-log-from { color: #8a2a12; text-decoration: line-through; }
+.action-log-to   { color: #1f6b35; }

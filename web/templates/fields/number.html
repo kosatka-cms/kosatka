@@ -1,0 +1,7 @@
+{{/* Default value template for number fields. Node pages and View lists
+     call renderSuggestion "field_number" <machine name> (fieldNumber
+     <field> <value>), the theme's "field_number_<machine name>" if
+     defined, else this one: .Formatted - by the field's settings (its
+     kind, decimals, prefix and suffix) in the page's language; .Value -
+     the number. */}}
+{{define "field_number_default"}}{{.Formatted}}{{end}}

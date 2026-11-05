@@ -1,0 +1,20 @@
+{{/* admin_confirm_delete - an admin delete confirmation page's content:
+     (dict "Ctx" . "Back" <url> "BackLabel" <text> "Heading" <question>
+     "Body" <HTML: renderBlock of the page's own define> "Action" <the
+     POST url> "Submit" <button label> ["Cancel" <url>, default Back]
+     ["Index" <url> "IndexLabel" <text>: a link to the list above Back]).
+     The page keeps its own texts; the markup is shared. */}}
+{{define "admin_confirm_delete"}}
+{{with .Index}}<p><a href="{{.}}">&larr; {{$.IndexLabel}}</a></p>{{end}}
+<p><a href="{{.Back}}">&larr; {{.BackLabel}}</a></p>
+
+<div class="alert alert-danger">
+    <h5 class="alert-heading">{{.Heading}}</h5>
+    {{.Body}}
+</div>
+
+<form method="post" action="{{.Action}}">
+    <button type="submit" class="btn btn-danger">{{.Submit}}</button>
+    <a href="{{if .Cancel}}{{.Cancel}}{{else}}{{.Back}}{{end}}" class="btn btn-secondary">{{t "Cancel"}}</a>
+</form>
+{{end}}

@@ -1,0 +1,70 @@
+{{/* admin/config/date-formats/{id} and /new - a date format
+     (DateFormatEdit, DateFormatNew): its name, machine name (fixed once
+     created) and pattern with a live example, as rows; the pattern letters
+     on a table card under it. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="date-format-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{$f := .format}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "label" (t "Enter a name.")
+        "machine-name" (t "Machine name: Latin letters, digits and \"_\", starting with a letter.")
+        "taken" (t "A format with this machine name already exists.")
+        "pattern" (t "Enter a pattern."))
+    "Fallback" (t "Could not save."))}}
+
+<div class="admin-settings">
+<form method="post" action="/admin/config/date-formats{{if $f.ID}}/{{$f.ID}}{{end}}" id="date-format-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="df-label" class="admin-setting-label">{{t "Name"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="df-label" name="label" class="form-control" value="{{$f.Label}}" required></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="df-machine-name" class="admin-setting-label">{{t "Machine name"}}</label>
+                <span class="admin-setting-help">{{if $f.ID}}{{t "Cannot be changed after creation: fields select the format by it."}}{{else}}{{t "Latin letters, digits and \"_\", starting with a letter."}}{{end}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{if $f.ID}}
+                <input type="text" id="df-machine-name" class="form-control" value="{{$f.MachineName}}" disabled>
+                {{else}}
+                <input type="text" id="df-machine-name" name="machine_name" class="form-control" pattern="[a-z][a-z0-9_]*" required placeholder="{{t "e.g. short_date"}}">
+                {{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="df-pattern" class="admin-setting-label">{{tc "date format" "Pattern"}}</label>
+                <span class="admin-setting-help">{{t "Today's example:"}} <strong id="df-example">{{.example}}</strong></span>
+            </div>
+            <div class="admin-setting-control"><input type="text" id="df-pattern" name="pattern" class="form-control font-monospace" value="{{$f.Pattern}}" required placeholder="j F Y" data-date-example="df-example" data-date-names="{{json (dict "F" .monthsInDate "f" .months "M" .monthsShort "l" .weekdays "D" .weekdaysShort)}}"></div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Pattern letters"}}</h2>
+    <div class="admin-table-card">
+        <table class="table admin-table">
+            <tbody>
+                {{range .letters}}<tr><td style="width: 1%;"><code>{{.Letter}}</code></td><td>{{.Meaning}}</td><td class="admin-table-muted">{{.Example}}</td></tr>{{end}}
+            </tbody>
+        </table>
+    </div>
+    <p class="admin-setting-help">{{t "Other characters are output as is. Examples: <code>d.m.Y</code> - 31.12.2027, <code>j F Y</code> - 31 December 2027, <code>f Y</code> - December 2027, <code>D, j M</code> - Fri, 31 Dec, <code>g:i a</code> - 7:30 pm."}}</p>
+</section>
+</div>
+{{end}}

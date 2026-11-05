@@ -1,0 +1,118 @@
+{{/* admin/config/image-styles - the image styles (ImageStyleList): adding
+     one (a card over the list, the rarer settings folded), on a table card
+     each style - its name and machine name, size, mode, anchor, quality,
+     format, edit, delete. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .imageStyles) "@count image style" "@count image styles"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Style deleted."))
+    "Errors" (dict
+        "invalid" (t "Check the width/height/mode/anchor/quality.")
+        "duplicate" (t "A style with this name already exists.")
+        "create" (t "Error creating the style.")
+        "update" (t "Error saving the style.")
+        "delete" (t "Error deleting the style."))
+    "Warnings" (dict
+        "empty" (t "name and label are required.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="image-style-add">
+    <h2 class="admin-add-title" id="image-style-add">{{t "Add style"}}</h2>
+    <form method="post" action="/admin/config/image-styles" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "name (Latin letters)"}}</span>
+            <input type="text" name="name" class="form-control" required>
+        </label>
+        <label class="admin-filter admin-filter--narrow">
+            <span class="admin-filter-label">{{t "Width"}}</span>
+            <input type="number" name="width" class="form-control" required>
+        </label>
+        <label class="admin-filter admin-filter--narrow">
+            <span class="admin-filter-label">{{t "Height (0=auto)"}}</span>
+            <input type="number" name="height" class="form-control" value="0">
+        </label>
+        <label class="admin-filter admin-filter--narrow">
+            <span class="admin-filter-label">{{t "Mode"}}</span>
+            <select name="mode" class="form-select">
+                {{range .modes}}<option value="{{.}}">{{.}}</option>{{end}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        <details class="admin-add-more">
+            <summary>{{t "More"}}</summary>
+            <div class="admin-add-form">
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "Description"}}</span>
+                    <input type="text" name="description" class="form-control">
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Anchor"}}</span>
+                    <select name="anchor" class="form-select">
+                        {{range .anchors}}<option value="{{.}}" {{if eq . "center"}}selected{{end}}>{{if eq . "focal"}}{{t "the image's focal point (or the center)"}}{{else}}{{.}}{{end}}</option>{{end}}
+                    </select>
+                </label>
+                <label class="admin-filter admin-filter--narrow">
+                    <span class="admin-filter-label">{{t "Quality"}}</span>
+                    <input type="number" name="quality" class="form-control" value="85" min="1" max="100">
+                </label>
+                <label class="admin-filter admin-filter--narrow">
+                    <span class="admin-filter-label">{{t "Format"}}</span>
+                    <select name="format" class="form-select">
+                        <option value="webp" selected>WebP</option>
+                        <option value="jpeg">JPEG</option>
+                    </select>
+                </label>
+            </div>
+        </details>
+    </form>
+    <p class="admin-setting-help">{{t "name is used in image URLs (<code>…/styles/{name}/…</code>) and cannot be changed after creation. height=0 - keep proportions (fit/resize mode only)."}}</p>
+</section>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Size"}}</th>
+                    <th>{{t "Mode"}}</th>
+                    <th>{{t "Anchor"}}</th>
+                    <th class="text-end">{{t "Quality"}}</th>
+                    <th>{{t "Format"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .imageStyles}}
+                <tr>
+                    <td><a href="/admin/config/image-styles/{{.ID}}/edit" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><code>{{.Name}}</code></span></td>
+                    <td class="text-nowrap admin-table-num">{{.Width}}&times;{{if .Height}}{{.Height}}{{else}}{{t "auto"}}{{end}}</td>
+                    <td><code>{{.Mode}}</code></td>
+                    <td><code>{{.Anchor}}</code></td>
+                    <td class="text-end admin-table-num">{{.Quality}}</td>
+                    <td>{{if eq .Format "jpeg"}}JPEG{{else}}WebP{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/image-styles/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/image-styles/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="7" class="admin-table-empty">{{t "No styles yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,24 @@
+{{/* visibility_roles - the "roles" row of a placement's visibility
+     (BlockPlacementDef.VisibilityRoles), a settings row (admin-setting):
+     checked roles are joined into visibility_roles (parseVisibilityRoles,
+     admin/blocks_visibility.go). Takes (dict "Placement"
+     entity.BlockPlacementDef "Roles" []visibilityRoleOption "IDPrefix"
+     string). */}}
+{{define "visibility_roles"}}
+{{$p := .Placement}}
+{{$prefix := .IDPrefix}}
+<fieldset class="admin-setting">
+    <legend class="admin-setting-text">
+        <span class="admin-setting-label">{{t "Roles"}}</span>
+        <span class="admin-setting-help">{{t "Show the block only to the checked roles; none checked - to everyone. Works together with the visibility below."}}</span>
+    </legend>
+    <div class="admin-setting-control admin-setting-control--choices">
+        {{range .Roles}}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="visibility_roles" value="{{.Name}}" id="{{$prefix}}-role-{{.Name}}" {{if $p.HasRole .Name}}checked{{end}}>
+            <label class="form-check-label" for="{{$prefix}}-role-{{.Name}}">{{.Label}}</label>
+        </div>
+        {{end}}
+    </div>
+</fieldset>
+{{end}}

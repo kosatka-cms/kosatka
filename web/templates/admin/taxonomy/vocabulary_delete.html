@@ -1,0 +1,27 @@
+{{template "layout.html" .}}
+
+{{define "content"}}
+<p><a href="/admin/config/taxonomy">&larr; {{t "Vocabularies"}}</a></p>
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "has-terms" (t "Cannot delete the vocabulary: it still has terms. Delete them first.")
+        "delete" (t "Error deleting the vocabulary.")))}}
+
+<div class="alert alert-danger">
+    <h5 class="alert-heading">{{t "Delete vocabulary \"@name\"?" "@name" .vocabulary.Name}}</h5>
+    {{if gt .termCount 0}}
+    <p class="mb-0"><strong>{{plural .termCount "Cannot delete it now - the vocabulary still has @count term." "Cannot delete it now - the vocabulary still has @count terms."}}</strong>
+        {{t "Delete its terms first, then delete the empty vocabulary."}}</p>
+    {{else}}
+    <p class="mb-0">{{t "The vocabulary has no terms - it can be deleted."}}</p>
+    {{end}}
+</div>
+
+<form method="post" action="/admin/config/taxonomy/{{.vocabulary.ID}}/delete">
+    {{if eq .termCount 0}}
+    <button type="submit" class="btn btn-danger">{{t "Yes, delete vocabulary"}}</button>
+    {{end}}
+    <a href="/admin/config/taxonomy" class="btn btn-secondary">{{t "Cancel"}}</a>
+</form>
+{{end}}

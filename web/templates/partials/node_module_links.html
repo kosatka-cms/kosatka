@@ -1,0 +1,14 @@
+{{define "node_module_links"}}
+{{/* The modules' links under the node: their own markup
+     ("node_links_<module>", from .moduleNode) and their plain links
+     (.moduleNodeLinks); see interfaces.AddNodePage. */}}
+{{$own := moduleHook "node_links" .}}
+{{if or $own .moduleNodeLinks}}
+<div class="node-module-links">
+    {{$own}}
+    {{range .moduleNodeLinks}}
+    <p class="node-module-links-link"><a href="{{.URL}}">{{.Label}}</a></p>
+    {{end}}
+</div>
+{{end}}
+{{end}}

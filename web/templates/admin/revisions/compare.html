@@ -1,0 +1,71 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{.node.Title}} · {{plural (len .comparison.Changes) "@count change" "@count changes"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/node/{{.node.ID}}/revisions" class="btn btn-outline-secondary">{{t "Back to the history"}}</a>
+{{if .canRevert}}
+<form method="post" action="/node/{{.node.ID}}/revisions/{{.comparison.From.ID}}/revert" class="d-inline" data-confirm="{{t "Bring back the version of @date? The current one stays in the history." "@date" (formatDate .comparison.From.CreatedAt)}}">
+    <button type="submit" class="btn btn-primary">{{t "Bring back the version of @date" "@date" (formatDate .comparison.From.CreatedAt)}}</button>
+</form>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{/* revision_side - a revision as a compared side's heading. */}}
+{{define "revision_side"}}
+<span class="admin-revision-side-name">{{formatDate .CreatedAt}}{{with .User}}{{if .Username}} · {{.Username}}{{end}}{{end}}</span>
+{{end}}
+
+{{/* revision_text - a side of a text compared by words: its paragraphs,
+     the changed words marked (del on the old side, ins on the new). */}}
+{{define "revision_text"}}
+{{range .Paragraphs}}<p>{{range .}}{{if .Changed}}{{if $.Old}}<del>{{.Text}}</del>{{else}}<ins>{{.Text}}</ins>{{end}}{{else}}{{.Text}}{{end}}{{end}}</p>{{else}}<p class="admin-revision-empty">-</p>{{end}}
+{{end}}
+
+{{/* revision_items - a side's values, those absent from the other side
+     marked. */}}
+{{define "revision_items"}}
+{{range .Items}}<span class="admin-revision-item{{if .Changed}}{{if $.Old}} admin-revision-item--del{{else}} admin-revision-item--ins{{end}}{{end}}">{{if not .Time.IsZero}}{{formatDate .Time}}{{else}}{{.Text}}{{end}}</span>{{else}}<span class="admin-revision-empty">-</span>{{end}}
+{{end}}
+
+{{define "content"}}
+{{$c := .comparison}}
+<div class="admin-revision-sides">
+    <div class="admin-revision-side">
+        <span class="admin-revision-side-label admin-revision-side-label--old">{{t "Was"}}</span>
+        {{template "revision_side" $c.From}}
+    </div>
+    <div class="admin-revision-side">
+        <span class="admin-revision-side-label admin-revision-side-label--new">{{t "Became"}}</span>
+        {{template "revision_side" $c.To}}
+    </div>
+</div>
+
+{{range $c.Changes}}
+<section class="admin-revision-change">
+    <h2 class="admin-revision-change-title">{{.Label}}</h2>
+    <div class="admin-revision-change-body">
+        {{if .IsText}}
+        <div class="admin-revision-col">{{template "revision_text" (dict "Paragraphs" .OldText "Old" true)}}</div>
+        <div class="admin-revision-col">{{template "revision_text" (dict "Paragraphs" .NewText "Old" false)}}</div>
+        {{else}}
+        <div class="admin-revision-col admin-revision-items">{{template "revision_items" (dict "Items" .OldItems "Old" true)}}</div>
+        <div class="admin-revision-col admin-revision-items">{{template "revision_items" (dict "Items" .NewItems "Old" false)}}</div>
+        {{end}}
+    </div>
+</section>
+{{else}}
+<div class="admin-surface"><p class="mb-0">{{t "The two versions are the same."}}</p></div>
+{{end}}
+
+{{with $c.Unchanged}}
+<details class="admin-revision-unchanged">
+    <summary>{{plural (len .) "Unchanged: @count field" "Unchanged: @count fields"}}</summary>
+    <p>{{range $i, $l := .}}{{if $i}}, {{end}}{{$l}}{{end}}</p>
+</details>
+{{end}}
+{{end}}

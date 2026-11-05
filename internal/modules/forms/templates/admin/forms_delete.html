@@ -1,0 +1,12 @@
+{{/* admin/forms_delete.html - whether to delete a form with its
+     submissions (WebformController.DeleteFormConfirm). */}}
+{{template "layout.html" .}}
+
+{{define "forms_delete_body"}}
+<p class="mb-0">{{if .submissions}}{{plural .submissions "Its @count submission goes with it." "Its @count submissions go with it."}} {{end}}{{t "This can't be undone."}}</p>
+{{end}}
+
+{{define "content"}}
+{{template "admin_confirm_delete" (dict "Ctx" . "Back" "/admin/forms" "BackLabel" (t "All forms")
+    "Heading" .question "Body" (renderBlock "forms_delete_body" .) "Action" .action "Submit" (t "Delete"))}}
+{{end}}

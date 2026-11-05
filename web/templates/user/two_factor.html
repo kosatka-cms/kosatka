@@ -1,0 +1,76 @@
+{{/* user/two_factor.html - the user's two-factor sign-in
+     (UserController.TwoFactor). Off: turning it on - the app, the QR code
+     (.qr) or the key by hand (.setup), the code confirming it. On (.status):
+     since when, the recovery codes left, new ones, turning it off (not
+     while the role needs it, .required). A code asked for each change. */}}
+{{template "layout.html" .}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="two-factor-page">
+<h1 class="two-factor-title">{{t "Two-factor sign-in"}}</h1>
+{{if .off}}<div class="alert alert-success" role="status">{{t "Two-factor sign-in is turned off."}}</div>{{end}}
+{{if eq .error "code"}}<div class="alert alert-danger" role="alert">{{t "The code is wrong or already used. Try the next one."}}</div>
+{{else if eq .error "required"}}<div class="alert alert-danger" role="alert">{{t "Two-factor sign-in is required for your role: it can't be turned off."}}</div>{{end}}
+
+{{with .status}}
+<section class="two-factor-card">
+    <p class="two-factor-state"><span class="badge text-bg-success">{{tc "two-factor" "on"}}</span> {{t "Since @date. Recovery codes left: @count." "@date" (date .EnabledAt "") "@count" .CodesLeft}}</p>
+    <p>{{t "Signing in takes the password and a code from the authenticator app."}}</p>
+    {{if lt .CodesLeft 3}}<div class="alert alert-warning" role="alert">{{t "Few recovery codes are left: get new ones."}}</div>{{end}}
+    <form method="POST" action="/me/two-factor/codes" class="two-factor-action">
+        <label for="codes-code" class="form-label">{{t "New recovery codes"}}</label>
+        <span class="form-text">{{t "The old ones stop working. Enter a code from the app to confirm."}}</span>
+        <div class="two-factor-row">
+            <input type="text" class="form-control two-factor-code" id="codes-code" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required>
+            <button type="submit" class="btn btn-outline-primary">{{t "Get new codes"}}</button>
+        </div>
+    </form>
+    {{if not $.required}}
+    <form method="POST" action="/me/two-factor/disable" class="two-factor-action">
+        <label for="off-code" class="form-label">{{t "Turn off"}}</label>
+        <span class="form-text">{{t "Signing in will take the password alone. Enter a code from the app (or a recovery code) to confirm."}}</span>
+        <div class="two-factor-row">
+            <input type="text" class="form-control two-factor-code" id="off-code" name="code" autocomplete="one-time-code" placeholder="123456" required>
+            <button type="submit" class="btn btn-outline-danger">{{t "Turn off"}}</button>
+        </div>
+    </form>
+    {{else}}
+    <p class="form-text">{{t "Two-factor sign-in is required for your role: it can't be turned off."}}</p>
+    {{end}}
+</section>
+{{else}}
+{{if .required}}<div class="alert alert-warning" role="alert">{{t "Your role requires two-factor sign-in: turn it on to continue."}}</div>{{end}}
+<p>{{t "Two-factor sign-in protects the account if the password leaks: signing in takes a code from an app on your phone as well."}}</p>
+{{with .setup}}
+<ol class="two-factor-steps">
+    <li>
+        <strong>{{t "Install an authenticator app"}}</strong>
+        <span>{{t "Google Authenticator, Microsoft Authenticator, Yandex Key, 1Password, Bitwarden - any will do."}}</span>
+    </li>
+    <li>
+        <strong>{{t "Scan the QR code in the app"}}</strong>
+        <div class="two-factor-qr-row">
+            <div class="two-factor-qr" role="img" aria-label="{{t "QR code for the authenticator app"}}">{{$.qr}}</div>
+            <div>
+                <span>{{t "Doesn't scan? Add it by hand, the key:"}}</span>
+                <code class="two-factor-key">{{.Grouped}}</code>
+                <span class="form-text">{{t "The app will name it \"@issuer: @account\"." "@issuer" .Issuer "@account" .Account}}</span>
+                <span class="form-text">{{t "Tip: add the same key to a password manager too - then a lost phone won't lock you out."}}</span>
+            </div>
+        </div>
+    </li>
+    <li>
+        <form method="POST" action="/me/two-factor/enable">
+            <label for="on-code"><strong>{{t "Enter the code the app shows"}}</strong></label>
+            <div class="two-factor-row">
+                <input type="text" class="form-control two-factor-code" id="on-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" placeholder="123456" required>
+                <button type="submit" class="btn btn-primary">{{t "Turn on"}}</button>
+            </div>
+        </form>
+    </li>
+</ol>
+{{end}}
+{{end}}
+</div>
+{{end}}

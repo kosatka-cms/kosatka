@@ -1,0 +1,105 @@
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="block-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "update" (t "Error while saving.")
+        "machine_name" (t "The machine name must be lowercase Latin letters, digits and _, starting with a letter, and not another block's."))
+    "Warnings" (dict
+        "empty" (t "Enter a title.")))}}
+
+<form method="post" action="/admin/config/blocks/{{.block.ID}}" id="block-form" class="admin-settings">
+    <input type="hidden" name="theme" value="{{.blocksTheme}}">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-title" class="admin-setting-label">{{t "Name"}}</label>
+                <span class="admin-setting-help">{{t "Admin only - identifies the block in the \"Blocks\" list. Shown on the site as a heading (&lt;h2&gt;) only if \"Show title\" is enabled below."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="block-title" name="title" class="form-control" value="{{.block.Title}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-machine-name" class="admin-setting-label">{{t "Machine name"}}</label>
+                <span class="admin-setting-help">{{t "What a text or a template embeds the block by: @tag. Changing it breaks the tags with the old one." "@tag" (printf "[[block:%s]]" .block.MachineName)}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="block-machine-name" name="machine_name" class="form-control" value="{{.block.MachineName}}" pattern="[a-z][a-z0-9_]*" maxlength="64">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-show-title" class="admin-setting-label">{{t "Show title"}}</label>
+                <span class="admin-setting-help">{{t "Render the \"Title\" as an &lt;h2&gt; above the block on the site. Turn it off if no heading is needed (for example, in the footer) without touching the \"Title\" itself."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="block-show-title" name="show_title" value="1" class="form-check-input" {{if .block.ShowTitle}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-text-format" class="admin-setting-label">{{t "Text format"}}</label>
+                <span class="admin-setting-help">{{t "\"- as before -\" is the standard safe sanitization (no &lt;script&gt;). A format with \"script\"/\"style\" among the allowed tags (see <a href=\"/admin/config/text-formats\">Text formats</a>) is the only way to save raw code in a block (for example an ad &lt;script&gt;)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select id="block-text-format" name="text_format_id" class="form-select text-format-picker" data-target-field="block-body">
+                    <option value="" data-rich-editor="1" data-plugins="link image code lists" data-toolbar="undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code" {{if not .block.TextFormatID}}selected{{end}}>{{t "- as before (plain HTML) -"}}</option>
+                    {{$currentFormatID := .block.TextFormatIDValue}}
+                    {{range .textFormats}}
+                    {{if or (eq .Status 1) (eq .ID $currentFormatID)}}
+                    <option value="{{.ID}}" data-rich-editor="{{if .HasRichEditor}}1{{else}}0{{end}}" {{with textFormatEditor .}}data-plugins="{{.Plugins}}" data-toolbar="{{.Toolbar}}"{{with .External}} data-external-plugins="{{.}}"{{end}}{{end}} {{if eq .ID $currentFormatID}}selected{{end}}>{{.Label}}</option>
+                    {{end}}
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting admin-setting--stacked">
+            <div class="admin-setting-text">
+                <label for="block-body" class="admin-setting-label">{{t "Content"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <textarea id="block-body" name="body" class="form-control" rows="6">{{.block.Body}}</textarea>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-status" class="admin-setting-label">{{tc "masculine" "Published"}}</label>
+                <span class="admin-setting-help">{{t "A disabled block is not shown on the site but is not deleted."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="block-status" name="status" value="1" class="form-check-input" {{if .block.Status}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="block-lazy" class="admin-setting-label">{{t "Load on scroll"}}</label>
+                <span class="admin-setting-help">{{t "The block is loaded when scrolling reaches it - for heavy blocks at the bottom of the page. While it loads, the theme's placeholder for the region is shown in its place, if there is one."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="block-lazy" name="lazy" value="1" class="form-check-input" {{if .placement.Lazy}}checked{{end}}>
+            </div>
+        </div>
+        {{template "visibility_roles" (dict "Placement" .placement "Roles" .visibilityRoles "IDPrefix" "block")}}
+        {{template "visibility_scope" (dict "Placement" .placement "ContentTypes" .contentTypes "IDPrefix" "block")}}
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection): form_block_<module>, form_block_placement_<module>. */}}
+    {{moduleHook "form_block" .}}
+    {{moduleHook "form_block_placement" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+{{template "tinymce_user_files.html" .}}
+{{end}}

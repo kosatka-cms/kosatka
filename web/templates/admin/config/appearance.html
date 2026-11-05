@@ -1,0 +1,101 @@
+{{/* admin/config/appearance - the themes (AppearancePage): a card per theme
+     (preview, set as default, its settings), the catalog and the style
+     guide over the page; the site-wide settings as rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The theme sets the site's templates, styles and block regions. The change applies at once, without a restart. Blocks placed in regions the new theme doesn't have are not shown - move them on the <a href=\":url\">Blocks</a> page." ":url" "/admin/config/blocks"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/appearance/catalog" class="btn btn-outline-secondary" title="{{t "themes from their own repositories, with the command that installs them."}}">{{t "Themes catalog"}}</a>
+<a href="/admin/config/appearance/styleguide" class="btn btn-outline-secondary" title="{{t "headings, buttons, forms and the other markup of the site as the active theme shows it."}}">{{t "Style guide"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "saved" (t "The theme has been changed.")))}}
+{{if .settingsSaved}}<div class="alert alert-success">{{t "Settings saved."}}</div>{{end}}
+{{template "admin_alerts" (dict "Ctx" . "Fallback" (t "Could not change the theme."))}}
+
+{{/* The directories under themes/ that aren't usable themes, with why
+     (themes.Invalid): their author sees what to fix. */}}
+{{with .invalidThemes}}
+<div class="alert alert-warning">
+    <p class="mb-1">{{t "These directories under themes/ are not listed: their theme.yaml is missing or has an error."}}</p>
+    <ul class="mb-0">{{range .}}<li><code>themes/{{.Dir}}</code> - {{.Err}}</li>{{end}}</ul>
+</div>
+{{end}}
+
+{{/* A card per theme (themes.Option, its theme.yaml): the
+     screenshot, the name, the release, the description, the author (to
+     the homepage), the license, the tags; a theme the engine release is
+     too old for (min_version) can't be previewed or set active. */}}
+<div class="theme-cards mb-4">
+    {{range .themes}}
+    <div>
+        <div class="card h-100 theme-card{{if eq .Dir $.activeTheme}} border-success{{end}}">
+            {{if .Screenshot}}
+            <img src="{{.Screenshot}}" class="card-img-top theme-card-screenshot" alt="{{t "Screenshot of the @theme theme" "@theme" .Name}}" loading="lazy" width="1500" height="1000">
+            {{else}}
+            <div class="card-img-top theme-card-screenshot theme-card-noshot">{{t "No screenshot"}}</div>
+            {{end}}
+            <div class="card-body">
+                <h5 class="card-title mb-1">{{.Name}}
+                    {{if eq .Dir $.activeTheme}}<span class="badge text-bg-success align-middle">{{t "active"}}</span>{{end}}
+                </h5>
+                <div class="small text-muted mb-2">
+                    {{if .Version}}{{t "Version @version" "@version" .Version}}{{else}}{{t "Part of the engine"}}{{with $.engineRelease}} ({{.}}){{end}}{{end}}
+                    · {{if .Dir}}<code>themes/{{.Dir}}</code>{{else}}{{t "engine templates"}}{{end}}
+                    · {{plural .Regions "@count region" "@count regions"}}
+                </div>
+                {{with .Description}}<p class="card-text">{{.}}</p>{{end}}
+                <dl class="theme-card-meta small mb-2">
+                    {{with .Base}}<dt>{{t "Subtheme of"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .Author}}<dt>{{t "Author"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .Homepage}}<dt>{{t "Homepage"}}</dt><dd><a href="{{.}}" rel="noopener" target="_blank">{{.}}</a></dd>{{end}}
+                    {{with .Source}}<dt>{{t "Installed from"}}</dt><dd><code>{{.}}</code></dd>{{end}}
+                    {{with .License}}<dt>{{t "License"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .MinVersion}}<dt>{{t "Requires"}}</dt><dd>Kosatka {{.}}+</dd>{{end}}
+                </dl>
+                {{with .Tags}}<div class="theme-card-tags">{{range .}}<span class="badge text-bg-light border">{{.}}</span> {{end}}</div>{{end}}
+                {{if not .Compatible}}
+                <div class="alert alert-warning small mt-3 mb-0">{{t "The theme needs Kosatka @version or newer; this site runs @current." "@version" .MinVersion "@current" $.engineRelease}}</div>
+                {{end}}
+            </div>
+            <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+                {{if .Settings}}<a href="/admin/config/appearance/theme/{{.Key}}" class="btn btn-sm btn-outline-secondary">{{t "Settings"}}</a>{{end}}
+                {{if and (ne .Dir $.activeTheme) .Compatible}}
+                <form method="post" action="/admin/config/appearance/preview" class="d-inline">
+                    <input type="hidden" name="theme" value="{{.Dir}}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{tc "theme" "Preview"}}</button>
+                </form>
+                <form method="post" action="/admin/config/appearance" class="d-inline">
+                    <input type="hidden" name="theme" value="{{.Dir}}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Set as default"}}</button>
+                </form>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+<form method="post" action="/admin/config/appearance/settings" class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="back_to_top" class="admin-setting-label">{{t "\"Back to top\" button"}}</label>
+                <span class="admin-setting-help">{{t "A round button in the corner of the page that scrolls back to the top; appears after scrolling down. Its look can be changed in the theme (the .back-to-top class)."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input type="checkbox" class="form-check-input" role="switch" id="back_to_top" name="back_to_top" value="1" {{if .backToTopEnabled}}checked{{end}}>
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

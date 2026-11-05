@@ -1,0 +1,16 @@
+{{/* content_type_tabs - top nav across a content type's separate edit
+     pages (real links, not JS tabs): settings, fields, detail-page display.
+     Expects .contentType and .activeTab ("settings"/"fields"/"detail-display"). */}}
+{{define "content_type_tabs"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link{{if eq .activeTab "settings"}} active{{end}}" href="/admin/config/content-types/{{.contentType.ID}}">{{t "Settings"}}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{{if eq .activeTab "fields"}} active{{end}}" href="/admin/config/content-types/{{.contentType.ID}}/fields">{{t "Fields"}}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link{{if eq .activeTab "detail-display"}} active{{end}}" href="/admin/config/content-types/{{.contentType.ID}}/fields/display-detail">{{t "Display: detail page"}}</a>
+    </li>
+</ul>
+{{end}}

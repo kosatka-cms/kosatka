@@ -1,0 +1,38 @@
+{{/* node_settings_action_log - the content form's "Log" row
+     (.moduleSettings.action_log, Hooks.NodeSettings: how many entries,
+     the address of the content's own log), a node-settings-section of the
+     form's side column; none for a new content or a user who may not see
+     the log. */}}
+{{define "node_settings_action_log"}}
+{{with .moduleSettings}}{{with index . "action_log"}}
+<a class="node-settings-section node-settings-link" href="{{.URL}}">
+  <span class="node-settings-title">{{t "Action log"}}</span>
+  <span class="node-settings-value">{{plural .Count "@count entry" "@count entries"}}</span>
+</a>
+{{end}}{{end}}
+{{end}}
+
+{{/* admin_people_actions_action_log - the log icon of a user in the
+     admin's list, beside its edit icon (dict "User" "Ctx";
+     Ctx.actionLogCanView - Hooks.PageData): the log of what they did. */}}
+{{define "admin_people_actions_action_log"}}
+{{if .Ctx.actionLogCanView}}<a href="/admin/reports/action-log?actor_id={{.User.ID}}" class="admin-icon-btn" title="{{t "Action log"}}" aria-label="{{t "Action log"}}">{{template "admin_icon_log"}}</a>{{end}}
+{{end}}
+
+{{/* dashboard_action_log - the action log's block on the admin's Overview
+     (.Data: the newest entries, dashboardRows): the action in its tone's
+     colour, what it was done to (linked while it exists), who and when. */}}
+{{define "dashboard_action_log"}}
+{{attach "action_log"}}
+{{range .Data}}
+<div class="admin-dash-row">
+    <span class="admin-dash-grow">
+        <span class="action-log-badge action-log-badge--{{or .Tone "change"}}">{{.Action}}</span>
+        {{if .Object.URL}}<a href="{{.Object.URL}}">{{.Object.Label}}</a>{{else}}{{.Object.Label}}{{end}}
+        <span class="admin-dash-sub">{{if .ActorID}}{{or .ActorName (print "#" .ActorID)}}{{else}}-{{end}} · {{date .At "datetime"}}</span>
+    </span>
+</div>
+{{else}}
+<p class="admin-dash-empty">{{t "No entries."}}</p>
+{{end}}
+{{end}}

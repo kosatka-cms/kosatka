@@ -1,0 +1,158 @@
+{{/* The subscriptions module's parts of the core's pages (moduleHook,
+     renderOptional). */}}
+
+{{/* subscriptions_bell - the bell icon of the module's items. */}}
+{{define "subscriptions_bell"}}<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>{{end}}
+
+{{/* user_menu_subscriptions - "Notifications" in the user menu (the
+     user_menu block), with the unread ones; data-mobile-user-menu: the
+     mobile menu copies it (app.js). */}}
+{{define "user_menu_subscriptions"}}
+<a href="/me/notifications" class="dropdown-item dropdown-item-notifications" data-mobile-user-menu>
+    {{template "subscriptions_bell"}}
+    {{t "Notifications"}}
+    {{if gt (or .subscriptionsUnread 0) 0}}<span class="badge bg-danger ms-1">{{.subscriptionsUnread}}</span>{{end}}
+</a>
+{{end}}
+
+{{/* admin_user_menu_subscriptions - "Notifications" in the admin header's
+     user menu. */}}
+{{define "admin_user_menu_subscriptions"}}
+<a href="/me/notifications" class="dropdown-item dropdown-item-notifications">{{t "Notifications"}}{{if gt (or .subscriptionsUnread 0) 0}} <span class="badge bg-danger ms-1">{{.subscriptionsUnread}}</span>{{end}}</a>
+{{end}}
+
+{{/* subscriptions_follow - a follow button (Controller.followState):
+     the form posting to .Action, back to .Back; a guest is offered to log
+     in. .Label / .On - the button's words before and after following. */}}
+{{define "subscriptions_follow"}}{{attach "subscriptions"}}
+{{$s := .State}}
+<div class="subscriptions-follow">
+{{if $s.SignedIn}}
+<form method="post" action="{{$s.Action}}" class="subscriptions-follow-form">
+    <input type="hidden" name="back" value="{{$s.Back}}">
+    {{if $s.Following}}
+    <input type="hidden" name="action" value="unsubscribe">
+    <span class="subscriptions-follow-state">{{template "subscriptions_bell"}} {{.On}}</span>
+    <button type="submit" class="subscriptions-follow-off">{{.Off}}</button>
+    {{else}}
+    <button type="submit" class="subscriptions-follow-on">{{template "subscriptions_bell"}} {{.Label}}</button>
+    {{end}}
+</form>
+{{else}}
+<a href="/login?destination={{urlquery $s.Back}}" class="subscriptions-follow-login">{{t "Log in to subscribe"}}</a>
+{{end}}
+</div>
+{{end}}
+
+{{/* comments_actions_subscriptions - the comments' subscription button
+     on a content page (.moduleNode.subscriptions, Controller.NodePage). */}}
+{{define "comments_actions_subscriptions"}}
+{{with .moduleNode}}{{with .subscriptions}}
+{{template "subscriptions_follow" (dict "State" . "Label" (t "Subscribe to the comments") "On" (t "You are subscribed") "Off" (t "Unsubscribe"))}}
+{{end}}{{end}}
+{{end}}
+
+{{/* term_actions_subscriptions - following a term (.moduleTerm.subscriptions,
+     Controller.TermPage). */}}
+{{define "term_actions_subscriptions"}}
+{{with .moduleTerm}}{{with .subscriptions}}
+{{template "subscriptions_follow" (dict "State" . "Label" (t "Follow") "On" (t "You follow it") "Off" (t "Stop"))}}
+{{end}}{{end}}
+{{end}}
+
+{{/* profile_tab_subscriptions - the Notifications tab: the notifications
+     (an unread group of comments as one), what the user follows. */}}
+{{define "profile_tab_subscriptions"}}{{attach "subscriptions"}}
+<div class="subscriptions-tab">
+    <section class="subscriptions-feed" aria-labelledby="subscriptions-feed-title">
+        <div class="subscriptions-head">
+            <h2 id="subscriptions-feed-title" class="subscriptions-title">{{t "Notifications"}}</h2>
+            {{if .subscriptionsUnread}}
+            <form method="post" action="/notifications/read">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Mark all as read"}}</button>
+            </form>
+            {{end}}
+        </div>
+        {{if .subscriptionsItems}}
+        <ul class="subscriptions-items">
+            {{range .subscriptionsItems}}
+            <li class="subscriptions-item{{if not .Read}} is-unread{{end}}">
+                <a href="/notifications/{{.ID}}" class="subscriptions-item-link">
+                    <span class="subscriptions-item-text">
+                    {{- if eq .Kind "reply"}}{{t "<strong>@user</strong> replied to your comment on \"@title\"" "@user" .Actor "@title" .NodeTitle}}
+                    {{- else if eq .Kind "comment"}}{{if gt .Count 1}}{{plural .Count "<strong>@count new comment</strong> on \"@title\"" "<strong>@count new comments</strong> on \"@title\"" "@title" .NodeTitle}}{{else}}{{t "<strong>@user</strong> commented on \"@title\"" "@user" .Actor "@title" .NodeTitle}}{{end}}
+                    {{- else}}{{t "New content with <strong>@term</strong>: \"@title\"" "@term" .TermName "@title" .NodeTitle}}{{end -}}
+                    </span>
+                    <span class="subscriptions-item-meta">{{if gt .Count 1}}{{range $i, $a := .Actors}}{{if $i}}, {{end}}{{$a}}{{end}} · {{else if .Excerpt}}"{{.Excerpt}}" · {{end}}{{formatDate .CreatedAt}}</span>
+                </a>
+            </li>
+            {{end}}
+        </ul>
+        {{template "pagination.html" .}}
+        {{else}}
+        <p class="subscriptions-empty">{{t "No notifications yet."}}</p>
+        {{end}}
+    </section>
+
+    <section class="subscriptions-list" aria-labelledby="subscriptions-list-title">
+        <div class="subscriptions-head">
+            <h2 id="subscriptions-list-title" class="subscriptions-title">{{t "Subscriptions"}}</h2>
+            <a href="/me/edit#subscriptions-settings">{{t "Settings"}}</a>
+        </div>
+        {{if .subscriptionsList}}
+        <ul class="subscriptions-subs">
+            {{range .subscriptionsList}}
+            <li>
+                <a href="{{.URL}}">{{.Title}}</a>{{with .Kind}} <span class="subscriptions-kind">· {{.}}</span>{{end}}
+                <form method="post" action="/subscriptions/delete/{{.ID}}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{{if .Kind}}{{t "Stop"}}{{else}}{{t "Unsubscribe"}}{{end}}</button>
+                </form>
+            </li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p class="subscriptions-empty">{{t "You follow nothing yet: subscribe to the comments of content or follow a tag."}}</p>
+        {{end}}
+        <p class="subscriptions-note">{{t "Replies to your comments come always - they can be turned off in the settings."}}</p>
+    </section>
+</div>
+{{end}}
+
+{{/* user_settings_subscriptions - the notification settings on the
+     profile form, a card of its side column; the hidden field marks the
+     section shown. */}}
+{{define "user_settings_subscriptions"}}
+{{with .moduleSettings}}{{with .subscriptions}}
+<section class="node-edit-card" id="subscriptions-settings" aria-labelledby="subscriptions-settings-title">
+    <h2 class="node-edit-card-title" id="subscriptions-settings-title">{{t "Notifications"}}</h2>
+    <input type="hidden" name="subscriptions_user_settings" value="1">
+    <div class="fw-semibold">{{t "E-mails"}}</div>
+    <div class="form-check">
+        <input type="radio" class="form-check-input" id="subscriptions_mail_now" name="subscriptions_mail" value="now" {{if eq .Mail "now"}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_mail_now">{{t "At once - an e-mail of what happened (several things in a row - one e-mail)"}}</label>
+    </div>
+    <div class="form-check">
+        <input type="radio" class="form-check-input" id="subscriptions_mail_daily" name="subscriptions_mail" value="daily" {{if eq .Mail "daily"}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_mail_daily">{{t "Once a day - a digest in the morning"}}</label>
+    </div>
+    <div class="form-check">
+        <input type="radio" class="form-check-input" id="subscriptions_mail_never" name="subscriptions_mail" value="never" {{if eq .Mail "never"}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_mail_never">{{t "Never - on the site only"}}</label>
+    </div>
+    <div class="fw-semibold mt-2">{{t "What to tell me of"}}</div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="subscriptions_replies" name="subscriptions_replies" value="1" {{if .Replies}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_replies">{{t "Replies to my comments"}}</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="subscriptions_auto_own" name="subscriptions_auto_own" value="1" {{if .AutoOwn}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_auto_own">{{t "Subscribe me to the comments of content I create"}}</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="subscriptions_auto_commented" name="subscriptions_auto_commented" value="1" {{if .AutoCommented}}checked{{end}}>
+        <label class="form-check-label" for="subscriptions_auto_commented">{{t "Subscribe me to the comments of content I comment on"}}</label>
+    </div>
+</section>
+{{end}}{{end}}
+{{end}}
+

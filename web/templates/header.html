@@ -1,0 +1,34 @@
+{{/* Default header (a theme overrides it with its own header.html): engine
+     document start (html_start, partials/html.html), one row with the
+     site's name, logo and slogan (Site information), the header region
+     (the main menu on a new site) and the account links; on a phone the
+     region wraps under them. */}}
+{{define "header"}}
+{{template "html_start" .}}
+
+<header class="site-header" role="banner">
+    <div class="container site-header-inner">
+        <a class="site-branding" href="{{localURL "/"}}" rel="home">
+            {{if .siteLogoURI}}<img class="site-logo" src="{{.siteLogoURI}}" alt="{{.siteName}}">{{end}}
+            <span class="site-branding-text">
+                <span class="site-name">{{.siteName}}</span>
+                {{with .siteSlogan}}<span class="site-slogan">{{.}}</span>{{end}}
+            </span>
+        </a>
+        {{if regionHasBlocks "header" .}}
+        <div class="site-header-region">
+            {{template "region_blocks" (dict "Region" (region "header") "Ctx" .)}}
+        </div>
+        {{end}}
+        <nav class="site-account" aria-label="{{t "User menu"}}">
+            {{if .user}}
+            <a href="/me">{{t "My profile"}}</a>
+            <a href="/logout">{{t "Log out"}}</a>
+            {{else}}
+            <a href="/login">{{t "Log in"}}</a>
+            {{if registrationOpen}}<a href="/user/register" class="site-account-primary">{{t "Registration"}}</a>{{end}}
+            {{end}}
+        </nav>
+    </div>
+</header>
+{{end}}

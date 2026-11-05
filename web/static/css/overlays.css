@@ -1,0 +1,445 @@
+/* overlays.css - what scripts open over the page, on public pages and in
+   the admin alike: the windows (Kosatka.window: the editor's "Insert into
+   the text" - .kosatka-embed, the media library's picker -
+   .kosatka-media), the toasts (Kosatka.toast) and the suggestions under
+   an input (Kosatka.autocomplete). The windows keep their own look
+   whatever the theme; the toasts' and the suggestions' rules are inside
+   :where(), so a theme's rule wins over them. */
+
+/* ===== Windows ===== */
+/* Above the editor's own dialogs: the file picker opens from its image
+   dialog. */
+.kosatka-window-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(16, 32, 43, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #10202b;
+}
+.kosatka-window {
+    width: 860px;
+    max-width: 100%;
+    height: 540px;
+    max-height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(6, 32, 51, .25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.kosatka-window-head,
+.kosatka-window-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #dde4ea;
+}
+.kosatka-window-head h2 {
+    margin: 0;
+    font-size: 16px;
+    flex: 1;
+}
+.kosatka-window-foot {
+    border-bottom: 0;
+    border-top: 1px solid #dde4ea;
+    justify-content: flex-end;
+}
+.kosatka-window-foot:empty {
+    display: none;
+}
+.kosatka-window-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+}
+.kosatka-window button.kosatka-window-btn {
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid #c9d3db;
+    background: #fff;
+    border-radius: 6px;
+    font: inherit;
+    color: #10202b;
+    cursor: pointer;
+}
+.kosatka-window button.kosatka-window-btn.is-primary {
+    border-color: #062033;
+    background: #062033;
+    color: #fff;
+}
+.kosatka-window button.kosatka-window-btn:disabled {
+    opacity: .5;
+    cursor: default;
+}
+.kosatka-window-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: none;
+    font-size: 22px;
+    color: #4a6272;
+    cursor: pointer;
+}
+@media (max-width: 760px) {
+    .kosatka-window {
+        height: 100%;
+    }
+    .kosatka-window-body {
+        flex-direction: column;
+        overflow: auto;
+    }
+}
+
+/* The editor's "Insert into the text" (embeds_editor.js): the kinds, the
+   found ones, the preview. */
+.kosatka-embed {
+    height: 520px;
+}
+.kosatka-embed-kinds {
+    width: 170px;
+    flex: none;
+    background: #f7f9fb;
+    border-right: 1px solid #dde4ea;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: auto;
+}
+.kosatka-embed-kinds button {
+    min-height: 40px;
+    text-align: left;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+.kosatka-embed-kinds button[aria-current=true] {
+    background: #062033;
+    color: #fff;
+}
+.kosatka-embed-list {
+    width: 320px;
+    flex: none;
+    border-right: 1px solid #dde4ea;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.kosatka-embed-list input {
+    margin: 12px;
+    height: 38px;
+    border: 1px solid #c9d3db;
+    border-radius: 6px;
+    padding: 0 10px;
+    font: inherit;
+}
+.kosatka-embed-options {
+    flex: 1;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.kosatka-embed-options li {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+.kosatka-embed-options li[aria-selected=true] {
+    background: #e6f1f6;
+}
+.kosatka-embed-options img,
+.kosatka-embed-options .kosatka-embed-nothumb {
+    width: 48px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex: none;
+    background: #dcecf2;
+}
+.kosatka-embed-options strong {
+    display: block;
+}
+.kosatka-embed-options span {
+    display: block;
+    font-size: 12px;
+    color: #4a6272;
+}
+.kosatka-embed-empty {
+    padding: 12px;
+    color: #4a6272;
+}
+.kosatka-embed-preview {
+    flex: 1;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    overflow: auto;
+}
+.kosatka-embed-preview h3 {
+    margin: 0;
+    font-size: 16px;
+}
+.kosatka-embed-preview .kosatka-embed-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a6272;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.kosatka-embed-preview .kosatka-embed-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+.kosatka-embed-preview .kosatka-embed-grid img {
+    width: 100%;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+.kosatka-embed-preview ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.kosatka-embed-preview p {
+    margin: 0;
+    font-size: 13px;
+    color: #4a6272;
+}
+.kosatka-embed-preview code {
+    font-family: ui-monospace, Menlo, monospace;
+    color: #10202b;
+}
+@media (max-width: 760px) {
+    .kosatka-embed-kinds {
+        width: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: 0;
+        border-bottom: 1px solid #dde4ea;
+    }
+    .kosatka-embed-list {
+        width: auto;
+        border-right: 0;
+        border-bottom: 1px solid #dde4ea;
+        max-height: 45%;
+    }
+}
+
+/* The media library's picker (52-media-picker.js): the files, the
+   chosen one beside. */
+.kosatka-media {
+    height: 560px;
+}
+.kosatka-media-list {
+    flex: 1;
+    min-width: 0;
+    border-right: 1px solid #dde4ea;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+    overflow: auto;
+}
+.kosatka-media-list input[type=search] {
+    height: 36px;
+    border: 1px solid #c9d3db;
+    border-radius: 6px;
+    padding: 0 10px;
+    font: inherit;
+}
+.kosatka-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.kosatka-media-grid li {
+    cursor: pointer;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #dde4ea;
+    background: #f7f9fb;
+}
+.kosatka-media-grid li[aria-selected=true] {
+    outline: 3px solid #0b5c7a;
+    outline-offset: 1px;
+}
+.kosatka-media-grid img,
+.kosatka-media-grid .kosatka-media-ext {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    font-weight: 700;
+    color: #4a6272;
+    background: #e6edf2;
+}
+.kosatka-media-grid span.kosatka-media-name {
+    display: block;
+    padding: 4px 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kosatka-media-empty {
+    color: #4a6272;
+}
+.kosatka-media-more {
+    align-self: center;
+}
+.kosatka-media-side {
+    width: 280px;
+    flex: none;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+}
+.kosatka-media-side img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f2f6f8;
+}
+.kosatka-media-side p {
+    margin: 0;
+    font-size: 12px;
+    color: #4a6272;
+}
+.kosatka-media-side label {
+    font-size: 13px;
+    font-weight: 600;
+}
+.kosatka-media-side input {
+    height: 34px;
+    border: 1px solid #c9d3db;
+    border-radius: 6px;
+    padding: 0 10px;
+    font: inherit;
+}
+@media (max-width: 760px) {
+    .kosatka-media-list {
+        border-right: 0;
+        border-bottom: 1px solid #dde4ea;
+        overflow: visible;
+    }
+    .kosatka-media-side {
+        width: auto;
+    }
+}
+
+/* ===== Toasts ===== */
+/* At the bottom: the admin's bar and a theme's sticky header take the
+   top. */
+:where(.kosatka-toasts) {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100010;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: min(420px, calc(100vw - 40px));
+    pointer-events: none;
+}
+:where(.kosatka-toast) {
+    min-width: 250px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #b6d4e3;
+    background: #e7f3f9;
+    color: #10202b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    white-space: pre-wrap;
+    word-break: break-word;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity .3s ease, transform .3s ease;
+}
+:where(.kosatka-toast.is-shown) {
+    opacity: 1;
+    transform: none;
+}
+:where(.kosatka-toast--success) {
+    border-color: #b7dfc3;
+    background: #e8f6ec;
+    color: #12452a;
+}
+:where(.kosatka-toast--warning) {
+    border-color: #f0d9a0;
+    background: #fdf5e1;
+    color: #5a4108;
+}
+:where(.kosatka-toast--error) {
+    border-color: #efc0c0;
+    background: #fbeaea;
+    color: #6b1515;
+}
+@media (prefers-reduced-motion: reduce) {
+    :where(.kosatka-toast) {
+        transition: none;
+    }
+}
+
+/* ===== Suggestions (Kosatka.autocomplete) ===== */
+:where(.kosatka-autocomplete-wrap) {
+    position: relative;
+}
+/* ul:where(…) - as specific as the framework's ul rule (its padding,
+   margin), still below any theme class rule. */
+ul:where(.kosatka-autocomplete) {
+    position: absolute;
+    z-index: 1060;
+    max-height: 300px;
+    margin: 2px 0 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    list-style: none;
+    background: var(--bs-body-bg, #fff);
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+:where(.kosatka-autocomplete-item) {
+    padding: 6px 12px;
+    cursor: pointer;
+}
+:where(.kosatka-autocomplete-item:hover, .kosatka-autocomplete-item[aria-selected="true"]) {
+    background: var(--bs-tertiary-bg, #f1f3f5);
+}
+:where(.kosatka-autocomplete-group) {
+    padding: 6px 12px 2px;
+    font-size: .8em;
+    font-weight: 600;
+    color: var(--bs-secondary-color, #6c757d);
+}
+:where(.kosatka-autocomplete-empty) {
+    padding: 6px 12px;
+    color: var(--bs-secondary-color, #6c757d);
+}

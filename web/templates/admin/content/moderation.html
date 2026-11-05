@@ -1,0 +1,93 @@
+{{/* admin/content/moderation.html - the content waiting on moderation
+     (Controller.ModerationList), like the content list: the filters (the
+     status, the type; applied as one changes), on a table card the
+     content, its type, author, status, times and views, edit and delete;
+     for an administrator the checked ones published, unpublished, taken
+     off moderation or deleted (the bar over the table, admin_bulk.js). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count content item" "@count content items"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<form method="get" action="/admin/moderation" class="admin-filters" data-autosubmit>
+    <input type="hidden" name="sort" value="{{.sort}}">
+    <input type="hidden" name="order" value="{{.order}}">
+    <div class="admin-filter">
+        <label for="field-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="field-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .contentTypes}}
+            <option value="{{.}}" {{if and $.filterType (eq $.filterType (toString .))}}selected{{end}}>{{or (index $.typeLabels (toString .)) (toString .)}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="field-status" class="admin-filter-label">{{t "Status"}}</label>
+        <select id="field-status" name="status" class="form-select">
+            <option value="">{{t "All"}}</option>
+            <option value="1" {{if eq .filterStatus 1}}selected{{end}}>{{t "Published"}}</option>
+            <option value="0" {{if eq .filterStatus 0}}selected{{end}}>{{t "Not published"}}</option>
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+    {{if .filtered}}<a href="/admin/moderation" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<form method="post" action="/admin/moderation/bulk-confirm" id="bulkForm" class="admin-table-card">
+    <div class="admin-bulk-bar" data-bulk-bar hidden>
+        <span class="admin-bulk-count">{{t "Selected:"}} <span data-bulk-count>0</span></span>
+        {{if .bulkPublish}}
+        <button type="submit" name="action" value="status_publish" class="btn btn-sm btn-outline-primary">{{t "Publish"}}</button>
+        <button type="submit" name="action" value="status_unpublish" class="btn btn-sm btn-outline-primary">{{t "Unpublish"}}</button>
+        {{end}}
+        <button type="submit" name="action" value="moderation_off" class="btn btn-sm btn-outline-primary">{{t "Remove from moderation"}}</button>
+        <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger">{{t "Delete"}}</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-check"><input type="checkbox" id="selectAll" class="form-check-input" title="{{t "Select all on this page"}}" aria-label="{{t "Select all on this page"}}"></th>
+                    <th><a href="{{.sortURLTitle}}">{{t "Title"}}</a>{{if eq .sort "title"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th>{{t "Author"}}</th>
+                    <th><a href="{{.sortURLStatus}}">{{t "Status"}}</a>{{if eq .sort "status"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th><a href="{{.sortURLCreated}}">{{tc "content" "Created"}}</a>{{if eq .sort "created"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th><a href="{{.sortURLUpdated}}">{{t "Updated"}}</a>{{if eq .sort "updated"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><a href="{{.sortURLViews}}">{{t "Page views"}}</a>{{if eq .sort "views"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .nodes}}
+                <tr>
+                    <td class="admin-table-check"><input type="checkbox" name="ids" value="{{.ID}}" class="form-check-input bulk-checkbox" aria-label="{{t "Select"}}"></td>
+                    <td>
+                        <a href="{{if .Slug}}{{.URL}}{{else}}{{nodeEditPath .Type .ID}}{{end}}" class="admin-table-title">{{.Title}}</a>
+                        <span class="admin-table-sub">{{or (index $.typeLabels (toString .Type)) (toString .Type)}}</span>
+                    </td>
+                    <td>{{if .CreatedBy.Username}}<a href="{{userURL .CreatedBy.Slug}}">{{.CreatedBy.Username}}</a>{{else}}-{{end}}</td>
+                    <td>
+                        <span class="admin-pill admin-pill--warn">{{t "In moderation"}}</span>
+                        {{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Published"}}</span>{{else}}<span class="admin-pill">{{t "Not published"}}</span>{{end}}
+                    </td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .UpdatedAt}}</td>
+                    <td class="text-end admin-table-num">{{.Counter.TotalCount}}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{nodeEditPath .Type .ID}}" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="{{nodeDeletePath .Type .ID}}" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="8" class="admin-table-empty">{{t "No content in moderation"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</form>
+{{end}}

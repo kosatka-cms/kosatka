@@ -1,0 +1,208 @@
+{{template "layout.html" .}}
+
+{{/* Override/revert banner shown above each of the 4 cards. Inherited from
+       Default → "Override" forks a local copy (see views.DefaultService.Override*);
+       an override of a grouped non-Default display → "Revert to default".
+       Defined at top level because Go templates can't nest {{define}}. */}}
+{{define "view_section_override_banner"}}
+{{if not .CanEdit}}
+<div class="alert alert-info d-flex justify-content-between align-items-center py-2 px-3 mb-2">
+    <span>{{t "Inherited from Default"}}{{if .DefaultDisplay}} "{{.DefaultDisplay.Label}}"{{end}}</span>
+    <form method="post" action="{{.OverrideURL}}" class="mb-0">
+        <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Override"}}</button>
+    </form>
+</div>
+{{else if and .View.HasGroup (not .View.IsDefault) .Overridden}}
+<div class="alert alert-warning d-flex justify-content-between align-items-center py-2 px-3 mb-2">
+    <span>{{t "Overridden - does not follow changes in Default"}}</span>
+    <form method="post" action="{{.RevertURL}}" class="mb-0">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Revert to default"}}</button>
+    </form>
+</div>
+{{end}}
+{{end}}
+
+{{/* view_page - single-page View editor (the one exception to separate admin
+     tab pages, see admin/views/tabs.html). Sections are edited in AJAX modals
+     (admin_views.js); plain form POST still works without JS (wantsJSON). */}}
+{{define "page_meta"}}
+<span class="admin-page-meta">{{tc "views" "View"}} · {{if eq (print .view.DisplayType) "block"}}{{t "Block"}}{{else if eq (print .view.DisplayType) "attachment"}}{{t "Attached to content"}}{{else if eq (print .view.DisplayType) "term"}}{{t "Term page"}}{{else if eq (print .view.DisplayType) "user_tab"}}{{t "Profile tab"}}{{else}}{{t "Page"}}{{end}} · <code>{{.view.MachineName}}</code> · {{if eq .view.Status 1}}{{t "enabled"}}{{else}}{{t "disabled"}}{{end}}</span>
+{{end}}
+
+{{/* The page's actions: the publish state with discard and publish
+     (view_publish_status, refreshed after every change), then the rest
+     in a menu. */}}
+{{define "page_actions"}}
+<div id="view-publish-status">{{template "view_publish_status" .}}</div>
+{{if not .view.IsDefault}}
+<div class="dropdown">
+    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{t "More"}}" title="{{t "More"}}">⋯</button>
+    <div class="dropdown-menu dropdown-menu-end">
+        <form method="post" action="/admin/config/views/{{.view.ID}}/clone" class="mb-0">
+            <button type="submit" class="dropdown-item">{{t "Duplicate"}}</button>
+        </form>
+        {{/* Lets every display of a group be deleted from its own page; the list
+             (admin/views/index.html) shows one row per group. ViewDeleteConfirm guards Default. */}}
+        <a href="/admin/config/views/{{.view.ID}}/delete" class="dropdown-item text-danger">{{t "Delete"}}</a>
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{/* Tab strip - only for displays that belong to a multi-display View
+       (.view.HasGroup). Tabs are plain links: each display has its own URL. */}}
+{{if .view.HasGroup}}
+<div class="mb-3 pb-2 border-bottom d-flex align-items-center flex-wrap gap-1" id="view-tab-strip">
+    {{if .defaultDisplay}}
+    <a href="/admin/config/views/{{.defaultDisplay.ID}}" class="btn btn-sm {{if .view.IsDefault}}btn-primary{{else}}btn-outline-secondary{{end}}">{{t "Default"}}</a>
+    {{end}}
+    {{/* data-tab-id lets admin_views.js update the label in place after a rename.
+         Not on the Default tab: its text is always "Default". */}}
+    {{range .siblingDisplays}}
+    <a href="/admin/config/views/{{.ID}}" data-tab-id="{{.ID}}" class="btn btn-sm {{if eq .ID $.view.ID}}btn-primary{{else}}btn-outline-secondary{{end}}">
+        {{.Label}}{{if index $.siblingUnpublished .ID}} <span class="unpublished-badge text-warning fw-bold" title="{{t "Unpublished changes"}}">*</span>{{end}}
+    </a>
+    {{end}}
+    {{/* "Add display" creates a blank display that inherits everything from
+         Default (see views.DefaultService.AddDisplay), unlike "Duplicate". Allowed
+         from any tab, including Default. */}}
+    <form method="post" action="/admin/config/views/{{.view.ID}}/add-display" class="ms-1">
+        <button type="submit" class="btn btn-sm btn-outline-primary">+ {{t "Add display"}}</button>
+    </form>
+</div>
+{{end}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "custom-css-invalid" (t "Custom CSS must not contain \"&lt;/style&gt;\".")
+        "publish" (t "Error publishing changes.")
+        "discard" (t "Error discarding changes.")
+        "no-snapshot" (t "This display has not been published yet - nothing to discard.")
+        "duplicate" (t "This URL or machine name is already used by another view.")
+        "url-path-taken" (t "This address is already used on the site: by the engine, content, a term page or a module's page (a feed).")
+        "url-argument" (t "The path may contain only one <code>%</code> segment, as a whole (for example <code>articles/%</code>).")
+        "theme-template" (t "Theme template name: Latin letters, digits and \"_\".")
+        "machine-name" (t "The machine name must be lowercase Latin letters, digits and _, starting with a letter.")
+        "profile-tab-path" (t "Profile tab path: Latin letters, digits, hyphen, and not the path of a built-in tab (edit) or of a module's tab.")
+        "profile-tab-path-taken" (t "This profile tab path is already taken by another View.")
+        "sort-field" (t "This field cannot be used for sorting (only text/number/date fields are allowed).")
+        "params" (t "Check the criterion's settings: a value is out of range.")
+        "operator" (t "This operator is not supported for the selected field.")
+        "field-type" (t "This field cannot be used here (for example image/reference/list/group).")
+        "link-target" (t "The \"link to the original image\" option is available only for \"Image\" fields.")
+        "exposed-param" (t "An exposed filter requires a parameter name.")
+        "exposed-param-invalid" (t "The parameter name: lowercase latin letters, digits and _, starting with a letter; not page, letter or sort.")
+        "exposed-param-taken" (t "Another exposed filter of this display already uses this parameter.")
+        "create" (t "Error creating.")
+        "update" (t "Error saving.")
+        "delete" (t "Error deleting.")
+        "clone" (t "Error duplicating the view.")
+        "invalid" (t "Invalid request.")
+        "section-not-overridden" (t "This section is inherited from Default - click \"Override\" first.")
+        "override" (t "Error overriding.")
+        "revert" (t "Error reverting to default."))
+    "Warnings" (dict
+        "empty" (t "Fill in the required fields.")))}}
+
+<div class="card mb-4" id="settings-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{t "Page settings"}}</span>
+        <button type="button" class="admin-icon-btn" data-bs-toggle="modal" data-bs-target="#settingsModal" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</button>
+    </div>
+    <div class="card-body">
+        {{template "view_section_override_banner" (dict "CanEdit" .view.CanEditSettings "Overridden" .view.OverrideSettings "View" .view "DefaultDisplay" .defaultDisplay "OverrideURL" (printf "/admin/config/views/%d/settings/override" .view.ID) "RevertURL" (printf "/admin/config/views/%d/settings/revert" .view.ID))}}
+        <div id="settings-summary">
+            {{template "view_settings_summary" .}}
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" id="filters-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{t "Filters"}}</span>
+        {{if .view.CanEditFilters}}<button type="button" class="btn btn-sm btn-primary" id="filter-add-btn">{{t "Add filter"}}</button>{{end}}
+    </div>
+    <div class="card-body">
+        {{template "view_section_override_banner" (dict "CanEdit" .view.CanEditFilters "Overridden" .view.OverrideFilters "View" .view "DefaultDisplay" .defaultDisplay "OverrideURL" (printf "/admin/config/views/%d/filters/override" .view.ID) "RevertURL" (printf "/admin/config/views/%d/filters/revert" .view.ID))}}
+        <div id="filters-list">
+            {{template "view_filters_list" .}}
+        </div>
+    </div>
+    <div class="card-footer text-muted small">
+        {{t "Operators: <code>eq</code> - equals, <code>in</code> - one of a list (of terms/values), <code>not_in</code> - none of a list (taxonomy fields get a term picker instead of text), <code>contains</code> - substring, <code>gte</code>/<code>lte</code> - comparison, <code>empty</code>/<code>not_empty</code> - the field has no/has a value (the value is not used at all, the filter is always active), <code>ongoing</code>/<code>not_ended</code>/<code>ended</code> - a date field's date is going on now / is going on or to come / has ended (no value either). The operator list is narrowed automatically to those suitable for the selected field. The <code>content_type</code> filter is the only way to limit a view with the \"Content\" base table to specific content type(s); a view with the \"Comments\" base table uses <code>comment_node_type</code> for this (the type of the content the comment was posted on). Exposed filter - the value comes from a query parameter, and \"Value\" is not used then. Drag a row by &#9776; to change the order."}}
+    </div>
+</div>
+
+<div class="card mb-4" id="fields-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{t "Fields"}}</span>
+        {{if .view.CanEditFields}}<button type="button" class="btn btn-sm btn-primary" id="field-add-btn">{{t "Add field"}}</button>{{end}}
+    </div>
+    <div class="card-body">
+        {{template "view_section_override_banner" (dict "CanEdit" .view.CanEditFields "Overridden" .view.OverrideFields "View" .view "DefaultDisplay" .defaultDisplay "OverrideURL" (printf "/admin/config/views/%d/fields/override" .view.ID) "RevertURL" (printf "/admin/config/views/%d/fields/revert" .view.ID))}}
+        <div id="fields-list">
+            {{template "view_fields_list" .}}
+        </div>
+    </div>
+    <div class="card-footer text-muted small">
+        {{t "Fields are columns in table mode and compact rows in grid mode. A field can be selected even if it is not used in any filter - filtering and display are independent. Drag a row by &#9776; to change the order."}}
+    </div>
+</div>
+
+{{/* Sorting card. Row order matters: the first row is the primary sort key,
+       the rest are tie-breakers (see entity.ViewSortDef). */}}
+<div class="card mb-4" id="sorts-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{t "Sorting"}}</span>
+        {{if .view.CanEditSort}}<button type="button" class="btn btn-sm btn-primary" id="sort-add-btn">{{t "Add sort criterion"}}</button>{{end}}
+    </div>
+    <div class="card-body">
+        {{template "view_section_override_banner" (dict "CanEdit" .view.CanEditSort "Overridden" .view.OverrideSort "View" .view "DefaultDisplay" .defaultDisplay "OverrideURL" (printf "/admin/config/views/%d/sorts/override" .view.ID) "RevertURL" (printf "/admin/config/views/%d/sorts/revert" .view.ID))}}
+        <div id="sorts-list">
+            {{template "view_sorts_list" .}}
+        </div>
+    </div>
+    <div class="card-footer text-muted small">
+        {{t "Multiple criteria are applied in order: the first is the primary sort key, the rest are only tie-breakers (used when content has the same value for all previous criteria). With no criteria - sorted by creation date (newest first). Drag a row by &#9776; to change the order - here the order affects the result, not just how the list is displayed."}}
+    </div>
+</div>
+
+{{/* The preview: under the editor, full width, the live configuration
+     with the settings modal's unsaved values (admin_views.js); redrawn
+     after every change while "Refresh automatically" is on. */}}
+<div class="card mb-4" id="preview-card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>{{t "Preview"}} <span class="admin-card-note">· {{t "the current version, not published yet"}}</span></span>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="form-check form-switch mb-0">
+                <input type="checkbox" role="switch" class="form-check-input" id="view-preview-auto" checked>
+                <label class="form-check-label" for="view-preview-auto">{{t "Refresh automatically"}}</label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="preview-btn">{{t "Refresh"}}</button>
+        </div>
+    </div>
+    <div class="card-body view-preview-body">
+        <div id="view-preview-status" class="text-muted">{{t "Loading…"}}</div>
+        {{/* The list renders in a frame with the site's stylesheets and
+             the active theme (admin_views.js, view_preview_head), so it
+             looks as on the site while the admin keeps its own styles. */}}
+        <iframe id="view-preview-frame" class="view-preview-frame" title="{{t "Preview"}}"></iframe>
+    </div>
+</div>
+
+{{template "view_settings_modal" .}}
+
+{{template "view_filter_modal" .}}
+
+{{template "view_field_modal" .}}
+
+{{template "view_sort_modal" .}}
+
+{{template "tinymce_user_files.html" .}}
+<script src="{{ staticJS "admin_views" }}"></script>
+{{end}}

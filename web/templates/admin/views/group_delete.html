@@ -1,0 +1,23 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/views" "BackLabel" (t "All views")
+    "Heading" (t "Delete the entire view \"@label\"?" "@label" .container.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/view-groups/%v/delete" .container.ID)
+    "Submit" (t "Yes, delete the entire view"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-1">machine_name: <code>{{.container.MachineName}}</code></p>
+<p class="mb-1">
+    {{t "Default and @displays will be deleted:" "@displays" (plural (len .displays) "@count display" "@count displays")}}
+    {{.defaultDisplay.Label}}{{range .displays}}, {{.Label}}{{end}}.
+</p>
+{{if or .filterCount .sortCount .fieldCount}}
+<p class="mb-0">
+    <strong>{{t "@filters, @sorts and @fields will be deleted along with them - this cannot be undone." "@filters" (plural .filterCount "@count filter" "@count filters") "@sorts" (plural .sortCount "@count sort criterion" "@count sort criteria") "@fields" (plural .fieldCount "@count field" "@count fields")}}</strong>
+</p>
+{{else}}
+<p class="mb-0">{{t "These displays have no filters, fields or sorting yet."}}</p>
+{{end}}
+{{end}}

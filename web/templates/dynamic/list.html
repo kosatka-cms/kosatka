@@ -1,0 +1,492 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{.title}}</h1>{{end}}
+
+{{/* breadcrumb - before the h1 (layout.html renders it first); the
+     trail comes from BreadcrumbService. */}}
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{/* dynamic_list_field_value_raw - one field's rendered value, shared
+     by the grid and table styles. Expects dict "Field"
+     (entity.FieldInstanceDef-shaped) "Value" $value "Item" $item.
+
+     dynamic_list_field_value - wraps the raw value with
+     ViewFieldDef.RewriteHTML when set, substituting the literal "{{value}}"
+     token (rewriteFieldValue: plain string substitution, never parsed as a
+     template). renderBlock captures the raw block's output, which
+     text/template can't do natively. */}}
+{{define "dynamic_list_field_value"}}
+{{$raw := renderBlock "dynamic_list_field_value_raw" .}}
+{{$rewrite := index .Field.Config "rewrite_html"}}
+{{if $rewrite}}{{rewriteFieldValue $rewrite $raw .Tokens}}{{else}}{{$raw}}{{end}}
+{{end}}
+
+{{/* dynamic_list_row_tokens - fills Tokens (newFieldTokenMap) with a
+     row's {{field:<machine name>}} values for RewriteHTML and row templates:
+     each field's rendered value (dynamic_list_field_value_raw), images
+     with only a default picture too; empty fields get no token.
+     (dict "Item" <row> "Tokens" <map>). */}}
+{{define "dynamic_list_row_tokens"}}{{$item := .Item}}{{$tokens := .Tokens}}
+{{- range $item.Fields}}
+{{- $tval := index $item.Values .ID}}
+{{- $tfallback := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+{{- if or $tval $tfallback}}{{$_ := setFieldToken $tokens .MachineName (renderBlock "dynamic_list_field_value_raw" (dict "Field" . "Value" $tval "Item" $item))}}{{end}}
+{{- end}}
+{{- end}}
+
+{{define "dynamic_list_field_value_raw"}}
+{{/* link_to (entity.ViewFieldLinkTarget): "content" links the value to the
+     node, "file" (image fields) to the original image, "author" (the
+     builtin author field) to the author's profile. Skipped for
+     taxonomy, link, user, e-mail and phone fields, which render their own
+     links - wrapping
+     would nest <a>.
+     Node.URL, not "/"+Slug: some slugs (e.g. forum topics) aren't the
+     full path (see entity.NodeRelPath). */}}
+{{$linkTo := index .Field.Config "link_to"}}
+{{$href := ""}}
+{{if and (ne (print .Field.FieldType) "taxonomy") (ne (print .Field.FieldType) "link") (ne (print .Field.FieldType) "user") (ne (print .Field.FieldType) "email") (ne (print .Field.FieldType) "phone")}}
+{{if eq $linkTo "content"}}{{$href = .Item.Node.URL}}{{else if eq $linkTo "file"}}{{$href = index .Item.ImageFieldOriginalURLs .Field.ID}}{{else if and (eq $linkTo "author") .Item.Node.CreatedBy.Slug}}{{$href = userURL .Item.Node.CreatedBy.Slug}}{{end}}
+{{end}}
+{{if $href}}<a href="{{$href}}" class="item-field-link">{{end}}
+{{if eq (print .Field.FieldType) "text"}}
+{{$trim := index .Field.Config "trim_length"}}
+{{if and $trim (gt $trim 0)}}
+{{/* trim_length (ViewFieldDef.TrimLength): plain text, cut at a word. */}}
+<span class="item-field-value">{{plainExcerpt (print .Value) $trim}}</span>
+{{else if .Field.RichText}}
+{{/* HTML values only (FieldInstanceDef.RichText): truncate keeps the
+     markup, so its input must be HTML sanitized on save. */}}
+<span class="item-field-value">{{truncate .Value 150}}</span>
+{{else}}
+<span class="item-field-value">{{.Value}}</span>
+{{end}}
+{{/* The built-in title of content in another language than the page's
+     (a list showing an original where there's no translation): marked
+     with its language. */}}
+{{if and (lt .Field.ID 0) (eq .Field.MachineName "title")}}{{with otherLanguage .Item.Node.Langcode}} <span class="badge text-bg-secondary node-teaser-language">{{.}}</span>{{end}}{{end}}
+{{else if eq (print .Field.FieldType) "list"}}
+{{/* Its chosen options (entity.ListItems), by fields/list.html. */}}
+<span class="item-field-value">{{renderSuggestion "field_list" .Field.MachineName .Value}}</span>
+{{else if eq (print .Field.FieldType) "number"}}
+<span class="item-field-value">{{renderSuggestion "field_number" .Field.MachineName (fieldNumber .Field .Value)}}</span>
+{{else if eq (print .Field.FieldType) "email"}}
+<span class="item-field-value">{{renderSuggestion "field_email" .Field.MachineName (fieldEmail .Field .Value)}}</span>
+{{else if eq (print .Field.FieldType) "phone"}}
+<span class="item-field-value">{{renderSuggestion "field_phone" .Field.MachineName (fieldPhone .Value)}}</span>
+{{else if eq (print .Field.FieldType) "bool"}}
+<span class="item-field-value">{{renderSuggestion "field_bool" .Field.MachineName .Value}}</span>
+{{else if and (eq (print .Field.FieldType) "date") .Field.Multiple}}
+{{/* Several dates: as the View field's layout says (Config "layout"). */}}
+<div class="item-field-value">{{renderSuggestion "field_dates" .Field.MachineName (dict "Field" .Field "List" (fieldDatesFor .Field .Value (index .Field.Config "layout")))}}</div>
+{{else if eq (print .Field.FieldType) "date"}}
+<span class="item-field-value">{{renderSuggestion "field_date" .Field.MachineName (fieldDate (viewDateValue .Field .Value) (viewDateFormat .Field .Item))}}</span>
+{{else if eq (print .Field.FieldType) "image"}}
+{{$all := index .Item.ImageFieldImages .Field.ID}}
+{{if and $all (eq (index .Field.Config "image_display") "all")}}
+{{/* image_display "all": every image of a field with several, in order. */}}
+{{$label := .Field.Label}}
+<span class="item-field-images">{{range $all}}{{img .Picture (or .Alt $label) "class" "item-field-image"}}{{end}}</span>
+{{else}}
+{{$imgAlt := index .Item.ImageFieldAlts .Field.ID}}
+{{img (index .Item.ImageFieldPictures .Field.ID) (or $imgAlt .Field.Label) "class" "item-field-image"}}
+{{end}}
+{{else if eq (print .Field.FieldType) "user"}}
+{{/* The users, resolved in order (ContentListItem.UserFieldUsers),
+     fields/user.html. */}}
+{{$name := .Field.MachineName}}
+{{with index .Item.UserFieldUsers .Field.ID}}<div class="item-field-value">{{renderSuggestion "field_users" $name .}}</div>{{end}}
+{{else if eq (print .Field.FieldType) "link"}}
+{{/* The View field's formatter and layout (ViewFieldDef.Formatter,
+     Layout), fields/link.html. */}}
+<div class="item-field-value">{{template "field_link" (dict "Field" .Field "Value" .Value "Formatter" (index .Field.Config "formatter") "Layout" (index .Field.Config "layout"))}}</div>
+{{else if eq (print .Field.FieldType) "taxonomy"}}
+{{$terms := index .Item.TaxonomyFieldTerms .Field.ID}}
+{{if and (not $terms) (eq (printf "%T" .Value) "string")}}
+{{/* No terms, but a fallback field (FallbackFieldKey) supplied a plain
+     value, e.g. the content type label. */}}
+<span class="item-field-value">{{.Value}}</span>
+{{else}}
+{{/* tag_format: plain (default, comma-joined names), linked
+     (comma-joined links), badges (linked pills, same markup as
+     dynamic/page.html's tags); a term of a vocabulary without public
+     term pages (TaxonomyTerm.HasPublicPage) is never a link. */}}
+{{$tagFormat := index .Field.Config "tag_format"}}
+{{if eq $tagFormat "linked"}}
+<span class="item-field-value">{{range $i, $t := $terms}}{{if $i}}, {{end}}{{if $t.HasPublicPage}}<a href="{{localURL (print "/" $t.Slug)}}">{{termName $t}}</a>{{else}}{{termName $t}}{{end}}{{end}}</span>
+{{else if eq $tagFormat "badges"}}
+<ul class="links inline">
+    {{range $terms}}
+    <li class="taxonomy_term">{{if .HasPublicPage}}<a href="{{localURL (print "/" .Slug)}}">{{termName .}}</a>{{else}}<span>{{termName .}}</span>{{end}}</li>
+    {{end}}
+</ul>
+{{else}}
+<span class="item-field-value">{{range $i, $t := $terms}}{{if $i}}, {{end}}{{termName $t}}{{end}}</span>
+{{end}}
+{{end}}
+{{else}}
+<span class="item-field-value">{{.Value}}</span>
+{{end}}
+{{if $href}}</a>{{end}}
+{{end}}
+
+{{/* view_list_body - the items list and pager, split out so AJAX
+     pagination (entity.ViewDisplayDef.PaginationAjax) can re-render it alone:
+     ViewPageFallback returns RenderNamed("view_list_body", ...) as JSON
+     {"html": "..."}, which app.js's initViewPagination swaps into
+     #view-list-container. */}}
+{{define "view_list_body"}}
+{{/* headerText - rich text before the list
+     (entity.ViewDisplayDef.HeaderText), shown whenever set. Uses "html",
+     not "processContent", which would wrap every <img> in a lightbox
+     link; the markup is already sanitized (SanitizeAdmin). */}}
+{{if .headerText}}<div class="view-text view-header-text">{{.headerText | rawHTML}}</div>{{end}}
+{{/* themeListHTML - the list rendered by the View's theme template
+     (ViewDisplayDef.ThemeTemplate, views/<name>.html, with its own
+     pager) instead of the field grid below. */}}
+{{if .themeListHTML}}
+{{.themeListHTML}}
+{{else}}
+{{/* No fields configured yet (a new display): the query still runs,
+     but there is nothing to render per item, so show a placeholder instead
+     of empty cards and a pager over nothing. */}}
+{{if and $.isViewList (not .listFieldsHead)}}
+<p class="text-muted">{{t "Add at least one field to see content in the list."}}</p>
+{{else}}
+{{/* overflowAfter (entity.ViewDisplayDef.OverflowAfter): when set and
+     exceeded, only the first items use displayStyle ($primaryItems); the
+     rest render as a compact list ($overflowItems, below). sliceHead/
+     sliceTail rather than the builtin "slice" - see their FuncMap doc
+     comment (template_funcs.go). */}}
+{{$primaryItems := .items}}
+{{$overflowItems := sliceTail .items 0}}
+{{if and .overflowAfter (gt (len .items) .overflowAfter)}}
+{{$primaryItems = sliceHead .items .overflowAfter}}
+{{$overflowItems = sliceTail .items .overflowAfter}}
+{{end}}
+{{if eq .displayStyle "table"}}
+<div class="table-responsive view-table-wrap">
+    <table class="table table-striped table-hover view-table">
+        <thead>
+            <tr>
+                {{if not $.isViewList}}<th>{{t "Content item"}}</th>{{end}}
+                {{range .listFieldsHead}}{{if not .ExcludeFromDisplay}}<th>{{.Label}}</th>{{end}}{{end}}
+            </tr>
+        </thead>
+        <tbody>
+            {{range $g := viewGroups $primaryItems $.groupByField $.groupDateFormat}}
+            {{if $.groupByField}}<tr class="view-group-heading"><th colspan="99">{{$g.Heading}}</th></tr>{{end}}
+            {{range $g.Items}}
+            {{$item := .}}
+            {{$tokens := newFieldTokenMap}}{{template "dynamic_list_row_tokens" (dict "Item" $item "Tokens" $tokens)}}
+            <tr>
+                {{if not $.isViewList}}<td><a href="{{.Node.URL}}">{{.Node.Title}}</a></td>{{end}}
+                {{range .Fields}}
+                {{if not .ExcludeFromDisplay}}
+                {{$value := index $item.Values .ID}}
+                {{/* Fallback-image fields (FieldInstanceDef.DefaultImageID) have no
+                     value in $item.Values but a URL in
+                     $item.ImageFieldURLs - don't gate on $value alone. */}}
+                {{$hasFallbackImage := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+                <td{{with index .Config "css_class"}} class="{{.}}"{{end}}>{{if or $value $hasFallbackImage}}{{template "dynamic_list_field_value" (dict "Field" . "Value" $value "Item" $item "Tokens" $tokens)}}{{end}}</td>
+                {{end}}
+                {{end}}
+            </tr>
+            {{end}}
+            {{else}}
+            <tr><td colspan="99">{{t "No content yet."}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else if eq .displayStyle "list"}}
+{{/* List style - same per-field rendering as the grid, without the
+     card wrapper and title highlighting (see
+     entity.ViewDisplayDef.DisplayStyle). */}}
+<div class="item-list">
+    {{range $g := viewGroups $primaryItems $.groupByField $.groupDateFormat}}
+    {{if $.groupByField}}<h3 class="view-group-heading">{{$g.Heading}}</h3>{{end}}
+    {{range $g.Items}}
+    {{$item := .}}
+    {{$tokens := newFieldTokenMap}}{{template "dynamic_list_row_tokens" (dict "Item" $item "Tokens" $tokens)}}
+    {{/* view-list-item-sticky - "at the top of lists" (Node.Sticky): a
+         theme may make it lead the list. */}}
+    <div class="view-list-item{{if .Node.Sticky}} view-list-item-sticky{{end}}">
+        {{if $.rowTemplate}}
+        {{renderRowTemplate $.rowTemplate ($item.Node.URL) $tokens}}
+        {{else}}
+        {{if not $.isViewList}}<a href="{{.Node.URL}}" class="item-link">{{.Node.Title}}</a>{{end}}
+        {{range .Fields}}
+        {{if not .ExcludeFromDisplay}}
+        {{$value := index $item.Values .ID}}
+        {{$hasFallbackImage := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+        {{if or $value $hasFallbackImage}}
+        <div class="item-field item-field-{{fieldTypeClass .FieldType}} item-field-name-{{.MachineName}}{{with index .Config "css_class"}} {{.}}{{end}}">
+            {{if .ShowLabelInList}}<span class="item-field-label">{{.Label}}:</span>{{end}}
+            {{template "dynamic_list_field_value" (dict "Field" . "Value" $value "Item" $item "Tokens" $tokens)}}
+        </div>
+        {{end}}
+        {{end}}
+        {{end}}
+        {{end}}
+    </div>
+    {{end}}
+    {{else}}
+    <p>{{t "No content yet."}}</p>
+    {{end}}
+</div>
+{{else if eq .displayStyle "carousel"}}
+{{template "view_carousel" (dict "Ctx" $ "Items" $primaryItems)}}
+{{else}}
+{{/* list-grid-fields - distinguishes the generic field-card grid
+     (.list-grid-item + .item-field-* boxes, any field combination) from
+     plain .list-grid; base.css lays it out and collapses it responsively.
+     --list-grid-columns carries GridColumns as a custom property so media
+     queries can override it (an inline grid-template-columns couldn't be). */}}
+{{/* With grouping each group is its own grid under its heading, so the
+     grid opens at the first row and at every new group instead. */}}
+    {{range $g := viewGroups $primaryItems $.groupByField $.groupDateFormat}}
+    {{if $.groupByField}}<h3 class="view-group-heading">{{$g.Heading}}</h3>{{end}}
+    <div class="list-grid list-grid-fields" {{if $.gridColumns}}style="--list-grid-columns: {{$.gridColumns}};"{{end}}>
+    {{range $g.Items}}
+    {{$item := .}}
+    <div class="list-grid-item{{if $item.Node.Sticky}} list-grid-item-sticky{{end}}">
+        {{/* item-field-title - the card's title: the built-in title when
+             the View shows it, else the first non-image field with a
+             value, whatever its type (Views doesn't guarantee a text
+             field). */}}
+        {{$hasTitle := false}}
+        {{range .Fields}}{{if and (lt .ID 0) (eq .MachineName "title") (not .ExcludeFromDisplay)}}{{$hasTitle = true}}{{end}}{{end}}
+        {{$titleAssigned := false}}
+        {{$tokens := newFieldTokenMap}}{{template "dynamic_list_row_tokens" (dict "Item" $item "Tokens" $tokens)}}
+        {{if $.rowTemplate}}
+        {{renderRowTemplate $.rowTemplate ($item.Node.URL) $tokens}}
+        {{else}}
+        {{range .Fields}}
+        {{if not .ExcludeFromDisplay}}
+        {{$value := index $item.Values .ID}}
+        {{/* Same fallback-image gate as the table row above. */}}
+        {{$hasFallbackImage := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+        {{if or $value $hasFallbackImage}}
+        {{$isTitle := false}}
+        {{if $hasTitle}}
+        {{$isTitle = and (lt .ID 0) (eq .MachineName "title")}}
+        {{else if and (not $titleAssigned) (ne (print .FieldType) "image")}}
+        {{$isTitle = true}}
+        {{$titleAssigned = true}}
+        {{end}}
+        <div class="item-field item-field-{{fieldTypeClass .FieldType}} item-field-name-{{.MachineName}}{{if $isTitle}} item-field-title{{end}}{{with index .Config "css_class"}} {{.}}{{end}}">
+            {{if .ShowLabelInList}}<span class="item-field-label">{{.Label}}:</span>{{end}}
+            {{template "dynamic_list_field_value" (dict "Field" . "Value" $value "Item" $item "Tokens" $tokens)}}
+        </div>
+        {{end}}
+        {{end}}
+        {{end}}
+        {{end}}
+    </div>
+    {{end}}
+</div>
+    {{else}}
+    <p>{{t "No content yet."}}</p>
+    {{end}}
+{{end}}
+{{/* Overflow list (entity.ViewDisplayDef.OverflowAfter) - items past
+     overflowAfter as a compact list, rendered like the "list" style minus
+     fields marked HideInOverflow ("hide_in_overflow"), typically images or
+     badges. */}}
+{{if $overflowItems}}
+{{/* overflowHeaderText (entity.ViewDisplayDef.OverflowHeaderText) - a
+     plain-text label, shown only when the overflow list is non-empty. */}}
+{{if .overflowHeaderText}}<h3 class="view-overflow-header-text">{{.overflowHeaderText}}</h3>{{end}}
+<ul class="view-overflow-list">
+    {{range $overflowItems}}
+    {{$item := .}}
+    {{$tokens := newFieldTokenMap}}{{template "dynamic_list_row_tokens" (dict "Item" $item "Tokens" $tokens)}}
+    <li class="view-overflow-item">
+        {{if not $.isViewList}}<a href="{{.Node.URL}}" class="item-link">{{.Node.Title}}</a>{{end}}
+        {{range .Fields}}
+        {{if and (not .ExcludeFromDisplay) (not (index .Config "hide_in_overflow"))}}
+        {{$value := index $item.Values .ID}}
+        {{$hasFallbackImage := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+        {{if or $value $hasFallbackImage}}
+        <span class="item-field item-field-{{fieldTypeClass .FieldType}} item-field-name-{{.MachineName}}{{with index .Config "css_class"}} {{.}}{{end}}">
+            {{if .ShowLabelInList}}<span class="item-field-label">{{.Label}}:</span>{{end}}
+            {{template "dynamic_list_field_value" (dict "Field" . "Value" $value "Item" $item "Tokens" $tokens)}}
+        </span>
+        {{end}}
+        {{end}}
+        {{end}}
+    </li>
+    {{end}}
+</ul>
+{{end}}
+
+{{end}}
+{{/* footerText - like headerText: shown whenever set, after the list and
+     before the pager. */}}
+{{if .footerText}}<div class="view-text view-footer-text">{{.footerText | rawHTML}}</div>{{end}}
+{{/* Hidden with the no-fields placeholder above - nothing to page through. */}}
+{{if and .showPagination (or (not $.isViewList) .listFieldsHead)}}{{template "pagination.html" .}}{{end}}
+{{end}}
+{{end}}
+
+{{/* view_exposed_filters - public GET form for a display's exposed
+     ViewFilterDefs (search box / dropdowns / checkboxes - an in filter's
+     options, sent as the parameter repeated) and, last, the visitors'
+     choice of sort (a dropdown with no "All"), works without JS. Kept
+     outside #view-list-container so AJAX swaps of view_list_body don't
+     wipe it. Not rendered on the AJAX fragment path (exposedFilters is set
+     only for full pages). */}}
+{{define "view_exposed_filters"}}
+{{if .exposedFilters}}
+<div class="view-exposed-filters mb-3">
+    <form method="get" class="row g-2 align-items-end flex-wrap">
+        {{range .exposedFilters}}
+        {{if eq .Kind "checkboxes"}}
+        <fieldset class="col-12 view-exposed-checkboxes">
+            <legend class="form-label">{{.Label}}</legend>
+            {{$f := .}}
+            {{range $i, $o := .Options}}
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="{{$f.Param}}" id="ef-{{$f.Param}}-{{$i}}" value="{{$o.Value}}"{{if index $f.Checked $o.Value}} checked{{end}}>
+                <label class="form-check-label" for="ef-{{$f.Param}}-{{$i}}">{{$o.Label}}</label>
+            </div>
+            {{end}}
+        </fieldset>
+        {{else}}
+        <div class="col-12 col-md-4">
+            <label for="ef-{{.Param}}" class="form-label">{{.Label}}</label>
+            {{if or (eq .Kind "select") (eq .Kind "sort")}}
+            <select name="{{.Param}}" id="ef-{{.Param}}" class="form-select form-select-sm">
+                {{if eq .Kind "select"}}<option value="">{{t "All"}}</option>{{end}}
+                {{$current := .Value}}
+                {{range .Options}}
+                <option value="{{.Value}}" {{if eq .Value $current}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+            </select>
+            {{else}}
+            <input type="{{if .InputType}}{{.InputType}}{{else}}text{{end}}" name="{{.Param}}" id="ef-{{.Param}}" class="form-control form-control-sm" value="{{.Value}}" autocomplete="off">
+            {{end}}
+        </div>
+        {{end}}
+        {{end}}
+        <div class="col-12 col-md-3 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">{{t "Find"}}</button>
+            <a href="{{localURL (print "/" $.viewURLPath)}}" class="btn btn-outline-secondary btn-sm">{{t "Reset"}}</a>
+        </div>
+    </form>
+</div>
+{{end}}
+{{end}}
+
+{{/* view_glossary - letter index bar (entity.ViewDisplayDef.ShowGlossary): the
+     letter is the link, "(count)" is plain text, " | "-separated. Outside
+     #view-list-container so AJAX swaps don't wipe it; app.js's
+     initViewGlossary updates the .active class. */}}
+{{define "view_glossary"}}
+{{if .showGlossary}}
+<div id="view-glossary" class="view-glossary"{{if .paginationAjax}} data-ajax-pagination="1"{{end}}>
+    {{range $index, $item := .glossaryItems}}{{if $index}} | {{end}}<a href="{{localURL $item.URL}}" class="glossary-letter{{if eq $item.Letter $.activeLetter}} active{{end}}" data-letter="{{$item.Letter}}">{{$item.Letter}}</a> ({{$item.Count}}){{end}}
+</div>
+{{end}}
+{{end}}
+
+{{define "content"}}
+
+{{/* customCSS - ViewDisplayDef.CustomCSS, admin-authored CSS embedded
+     verbatim. Outside #view-list-container so AJAX pagination doesn't
+     duplicate or drop it. safeCSS, not "html": html/template escapes
+     <style> content even for template.HTML; template.CSS bypasses that. */}}
+{{if .customCSS}}<style>{{.customCSS | safeCSS}}</style>{{end}}
+
+{{/* Staff-only draft preview: set only when ViewPageFallback let a
+     disabled view through (BaseController.IsViewVisible); visitors get a
+     404. .moderation-notice: css/components.css. */}}
+{{if .viewUnpublished}}
+<div class="moderation-notice is-unpublished">
+    <strong>⚠ {{t "Page is not published"}}</strong> - {{t "visible only to administrators and moderators for preview."}}
+</div>
+{{end}}
+
+{{template "view_exposed_filters" .}}
+{{template "view_glossary" .}}
+
+{{/* #view-list-container - see view_list_body above.
+     data-ajax-pagination is set only by ViewPageFallback (app.js's
+     initViewPagination no-ops without it).
+     isViewBlock+viewID (CacheService.renderContentViewBlock) gives each
+     View block its own id: several blocks and a page View can render on
+     one page, and a shared id would leak one View's CustomCSS into
+     another. */}}
+<div id="{{if .isViewBlock}}view-list-container-block-{{.viewID}}{{else}}view-list-container{{end}}"{{if .paginationAjax}} data-ajax-pagination="1"{{end}}>
+{{template "view_list_body" .}}
+</div>
+
+{{end}}
+
+{{/* view_carousel - a View's carousel display (dynamic/list.html, and the
+     admin Views preview): .Ctx - the list's template data (carousel
+     settings, rowTemplate, carouselLinkURLs), .Items - the items. */}}
+{{define "view_carousel"}}
+{{$ctx := .Ctx}}
+{{/* Carousel - same per-field rendering as list/grid, one .swiper-slide
+     per item. Swiper is initialized from the container's data attributes
+     (web/static/js/app.js's initViewCarousels; see
+     entity.ViewDisplayDef.CarouselSlidesPerView). */}}
+<div class="view-carousel swiper"
+     data-view-carousel="1"
+     data-slides-per-view="{{if $ctx.carouselSlidesPerView}}{{$ctx.carouselSlidesPerView}}{{else}}1{{end}}"
+     data-autoplay="{{if $ctx.carouselAutoplay}}1{{else}}0{{end}}"
+     data-loop="{{if $ctx.carouselLoop}}1{{else}}0{{end}}"
+     data-show-navigation="{{if $ctx.carouselShowNavigation}}1{{else}}0{{end}}"
+     data-show-pagination="{{if $ctx.carouselShowPagination}}1{{else}}0{{end}}"
+     data-effect="{{if eq $ctx.carouselEffect "fade"}}fade{{else}}slide{{end}}">
+    <div class="swiper-wrapper">
+        {{range .Items}}
+        {{$item := .}}
+        {{$tokens := newFieldTokenMap}}{{template "dynamic_list_row_tokens" (dict "Item" $item "Tokens" $tokens)}}
+        {{/* carouselLinkFieldStorageID
+             (entity.ViewDisplayDef.CarouselLinkFieldStorageID): when set and
+             non-empty for the item, the slide links to that text field's
+             value (e.g. an external URL); otherwise to the node. The whole
+             slide is always one <a> around all .Fields. */}}
+        {{$slideLinkURL := .Node.URL}}
+        {{if $ctx.carouselLinkFieldStorageID}}
+        {{$explicit := index $ctx.carouselLinkURLs $item.Node.ID}}
+        {{if $explicit}}{{$slideLinkURL = $explicit}}{{end}}
+        {{end}}
+        <div class="swiper-slide view-carousel-slide">
+            {{/* A custom row template sets its own links ({{url}}), so no
+                 slide-wide link (nested <a> is invalid). */}}
+            {{if $ctx.rowTemplate}}
+            {{renderRowTemplate $ctx.rowTemplate $slideLinkURL $tokens}}
+            {{else}}
+            <a href="{{$slideLinkURL}}" class="view-carousel-slide-link" aria-label="{{.Node.Title}}">
+            {{range .Fields}}
+            {{if not .ExcludeFromDisplay}}
+            {{$value := index $item.Values .ID}}
+            {{$hasFallbackImage := and (eq (print .FieldType) "image") (index $item.ImageFieldURLs .ID)}}
+            {{if or $value $hasFallbackImage}}
+            <div class="item-field item-field-{{fieldTypeClass .FieldType}} item-field-name-{{.MachineName}}{{with index .Config "css_class"}} {{.}}{{end}}">
+                {{if .ShowLabelInList}}<span class="item-field-label">{{.Label}}:</span>{{end}}
+                {{template "dynamic_list_field_value" (dict "Field" . "Value" $value "Item" $item "Tokens" $tokens)}}
+            </div>
+            {{end}}
+            {{end}}
+            {{end}}
+            </a>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="swiper-slide"><p>{{t "No content yet."}}</p></div>
+        {{end}}
+    </div>
+    {{if $ctx.carouselShowNavigation}}
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+    {{end}}
+    {{if $ctx.carouselShowPagination}}
+    <div class="swiper-pagination"></div>
+    {{end}}
+</div>
+{{end}}

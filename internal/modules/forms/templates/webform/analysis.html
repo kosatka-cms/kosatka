@@ -1,0 +1,40 @@
+{{/* webform/analysis.html - a form's answers summed up (WebformController.
+     Analysis): per question those who answered; per choice each option's
+     count with a bar (of those who answered; checkboxes may sum past
+     100%). */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+{{$wf := .webform}}
+{{$a := .analysis}}
+<section class="webform-analysis">
+    <p>
+        <a href="{{$wf.Node.URL}}">← {{$wf.Node.Title}}</a>
+        · <a href="/node/{{$wf.Node.ID}}/form/submissions">{{t "Submissions"}}</a>
+    </p>
+    <p class="text-muted">{{plural $a.Total "@count submission" "@count submissions"}}</p>
+    {{range $a.Elements}}
+    <div class="webform-analysis-element mb-4">
+        <h2 class="h5">{{.Element.Label}}</h2>
+        <p class="text-muted small mb-2">{{t "Answered: @count (@percent%)" "@count" .Answered "@percent" .Percent}}</p>
+        {{if .Options}}
+        <table class="table table-sm align-middle">
+            <tbody>
+                {{range .Options}}
+                <tr{{if .Other}} class="text-muted"{{end}}>
+                    <td>{{.Value}}{{if .Other}} <span class="small">({{t "no longer an option"}})</span>{{end}}</td>
+                    <td class="w-50"><div class="progress" role="progressbar" aria-valuenow="{{.Percent}}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{.Percent}}%"></div></div></td>
+                    <td class="text-nowrap text-end">{{.Count}} · {{.Percent}}%</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+    </div>
+    {{end}}
+</section>
+{{end}}

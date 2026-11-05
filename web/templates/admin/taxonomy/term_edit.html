@@ -1,0 +1,90 @@
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="term-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "parent-loop" (t "A term cannot be placed under itself or one of its own child terms.")
+        "parent-invalid" (t "The parent must be a term of the same vocabulary.")
+        "update" (t "Error saving the term."))
+    "Warnings" (dict
+        "empty" (t "Term name is required.")))}}
+
+<form method="post" action="/admin/config/taxonomy/{{.vocabulary.ID}}/terms/{{.term.ID}}" id="term-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="name" class="admin-setting-label">{{t "Name"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="name" name="name" class="form-control" value="{{.term.Name}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="slug" class="admin-setting-label">{{t "Address"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="slug" name="slug" class="form-control" value="{{.term.Slug}}" placeholder="{{t "Path (empty - vocabulary prefix + name)"}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="description" class="admin-setting-label">{{t "Description"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="description" name="description" class="form-control" value="{{.term.Desc}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="page_title" class="admin-setting-label">{{t "Page title"}}</label>
+                <span class="admin-setting-help">{{t "Title of the term page and the <code>[term:title]</code> token in <a href=\"/admin/config/seo\">SEO templates</a>. Empty - the name."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="page_title" name="page_title" class="form-control" value="{{.term.PageTitle}}" placeholder="{{.term.Name}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="weight" class="admin-setting-label">{{t "Weight"}}</label>
+                <span class="admin-setting-help">{{t "Order among terms on the same level - it is usually easier to drag the row on the \"Terms\" page."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="weight" name="weight" class="form-control admin-max-xs" value="{{.term.Weight}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="parent_id" class="admin-setting-label">{{t "Parent"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                {{$names := .termDisplayNames}}
+                {{$currentID := .term.ID}}
+                {{$currentParent := .term.ParentID}}
+                <select id="parent_id" name="parent_id" class="form-select">
+                    <option value="0">{{t "- no parent -"}}</option>
+                    {{range .terms}}
+                    {{if ne .ID $currentID}}
+                    <option value="{{.ID}}" {{if eq .ID $currentParent}}selected{{end}}>{{index $names .ID}}</option>
+                    {{end}}
+                    {{end}}
+                </select>
+            </div>
+        </div>
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection): form_term_<module>. */}}
+    {{moduleHook "form_term" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

@@ -1,0 +1,13 @@
+{{/* Default page layout (a theme overrides it with its own layout.html):
+     header, the main column (main_column: content, content_bottom,
+     sidebar), footer. Regions are declared in theme.yaml. */}}
+{{template "header" .}}
+
+<main id="main-content" class="container container-content">
+    {{template "main_column" .}}
+</main>
+
+{{/* The enabled modules' markup at the end of the page
+     (page_end_<module>, e.g. the error report form). */}}
+{{moduleHook "page_end" .}}
+{{template "footer" .}}

@@ -1,0 +1,67 @@
+# The kosatka theme: the engine's showcase theme and the look of a new
+# site (app install) - sea colours, dark by default with a light scheme a
+# visitor switches to. It keeps the engine's regions and layout, so blocks
+# placed for the engine's look stay where they are.
+name: Kosatka
+# favicon - the theme's icon (the site's, uploaded on Site information,
+# replaces it).
+favicon: /static/images/kosatka-icon.svg
+# The theme's description (Appearance page; entity.ThemeInfo).
+description: The engine's theme - lists in rows of glass with covers (a pinned item leads as a large card), a reading column, a light and a dark scheme in an accent colour of the site's.
+author: Kosatka
+license: MIT
+tags: [light, dark, cards, two-columns, responsive]
+screenshot: screenshot.jpg
+# default_region - where new blocks go.
+default_region: sidebar
+regions:
+  - id: header
+    label: Header
+  # The whole sidebar is one region (sidebar.html), ordered by weight.
+  - id: sidebar
+    label: Sidebar
+  # Between the page's title and its content.
+  - id: content_top
+    label: Content top
+  - id: content_bottom
+    label: Content bottom
+  # Inside the node page (dynamic/page.html, forum/topic.html).
+  - id: content_inline
+    label: Inside content (content page)
+  - id: footer
+    label: Footer
+  # The footer's last line (the copyright block on a new site).
+  - id: footer_bottom
+    label: Footer bottom line
+# blocks - the blocks the theme comes with (entity.ThemeBlock): placed
+# when the theme gets its layout for the first time, unless the layout
+# has them.
+blocks:
+  - plugin: copyright
+    region: footer_bottom
+# settings - the theme's options on the Appearance page
+# (entity.ThemeSetting): each scheme's accent (the shades follow it) and
+# the scheme a visitor who hasn't chosen one sees.
+settings:
+  - id: accent
+    label: Accent colour
+    type: color
+    default: "#0e7490"
+    css_var: --kosatka-accent
+  - id: accent_dark
+    label: Accent colour of the dark scheme
+    type: color
+    default: "#22d3ee"
+    css_var: --kosatka-accent
+    selector: ':root[data-bs-theme="dark"]'
+  - id: scheme
+    label: Colour scheme by default
+    type: select
+    default: dark
+    options:
+      - value: light
+        label: Light
+      - value: dark
+        label: Dark
+      - value: auto
+        label: As on the visitor's device

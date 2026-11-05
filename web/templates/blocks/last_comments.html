@@ -1,0 +1,27 @@
+{{/* block_last_comments - plugin block "last_comments" (see
+     entity.PluginBlockID), usually in region widgets_col_1. Renders only the
+     latest comments column from .lastComments
+     (CacheService.GetSidebarData, base_controller.go): each comment's
+     Summary (its subject or the start of its text), linking the comment.
+     The .block class
+     matches the generic View block wrapper in region_blocks.html, for the
+     shared column layout rule (.last-comments-container.row >
+     .last-comments-column, styles.css). */}}
+{{define "block_last_comments"}}
+<div class="block">
+    <h2>{{t "Recent comments"}}</h2>
+    <div class="item-list">
+        <ul>
+            {{range .lastComments}}
+            <li>
+                <a href="/comment/{{.ID}}#comment-{{.ID}}">{{.Summary}}</a>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+
+    <div class="more-link">
+        <a href="/comments/recent">{{t "all comments"}} </a>
+    </div>
+</div>
+{{end}}

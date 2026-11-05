@@ -1,0 +1,21 @@
+{{/* A module's profile tab the visitor may not open (403): a guest is
+     offered to log in or register (interfaces.ProfileTab.Allowed). */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{t "Access to \"@tab\" is restricted" "@tab" .profileTabLabel}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+<div class="page-content profile-tab-access-denied">
+    {{if .profileTabForbiddenAnonymous}}
+    <p>
+        {{if registrationOpen}}{{t "<a href=\":login\">Log in</a> or <a href=\":register\">register</a> to open this page." ":login" (printf "/login?destination=%s" .profileTabForbiddenDestination) ":register" (printf "/user/register?destination=%s" .profileTabForbiddenDestination)}}{{else}}{{t "<a href=\":login\">Log in</a> to open this page." ":login" (printf "/login?destination=%s" .profileTabForbiddenDestination)}}{{end}}
+    </p>
+    {{else}}
+    <p>{{t "This section of the profile isn't available to you."}}</p>
+    {{end}}
+    <p><a href="/{{.profileUser.Slug}}">{{t "Back to the profile of @name" "@name" .profileUser.Username}}</a></p>
+</div>
+{{end}}

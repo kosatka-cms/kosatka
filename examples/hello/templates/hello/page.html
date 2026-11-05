@@ -1,0 +1,16 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "content"}}{{attach "hello"}}
+<section class="hello-greetings">
+    <p class="hello-lead">{{t "Greetings from a module of its own repository."}}</p>
+    {{if .greetings}}
+    <ul class="hello-list">
+        {{range .greetings}}<li>{{.Text}}</li>{{end}}
+    </ul>
+    {{else}}
+    <p class="hello-empty">{{t "No greetings yet."}}</p>
+    {{end}}
+</section>
+{{end}}

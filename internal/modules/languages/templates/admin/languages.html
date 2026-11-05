@@ -1,0 +1,108 @@
+{{/* admin/languages.html - the site's languages (Controller.List): on a
+     table card the default one first, then the others - the name, code,
+     address prefix, content, whether the interface is in it; making one
+     the default, removing one; the translations' settings (what lists
+     show where there's no translation, the translatable content types);
+     the form adding a language. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The default language's addresses have no prefix, the others' start with theirs: /en/…"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "added" (t "Language added.") "removed" (t "Language removed.") "defaultSet" (t "The default language changed.") "saved" (t "Saved.")) "Errors" (dict "code" (t "No such language, or the site has it already.") "prefix" (t "A prefix is lower-case Latin letters, digits and hyphens, up to 12 characters.") "prefix-language" (t "Another language has this prefix.") "prefix-taken" (t "The site has an address like this prefix (@owner): a prefix would hide it." "@owner" .owner) "prefix-content" (t "Content has addresses starting with this prefix: a prefix would hide them.")) "Fallback" (t "Error while saving."))}}
+{{$def := ""}}{{range .rows}}{{if .Default}}{{$def = .}}{{end}}{{end}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr><th>{{t "Language"}}</th><th>{{t "Code"}}</th><th>{{t "Address"}}</th><th>{{t "Content"}}</th><th>{{t "Interface"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr>
+            </thead>
+            <tbody>
+                {{range .rows}}
+                <tr>
+                    <td><span class="admin-table-title" lang="{{.Code}}">{{.Name}}</span>{{if .Default}} <span class="admin-pill admin-pill--ok">{{tc "language" "default"}}</span>{{end}}</td>
+                    <td><code>{{.Code}}</code></td>
+                    <td>{{if .Default}}<span class="text-body-secondary">{{t "no prefix"}}</span>{{else}}<code>/{{.Prefix}}/</code>{{end}}</td>
+                    <td>{{.Nodes}}</td>
+                    <td>{{if .Interface}}{{t "yes"}}{{else}}<span class="text-body-secondary">{{t "no: shown in @language" "@language" $.sourceName}}</span>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        {{if not .Default}}
+                        {{if .Interface}}<form method="post" action="/admin/config/languages/{{.Code}}/default" class="d-inline" data-confirm="{{t "Make @language the default language? Its addresses lose /@prefix/, those of @old get /@code/." "@language" .Name "@prefix" .Prefix "@old" $def.Name "@code" $def.Code}}"><button type="submit" class="btn btn-link btn-sm">{{t "Make default"}}</button></form>{{end}}
+                        <form method="post" action="/admin/config/languages/{{.Code}}/remove" class="d-inline" data-confirm="{{t "Remove @language? Its content (@count) stays, at addresses without /@prefix/." "@language" .Name "@count" .Nodes "@prefix" .Prefix}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Remove"}}" aria-label="{{t "Remove"}}">{{template "admin_icon_delete"}}</button></form>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form method="post" action="/admin/config/languages/settings" class="admin-settings admin-settings--form mt-4">
+    <section class="admin-settings-group" aria-labelledby="lang-types">
+        <h2 class="admin-settings-title" id="lang-types">{{t "Translations"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "No translation"}}</span>
+                    <span class="admin-setting-help">{{t "What lists in a language show of the content without a version in it."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    {{$u := .untranslated}}
+                    <div class="form-check"><input type="radio" class="form-check-input" id="untr-original" name="untranslated" value="original"{{if eq $u "original"}} checked{{end}}><label class="form-check-label" for="untr-original">{{t "Its original, marked with its language"}}</label></div>
+                    <div class="form-check"><input type="radio" class="form-check-input" id="untr-hide" name="untranslated" value="hide"{{if eq $u "hide"}} checked{{end}}><label class="form-check-label" for="untr-hide">{{t "Nothing: only the language's content"}}</label></div>
+                    <div class="form-check"><input type="radio" class="form-check-input" id="untr-all" name="untranslated" value="all"{{if eq $u "all"}} checked{{end}}><label class="form-check-label" for="untr-all">{{t "Everything: lists aren't divided by language"}}</label></div>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Translatable types"}}</span>
+                    <span class="admin-setting-help">{{t "Their items get the Translations tab: a version in each of the site's languages."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    {{range .types}}<div class="form-check"><input type="checkbox" class="form-check-input" id="tr-{{.Name}}" name="translatable" value="{{.Name}}"{{if .On}} checked{{end}}><label class="form-check-label" for="tr-{{.Name}}">{{.Label}}</label></div>{{end}}
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+{{if .choices}}
+<form method="post" action="/admin/config/languages" class="admin-settings admin-settings--form mt-4">
+    <section class="admin-settings-group" aria-labelledby="lang-add">
+        <h2 class="admin-settings-title" id="lang-add">{{t "Add a language"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="lang-code" class="admin-setting-label">{{t "Language"}}</label>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="lang-code" name="code" class="form-select" required>
+                        <option value="">{{t "- language -"}}</option>
+                        {{range .choices}}<option value="{{.Code}}" lang="{{.Code}}">{{.Label}} - {{.Code}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="lang-prefix" class="admin-setting-label">{{t "Address prefix"}}</label>
+                    <span class="admin-setting-help">{{t "Its addresses start with it: /de/… Empty - the language's code."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="lang-prefix" name="prefix" class="form-control" maxlength="12" pattern="[a-z0-9][a-z0-9\-]*" autocomplete="off"></div>
+            </div>
+        </div>
+    </section>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </div>
+</form>
+{{end}}
+{{end}}

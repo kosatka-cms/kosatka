@@ -1,0 +1,9 @@
+{{/* block_copyright - plugin block "copyright" (entity.PluginBlockCopyright):
+     "© <years> <holder>" - the current year, from the placement's first
+     year when set ("2008-2026", copyrightYears), the holder the
+     placement's or the site's name. The class site-footer-credit - the
+     themes' footer line. Takes (dict "PluginID" "Ctx" "Placement"). */}}
+{{define "block_copyright"}}
+{{$holder := or (.Placement.PluginSetting "holder") .Ctx.siteName}}
+<p class="site-footer-credit block-copyright">© {{copyrightYears (.Placement.PluginSetting "since")}}{{with $holder}} {{.}}{{end}}</p>
+{{end}}

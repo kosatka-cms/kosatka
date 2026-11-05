@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 16 168 168" width="64" height="64" role="img" aria-label="Kosatka">
+  <!-- The Kosatka CMS mark: the letter K whose arm is an orca's dorsal fin,
+       lying over the leg with a gap of the tile's colour. The default logo
+       of a new site (app install); replaced in the admin's Site
+       information. Its small pair, without the gap - kosatka-icon.svg. -->
+  <defs>
+    <clipPath id="kosatka-fin"><rect x="78" y="0" width="122" height="200"/></clipPath>
+  </defs>
+  <rect x="16" y="16" width="168" height="168" rx="40" fill="#062033"/>
+  <path d="M78 84 L104 84 L152 156 H126Z" fill="#fff"/>
+  <g clip-path="url(#kosatka-fin)" stroke-linejoin="round">
+    <path d="M78 62 C98 48 124 40 146 40 C120 56 100 80 82 100 L78 100Z" fill="#062033" stroke="#062033" stroke-width="32"/>
+    <path d="M78 62 C98 48 124 40 146 40 C120 56 100 80 82 100 L78 100Z" fill="#22d3ee" stroke="#22d3ee" stroke-width="12"/>
+  </g>
+  <rect x="54" y="44" width="24" height="112" rx="3" fill="#fff"/>
+</svg>

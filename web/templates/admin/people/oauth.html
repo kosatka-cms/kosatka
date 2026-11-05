@@ -1,0 +1,80 @@
+{{/* admin/config/oauth - sign-in with other services (OAuthPage): a
+     group of rows per provider - on or off and what that means now, the
+     keys (the secret never shown), the redirect URI for its console; Save
+     over the page and under the form. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Visitors can log in and register with their accounts on these services. Register an app in the provider's console with the redirect URI shown below and enter its keys here. After saving, check the login in a private window."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="oauth-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "pair" (t "@provider: enter both keys, the client ID and the client secret (or delete the saved keys)." "@provider" .errorProvider))
+    "Fallback" (t "Could not save."))}}
+
+<form method="post" action="/admin/config/oauth" id="oauth-form" class="admin-settings" autocomplete="off">
+    {{range .providers}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{.Label}}</h2>
+        {{if eq .Source "config"}}<div class="alert alert-info mb-0">{{t "The keys come from the server configuration and can't be changed here; the switch still applies."}}</div>{{end}}
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="oauth-{{.Name}}-enabled" class="admin-setting-label">{{t "Enabled"}}
+                        {{if .Active}}<span class="admin-pill admin-pill--ok">{{t "Offered on the login and registration pages."}}</span>{{end}}
+                    </label>
+                    {{if not .Active}}<span class="admin-setting-help">{{if eq .Source "none"}}{{t "No keys: not offered on the login page."}}{{else}}{{t "Switched off: not offered on the login page. The keys are kept."}}{{end}}</span>{{end}}
+                    {{if .LinkedCount}}<span class="admin-setting-help">{{plural .LinkedCount "@count account is linked to it. Switched off, its users log in with a password (or reset it)." "@count accounts are linked to it. Switched off, their users log in with a password (or reset it)."}}</span>{{end}}
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="oauth-{{.Name}}-enabled" name="{{.Name}}_enabled" value="1" {{if .Enabled}}checked{{end}}>
+                </div>
+            </div>
+            {{if ne .Source "config"}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="oauth-{{.Name}}-id" class="admin-setting-label">{{t "Client ID"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="oauth-{{.Name}}-id" name="{{.Name}}_client_id" class="form-control font-monospace" value="{{.ClientID}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="oauth-{{.Name}}-secret" class="admin-setting-label">{{t "Client secret"}}</label>
+                    <span class="admin-setting-help">{{t "Saved secrets are never shown. Leave the field empty to keep it."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="password" id="oauth-{{.Name}}-secret" name="{{.Name}}_client_secret" class="form-control font-monospace" autocomplete="new-password" placeholder="{{if .SecretSaved}}{{t "saved - leave empty to keep it"}}{{end}}"></div>
+            </div>
+            {{if .KeysSaved}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="oauth-{{.Name}}-clear" class="admin-setting-label">{{t "Delete the saved keys"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="oauth-{{.Name}}-clear" name="{{.Name}}_clear" value="1">
+                </div>
+            </div>
+            {{end}}
+            {{end}}
+            {{if .RedirectURL}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="oauth-{{.Name}}-redirect" class="admin-setting-label">{{t "Redirect URI (for the provider's console)"}}</label>
+                    {{if .ConsoleURL}}<span class="admin-setting-help"><a href="{{.ConsoleURL}}" target="_blank" rel="noopener">{{t "Provider's console"}}</a></span>{{end}}
+                </div>
+                <div class="admin-setting-control"><input type="text" id="oauth-{{.Name}}-redirect" class="form-control font-monospace" value="{{.RedirectURL}}" readonly></div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

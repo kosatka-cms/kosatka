@@ -1,0 +1,50 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{.thread.Subject}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}{{attach "private_messages"}}
+<div class="pm-thread-page">
+
+    <div class="pm-thread-header">
+        <a href="/me/messages" class="btn-back">← {{t "Back"}}</a>
+        <h2>{{.thread.Subject}}</h2>
+        <div class="pm-thread-participants">
+            {{t "Participants:"}}
+            {{range .thread.Members}}
+            {{if .User}}<span class="participant">{{.User.Username}}</span>{{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <div class="pm-messages-list">
+        {{range .messagePage.Messages}}
+        <div class="pm-message {{if eq .AuthorID $.currentUserID}}pm-message--own{{end}}">
+            <div class="pm-message-author">
+                {{if .Author}}
+                <img src="{{if .Author.Avatar.URI}}{{.Author.Avatar.URI}}{{else}}{{avatarPlaceholder}}{{end}}" class="pm-message-avatar" alt="{{.Author.Username}}">
+                <span>{{.Author.Username}}</span>
+                {{end}}
+            </div>
+            <div class="pm-message-body">{{.Body | rawHTML}}</div>
+            <div class="pm-message-date">{{date .CreatedAt "datetime"}}</div>
+        </div>
+        {{end}}
+    </div>
+
+    {{template "pagination.html" .}}
+
+    <form class="pm-reply-form" action="/me/messages/thread/{{.thread.ID}}/reply" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <textarea name="body" aria-label="{{t "Message"}}" placeholder="{{t "Write a message..."}}" required rows="4"></textarea>
+        <button type="submit" class="btn btn-primary">{{t "Send"}}</button>
+    </form>
+
+    <form action="/me/messages/thread/{{.thread.ID}}/archive" method="POST" class="pm-archive-form">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <button type="submit" class="btn btn-secondary">{{t "Archive conversation"}}</button>
+    </form>
+
+</div>
+{{end}}

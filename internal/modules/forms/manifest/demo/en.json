@@ -1,0 +1,18 @@
+{
+  "title": "Contact us",
+  "description": "A question, an idea or a bug - write to us.",
+  "confirmation": "Thank you! We've got your message and will reply to your e-mail.",
+  "submit": "Send",
+  "elements": [
+    {"name": "name", "type": "text", "label": "Name", "required": true},
+    {"name": "email", "type": "email", "label": "E-mail", "required": true},
+    {"name": "subject", "type": "select", "label": "Subject", "required": true, "options": ["Question", "Idea", "Bug"]},
+    {"name": "message", "type": "textarea", "label": "Message", "required": true}
+  ],
+  "submissions": [
+    {"author": "jim_hawkins", "values": {"name": "Jim Hawkins", "email": "jim_hawkins@example.com", "subject": "Question", "message": "Can a form go in the sidebar?"}},
+    {"author": "queequeg", "values": {"name": "Queequeg", "email": "queequeg@example.com", "subject": "Idea", "message": "Add one more scheme to the theme - \"storm\"."}},
+    {"author": "long_john_silver", "values": {"name": "John Silver", "email": "long_john_silver@example.com", "subject": "Bug", "message": "The island's map won't open. I need it badly."}}
+  ],
+  "menu": "Contact us"
+}

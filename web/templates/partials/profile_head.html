@@ -1,0 +1,78 @@
+{{/* profile_head - a profile's header (its picture, name and the counts
+     of its public View tabs) and its tabs: the profile page's and the
+     profile edit form's (user/edit_form.html). Needs profileUser,
+     isCurrentUser, canEdit, activeTab, profileModuleTabs, profileViewTabs
+     (UserController.Profile, EditForm). */}}
+{{define "profile_head"}}
+    <div class="profile-header">
+        <div class="profile-avatar-section">
+            {{if .profileUser.Avatar.URI}}
+            <img src="{{.profileUser.Avatar.URI}}" class="profile-avatar-large" alt="{{.profileUser.Username}}">
+            {{else}}
+            <img src="{{avatarPlaceholder}}" class="profile-avatar-large" alt="{{.profileUser.Username}}">
+            {{end}}
+        </div>
+        
+        <div class="profile-info-section">
+            <h1 class="profile-username">{{.profileUser.Username}}</h1>
+            <div class="profile-stats-bar">
+                {{range .profileViewTabs}}{{if .Public}}
+                <div class="stat-item">
+                    <span class="stat-value">{{.Count}}</span>
+                    <span class="stat-label">{{.Label}}</span>
+                </div>
+                {{end}}{{end}}
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-tabs">
+        {{if .isCurrentUser}}
+            <a href="/me" class="tab-item {{if eq .activeTab "overview"}}active{{end}}">
+                {{t "Overview"}}
+            </a>
+            <a href="/me/edit" class="tab-item {{if eq .activeTab "edit"}}active{{end}}">
+                {{t "Edit"}}
+            </a>
+            <a href="/me/files" class="tab-item {{if eq .activeTab "files"}}active{{end}}">
+                {{t "Files"}}
+            </a>
+            {{template "profile_module_tabs" .}}
+            {{template "profile_view_tabs" .}}
+        {{else}}
+            <a href="/{{.profileUser.Slug}}" class="tab-item {{if eq .activeTab "overview"}}active{{end}}">
+                {{t "Overview"}}
+            </a>
+            {{if .canEdit}}
+            <a href="/user/{{.profileUser.ID}}/edit" class="tab-item {{if eq .activeTab "edit"}}active{{end}}">
+                {{t "Edit"}}
+            </a>
+            {{end}}
+            {{template "profile_module_tabs" .}}
+            {{template "profile_view_tabs" .}}
+        {{end}}
+    </div>
+{{end}}
+
+{{/* profile_module_tabs - the modules' tabs of the profile
+     (interfaces.AddProfileTab) the visitor may open: label, badge (e.g.
+     unread items); the active one's content is the module's
+     "profile_tab_<module>". */}}
+{{define "profile_module_tabs"}}
+{{range .profileModuleTabs}}
+            <a href="{{.URL}}" class="tab-item {{if .Active}}active{{end}}">
+                {{.Label}}
+                {{if .Badge}}<span class="badge">{{.Badge}}</span>{{end}}
+            </a>
+{{end}}
+{{end}}
+
+{{/* profile_view_tabs - the profile's View tabs (user_tab displays,
+     tabs under user/%user): label, result count. */}}
+{{define "profile_view_tabs"}}
+{{range .profileViewTabs}}
+            <a href="{{.URL}}" class="tab-item {{if .Active}}active{{end}}">
+                {{.Label}} ({{.Count}})
+            </a>
+{{end}}
+{{end}}

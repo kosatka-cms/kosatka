@@ -1,0 +1,50 @@
+{{/* admin/url-aliases/patterns.html - every content type's URL pattern
+     (URLPatternList, saved together by URLPatternsSave): .rows with the
+     pattern, the tokens the type's pattern can take and an error. */}}
+{{template "layout.html" .}}
+
+{{/* The tabs over the page's card (as on the addresses' tab). */}}
+{{define "page_body"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/config/url-aliases">{{t "Addresses"}}</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/admin/config/url-aliases/patterns">{{t "Patterns"}}</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/config/url-aliases/rebuild">{{t "Rebuild"}}</a></li>
+</ul>
+<div class="admin-surface">{{template "content" .}}</div>
+{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "saved" (t "Saved.")))}}
+
+<p class="text-muted">
+    {{t "The address of each type's content generated automatically. Empty - @default." "@default" .defaultPathPattern}}
+    {{t "The tokens a type's pattern can take are under it."}}
+    {{t "A changed pattern applies to new content and to content whose address is generated automatically, when it is saved; other addresses stay as they are."}}
+</p>
+
+<form method="post" action="/admin/config/url-aliases/patterns">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>{{t "Content type"}}</th>
+                    <th>{{t "URL pattern"}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .rows}}
+                <tr>
+                    <td><a href="/admin/config/content-types/{{.Type.ID}}">{{.Type.Label}}</a> <code class="small">{{.Type.MachineName}}</code></td>
+                    <td>
+                        <input type="text" name="pattern_{{.Type.ID}}" value="{{.Pattern}}" placeholder="{{$.defaultPathPattern}}" maxlength="255" class="form-control form-control-sm{{if .Error}} is-invalid{{end}}" aria-label="{{t "URL pattern"}}: {{.Type.Label}}">
+                        {{with .Error}}<div class="invalid-feedback">{{.}}</div>{{end}}
+                        {{with .Tokens}}<div class="form-text">{{range .}}<code>{{.}}</code> {{end}}</div>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+</form>
+{{end}}

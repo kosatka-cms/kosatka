@@ -1,0 +1,139 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<article class="node node-edit-gallery{{if .gallery.IsPortrait}} node-edit-gallery--portrait{{end}}" data-gallery-editor="{{.gallery.ID}}" data-node-id="{{.node.ID}}"{{with .gallery}}{{if and .PreviewWidth .PreviewHeight}} style="--gallery-thumb-w: {{.PreviewWidth}}; --gallery-thumb-h: {{.PreviewHeight}}"{{end}}{{end}}>
+    <h1 class="node-title">{{if .gallery.Title}}{{.gallery.Title}}{{else}}{{t "Gallery"}}{{end}}</h1>
+
+    <div class="gallery-settings mb-4">
+        <form id="gallerySettingsForm">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="galleryTitle">{{t "Name"}}</label>
+                    <input type="text" class="form-control" id="galleryTitle" name="title" 
+                           {{if .gallery.Title}}value="{{.gallery.Title}}"{{end}} maxlength="255">
+                </div>
+            </div>
+            {{template "galleries_preview_styles" (dict "Styles" .imageStyles "Small" .gallery.PreviewSmallStyle "Medium" .gallery.PreviewMediumStyle "Prefix" "gallery")}}
+            <div class="form-group">
+                <label for="galleryDescription">{{t "Description"}}</label>
+                <textarea class="form-control" id="galleryDescription" name="description" rows="2">{{if .gallery.Description}}{{.gallery.Description}}{{end}}</textarea>
+            </div>
+
+            <div class="form-group col-md-12" style="display: flex; align-items: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-primary" id="saveSettingsBtn">{{t "Save settings"}}</button>
+                <a href="/galleries/{{.gallery.ID}}" class="btn btn-info">{{t "View"}}</a>
+                <a href="/node/{{.node.ID}}/galleries" class="btn btn-secondary">← {{t "Back to gallery list"}}</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="upload-section mb-4">
+        <h3>{{t "Upload images"}}</h3>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="imageFiles">{{t "Select files"}}</label>
+                <input type="file" class="form-control" id="imageFiles" name="images" multiple accept="{{or .uploadAccept "image/*"}}">
+                <small class="form-text text-muted">{{if .uploadFormats}}{{t "You can select multiple files. Formats: @formats." "@formats" .uploadFormats}}{{else}}{{t "You can select multiple files."}}{{end}}</small>
+            </div>
+            <button type="submit" class="btn btn-success" id="uploadBtn">{{t "Upload"}}</button>
+        </form>
+        <div id="uploadProgress" style="display: none; margin-top: 10px;">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+        </div>
+        <div id="galleryUploadErrors" class="alert alert-danger mt-2 mb-0" style="display: none; white-space: pre-wrap;" role="alert"></div>
+    </div>
+
+    <div class="images-section">
+        <h3>{{t "Images (@count)" "@count" (len .gallery.Items)}}</h3>
+        
+        {{if .gallery.Items}}
+        <div class="images-grid sortable" id="imagesGrid" data-gallery-id="{{.gallery.ID}}">
+            {{range .gallery.Items}}
+            <div class="image-item" draggable="true" data-item-id="{{.ID}}" data-weight="{{.Weight}}">
+                <div class="image-preview">
+                    {{if .File}}
+                    <img src="{{.File.URI}}" alt="{{if .Title}}{{.Title}}{{end}}" loading="lazy">
+                    {{end}}
+                    {{if .IsCover}}
+                    <span class="cover-badge">{{t "Cover"}}</span>
+                    {{end}}
+                </div>
+                <div class="image-actions">
+                    <button type="button" class="btn btn-sm btn-outline-primary set-cover-btn" 
+                            data-item-id="{{.ID}}" title="{{t "Set as cover"}}">
+                        {{if .IsCover}}★{{else}}☆{{end}}
+                    </button>
+                    {{if $.canSetPicture}}
+                    <button type="button" class="btn btn-sm btn-outline-success set-node-main-btn" 
+                            data-item-id="{{.ID}}" title="{{t "Main content image"}}">
+                        🖼
+                    </button>
+                    {{end}}
+                    <button type="button" class="btn btn-sm btn-outline-secondary edit-meta-btn" 
+                            data-item-id="{{.ID}}" 
+                            data-title="{{if .Title}}{{.Title}}{{end}}" 
+                            data-description="{{if .Description}}{{.Description}}{{end}}"
+                            title="{{t "Edit"}}">
+                        ✎
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-item-btn" 
+                            data-item-id="{{.ID}}" title="{{t "Delete"}}">
+                        ×
+                    </button>
+                </div>
+                {{if .Title}}
+                <div class="image-title">{{.Title}}</div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        <div class="hint mt-2">
+            <small>{{t "Drag images to change the order"}}</small>
+        </div>
+        {{else}}
+        <div class="alert alert-info">
+            <p>{{t "This gallery has no images yet. Upload the first ones!"}}</p>
+        </div>
+        {{end}}
+    </div>
+</article>
+
+<div class="modal fade" id="editMetaModal" tabindex="-1" aria-labelledby="editMetaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editMetaModalLabel">{{t "Edit metadata"}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editMetaForm">
+                    <input type="hidden" id="editItemId">
+                    <div class="mb-3">
+                        <label for="editItemTitle" class="form-label">{{t "Name"}}</label>
+                        <input type="text" class="form-control" id="editItemTitle" name="title" maxlength="255">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editItemDescription" class="form-label">{{t "Description"}}</label>
+                        <textarea class="form-control" id="editItemDescription" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                <button type="button" class="btn btn-primary" id="saveMetaBtn">{{t "Save"}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ moduleCSS "galleries" "gallery-manager" }}">
+<script src="{{ moduleJS "galleries" "gallery-manager" }}"></script>
+{{end}}

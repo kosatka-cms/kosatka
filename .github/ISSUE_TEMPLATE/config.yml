@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://kosatka-cms.github.io/kosatka/
+    about: Guides, themes, modules and the reference.
+  - name: Report a vulnerability
+    url: https://github.com/kosatka-cms/kosatka/security
+    about: Security problems are reported privately, never in a public issue.

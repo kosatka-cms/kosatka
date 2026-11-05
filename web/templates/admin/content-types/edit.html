@@ -1,0 +1,264 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+{{if .contentType.Embedded}}
+<span class="admin-page-meta"><a href="/admin/config/field-sets">{{t "Field set"}}</a> · <code>{{.contentType.MachineName}}</code>{{if ge .contentCount 0}} · {{plural .contentCount "@count block" "@count blocks"}}{{end}}</span>
+{{else}}
+<span class="admin-page-meta">{{t "Content type"}} · <code>{{.contentType.MachineName}}</code>{{if ge .contentCount 0}} · <a href="/admin/content?type={{.contentType.MachineName}}">{{plural .contentCount "@count content item" "@count content items"}}</a>{{end}}</span>
+{{end}}
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="content-type-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "content_type_tabs" .}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "path-pattern" (t "The URL pattern isn't valid: use lowercase Latin letters, digits, - _ . / and the tokens listed under the field.")
+        "update" (t "Error saving the content type."))
+    "Warnings" (dict
+        "empty" (t "Fill in the label.")))}}
+
+{{/* The settings as rows: what each is on the left, its control on the
+     right (admin.css, .admin-setting), in groups that fold
+     (admin-settings-fold): the first open, the others folded, each folded
+     one showing its values in one line (settingsFolds in app.js). */}}
+<form method="post" action="/admin/config/content-types/{{.contentType.ID}}" id="content-type-form" class="admin-settings admin-settings--form">
+    <div class="admin-settings-fold-toolbar">
+        <button type="button" class="admin-settings-fold-all" data-settings-fold-all data-expand="{{t "Expand all"}}" data-collapse="{{t "Collapse all"}}">{{t "Expand all"}}</button>
+    </div>
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold open>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Basic"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="label" class="admin-setting-label">{{t "Name"}}</label>
+                    <span class="admin-setting-help">{{if .contentType.Embedded}}{{t "The set's name on the button adding its block in the content form. Its machine name can't be changed after creation."}}{{else}}{{t "The type's name in the \"Create content\" menu and in lists. Its machine name can't be changed after creation."}}{{end}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="label" name="label" class="form-control" value="{{.contentType.Label}}" required></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="description" class="admin-setting-label">{{t "Description"}}</label>
+                    <span class="admin-setting-help">{{t "A hint for whoever creates the content."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="description" name="description" class="form-control" rows="2">{{.contentType.Description}}</textarea></div>
+            </div>
+            {{/* A field set: its name and description only - its blocks have
+                 no page, address or publishing of their own. */}}
+            {{if not .contentType.Embedded}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="path_pattern" class="admin-setting-label">{{t "URL pattern"}}</label>
+                    <span class="admin-setting-help">
+                        {{t "The address of this type's content generated automatically. Empty - @default." "@default" .defaultPathPattern}}
+                        {{t "Tokens:"}}{{range .pathTokens}} <code>{{.}}</code>{{end}}.
+                        {{t "A changed pattern applies to new content and to content whose address is generated automatically, when it is saved; other addresses stay as they are."}}
+                    </span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="path_pattern" name="path_pattern" class="form-control font-monospace" value="{{.contentType.PathPattern}}" placeholder="{{.defaultPathPattern}}" maxlength="255"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="status" class="admin-setting-label">{{t "Enabled"}}</label>
+                    <span class="admin-setting-help">{{t "Content of this type can be created."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="status" name="status" value="1" class="form-check-input" {{if eq .contentType.Status 1}}checked{{end}}>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </details>
+
+    {{if not .contentType.Embedded}}
+
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Content page"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            {{$titleDisplay := print .contentType.TitleDisplay}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="title_display" class="admin-setting-label">{{t "Title"}}</label>
+                    <span class="admin-setting-help">{{t "The title and the alternative title in the page heading."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="title_display" name="title_display" class="form-select">
+                        <option value="original_with_translation" {{if eq $titleDisplay "original_with_translation"}}selected{{end}}>{{t "Title (alternative title)"}}</option>
+                        <option value="translated_first" {{if eq $titleDisplay "translated_first"}}selected{{end}}>{{t "Alternative title, with the title below"}}</option>
+                        <option value="original_only" {{if eq $titleDisplay "original_only"}}selected{{end}}>{{t "Title only"}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="alt_title_field" class="admin-setting-label">{{t "Alternative title"}}</label>
+                    <span class="admin-setting-help">{{t "A text field of the type holding another title of the content item (for example, a translation). Used in the page heading, in the default title, in the \"Title\" field in Views and in cards."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="alt_title_field" name="alt_title_field" class="form-select">
+                        <option value="">{{t "- none -"}}</option>
+                        {{range .textFields}}<option value="{{.MachineName}}" {{if eq .MachineName $.contentType.AltTitleField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="redirect_field" class="admin-setting-label">{{t "Redirect to the address from field"}}</label>
+                    <span class="admin-setting-help">{{t "The content page is not shown; it redirects to the address from this field instead (for example, carousel slides). An empty value gives a regular page."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="redirect_field" name="redirect_field" class="form-select">
+                        <option value="">{{t "- none (regular page) -"}}</option>
+                        {{range .textFields}}<option value="{{.MachineName}}" {{if eq .MachineName $.contentType.RedirectField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="show_submitted" class="admin-setting-label">{{t "Display author and dates"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="show_submitted" name="show_submitted" value="1" class="form-check-input" {{if .contentType.ShowSubmitted}}checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="show_view_count" class="admin-setting-label">{{t "Display view count"}}</label>
+                    <span class="admin-setting-help">{{t "Together with the author and dates."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="show_view_count" name="show_view_count" value="1" class="form-check-input" {{if .contentType.ShowViewCount}}checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "New content"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            {{$publishing := print .contentType.DefaultPublishing}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="default_publishing" class="admin-setting-label">{{t "Publishing"}}</label>
+                    <span class="admin-setting-help">{{t "An editor without \"administer content\" gets it as it is and can't change an item's publishing, author or date; an editor who may sets them in the form."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="default_publishing" name="default_publishing" class="form-select">
+                        <option value="published"{{if eq $publishing "published"}} selected{{end}}>{{t "Published at once"}}</option>
+                        <option value="moderation" data-summary="{{t "On moderation"}}"{{if or (eq $publishing "moderation") (eq $publishing "")}} selected{{end}}>{{t "On moderation - its author sees it, the others after approval"}}</option>
+                        <option value="unpublished"{{if eq $publishing "unpublished"}} selected{{end}}>{{t "Unpublished"}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="default_promote" class="admin-setting-label">{{t "Promoted to the front page"}}</label>
+                    <span class="admin-setting-help">{{t "Lists use it through their View: the \"promote\" filter."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="default_promote" name="default_promote" value="1" class="form-check-input" {{if .contentType.DefaultPromote}}checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="default_sticky" class="admin-setting-label">{{t "Sticky at the top of lists"}}</label>
+                    <span class="admin-setting-help">{{t "Lists use it through their View: the \"sticky\" filter, the \"Sticky\" sort (descending - the sticky first)."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="default_sticky" name="default_sticky" value="1" class="form-check-input" {{if .contentType.DefaultSticky}}checked{{end}}>
+                </div>
+            </div>
+            {{$defaultMode := print .contentType.DefaultCommentMode}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label" id="default_comment_mode_label">{{t "Comments"}}</span>
+                    <span class="admin-setting-help">{{t "Open - new content can be commented on right away; closed - visible, but new comments are not allowed; hidden - the comments section is not shown. Each existing content item has its own setting."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <div class="admin-segmented" role="radiogroup" aria-labelledby="default_comment_mode_label">
+                        <input type="radio" name="default_comment_mode" id="default_comment_mode_open" value="open" {{if eq $defaultMode "open"}}checked{{end}}><label for="default_comment_mode_open">{{tc "comment mode" "Open"}}</label>
+                        <input type="radio" name="default_comment_mode" id="default_comment_mode_closed" value="closed" {{if eq $defaultMode "closed"}}checked{{end}}><label for="default_comment_mode_closed">{{tc "comment mode" "Closed"}}</label>
+                        <input type="radio" name="default_comment_mode" id="default_comment_mode_hidden" value="hidden" {{if eq $defaultMode "hidden"}}checked{{end}}><label for="default_comment_mode_hidden">{{tc "comment mode" "Hidden"}}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="hide_empty_comments" class="admin-setting-label">{{t "Hide the comments block while there are no comments"}}</label>
+                    <span class="admin-setting-help">{{t "Applies to all content of the type at once: while a content item has no comments, the section and the comment form are not shown."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="hide_empty_comments" name="hide_empty_comments" value="1" class="form-check-input" {{if .contentType.HideEmptyComments}}checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold{{if .contentType.ViewRoles}} open{{end}}>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Access"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            {{$viewRoles := .contentType.ViewRoles}}
+            <fieldset class="admin-setting">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Who may view"}}</span>
+                    <span class="admin-setting-help">{{t "The type's content - its pages, lists, search, feeds and private files - only for the checked roles; none checked - for everyone. Those who may edit it, and those with the permission to view every type, see it anyway."}}</span>
+                </legend>
+                <div class="admin-setting-control admin-setting-control--choices">
+                    {{range .viewRoles}}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="view_roles" value="{{.Name}}" id="view-role-{{.Name}}" {{if stringContains $viewRoles .Name}}checked{{end}}>
+                        <label class="form-check-label" for="view-role-{{.Name}}">{{.Label}}</label>
+                    </div>
+                    {{end}}
+                </div>
+            </fieldset>
+        </div>
+    </details>
+
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "History of changes"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="revisions" class="admin-setting-label">{{t "Keep the history of changes"}}</label>
+                    <span class="admin-setting-help">{{t "Every save of a content item becomes a version that can be compared with another or brought back, the bulk actions and publishing too."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="revisions" name="revisions" value="1" class="form-check-input" {{if .contentType.Revisions}}checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="revisions_keep" class="admin-setting-label">{{t "How many versions to keep"}}</label>
+                    <span class="admin-setting-help">{{t "The older ones beyond it are deleted on the next save. Empty - all."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="revisions_keep" name="revisions_keep" min="1" value="{{if .contentType.RevisionsKeep}}{{.contentType.RevisionsKeep}}{{end}}" class="form-control admin-max-xs">
+                </div>
+            </div>
+        </div>
+    </details>
+
+    {{/* The modules' settings of the type (interfaces.AddContentTypeSettings):
+         rows (.admin-setting) of the "Modules" group, shown when a module
+         has any. */}}
+    {{$modules := moduleHook "content_type_settings" .}}
+    {{if $modules}}
+    <details class="admin-settings-group admin-settings-fold" data-settings-fold>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Modules"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">{{$modules}}</div>
+    </details>
+    {{end}}
+    {{end}}
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

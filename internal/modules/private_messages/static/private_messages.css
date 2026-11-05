@@ -1,0 +1,171 @@
+/* The private messages module: its pages and the profile's messages tab. */
+
+.pm-container,
+.pm-thread-page,
+.pm-new-page {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.pm-thread-page .pm-thread-header,
+.pm-new-page h2 {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.pm-thread-page .btn-back {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #01799E;
+    text-decoration: none;
+}
+
+.pm-thread-page .btn-back:hover {
+    text-decoration: underline;
+}
+
+.pm-thread-participants {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.pm-thread-participants .participant {
+    margin-right: 8px;
+}
+
+.pm-messages-list {
+    margin: 20px 0;
+}
+
+.pm-message {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    border-left: 4px solid #dee2e6;
+}
+
+.pm-message--own {
+    background: #e7f3ff;
+    border-left-color: #01799E;
+}
+
+.pm-message-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.pm-message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #dee2e6;
+}
+
+.pm-message--own .pm-message-avatar {
+    border-color: #01799E;
+}
+
+/* The message is the plain text of a textarea: its line breaks show. */
+.pm-message-body {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.pm-message-date {
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+.pm-reply-form {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.pm-reply-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.pm-archive-form {
+    margin-top: 15px;
+}
+
+/* pm_new form */
+.pm-new-form .form-group {
+    margin-bottom: 20px;
+}
+
+.pm-new-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.pm-new-form input[type="text"],
+.pm-new-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.pm-new-form .form-text {
+    font-size: 0.875em;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.pm-new-form .recipients-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* List page filters */
+.pm-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.pm-filters .form-group {
+    margin-bottom: 0;
+}
+
+.pm-filters label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.pm-filters select,
+.pm-filters input {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.pm-bulk-actions {
+    margin-bottom: 15px;
+}

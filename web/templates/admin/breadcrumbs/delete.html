@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/breadcrumbs" "BackLabel" (t "Breadcrumbs")
+    "Heading" (t "Delete rule?")
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/breadcrumbs/%v/delete" .rule.ID)
+    "Submit" (t "Yes, delete"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">{{t "Content type:"}} <code>{{.rule.ContentType}}</code>{{if .link}}, {{t "menu link:"}} {{.link}}{{end}}. {{t "Content that matched it will get the breadcrumbs of the next matching rule or the fallback."}}</p>
+{{end}}

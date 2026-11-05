@@ -1,0 +1,54 @@
+{{/* The ratings module's parts of the core's pages (moduleHook; see
+     ratings.RegisterHooks), its widget and its View field. The total and
+     the stars they share are in blocks/node_rating.html (a plugin block's
+     file is parsed alone, and along with these). */}}
+
+{{/* content_type_settings_ratings - the content type form's row of the
+     module in its "Modules" group (.moduleSettings.ratings: typeForm). */}}
+{{define "content_type_settings_ratings"}}
+{{with .moduleSettings}}{{with .ratings}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="ratings_rated" class="admin-setting-label">{{t "Content of this type can be rated"}}</label>
+        <span class="admin-setting-help">{{t "Ratings"}} · {{if .Votes}}{{plural .Votes "@count vote" "@count votes"}} · {{plural .Nodes "@count content item" "@count content items"}}. {{end}}{{t "Switching it off keeps the votes. The scale and who can rate - in the <a href=\":url\">ratings settings</a>." ":url" "/admin/config/ratings"}}</span>
+    </div>
+    <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+        <input type="checkbox" role="switch" id="ratings_rated" name="ratings_rated" value="1" class="form-check-input" {{if .Rated}}checked{{end}}>
+    </div>
+</div>
+{{end}}{{end}}
+{{end}}
+
+{{/* ratings_summary - the rating field of a View row (Summary): by
+     .Look the stars, average and count, or only one of them. */}}
+{{define "ratings_summary"}}
+{{attach "ratings"}}
+<span class="rating-summary">
+{{- if eq .Look "average"}}<span class="rating-average">{{.Average}}</span>
+{{- else if eq .Look "count"}}<span class="rating-count">{{plural .Count "@count vote" "@count votes"}}</span>
+{{- else}}{{template "ratings_stars" .}} <span class="rating-average">{{.Average}}</span> <span class="rating-count">· {{.Count}}</span>{{end -}}
+</span>
+{{end}}
+
+{{/* ratings_widget - the content page's widget (Widget): the total, and
+     the visitor's vote - the star buttons of a form (ratings.js sends it
+     without leaving the page), taking it back, or the log in offer. */}}
+{{define "ratings_widget"}}
+<div class="rating-widget">
+    {{template "ratings_total" .}}
+    {{if or .CanVote .Mine}}
+    <form class="rating-vote" method="post" action="/node/{{.NodeID}}/rating">
+        <span class="rating-vote-label">{{if .Mine}}{{t "Your vote"}}{{else}}{{t "Rate it"}}{{end}}</span>
+        <span class="rating-vote-stars">
+            {{range .Stars}}
+            <button type="submit" name="score" value="{{.}}" class="rating-star{{if le . $.Mine}} is-on{{end}}" aria-label="{{plural . "@count star" "@count stars"}}"{{if eq . $.Mine}} aria-pressed="true"{{end}}{{if not $.CanVote}} disabled{{end}}>{{template "ratings_star_svg"}}</button>
+            {{end}}
+        </span>
+        {{if .CanWithdraw}}<button type="submit" name="withdraw" value="1" class="btn btn-sm btn-outline-secondary rating-withdraw">{{t "Take back"}}</button>{{end}}
+        <span class="rating-message" role="status"></span>
+    </form>
+    {{else if .LogIn}}
+    <p class="rating-login">{{t "<a href=\":login\">Log in</a> to rate it." ":login" (printf "/login?destination=%s" (urlquery .NodeURL))}}</p>
+    {{end}}
+</div>
+{{end}}

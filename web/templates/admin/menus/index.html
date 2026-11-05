@@ -1,0 +1,64 @@
+{{/* admin/config/menus - the menus (MenuList): adding one (a card over
+     the list), on a table card each menu - its name and machine name,
+     description, its links, edit, delete. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .menus) "@count menu" "@count menus"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Menu deleted."))
+    "Errors" (dict
+        "duplicate" (t "A menu with this machine_name already exists.")
+        "create" (t "Error creating the menu.")
+        "delete" (t "Error deleting the menu."))
+    "Warnings" (dict
+        "empty" (t "Enter a title.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="menu-add">
+    <h2 class="admin-add-title" id="menu-add">{{t "Add menu"}}</h2>
+    <form method="post" action="/admin/config/menus" class="admin-add-form">
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "The machine name is made from the name; the description is set on the menu's own page after creation. Several independent menus can exist at once (e.g. main navigation, footer, account) - any of them is placed as a block in any region on the <a href=\"/admin/config/blocks\">Blocks</a> page (\"Add menu block\"), the site's main menu too."}}</p>
+</section>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Description"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .menus}}
+                <tr>
+                    <td><a href="/admin/config/menus/{{.ID}}/links" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><code>{{.MachineName}}</code></span></td>
+                    <td class="admin-table-muted">{{.Description}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/menus/{{.ID}}/links" class="btn btn-sm btn-outline-primary">{{t "Links"}}</a>
+                        <a href="/admin/config/menus/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/menus/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="3" class="admin-table-empty">{{t "No menus yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,13 @@
+{
+  "title": "Which Kosatka scheme do you choose?",
+  "description": "<p>The theme has two schemes: the light \"foam\" and the dark \"deep\". The switch is in the site's header.</p>",
+  "options": ["The light \"foam\"", "The dark \"deep\"", "Depends on my mood"],
+  "votes": {"ishmael": 0, "queequeg": 1, "starbuck": 0, "captain_nemo": 1, "jim_hawkins": 2, "long_john_silver": 1},
+  "comments": [
+    {"author": "captain_nemo", "body": "The deep only. The surface is far too noisy.", "replies": [
+      {"author": "ishmael", "body": "I like to see the horizon."}
+    ]}
+  ],
+  "menu": "Poll",
+  "block": "Poll"
+}

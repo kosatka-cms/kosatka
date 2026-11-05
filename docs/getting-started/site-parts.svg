@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title>The parts of a site and how they fit together</title>
+  <style>
+    .h { font-size: 13px; font-weight: 700; fill: #ffffff; }
+    .ht { font-size: 11px; fill: #ffffff; fill-opacity: 0.85; }
+    .row { font-size: 12.5px; fill: #1f2937; }
+    .note { font-size: 11.5px; fill: #64748b; }
+    .lab { font-size: 11.5px; fill: #64748b; }
+    .region { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; fill: #94a3b8; }
+    .chip { font-size: 11.5px; font-weight: 600; fill: #1f2937; }
+    .sub { font-size: 10.5px; fill: #64748b; }
+    .edge { stroke: #94a3b8; stroke-width: 1.6; fill: none; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="899" height="619" rx="14" fill="#f8fafc" stroke="#e2e8f0"/>
+
+  <!-- A content type -->
+  <g>
+    <rect x="30" y="60" width="224" height="114" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="1.5"/>
+    <rect x="30" y="60" width="224" height="28" rx="6" fill="#e8590c"/>
+    <rect x="30" y="74" width="224" height="14" fill="#e8590c"/>
+    <text x="42" y="79" class="h">Article</text>
+    <text x="244" y="79" class="ht" text-anchor="end">a content type</text>
+    <text x="42" y="106" class="row">Title</text>
+    <text x="42" y="124" class="row">Body</text>
+    <text x="42" y="142" class="row">Image</text>
+    <text x="42" y="160" class="row">Tags</text>
+    <text x="244" y="160" class="note" text-anchor="end">a term field</text>
+    <text x="244" y="106" class="note" text-anchor="end">its fields</text>
+  </g>
+  <text x="30" y="46" class="region" fill="#e8590c">CONTENT</text>
+
+  <line x1="142" y1="174" x2="142" y2="211" class="edge" marker-end="url(#arrow)"/>
+  <text x="152" y="197" class="lab">an item of the type</text>
+
+  <!-- A content item -->
+  <g>
+    <rect x="30" y="214" width="224" height="114" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="1.5"/>
+    <rect x="30" y="214" width="224" height="28" rx="6" fill="#e8590c"/>
+    <rect x="30" y="228" width="224" height="14" fill="#e8590c"/>
+    <text x="42" y="233" class="h">Harbour festival</text>
+    <text x="244" y="233" class="ht" text-anchor="end">a content item</text>
+    <text x="42" y="260" class="row">Title: Harbour festival</text>
+    <text x="42" y="278" class="row">Body: Three days of boats...</text>
+    <text x="42" y="296" class="row">Image: harbour.jpg</text>
+    <text x="42" y="314" class="row">Tags: Festivals, Summer</text>
+  </g>
+
+  <line x1="142" y1="328" x2="142" y2="369" class="edge" marker-end="url(#arrow)"/>
+  <text x="152" y="354" class="lab">classified by its terms</text>
+
+  <!-- Taxonomy -->
+  <g>
+    <rect x="30" y="372" width="224" height="96" rx="6" fill="#ffffff" stroke="#7048e8" stroke-width="1.5"/>
+    <rect x="30" y="372" width="224" height="28" rx="6" fill="#7048e8"/>
+    <rect x="30" y="386" width="224" height="14" fill="#7048e8"/>
+    <text x="42" y="391" class="h">Tags</text>
+    <text x="244" y="391" class="ht" text-anchor="end">a vocabulary</text>
+    <text x="42" y="420" class="row">Festivals, Summer, Concerts</text>
+    <text x="42" y="438" class="note">its terms; each has a page of its own</text>
+    <text x="42" y="456" class="note">(sections, tags...)</text>
+  </g>
+
+  <!-- A View -->
+  <line x1="254" y1="271" x2="308" y2="271" class="edge" marker-end="url(#arrow)"/>
+  <text x="282" y="290" class="lab" text-anchor="middle">listed by</text>
+  <text x="310" y="46" class="region" fill="#0c8599">LISTS</text>
+  <g>
+    <rect x="310" y="190" width="210" height="150" rx="6" fill="#ffffff" stroke="#0c8599" stroke-width="1.5"/>
+    <rect x="310" y="190" width="210" height="28" rx="6" fill="#0c8599"/>
+    <rect x="310" y="204" width="210" height="14" fill="#0c8599"/>
+    <text x="322" y="209" class="h">Latest festivals</text>
+    <text x="510" y="209" class="ht" text-anchor="end">a View</text>
+    <text x="322" y="238" class="row">items of the type Article</text>
+    <text x="322" y="256" class="row">filter: the tag Festivals</text>
+    <text x="322" y="274" class="row">sort: newest first</text>
+    <text x="322" y="302" class="note">shown as a page, a block</text>
+    <text x="322" y="320" class="note">or a feed</text>
+  </g>
+
+  <line x1="520" y1="271" x2="554" y2="271" class="edge" marker-end="url(#arrow)"/>
+
+  <!-- A page in its theme -->
+  <text x="556" y="46" class="region" fill="#4263eb">PAGES</text>
+  <g>
+    <rect x="556" y="60" width="324" height="408" rx="10" fill="#ffffff" stroke="#4263eb" stroke-width="1.5"/>
+    <rect x="556" y="60" width="324" height="28" rx="10" fill="#4263eb"/>
+    <rect x="556" y="76" width="324" height="12" fill="#4263eb"/>
+    <text x="568" y="79" class="h">A page of the site</text>
+    <text x="870" y="79" class="ht" text-anchor="end">in its theme</text>
+    <text x="568" y="106" class="note">the theme declares the regions; blocks go in them</text>
+
+    <rect x="572" y="118" width="292" height="56" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="4 3"/>
+    <text x="580" y="132" class="region">HEADER</text>
+    <rect x="584" y="140" width="200" height="24" rx="5" fill="#edf2ff" stroke="#4263eb"/>
+    <text x="594" y="156" class="chip">Main menu</text>
+    <text x="664" y="156" class="sub">a menu's block</text>
+
+    <rect x="572" y="186" width="150" height="210" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="4 3"/>
+    <text x="580" y="200" class="region">CONTENT</text>
+    <rect x="584" y="210" width="126" height="54" rx="5" fill="#fff4e6" stroke="#e8590c"/>
+    <text x="594" y="232" class="chip">Harbour festival</text>
+    <text x="594" y="250" class="sub">the item's page</text>
+    <text x="584" y="284" class="sub">or a View's page,</text>
+    <text x="584" y="298" class="sub">such as /festivals</text>
+
+    <rect x="732" y="186" width="132" height="210" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="4 3"/>
+    <text x="740" y="200" class="region">SIDEBAR</text>
+    <rect x="742" y="210" width="112" height="40" rx="5" fill="#e3fafc" stroke="#0c8599"/>
+    <text x="750" y="227" class="chip">Latest festivals</text>
+    <text x="750" y="242" class="sub">a View's block</text>
+    <rect x="742" y="258" width="112" height="40" rx="5" fill="#f3f0ff" stroke="#7048e8"/>
+    <text x="750" y="275" class="chip">Tags</text>
+    <text x="750" y="290" class="sub">a term cloud</text>
+    <rect x="742" y="306" width="112" height="40" rx="5" fill="#f1f3f5" stroke="#868e96" stroke-dasharray="4 3"/>
+    <text x="750" y="323" class="chip">Poll</text>
+    <text x="750" y="338" class="sub">a module's block</text>
+
+    <rect x="572" y="408" width="292" height="48" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="4 3"/>
+    <text x="580" y="422" class="region">FOOTER</text>
+    <rect x="584" y="428" width="200" height="22" rx="5" fill="#edf2ff" stroke="#4263eb"/>
+    <text x="594" y="443" class="chip">Copyright</text>
+    <text x="664" y="443" class="sub">a custom block</text>
+  </g>
+
+  <!-- Modules -->
+  <rect x="30" y="496" width="850" height="104" rx="10" fill="#f1f3f5" stroke="#ced4da" stroke-dasharray="5 4"/>
+  <text x="46" y="520" class="region" fill="#868e96">MODULES</text>
+  <text x="46" y="544" class="row">Features a site can have or go without: forms, galleries, polls, ratings and more.</text>
+  <text x="46" y="564" class="row">A module brings its own content types (a poll, a form), blocks (the Poll above) and pages;</text>
+  <text x="46" y="584" class="row">it is switched on and off on the admin's Modules page, and can live in a repository of its own.</text>
+</svg>

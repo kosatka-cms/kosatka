@@ -1,0 +1,80 @@
+{{/* admin/modules/index.html - the Modules page (Controller.ModulesPage):
+     the modules by their categories (.groups, entity.ModuleCategories),
+     links to the groups with how many are on; a module's row - its name
+     (not installed, from its own repository), what it does, what it
+     includes, Uninstall for a disabled one, its switch; the groups folded
+     (admin-settings-fold). One form: Save at the top and the bottom. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="modules-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Settings saved."))
+    "Fallback" (t "Error while saving."))}}
+{{with .requiresError}}<div class="alert alert-danger">{{.}} {{t "Nothing was saved."}}</div>{{end}}
+{{with .uninstalled}}<div class="alert alert-success">{{t "\"@module\" is uninstalled: its data and tables are removed. Enabling it again installs it from scratch." "@module" .}}</div>{{end}}
+
+<p class="admin-module-intro">{{t "A disabled module keeps its data: its pages answer 404, its links, blocks and permissions are hidden. Enable it again to bring everything back."}}{{if .uninstallAvailable}} {{t "To remove a disabled module with all its data, uninstall it."}}{{end}}</p>
+
+<nav class="admin-module-cats" aria-label="{{t "Categories"}}">
+    {{range .groups}}<a href="#modules-{{.Name}}" class="admin-module-cat">{{.Label}} <span>{{.On}}/{{len .Modules}}</span></a>{{end}}
+</nav>
+
+<form method="post" action="/admin/config/modules" id="modules-form" class="admin-settings">
+    <div class="admin-settings-fold-toolbar">
+        <button type="button" class="admin-settings-fold-all" data-settings-fold-all data-expand="{{t "Expand all"}}" data-collapse="{{t "Collapse all"}}">{{t "Expand all"}}</button>
+    </div>
+    {{range .groups}}
+    {{/* Folded, its line names its modules that are on (settingsFolds);
+         a link to it (#modules-<name>) opens it. */}}
+    <details class="admin-settings-group admin-settings-fold" id="modules-{{.Name}}" data-settings-fold>
+        <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title admin-module-group-title">{{.Label}} <span class="admin-module-count">{{t "@on of @total on" "@on" .On "@total" (len .Modules)}}</span></h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
+        <div class="admin-settings-card">
+            {{range .Modules}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <div class="admin-module-name">
+                        <label for="module_{{.Name}}" class="admin-setting-label">{{.Label}}</label>
+                        {{if $.uninstallAvailable}}{{if not .Installed}}<span class="admin-pill">{{t "Not installed"}}</span>{{end}}{{end}}
+                        {{if .External}}<span class="admin-pill admin-pill--external">{{t "from its own repository"}}</span>{{end}}
+                    </div>
+                    <span class="admin-setting-help">{{.Description}}</span>
+                    {{if or .Details (and $.uninstallAvailable .Installed (not .Enabled))}}
+                    <div class="admin-module-links">
+                        {{with .Details}}
+                        <details class="admin-module-details">
+                            <summary>{{t "What the module includes"}}</summary>
+                            <dl>
+                                {{range .}}
+                                <dt>{{.Heading}}</dt>
+                                <dd>{{range $i, $it := .Items}}{{if $i}}<br>{{end}}{{$it}}{{end}}</dd>
+                                {{end}}
+                            </dl>
+                        </details>
+                        {{end}}
+                        {{if and $.uninstallAvailable .Installed (not .Enabled)}}
+                        {{if .UninstallBlocked}}<span class="admin-setting-help">{{t "Uninstall:"}} {{.UninstallBlocked}}</span>{{else}}<a href="/admin/config/modules/{{.Name}}/uninstall" class="link-danger">{{t "Uninstall"}}</a>{{end}}
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="module_{{.Name}}" name="module_{{.Name}}" value="1" class="form-check-input"{{if .Enabled}} checked{{end}}>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </details>
+    {{end}}
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

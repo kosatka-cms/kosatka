@@ -1,0 +1,15 @@
+{{/* admin_translations_tabs - the Interface translations page's tabs (real
+     links): the languages, the strings. Expects the tab shown:
+     "languages", "strings". */}}
+{{define "admin_translations_tabs"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{{if eq . "languages"}} active" aria-current="page{{end}}" href="/admin/config/translations">{{t "Languages"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if eq . "strings"}} active" aria-current="page{{end}}" href="/admin/config/translations/strings">{{t "Strings"}}</a></li>
+</ul>
+{{end}}
+
+{{/* admin_translations_meta - the page's description, the same on both
+     tabs. */}}
+{{define "admin_translations_meta"}}
+<span class="admin-page-meta">{{t "The interface's strings in the site's languages. A string changed here is shown instead of the default translation and stays through updates; the English text can be rewritten too."}}</span>
+{{end}}

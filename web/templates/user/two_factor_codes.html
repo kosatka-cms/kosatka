@@ -1,0 +1,24 @@
+{{/* user/two_factor_codes.html - the recovery codes, shown once
+     (UserController.renderRecoveryCodes): .justEnabled - after turning
+     it on. Download (a text file), copy, print; then back to the page. */}}
+{{template "layout.html" .}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="two-factor-page">
+{{if .justEnabled}}<div class="alert alert-success" role="status">{{t "Two-factor sign-in is turned on."}}</div>{{end}}
+<section class="two-factor-card">
+    <h2 class="two-factor-title">{{t "Save the recovery codes"}}</h2>
+    <p>{{t "If the phone is lost, one of these codes signs you in - each works once. Keep them apart from the phone: in a password manager or on paper."}} <strong>{{t "They won't be shown again."}}</strong></p>
+    <ul class="two-factor-codes" id="recovery-codes">
+        {{range .codes}}<li><code>{{.}}</code></li>{{end}}
+    </ul>
+    <div class="two-factor-row">
+        <a class="btn btn-outline-secondary" download="recovery-codes.txt" href="{{.codesURL}}">{{t "Download .txt"}}</a>
+        <button type="button" class="btn btn-outline-secondary" data-copy-text="{{.codesText}}" data-copied="{{t "Copied"}}">{{t "Copy"}}</button>
+        <button type="button" class="btn btn-outline-secondary" data-print>{{t "Print"}}</button>
+    </div>
+    <a class="btn btn-primary mt-3" href="/me/two-factor">{{t "I've saved the codes"}}</a>
+</section>
+</div>
+{{end}}

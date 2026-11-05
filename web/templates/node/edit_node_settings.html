@@ -1,0 +1,210 @@
+{{/* edit_node_settings.html - the side column of a content item's form
+     (node-edit-aside, beside node-edit-main in a node-edit-layout form):
+     the item's state and the save button (node-edit-save, kept in view
+     while the form scrolls), then, for who may edit them
+     (.canEditNodeSettings), its publishing and its settings - each a
+     node-settings-section (<details>: a title, the current value, the
+     fields), the modules' too (moduleHook "node_settings"). A
+     workflow's type (.nodeWorkflow) has its state and transitions
+     instead of the state and the button, no publishing or schedule.
+     $node - the node being edited: .dc (content types) or .editNode (a
+     module's own type: anything with .Node). */}}
+{{$node := .dc}}
+{{if .editNode}}
+  {{$node = .editNode}}
+{{end}}
+
+<aside class="node-edit-aside" aria-label="{{t "Publishing and settings"}}">
+  {{/* A workflow's type (interfaces.NodeWorkflow): its state and
+       transitions in place of the publishing state and the button. */}}
+  {{if .nodeWorkflow}}{{moduleHook "node_workflow" .}}{{else}}
+  <div class="node-edit-card node-edit-save">
+    {{if not .isCreateMode}}
+    <div class="node-edit-state">
+      {{if eq .form.Status 1}}<span class="node-edit-pill node-edit-pill--published">{{t "Published"}}</span>{{else}}<span class="node-edit-pill">{{t "Not published"}}</span>{{end}}
+      <a href="{{$node.Node.URL}}">{{t "Open"}} ↗</a>
+    </div>
+    <div class="node-edit-meta">
+      {{with .contentType}}{{.Label}} · {{end}}{{if not $node.Node.UpdatedAt.IsZero}}{{t "changed @date" "@date" (date $node.Node.UpdatedAt "datetime")}}{{end}}
+      {{if and .dc .contentType .contentType.Revisions}} · <a href="/node/{{$node.Node.ID}}/revisions">{{t "History"}}</a>{{end}}
+    </div>
+    {{end}}
+    <div class="node-edit-buttons">
+      <button type="submit" class="btn btn-primary">{{if .isCreateMode}}{{t "Create"}}{{else}}{{t "Save"}}{{end}}</button>
+      {{if not .isCreateMode}}<a href="{{$node.Node.URL}}" class="btn btn-outline-secondary">{{t "Cancel"}}</a>{{end}}
+    </div>
+  </div>
+  {{end}}
+
+  {{/* A preview link (service.PreviewLinks): the item shown to whoever
+       has the link, published or not, for a week; made anew or revoked
+       here (web/static/js/app/57-preview-link.js) - a content type's
+       saved item, for its editors. */}}
+  {{if and .dc (not .isCreateMode)}}
+  <section class="node-edit-card node-preview-link" data-preview-link="/node/{{$node.Node.ID}}/preview-link" aria-labelledby="node-preview-link-title">
+    <h2 class="node-edit-card-title" id="node-preview-link-title">{{t "Link for viewing"}}</h2>
+    <p class="form-text text-muted">{{t "Shows this content as it is - even unpublished - to whoever has the link, for 7 days. Without an account, not indexed."}}</p>
+    <p class="form-text" data-preview-link-state>{{with .previewLinkExpires}}{{t "A link works until @date." "@date" (date . "datetime")}}{{end}}</p>
+    <div class="input-group input-group-sm mb-2" data-preview-link-url hidden>
+      <input type="text" class="form-control" readonly aria-label="{{t "Link for viewing"}}">
+      <button type="button" class="btn btn-outline-secondary" data-preview-link-copy>{{t "Copy"}}</button>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn btn-sm btn-outline-primary" data-preview-link-create>{{if .previewLinkExpires}}{{t "Make a new link"}}{{else}}{{t "Make a link"}}{{end}}</button>
+      <button type="button" class="btn btn-sm btn-outline-danger" data-preview-link-revoke{{if not .previewLinkExpires}} hidden{{end}}>{{t "Revoke"}}</button>
+    </div>
+  </section>
+  {{end}}
+
+  {{if .canEditNodeSettings}}
+  <section class="node-edit-card node-edit-publishing" aria-labelledby="node-edit-publishing-title">
+    <h2 class="node-edit-card-title" id="node-edit-publishing-title">{{t "Publishing"}}</h2>
+    {{if not .nodeWorkflow}}
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="status" name="status" value="1" {{if eq .form.Status 1}}checked{{end}}>
+      <label class="form-check-label" for="status">{{t "Published"}}</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="on_moderation" name="on_moderation" value="1" {{if eq .form.OnModeration 1}}checked{{end}}>
+      <label class="form-check-label" for="on_moderation">{{t "In moderation"}}</label>
+    </div>
+    {{end}}
+    {{/* The front page / sticky flags (entity.Node.Promote, Sticky):
+         content types' nodes; lists use them through their View. */}}
+    {{if .dc}}
+    <input type="hidden" name="node_flags_shown" value="1">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="promote" name="promote" value="1" {{if .form.Promote}}checked{{end}}>
+      <label class="form-check-label" for="promote">{{t "Promoted to the front page"}}</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="sticky" name="sticky" value="1" {{if .form.Sticky}}checked{{end}}>
+      <label class="form-check-label" for="sticky">{{t "Sticky at the top of lists"}}</label>
+    </div>
+    {{/* The schedule (entity.Node.PublishOn, UnpublishOn): the
+         background jobs publish or unpublish the node at that time. */}}
+    {{if not .nodeWorkflow}}
+    <input type="hidden" name="schedule_shown" value="1">
+    <details class="node-schedule"{{if or (not .form.PublishOn.IsZero) (not .form.UnpublishOn.IsZero) .errors.unpublish_on}} open{{end}}>
+      <summary class="node-schedule-title">{{t "On schedule"}}{{if not .form.PublishOn.IsZero}} <span class="node-schedule-pill">{{t "publishes @date" "@date" (date .form.PublishOn "datetime")}}</span>{{end}}{{if not .form.UnpublishOn.IsZero}} <span class="node-schedule-pill">{{t "unpublishes @date" "@date" (date .form.UnpublishOn "datetime")}}</span>{{end}}</summary>
+      <div class="form-group">
+        <label for="publish_on">{{t "Publish"}}</label>
+        <input type="datetime-local" id="publish_on" name="publish_on" value="{{if not .form.PublishOn.IsZero}}{{(siteTime .form.PublishOn).Format "2006-01-02T15:04"}}{{end}}" class="form-control">
+        <small class="form-text text-muted">{{t "The content is published at this time (and leaves moderation); until then it is unpublished."}}</small>
+      </div>
+      <div class="form-group">
+        <label for="unpublish_on">{{t "Unpublish"}}</label>
+        <input type="datetime-local" id="unpublish_on" name="unpublish_on" value="{{if not .form.UnpublishOn.IsZero}}{{(siteTime .form.UnpublishOn).Format "2006-01-02T15:04"}}{{end}}" class="form-control{{if .errors.unpublish_on}} is-invalid{{end}}">
+        {{with .errors.unpublish_on}}<div class="invalid-feedback d-block">{{.}}</div>{{end}}
+        <small class="form-text text-muted">{{t "For an announcement or an offer, say. Empty - no end."}}</small>
+      </div>
+      {{with .timeZone}}<small class="form-text text-muted">{{t "Time zone: @zone. Checked every minute." "@zone" .}}</small>{{end}}
+    </details>
+    {{end}}
+    {{end}}
+  </section>
+
+  <div class="node-edit-card node-settings">
+    <details class="node-settings-section"{{if .errors.slug}} open{{end}}>
+      <summary><span class="node-settings-title">{{tc "node setting" "Address"}}</span><span class="node-settings-value">{{with .form.Slug}}/{{.}}{{else}}{{tc "node setting" "Automatic"}}{{end}}</span></summary>
+      <div class="node-settings-body">
+        {{/* .pathPattern - the content type's URL pattern (a module's
+             type has none): "generate automatically" follows it; the
+             alias input is off then (edit_scripts.html). */}}
+        {{if .pathPattern}}
+        <div class="form-check mb-2">
+          <input type="hidden" name="path_auto_shown" value="1">
+          <input class="form-check-input" type="checkbox" id="path_auto" name="path_auto" value="1" {{if .form.PathAuto}}checked{{end}}>
+          <label class="form-check-label" for="path_auto">{{t "Generate the URL alias automatically"}}</label>
+          <div class="form-text">{{t "By the content type's pattern: @pattern" "@pattern" .pathPattern}}</div>
+        </div>
+        {{end}}
+        <div class="form-group">
+          <label for="slug">Slug (URL){{if not .isCreateMode}} <span class="required">*</span>{{end}}</label>
+          <input type="text" id="slug" name="slug" value="{{.form.Slug}}" {{if not .isCreateMode}}required{{end}} maxlength="255" class="form-control">
+          {{if and .isCreateMode (not .pathPattern)}}
+          <small class="form-text text-muted">{{t "Leave empty to generate automatically from the title"}}</small>
+          {{end}}
+        </div>
+      </div>
+    </details>
+    <details class="node-settings-section">
+      <summary><span class="node-settings-title">{{t "Meta tags"}}</span><span class="node-settings-value">{{if or .form.MetaTitle .form.MetaDescription}}{{tc "node setting" "Set"}}{{else}}{{tc "node setting" "Automatic"}}{{end}}</span></summary>
+      <div class="node-settings-body">
+        <div class="form-group">
+          <label for="meta_title">{{t "Page title"}}</label>
+          <input type="text" id="meta_title" name="meta_title" value="{{.form.MetaTitle}}" maxlength="200" class="form-control" placeholder="">
+          <small class="form-text text-muted">{{t "If empty, the title is generated automatically from the content title."}}</small>
+        </div>
+        <div class="form-group">
+          <label for="meta_description">{{t "Description (meta description)"}}</label>
+          <textarea id="meta_description" name="meta_description" maxlength="160" rows="3" class="form-control" placeholder="">{{.form.MetaDescription}}</textarea>
+          <small class="form-text text-muted">{{t "Up to 160 characters recommended. If empty, the description is taken from the content text."}}</small>
+        </div>
+      </div>
+    </details>
+    {{/* .form.CommentMode: the node's current value (edit) or the
+         resubmitted value after a validation error; falls back to
+         .defaultCommentMode (the content type's default, on create)
+         and finally to "open". */}}
+    {{$mode := "open"}}
+    {{if .defaultCommentMode}}{{$mode = .defaultCommentMode}}{{end}}
+    {{if .form.CommentMode}}{{$mode = .form.CommentMode}}{{end}}
+    <details class="node-settings-section">
+      <summary><span class="node-settings-title">{{t "Comments"}}</span><span class="node-settings-value">{{if eq $mode "closed"}}{{tc "comment mode" "Closed"}}{{else if eq $mode "hidden"}}{{tc "comment mode" "Hidden"}}{{else}}{{tc "comment mode" "Open"}}{{end}}</span></summary>
+      <div class="node-settings-body">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="comment_mode" id="comment_mode_open" value="open" {{if eq $mode "open"}}checked{{end}}>
+          <label class="form-check-label" for="comment_mode_open">{{t "Open - comments can be read and posted"}}</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="comment_mode" id="comment_mode_closed" value="closed" {{if eq $mode "closed"}}checked{{end}}>
+          <label class="form-check-label" for="comment_mode_closed">{{t "Closed - comments can only be read"}}</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="comment_mode" id="comment_mode_hidden" value="hidden" {{if eq $mode "hidden"}}checked{{end}}>
+          <label class="form-check-label" for="comment_mode_hidden">{{t "Hidden - the comments section is not shown"}}</label>
+        </div>
+      </div>
+    </details>
+    {{/* Who may view the item (entity.Node.ViewRoles), of those its type
+         is for: content types' nodes only (.dc). None checked - whoever
+         may view its type. */}}
+    {{if .dc}}
+    <input type="hidden" name="view_roles_shown" value="1">
+    <details class="node-settings-section">
+      <summary><span class="node-settings-title">{{t "Access"}}</span><span class="node-settings-value">{{if .form.ViewRoles}}{{tc "node setting" "Restricted"}}{{else}}{{tc "node setting" "As its type"}}{{end}}</span></summary>
+      <div class="node-settings-body">
+        <p class="form-text text-muted">{{t "Who may view this content, of those its type is for: its page, lists, search and files. None checked - whoever may view its type. Its author, those who may edit it and those who may view every content see it anyway."}}</p>
+        {{range .viewRoleOptions}}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="view_roles" value="{{.Name}}" id="view-role-{{.Name}}" {{if stringContains $.form.ViewRoles .Name}}checked{{end}}>
+          <label class="form-check-label" for="view-role-{{.Name}}">{{.Label}}</label>
+        </div>
+        {{end}}
+      </div>
+    </details>
+    {{end}}
+    {{/* The modules' sections (interfaces.AddNodeSettings): content types'
+         nodes only (.dc), not the modules' own types (polls, forms). Each
+         a node-settings-section like these. */}}
+    {{if .dc}}{{moduleHook "node_settings" .}}{{end}}
+    <details class="node-settings-section">
+      <summary><span class="node-settings-title">{{t "Author"}}</span><span class="node-settings-value">{{$node.Node.CreatedBy.Username}}{{if not $node.Node.CreatedAt.IsZero}}, {{date $node.Node.CreatedAt ""}}{{end}}</span></summary>
+      <div class="node-settings-body">
+        <div class="form-group">
+          <label for="created_by_display">{{t "Author"}}</label>
+          <input type="text" id="created_by_display" class="form-control" placeholder="{{t "Start typing a username..."}}" value="{{if $node.Node.CreatedBy.ID}}{{$node.Node.CreatedBy.Username}}{{end}}" autocomplete="off" data-user-autocomplete data-user-id-input="created_by">
+          <input type="hidden" id="created_by" name="created_by" value="{{if $node.Node.CreatedBy.ID}}{{$node.Node.CreatedBy.ID}}{{end}}">
+          <small class="form-text text-muted">{{t "Start typing a name to search for a user"}}</small>
+        </div>
+        <div class="form-group">
+          <label for="created_at">{{t "Creation date"}}</label>
+          <input type="datetime-local" id="created_at" name="created_at" value="{{if not $node.Node.CreatedAt.IsZero}}{{(siteTime $node.Node.CreatedAt).Format "2006-01-02T15:04"}}{{end}}" class="form-control">
+          <small class="form-text text-muted">{{t "Leave empty for the current date"}}</small>
+        </div>
+      </div>
+    </details>
+  </div>
+  {{end}}
+</aside>

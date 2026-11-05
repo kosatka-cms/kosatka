@@ -1,0 +1,73 @@
+{{/* admin/people/roles - the roles (RolesPage): adding one (a card over
+     the list), on a table card each role - its name (edited in place),
+     machine name, the base and full-access ones marked, its users, delete
+     (not those two, nor one with users). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "User roles. Role permissions are on the <a href=\":url\">\"Permissions\"</a> page; a role is assigned in the user profile." ":url" "/admin/people/permissions"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if eq .success "created"}}<div class="alert alert-success">{{t "Role created. Grant it permissions on the <a href=\":url\">\"Permissions\"</a> page." ":url" "/admin/people/permissions"}}</div>{{end}}
+{{if eq .success "saved"}}<div class="alert alert-success">{{t "Role name saved."}}</div>{{end}}
+{{if eq .success "deleted"}}<div class="alert alert-success">{{t "Role deleted."}}</div>{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "name" (t "The machine name may contain only lowercase Latin letters, digits and \"_\", and must start with a letter.")
+        "label" (t "Enter the role name.")
+        "exists" (t "A role with this machine name already exists.")
+        "protected" (t "The base role and the role with full access cannot be deleted.")
+        "in-use" (t "The role has users; assign them another role first."))
+    "Fallback" (t "Could not save."))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="role-add">
+    <h2 class="admin-add-title" id="role-add">{{t "Add role"}}</h2>
+    <form method="post" action="/admin/people/roles" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" placeholder="{{t "Forum moderator"}}" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Machine name"}}</span>
+            <input type="text" name="name" class="form-control" placeholder="forum_moderator" pattern="[a-z][a-z0-9_]*" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+</section>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th class="text-end">{{t "Users"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .roles}}
+                <tr>
+                    <td>
+                        <form method="post" action="/admin/people/roles/{{.Role.ID}}/rename" class="admin-table-inline-form">
+                            <input type="text" name="label" value="{{.Role.Description}}" class="form-control form-control-sm" aria-label="{{t "Name"}}" required>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Save"}}</button>
+                        </form>
+                        <span class="admin-table-sub"><code>{{.Role.Name}}</code>{{if .Base}} · {{t "all logged-in users"}}{{end}}{{if .FullAccess}} · {{t "full access"}}{{end}}</span>
+                    </td>
+                    <td class="text-end admin-table-num">{{.Users}}</td>
+                    <td class="text-nowrap text-end">
+                        {{if or .Base .FullAccess}}<span class="admin-table-muted">{{t "cannot be deleted"}}</span>
+                        {{else if .Users}}<span class="admin-table-muted" title="{{t "Assign the users another role first"}}">{{t "has users"}}</span>
+                        {{else}}<form method="post" action="/admin/people/roles/{{.Role.ID}}/delete" class="d-inline" data-confirm="{{t "Delete role \"@name\"?" "@name" .Role.Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

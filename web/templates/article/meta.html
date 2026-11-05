@@ -1,0 +1,23 @@
+<div class="article-meta">
+    <div class="meta-item">
+        <span class="meta-label">{{t "Author:"}}</span>
+        <a href="/{{.item.Node.CreatedBy.Slug}}">{{ .item.Node.CreatedBy.Username }}</a>
+
+    </div>
+    <div class="meta-item">
+        <span class="meta-label">{{t "Created:"}}</span>
+        <span class="meta-value">{{ date .item.Node.CreatedAt "" }}</span>
+    </div>
+    {{if not .item.Node.UpdatedAt.IsZero}}
+    <div class="meta-item">
+        <span class="meta-label">{{t "Updated:"}}</span>
+        <span class="meta-value">{{ date .item.Node.UpdatedAt "" }}</span>
+    </div>
+    {{end}}
+    {{if .contentType.ShowViewCount}}
+    <div class="meta-item">
+        <span class="meta-label">{{t "Views:"}}</span>
+        <span class="meta-value">{{.item.Node.Counter.TotalCount}}</span>
+    </div>
+    {{end}}
+</div>

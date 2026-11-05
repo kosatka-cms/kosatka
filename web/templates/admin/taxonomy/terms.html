@@ -1,0 +1,122 @@
+{{/* admin/config/taxonomy/{id}/terms - a vocabulary's terms
+     (TaxonomyTermList): adding one (a card over the list), on a table card
+     the tree - each term's name and path, its parent, edit, delete;
+     dragged by ☰ (before, after or into a row) or moved by its "Parent",
+     saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .terms) "@count term" "@count terms"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/taxonomy/{{.vocabulary.ID}}/edit" class="btn btn-outline-secondary">{{t "Vocabulary settings"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Term deleted."))
+    "Errors" (dict
+        "create" (t "Error creating the term (perhaps this slug already exists).")
+        "empty-order" (t "Could not save the order - the list is empty.")
+        "display-update" (t "Error saving the order/parent.")))}}
+
+{{$vid := .vocabulary.ID}}
+{{$names := .termDisplayNames}}
+{{$depths := .termDepths}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="term-add">
+    <h2 class="admin-add-title" id="term-add">{{t "Add term to \"@vocabulary\"" "@vocabulary" .vocabulary.Name}}</h2>
+    <form method="post" action="/admin/config/taxonomy/{{$vid}}/terms" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="name" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Parent"}}</span>
+            <select name="parent_id" class="form-select">
+                <option value="0">{{t "- no parent -"}}</option>
+                {{range .terms}}
+                <option value="{{.ID}}">{{index $names .ID}}</option>
+                {{end}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        <details class="admin-add-more">
+            <summary>{{t "More"}}</summary>
+            <div class="admin-add-form">
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "Path (empty - vocabulary prefix + name)"}}</span>
+                    <input type="text" name="slug" class="form-control">
+                </label>
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "Description"}}</span>
+                    <input type="text" name="description" class="form-control">
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Weight"}}</span>
+                    <input type="number" name="weight" class="form-control" value="0">
+                </label>
+            </div>
+        </details>
+    </form>
+</section>
+
+<form id="terms-reorder-form" method="post" action="/admin/config/taxonomy/{{$vid}}/terms/reorder">
+    <input type="hidden" name="order" id="terms-order-input" value="">
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to change the order or parent"}}</span></th>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Parent"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="terms-order-tbody" data-tree-sortable data-tree-nest data-root-parent="0" data-indent="24" data-order-input="terms-order-input">
+                {{range .terms}}
+                {{$depth := index $depths .ID}}
+                <tr data-sort-id="{{.ID}}" data-parent-id="{{.ParentID}}" data-depth="{{$depth}}">
+                    <td class="drag-handle admin-table-drag" draggable="true" title="{{t "Drag to change the order or parent"}}">&#9776;</td>
+                    <td data-tree-indent style="--tree-indent: {{mul $depth 24}}px;">
+                        <a href="/admin/config/taxonomy/{{$vid}}/terms/{{.ID}}/edit" class="admin-table-title">{{.Name}}</a><span class="admin-table-sub"><code>{{.Slug}}</code></span>
+                    </td>
+                    <td>
+                        <select form="terms-reorder-form" name="parent_id_{{.ID}}" class="form-select form-select-sm admin-min-md" data-tree-parent aria-label="{{t "Parent"}}">
+                            <option value="0">{{t "- no parent -"}}</option>
+                            {{$currentID := .ID}}
+                            {{$currentParent := .ParentID}}
+                            {{range $.terms}}
+                            {{if ne .ID $currentID}}
+                            <option value="{{.ID}}" {{if eq .ID $currentParent}}selected{{end}}>{{index $names .ID}}</option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/taxonomy/{{$vid}}/terms/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/taxonomy/{{$vid}}/terms/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{t "The vocabulary has no terms yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .terms}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "Drag a row by ☰: to the top third of another row - before it, to the bottom third - after it, to the middle - into it as its child. Or choose the \"Parent\" - the row moves by itself."}}</span>
+        <button form="terms-reorder-form" type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</div>
+{{end}}

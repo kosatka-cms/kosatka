@@ -1,0 +1,237 @@
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="site-information-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Fallback" (t "Error while saving."))}}
+{{if .errorPagesMissing}}
+<div class="alert alert-danger">{{t "No content at these addresses: @paths. The settings were not saved." "@paths" .errorPagesMissing}}</div>
+{{end}}
+{{if .errorPagesUnpublished}}
+<div class="alert alert-warning">{{t "These error pages are not published and are not shown (the default page is shown instead): @paths." "@paths" .errorPagesUnpublished}}</div>
+{{end}}
+{{if .errorPagesGone}}
+<div class="alert alert-warning">{{t "These error pages no longer exist (the default page is shown instead): @paths." "@paths" .errorPagesGone}}</div>
+{{end}}
+{{if .timezoneError}}
+<div class="alert alert-danger">{{t "Unknown time zone; the settings were not saved."}}</div>
+{{end}}
+{{if .baseURLError}}
+<div class="alert alert-danger">{{t "The site address must be like https://www.example.com - a scheme and a host, without a path; the settings were not saved."}}</div>
+{{end}}
+
+<form method="post" action="/admin/config/system/site-information" enctype="multipart/form-data" id="site-information-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="site_name" class="admin-setting-label">{{t "Site name"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" class="form-control" id="site_name" name="site_name" value="{{.site.SiteName}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="slogan" class="admin-setting-label">{{t "Slogan"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" class="form-control" id="slogan" name="slogan" value="{{.site.Slogan}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="base_url" class="admin-setting-label">{{t "Site address"}}</label>
+                <span class="admin-setting-help">{{t "Set in the server configuration (<code>public_base_url</code> / <code>PUBLIC_BASE_URL</code>), which overrides this field. To set it here, remove it from the configuration."}}</span>
+                <span class="admin-setting-help">{{t "The site's canonical address for absolute links: sitemap, RSS, canonical links, robots.txt, social login callbacks. Empty - taken from the request."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{if .baseURLOverride}}
+                <input type="url" class="form-control" id="base_url" value="{{.baseURLOverride}}" disabled>
+                <input type="hidden" name="base_url" value="{{.site.BaseURL}}">
+                {{else if not .canEditBaseURL}}
+                <input type="url" class="form-control" id="base_url" value="{{.site.BaseURL}}" disabled>
+                <div class="form-text">{{t "Only a full-access user may change it: it is in the links the site mails."}}</div>
+                {{else}}
+                <input type="url" class="form-control" id="base_url" name="base_url" value="{{.site.BaseURL}}" placeholder="https://www.example.com">
+                {{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="front_feed_view" class="admin-setting-label">{{t "Front page feed"}}</label>
+                <span class="admin-setting-help">{{t "The View whose list is shown as the feed on the front page (with pagination) and in RSS (<code>/rss.xml</code>)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select" id="front_feed_view" name="front_feed_view">
+                    <option value="">{{t "- None -"}}</option>
+                    {{range .feedViews}}<option value="{{.MachineName}}"{{if eq .MachineName $.site.FrontFeedView}} selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="site_email" class="admin-setting-label">{{t "Email address"}}</label>
+                <span class="admin-setting-help">{{t "Used for notifications to the administrator (for example, new registration requests)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="email" class="form-control" id="site_email" name="site_email" value="{{.site.SiteEmail}}" placeholder="admin@example.com">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="default_language" class="admin-setting-label">{{t "Interface language"}}</label>
+                <span class="admin-setting-help">{{t "Engine and theme labels are shown in this language (translation catalogs). Strings that are not translated yet stay in English."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select" id="default_language" name="default_language">
+                    {{range .languages}}<option value="{{.Code}}"{{if eq .Code $.site.DefaultLanguage}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="timezone" class="admin-setting-label">{{t "Time zone"}}</label>
+                <span class="admin-setting-help">{{t "Dates are stored in UTC, and times on the site (content publishing, comments, \"today\" in Views filters) are shown in this time zone."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select" id="timezone" name="timezone">
+                    {{/* Grouped by region (sitetime.ZoneOption.Group); UTC ungrouped. */}}{{$group := "-"}}{{range .timezones}}{{if ne .Group $group}}{{if and (ne $group "-") (ne $group "")}}</optgroup>{{end}}{{if .Group}}<optgroup label="{{.Group}}">{{end}}{{$group = .Group}}{{end}}<option value="{{.Name}}"{{if eq .Name $.site.Timezone}} selected{{end}}>{{.Label}}</option>{{end}}{{if and (ne $group "-") (ne $group "")}}</optgroup>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="page_404" class="admin-setting-label">{{t "404 page (not found)"}}</label>
+                <span class="admin-setting-help">{{t "Address of a published content item shown, with status 404, when a page is not found. Several addresses, one per line - a random one each time. At its own address the item also answers 404 and is left out of the sitemap. Empty - the default page."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <textarea class="form-control font-monospace" id="page_404" name="page_404" rows="3" placeholder="/page-not-found">{{.site.Page404}}</textarea>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="page_403" class="admin-setting-label">{{t "403 page (access denied)"}}</label>
+                <span class="admin-setting-help">{{t "The same for \"access denied\" (status 403)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <textarea class="form-control font-monospace" id="page_403" name="page_403" rows="3" placeholder="/access-denied">{{.site.Page403}}</textarea>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <span class="admin-setting-label">{{t "Logo"}}</span>
+                <span class="admin-setting-help">{{t "Shown by the \"Logo\" block in the site header (<a href=\":url\">Blocks and regions</a>). If no logo is set, the block is not displayed." ":url" "/admin/config/blocks"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{if .site.Logo.URI}}
+                <div class="mb-2">
+                    <img src="{{resolvePublicURI .site.Logo.URI}}" alt="{{t "Current logo"}}" style="max-width: 300px; max-height: 100px;">
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" id="delete_logo" name="delete_logo" value="1">
+                    <label class="form-check-label" for="delete_logo">{{t "Delete logo (the block will no longer be displayed)"}}</label>
+                </div>
+                {{end}}
+                <input type="file" class="form-control" name="logo" accept="image/jpeg,image/png,image/gif,image/webp">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="site-icon" class="admin-setting-label">{{t "Site icon"}}</label>
+                <span class="admin-setting-help">{{t "The icon of the browser's tab and bookmarks (favicon), the same in every theme. A square PNG of 180×180 px or larger is also the icon on a phone's home screen. Without one, the active theme's icon is shown."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{with siteIcon}}
+                <div class="mb-2">
+                    <img src="{{.URL}}" alt="{{t "Current icon"}}" width="48" height="48" style="object-fit: contain;">
+                </div>
+                {{end}}
+                {{if .site.Icon.URI}}
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" id="delete_icon" name="delete_icon" value="1">
+                    <label class="form-check-label" for="delete_icon">{{t "Delete the icon (the theme's will be shown)"}}</label>
+                </div>
+                {{end}}
+                <input type="file" class="form-control" id="site-icon" name="icon" accept="image/png,image/gif,image/webp,image/jpeg">
+            </div>
+        </div>
+    </div>
+    {{with .site.SchemaOrg}}
+    <section class="admin-settings-group mt-4" aria-labelledby="site-schema-org">
+        <h2 class="admin-settings-title" id="site-schema-org">{{t "Who runs the site - for search engines"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-kind" class="admin-setting-label">{{t "It is"}}</label>
+                    <span class="admin-setting-help">{{t "The publisher of the articles' markup and the site's card in the results (the front page's JSON-LD). The logo above is its logo."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="schema-org-kind" name="schema_org_kind" class="form-select">
+                        <option value="Organization"{{if eq .TypeName "Organization"}} selected{{end}}>{{t "An organization"}}</option>
+                        <option value="LocalBusiness"{{if eq .TypeName "LocalBusiness"}} selected{{end}}>{{t "A local business"}}</option>
+                        <option value="Person"{{if eq .TypeName "Person"}} selected{{end}}>{{t "A person"}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-name" class="admin-setting-label">{{t "Name"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - the site's name."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="schema-org-name" name="schema_org_name" class="form-control" value="{{.Name}}" maxlength="255"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-same-as" class="admin-setting-label">{{t "Profiles"}}</label>
+                    <span class="admin-setting-help">{{t "Its pages in social networks and directories, an address per line."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="schema-org-same-as" name="schema_org_same_as" class="form-control font-monospace" rows="3" placeholder="https://…">{{range .SameAs}}{{.}}
+{{end}}</textarea></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-phone" class="admin-setting-label">{{t "Phone"}}</label>
+                    <span class="admin-setting-help">{{t "Optional."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="tel" id="schema-org-phone" name="schema_org_phone" class="form-control" value="{{.Phone}}" maxlength="64"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-email" class="admin-setting-label">{{t "Contact email"}}</label>
+                    <span class="admin-setting-help">{{t "Optional."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="email" id="schema-org-email" name="schema_org_email" class="form-control" value="{{.Email}}" maxlength="255"></div>
+            </div>
+            <div class="admin-setting" data-show-when="schema-org-kind=LocalBusiness">
+                <div class="admin-setting-text">
+                    <label for="schema-org-address" class="admin-setting-label">{{t "Address"}}</label>
+                    <span class="admin-setting-help">{{t "City, street, house."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="schema-org-address" name="schema_org_address" class="form-control" value="{{.Address}}" maxlength="255"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="schema-org-search" class="admin-setting-label">{{t "The site's search in the results"}}</label>
+                    <span class="admin-setting-help">{{t "Search engines may show a search box for the site that leads to its search page."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input role="switch" type="checkbox" class="form-check-input" id="schema-org-search" name="schema_org_search" value="1"{{if .SearchBox}} checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </section>
+    {{end}}
+    {{/* The modules' sections (interfaces.AddFormSection): form_site_information_<module>. */}}
+    {{moduleHook "form_site_information" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

@@ -1,0 +1,4 @@
+{{/* Default value template for boolean fields. Node pages and View lists
+     call renderSuggestion "field_bool" <machine name> <value>, which uses the
+     theme's "field_bool_<machine name>" if defined, else this one. */}}
+{{define "field_bool_default"}}{{if .}}{{t "Yes"}}{{else}}{{t "No"}}{{end}}{{end}}

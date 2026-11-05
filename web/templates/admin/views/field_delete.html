@@ -1,0 +1,13 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Index" "/admin/config/views" "IndexLabel" (t "All views")
+    "Back" (printf "/admin/config/views/%v/fields" .view.ID) "BackLabel" (t "Fields of \"@label\"" "@label" .view.Label)
+    "Heading" (t "Delete field \"@label\"?" "@label" .row.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/views/%v/fields/%v/delete" .view.ID .row.ID)
+    "Submit" (t "Yes, delete field"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">machine_name: <code>{{.target}}</code></p>
+{{end}}

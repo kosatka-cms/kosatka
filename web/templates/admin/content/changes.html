@@ -1,0 +1,90 @@
+{{/* admin/content/changes.html - the recent changes of the content
+     (NodeController.RecentChanges): the types not keeping their history
+     named, the filter (a part of the title, the type, a part of the
+     saver's name, the days), the saves newest first by days - when, the
+     content and its type, who, what changed; compared with the version
+     before, the content's history. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The saves of the content of the types keeping their history, the newest first."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{with .noHistoryTypes}}
+<div class="alert alert-warning" role="note">
+    <strong>{{plural (len .) "The history of changes is off for @count type:" "The history of changes is off for @count types:"}}</strong>
+    {{range $i, $d := .}}{{if $i}}, {{end}}{{$d.Label}}{{end}} - {{t "their saves are not kept and don't get here."}}
+    <a href="/admin/config/content-types">{{t "Content types"}}</a>
+</div>
+{{end}}
+
+<form method="get" action="/admin/content/changes" class="admin-filters">
+    <div class="admin-filter admin-filter--wide">
+        <label for="field-title" class="admin-filter-label">{{t "Content"}}</label>
+        <input type="search" id="field-title" name="title" value="{{.filter.Title}}" class="form-control" placeholder="{{t "Title"}}">
+    </div>
+    <div class="admin-filter">
+        <label for="field-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="field-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .historyTypes}}<option value="{{.MachineName}}"{{if eq .MachineName $.filter.Type}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="field-who" class="admin-filter-label">{{t "Who"}}</label>
+        <input type="search" id="field-who" name="who" value="{{.filter.Actor}}" class="form-control">
+    </div>
+    <div class="admin-filter">
+        <label for="field-from" class="admin-filter-label">{{tc "period" "From"}}</label>
+        <input type="date" id="field-from" name="from" value="{{.fromValue}}" class="form-control">
+    </div>
+    <div class="admin-filter">
+        <label for="field-to" class="admin-filter-label">{{tc "period" "To"}}</label>
+        <input type="date" id="field-to" name="to" value="{{.toValue}}" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button>
+    {{if .filtered}}<a href="/admin/content/changes" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "When"}}</th>
+                    <th>{{t "Content"}}</th>
+                    <th>{{t "Who"}}</th>
+                    <th>{{t "What changed"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .days}}
+                <tr class="admin-table-group"><th colspan="5" scope="rowgroup">{{if .Today}}{{t "Today"}}{{else if .Yesterday}}{{t "Yesterday"}}{{else}}{{date .Day ""}}{{end}}</th></tr>
+                {{range .Rows}}
+                <tr>
+                    <td class="text-nowrap admin-table-muted">{{.Time}}</td>
+                    <td>
+                        <a href="{{.NodeURL}}" class="admin-table-title">{{.NodeTitle}}</a>
+                        <span class="admin-table-sub">{{.TypeLabel}}</span>
+                    </td>
+                    <td>{{with .User}}{{if .Username}}<a href="{{userURL .Slug}}">{{.Username}}</a>{{else}}-{{end}}{{else}}-{{end}}</td>
+                    <td>{{template "revision_summary" .Summary}}</td>
+                    <td class="text-end text-nowrap">
+                        {{if .PreviousID}}<a href="/node/{{.NodeID}}/revisions/compare?from={{.PreviousID}}&amp;to={{.ID}}" class="btn btn-sm btn-outline-secondary">{{t "Compare"}}</a>{{end}}
+                        <a href="/node/{{.NodeID}}/revisions" class="btn btn-sm btn-outline-secondary">{{t "History"}}</a>
+                    </td>
+                </tr>
+                {{end}}
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "No changes."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

@@ -1,0 +1,138 @@
+{{/* admin/config/text-formats/{id}/edit - a text format (TextFormatEdit):
+     its name, weight, allowed tags and class; the visual editor, its
+     uploads, buttons and the modules' processing when shown; a preview;
+     whether it is available - as rows; Save over the page and under it. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">machine_name: <code>{{.format.MachineName}}</code> {{t "- used in permissions (<code>use_text_format_@name</code>), cannot be changed after creation." "@name" .format.MachineName}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="text-format-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "update" (t "Error saving the format."))
+    "Warnings" (dict
+        "empty" (t "Name field is required.")))}}
+
+<form method="post" action="/admin/config/text-formats/{{.format.ID}}" id="text-format-form" class="admin-settings">
+    <input type="hidden" id="tinymce_plugins" name="tinymce_plugins" value="{{.format.TinyMCEPlugins}}">
+    <input type="hidden" id="tinymce_toolbar" name="tinymce_toolbar" value="{{.format.TinyMCEToolbar}}">
+    <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="label" class="admin-setting-label">{{t "Name"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="label" name="label" class="form-control" value="{{.format.Label}}" required></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="weight" class="admin-setting-label">{{t "Weight"}}</label>
+                    <span class="admin-setting-help">{{t "Order in the format drop-down - lower means higher, and the top format is applied by default if no choice has been saved for the value yet."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="number" id="weight" name="weight" class="form-control admin-max-xs" value="{{.format.Weight}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="allowed_tags" class="admin-setting-label">{{t "Allowed tags"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - \"Plain text\", all formatting is stripped. &lt;script&gt;/event handlers/javascript: links are always stripped, regardless of the list."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="allowed_tags" name="allowed_tags" class="form-control" value="{{.format.AllowedTags}}" placeholder="{{t "space-separated, e.g.: a em strong p br ul ol li"}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="allow_class_attribute" class="admin-setting-label">{{t "Allow the class attribute"}}</label>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="allow_class_attribute" name="allow_class_attribute" value="1" class="form-check-input" {{if .format.AllowClassAttribute}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="status" class="admin-setting-label">{{t "Available for selection"}}</label>
+                    <span class="admin-setting-help">{{t "Off - unavailable for new values; values already saved with this format keep working as is."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="status" name="status" value="1" class="form-check-input" {{if eq .format.Status 1}}checked{{end}}></div>
+            </div>
+    </div>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Use the visual editor (TinyMCE)"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="has_rich_editor" class="admin-setting-label">{{t "Use the visual editor (TinyMCE)"}}</label>
+                    <span class="admin-setting-help">{{t "The format itself decides, not the field widget - when this format is selected on the node edit form, TinyMCE appears/disappears automatically. Off - the field stays a plain textarea, the buttons/preview below are not used."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="has_rich_editor" name="has_rich_editor" value="1" class="form-check-input" {{if .format.HasRichEditor}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting admin-setting--stacked">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "TinyMCE buttons"}}</span>
+                    <span class="admin-setting-help">{{t "\"Undo\"/\"Redo\" are always added automatically. Buttons checked in one group go next to each other in the toolbar; groups are separated by a visual divider."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <div class="border rounded p-3 bg-light">
+                        {{range $group := .toolbarGroups}}
+                        <div class="mb-2" data-toolbar-group>
+                            <strong class="d-block mb-1" style="font-size:0.9em;">{{t $group.Label}}</strong>
+                            {{range $group.Options}}
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input tb-option" id="tb_{{.Button}}" data-button="{{.Button}}" data-plugin="{{.Plugin}}" {{if hasToken $.format.TinyMCEToolbar .Button}}checked{{end}}>
+                                <label class="form-check-label" for="tb_{{.Button}}">{{t .Label}}</label>
+                            </div>
+                            {{end}}
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            <div class="admin-setting admin-setting--stacked">
+                <div class="admin-setting-text"><span class="admin-setting-label">{{tc "text format" "Preview"}}</span></div>
+                <div class="admin-setting-control"><textarea id="tinymce-format-preview">&lt;p&gt;{{t "Sample text for the preview."}} &lt;strong&gt;{{t "Bold"}}&lt;/strong&gt;, &lt;em&gt;{{t "italic"}}&lt;/em&gt;.&lt;/p&gt;</textarea></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Upload via the file manager (independent of the <a href=\"/admin/config/upload-settings\">site-wide policy</a>)"}}</h2>
+        <div class="admin-settings-card">
+            {{template "admin_upload_extensions" (dict "Value" .format.AllowedExtensions "Placeholder" "jpg jpeg png gif webp")}}
+            {{template "admin_upload_max_size" (dict "Set" .format.MaxFileSizeBytes "Value" .format.MaxFileSizeMB)}}
+        </div>
+    </section>
+
+    {{/* The modules' text filters (service.TextFilters): processing of
+         the format's values when they're shown; a filter with a button
+         adds it to the format's editor. */}}
+    {{if .textFilters}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Processing when shown"}}</h2>
+        <div class="admin-settings-card">
+            {{range .textFilters}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="filter_{{.Name}}" class="admin-setting-label">{{t .Label}}</label>
+                    {{with .Description}}<span class="admin-setting-help">{{t .}}</span>{{end}}
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" class="form-check-input" id="filter_{{.Name}}" name="filters" value="{{.Name}}"{{if hasToken $.format.Filters .Name}} checked{{end}}></div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<script src="/static/js/tinymce/tinymce.min.js"></script>
+<script src="{{ staticJS "admin_text_format" }}" defer></script>
+{{end}}

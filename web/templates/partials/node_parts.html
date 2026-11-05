@@ -1,0 +1,63 @@
+{{/* Parts of a node's page shared by every page showing a node - the
+     standard node page (dynamic/page.html), a theme's own layouts, the
+     modules' pages of their content types (a poll, a form). They read
+     .item.Node, .canEdit, .canDelete and the modules' data .moduleNode
+     (interfaces.ModuleNodeData). */}}
+
+{{/* node_status_class - " node-unpublished" / " node-on-moderation" for
+     the node's wrapper (components.css), else nothing. */}}
+{{define "node_status_class"}}{{if eq .item.Node.Status 0}} node-unpublished{{else if eq .item.Node.OnModeration 1}} node-on-moderation{{end}}{{end}}
+
+{{/* node_moderation_notice - shown above content pending moderation;
+     to its editors, the content's schedule too (entity.Node.PublishOn,
+     UnpublishOn). */}}
+{{define "node_moderation_notice"}}
+{{if eq .item.Node.OnModeration 1}}
+<div class="moderation-notice">
+    <strong>⚠ {{t "Pending moderation"}}</strong>
+</div>
+{{end}}
+{{if and .canEdit (or (not .item.Node.PublishOn.IsZero) (not .item.Node.UnpublishOn.IsZero))}}
+<div class="moderation-notice node-schedule-notice" role="status">
+    {{with .item.Node.PublishOn}}{{if not .IsZero}}<strong>{{t "Not published"}}</strong> · {{t "publishes @date" "@date" (date . "datetime")}}{{end}}{{end}}
+    {{if and (not .item.Node.PublishOn.IsZero) (not .item.Node.UnpublishOn.IsZero)}} · {{end}}
+    {{with .item.Node.UnpublishOn}}{{if not .IsZero}}{{t "unpublishes @date" "@date" (date . "datetime")}}{{end}}{{end}}
+</div>
+{{end}}
+{{end}}
+
+{{/* node_actions - edit, the history (.canViewRevisions), the modules'
+     actions ("node_actions_<module>", e.g. a poll's votes),
+     publish/unpublish, delete, for those allowed; nothing when there is
+     none. */}}
+{{define "node_actions"}}
+{{$moduleActions := moduleHook "node_actions" .}}
+{{if or .canEdit .canDelete .canClone $moduleActions}}
+<div class="node-actions">
+    {{if .canEdit}}
+    <a href="/node/{{.item.Node.ID}}/edit" class="action-link edit">{{t "Edit"}}</a>
+    {{end}}
+    {{if .canViewRevisions}}<a href="/node/{{.item.Node.ID}}/revisions" class="action-link history">{{t "History"}}</a>{{end}}
+    {{if .canClone}}
+    {{/* A copy is an unpublished draft: asked first (data-confirm), no
+         page of its own - the copy is deleted as easily. */}}
+    <form method="POST" action="/node/{{.item.Node.ID}}/clone" class="d-inline" data-confirm="{{t "Make a copy of \"@title\"? It will be an unpublished draft." "@title" .item.Node.Title}}">
+        <button type="submit" class="action-link clone">{{t "Make a copy"}}</button>
+    </form>
+    {{end}}
+    {{$moduleActions}}
+    {{if .canDelete}}
+    {{if .workflowManaged}}{{else if eq .item.Node.Status 1}}
+    <form method="POST" action="/node/{{.item.Node.ID}}/unpublish" class="d-inline">
+        <button type="submit" class="action-link unpublish" data-confirm="{{t "Unpublish this content?"}}">{{t "Unpublish"}}</button>
+    </form>
+    {{else}}
+    <form method="POST" action="/node/{{.item.Node.ID}}/publish" class="d-inline">
+        <button type="submit" class="action-link publish" data-confirm="{{t "Publish this content?"}}">{{if .item.Node.PublishOn.IsZero}}{{t "Publish"}}{{else}}{{t "Publish now"}}{{end}}</button>
+    </form>
+    {{end}}
+    <a href="/node/{{.item.Node.ID}}/delete" class="action-link delete">{{t "Delete"}}</a>
+    {{end}}
+</div>
+{{end}}
+{{end}}

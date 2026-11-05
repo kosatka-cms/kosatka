@@ -1,0 +1,16 @@
+{{/* block_logo - plugin block "logo" (see entity.PluginBlockLogo), placed
+     in a region of the header. Themes style #logo-top/#logo-img by id - don't
+     rename. .Ctx.siteLogoURI/.Ctx.siteName are resolved once per request in
+     GetCommonDataWithUser (base_controller.go); the logo comes only from
+     entity.SiteInformation.Logo, with no hardcoded fallback - empty means no
+     logo is rendered. No width/height: the uploaded image's proportions are
+     unknown, and the CSS (width:auto) sets the rendered size anyway. */}}
+{{define "block_logo"}}
+{{if .siteLogoURI}}
+<div id="logo-top">
+    <a href="{{localURL "/"}}" title="">
+        <img id="logo-img" src="{{.siteLogoURI}}" alt="{{.siteName}}">
+    </a>
+</div>
+{{end}}
+{{end}}

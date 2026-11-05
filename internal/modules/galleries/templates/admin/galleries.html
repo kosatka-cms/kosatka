@@ -1,0 +1,75 @@
+{{/* admin/galleries.html - the galleries overview (GalleriesOverview):
+     the content by title, whether each can have galleries (switched here
+     as in its form), its galleries and their images; filtered by type and
+     to the content that can have galleries (.filterOn), applied as they
+     change; on a table card. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .total "@count content item" "@count content items"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<form method="get" action="/admin/content/galleries" class="admin-filters" data-autosubmit>
+    <div class="admin-filter">
+        <label for="galleries-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="galleries-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .contentTypes}}
+            <option value="{{.}}" {{if eq $.filterType (toString .)}}selected{{end}}>{{index $.typeLabels (toString .)}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="galleries-show" class="admin-filter-label">{{t "Show"}}</label>
+        <select id="galleries-show" name="show" class="form-select">
+            <option value="">{{t "All content"}}</option>
+            <option value="on" {{if .filterOn}}selected{{end}}>{{t "Content that can have galleries"}}</option>
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+    {{if or .filterType .filterOn}}<a href="/admin/content/galleries" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Title"}}</th>
+                    <th>{{t "Galleries"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .rows}}
+                <tr>
+                    <td><a href="{{.Node.URL}}" class="admin-table-title">{{.Node.Title}}</a><span class="admin-table-sub">{{or (index $.typeLabels (toString .Node.Type)) (toString .Node.Type)}}</span></td>
+                    <td>
+                        {{if .Enabled}}<span class="admin-pill admin-pill--ok">{{t "on"}}</span>{{else}}<span class="admin-pill">{{t "off"}}</span>{{end}}
+                        {{if .Galleries}}<span class="admin-table-sub">{{plural .Galleries "@count gallery" "@count galleries"}}, {{plural .Images "@count image" "@count images"}}</span>{{end}}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <form method="post" action="/admin/content/galleries/{{.Node.ID}}" class="d-inline">
+                            <input type="hidden" name="query" value="{{$.query}}">
+                            {{if .Enabled}}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Turn off"}}</button>
+                            {{else}}
+                            <input type="hidden" name="enabled" value="1">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Turn on"}}</button>
+                            {{end}}
+                        </form>
+                        {{if .Enabled}}<a href="/node/{{.Node.ID}}/galleries" class="btn btn-sm btn-outline-primary">{{t "Manage"}}</a>{{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="3" class="admin-table-empty">{{t "No content"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

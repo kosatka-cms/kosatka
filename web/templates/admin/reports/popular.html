@@ -1,0 +1,77 @@
+{{/* admin/reports/popular.html - the popular content (Controller.
+     PopularContent): the periods as tabs (today, 7 days, 30 days, all
+     time), the content type filter, the published content viewed most -
+     its place, title and type, its views in the period and in all;
+     50 a page. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The published content viewed most, the most viewed first."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if not .counting}}
+<div class="alert alert-warning" role="note">{{t "Views aren't counted now: the figures don't grow."}} <a href="/admin/config/statistics">{{t "Statistics"}}</a></div>
+{{end}}
+
+<ul class="nav nav-tabs mb-3">
+    {{range .periods}}
+    <li class="nav-item"><a class="nav-link{{if eq (print .) $.period}} active" aria-current="page{{end}}" href="/admin/reports/popular?period={{.}}{{with $.type}}&amp;type={{.}}{{end}}">{{template "popular_period" (print .)}}</a></li>
+    {{end}}
+</ul>
+
+<form method="get" action="/admin/reports/popular" class="admin-filters" data-autosubmit>
+    <input type="hidden" name="period" value="{{.period}}">
+    <div class="admin-filter admin-filter--fixed">
+        <label for="popular-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="popular-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .contentTypes}}<option value="{{.MachineName}}"{{if eq .MachineName $.type}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+</form>
+
+{{with .keepDays}}
+<p class="admin-table-muted">{{plural . "Views by day are kept for @count day, so the period counts only that day." "Views by day are kept for @count days, so the period counts only those."}} <a href="/admin/config/statistics">{{t "Statistics"}}</a></p>
+{{end}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="text-end">#</th>
+                    <th>{{t "Content"}}</th>
+                    <th class="text-end">{{template "popular_period_views" .period}}</th>
+                    <th class="text-end">{{t "Total views"}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $i, $p := .rows}}
+                <tr>
+                    <td class="text-end admin-table-muted">{{add $.rankFrom $i}}</td>
+                    <td>
+                        <a href="{{$p.Node.URL}}" class="admin-table-title">{{$p.Node.Title}}</a>
+                        <span class="admin-table-sub">{{or (index $.typeLabels (print $p.Node.Type)) $p.Node.Type}}</span>
+                    </td>
+                    <td class="text-end text-nowrap">{{$p.Views}}</td>
+                    <td class="text-end text-nowrap admin-table-muted">{{$p.Total}}</td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{t "No views in this period."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}
+
+{{/* popular_period - a period's name on its tab. */}}
+{{define "popular_period"}}{{if eq . "week"}}{{t "7 days"}}{{else if eq . "month"}}{{t "30 days"}}{{else if eq . "all"}}{{t "All time"}}{{else}}{{t "Today"}}{{end}}{{end}}
+
+{{/* popular_period_views - the period's views column's head. */}}
+{{define "popular_period_views"}}{{if eq . "week"}}{{t "Views, 7 days"}}{{else if eq . "month"}}{{t "Views, 30 days"}}{{else if eq . "all"}}{{t "Views, all time"}}{{else}}{{t "Views today"}}{{end}}{{end}}

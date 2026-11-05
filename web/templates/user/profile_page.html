@@ -1,0 +1,27 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+
+<div class="user-profile-page">
+    {{template "profile_head" .}}
+
+    <div class="profile-content">
+        {{if eq .activeTab "overview"}}
+            {{template "profile_overview" .}}
+        {{else if eq .activeTab "module"}}
+            {{renderOptional "profile_tab" .activeModuleTab .}}
+        {{else if eq .activeTab "files"}}
+            {{template "profile_files" .}}
+        {{else if eq .activeTab "view"}}
+            <div class="profile-view-tab">{{.profileTabHTML}}</div>
+        {{end}}
+    </div>
+</div>
+
+{{end}}

@@ -1,0 +1,46 @@
+{{/* admin/modules/uninstall.html - what uninstalling a module removes and
+     the confirmation (admin.Controller.ModuleUninstallPage); a module with
+     content first gets its content deleted (ModuleContentDelete). */}}
+{{template "layout.html" .}}
+
+{{define "content"}}
+<p><a href="/admin/config/modules">← {{t "Modules"}}</a></p>
+{{with .errorText}}<div class="alert alert-danger">{{.}}</div>{{end}}
+{{with .deletedCount}}<div class="alert alert-info">{{plural . "@count item deleted." "@count items deleted."}}{{if $.deletedMore}} {{t "Some are left: run it again."}}{{end}}</div>{{end}}
+
+{{if .blocked}}
+<div class="alert alert-warning">{{.blocked}}</div>
+{{else}}
+<div class="alert alert-danger admin-max-xxl">
+    <strong>{{t "This can't be undone."}}</strong>
+    {{t "Everything listed below is deleted: the module's content with its comments, the module's tables with their data, its blocks' placements, its permissions in roles, the settings of its content types and the files nothing else uses. Make a database backup first."}}
+</div>
+
+{{with .details}}
+<dl class="admin-max-xxl">
+    {{range .}}
+    <dt class="fw-normal text-muted">{{.Heading}}</dt>
+    <dd class="mb-2">{{range $i, $it := .Items}}{{if $i}}<br>{{end}}{{$it}}{{end}}</dd>
+    {{end}}
+</dl>
+{{end}}
+
+{{if .hasContent}}
+<h2 class="h5">{{t "Step 1. Delete the content"}}</h2>
+<p class="text-muted admin-max-xxl">{{t "The module has content. It is deleted first, each item with everything attached to it (comments, field values, files nothing else uses). A large site takes several runs."}}</p>
+<form method="post" action="/admin/config/modules/{{.module.Name}}/delete-content" class="admin-max-lg">
+    <label for="confirm-content" class="form-label">{{t "To confirm, type the module's machine name: <code>@name</code>" "@name" .module.Name}}</label>
+    <input type="text" id="confirm-content" name="confirm" class="form-control mb-3" autocomplete="off" required>
+    <button type="submit" class="btn btn-danger">{{t "Delete the content"}}</button>
+    <a href="/admin/config/modules" class="btn btn-link">{{t "Cancel"}}</a>
+</form>
+{{else}}
+<form method="post" action="/admin/config/modules/{{.module.Name}}/uninstall" class="admin-max-lg">
+    <label for="confirm" class="form-label">{{t "To confirm, type the module's machine name: <code>@name</code>" "@name" .module.Name}}</label>
+    <input type="text" id="confirm" name="confirm" class="form-control mb-3" autocomplete="off" required>
+    <button type="submit" class="btn btn-danger">{{t "Uninstall \"@module\"" "@module" .moduleLabel}}</button>
+    <a href="/admin/config/modules" class="btn btn-link">{{t "Cancel"}}</a>
+</form>
+{{end}}
+{{end}}
+{{end}}

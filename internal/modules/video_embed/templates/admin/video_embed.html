@@ -1,0 +1,67 @@
+{{/* admin/video_embed.html - the module's settings (Controller.Settings):
+     the services on, how the player and the previews load; in the admin's
+     setting rows (admin.css, .admin-setting), Save at the top and the
+     bottom. Which text formats show the videos - their pages' "Processing
+     when shown". */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="video-embed-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict "saved" (t "Saved."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="post" action="/admin/config/video-embed" id="video-embed-form" class="admin-settings admin-settings--form">
+    <p class="admin-setting-help mb-0">{{t "A link to a video standing alone on its line in a text shows as the video's player - in the text formats with \"Video links as players\" ticked (<a href=\"/admin/config/text-formats\">Text formats</a>)."}}</p>
+
+    <section class="admin-settings-group" aria-labelledby="video-embed-services">
+        <h2 class="admin-settings-title" id="video-embed-services">{{t "Services"}}</h2>
+        <div class="admin-settings-card">
+            {{range .providers}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="provider_{{.Name}}" class="admin-setting-label">{{.Label}}</label>
+                    <span class="admin-setting-help">{{.Hosts}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="provider_{{.Name}}" name="providers" value="{{.Name}}" class="form-check-input"{{if .Checked}} checked{{end}}>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+
+    <section class="admin-settings-group" aria-labelledby="video-embed-loading">
+        <h2 class="admin-settings-title" id="video-embed-loading">{{t "Loading"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="click_to_play" class="admin-setting-label">{{t "The player on a click"}}</label>
+                    <span class="admin-setting-help">{{t "A preview and a button until a click: the page loads faster, and the video service learns nothing about the visitor before it."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="click_to_play" name="click_to_play" value="1" class="form-check-input"{{if .settings.ClickToPlay}} checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="local_previews" class="admin-setting-label">{{t "Previews copied to the site"}}</label>
+                    <span class="admin-setting-help">{{t "The site takes the preview and the title from the service once and keeps them (the \"Video preview\" image style). Off - the preview is the service's picture."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="local_previews" name="local_previews" value="1" class="form-check-input"{{if .settings.LocalPreviews}} checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

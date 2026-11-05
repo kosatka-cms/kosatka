@@ -1,0 +1,45 @@
+{{/* admin/feeds.html - the feeds (FeedList): on a table card each feed -
+     its name, path (opens the feed), format, content types, whether it is
+     on, delete; "+ Add feed" over the page. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "XML content feeds for aggregators: Dzen (full text), RSS readers. Each feed has its own path, set of content and field mapping."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/feeds/new" class="btn btn-primary">+ {{t "Add feed"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if eq .success "deleted"}}<div class="alert alert-success">{{t "Feed deleted."}}</div>{{end}}
+{{if eq .error "delete"}}<div class="alert alert-danger">{{t "The feed could not be deleted."}}</div>{{end}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr><th>{{t "Name"}}</th><th>{{t "Format"}}</th><th>{{t "Types"}}</th><th>{{t "Status"}}</th><th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th></tr>
+            </thead>
+            <tbody>
+                {{range .feeds}}
+                <tr>
+                    <td><a href="/admin/config/feeds/{{.ID}}" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><a href="/{{.Path}}" target="_blank" rel="noopener"><code>/{{.Path}}</code></a></span></td>
+                    <td>{{t .Format.Label}}</td>
+                    <td>{{range $i, $t := .ContentTypes}}{{if $i}}, {{end}}<code>{{$t}}</code>{{end}}</td>
+                    <td>{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{tc "feed" "enabled"}}</span>{{else}}<span class="admin-pill">{{tc "feed" "disabled"}}</span>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/feeds/{{.ID}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <form method="post" action="/admin/config/feeds/{{.ID}}/delete" class="d-inline" data-confirm="{{t "Delete feed \"@label\"?" "@label" .Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "No feeds yet."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

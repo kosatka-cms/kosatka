@@ -1,0 +1,137 @@
+/* The subscriptions module: the follow buttons (comments, terms), the
+   Notifications tab, the unsubscribe page. Every rule is inside :where()
+   (zero specificity): a theme's rule wins, and Bootstrap's variables make
+   them follow the theme's colours. What has to beat Bootstrap's element
+   rules (a list's padding, a link's underline) is under the module's own
+   class (0,1,0) - a theme restyles it under its own class. */
+
+:where(.subscriptions-follow) {
+    margin: .25rem 0 1rem;
+}
+:where(.subscriptions-follow-form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .75rem;
+}
+:where(.subscriptions-follow-on, .subscriptions-follow-state) {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .4rem .85rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font: inherit;
+    font-weight: 600;
+}
+:where(.subscriptions-follow-on) {
+    cursor: pointer;
+}
+:where(.subscriptions-follow-on:hover) {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+:where(.subscriptions-follow-state) {
+    border-color: var(--bs-primary-border-subtle);
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+}
+:where(.subscriptions-follow-off) {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--bs-link-color);
+    font: inherit;
+    font-size: .9em;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* The Notifications tab: the feed and the subscriptions side by side. */
+:where(.subscriptions-tab) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2rem;
+    margin-top: 1rem;
+}
+:where(.subscriptions-feed) {
+    flex: 3 1 28rem;
+    min-width: 0;
+}
+:where(.subscriptions-list) {
+    flex: 2 1 18rem;
+    min-width: 0;
+}
+:where(.subscriptions-head) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .75rem;
+}
+:where(.subscriptions-head) .subscriptions-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.subscriptions-items,
+.subscriptions-subs {
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+:where(.subscriptions-items, .subscriptions-subs) {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    overflow: hidden;
+}
+:where(.subscriptions-item + .subscriptions-item, .subscriptions-subs li + li) {
+    border-top: 1px solid var(--bs-border-color);
+}
+.subscriptions-item-link {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: .75rem 1rem;
+    color: inherit;
+    text-decoration: none;
+}
+:where(.subscriptions-item-link:hover) {
+    background: var(--bs-tertiary-bg);
+}
+:where(.subscriptions-item.is-unread .subscriptions-item-link) {
+    background: var(--bs-primary-bg-subtle);
+}
+:where(.subscriptions-item-text strong) {
+    color: var(--bs-emphasis-color);
+}
+:where(.subscriptions-item.is-unread .subscriptions-item-text)::before {
+    content: "";
+    display: inline-block;
+    width: .5rem;
+    height: .5rem;
+    margin-right: .5rem;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    vertical-align: middle;
+}
+:where(.subscriptions-item-meta, .subscriptions-kind, .subscriptions-note, .subscriptions-empty) {
+    color: var(--bs-secondary-color);
+    font-size: .9em;
+}
+:where(.subscriptions-subs li) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1rem;
+}
+:where(.subscriptions-subs li form) {
+    margin-left: auto;
+}
+
+:where(.subscriptions-unsubscribe) {
+    max-width: 40rem;
+}

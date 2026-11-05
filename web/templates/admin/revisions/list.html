@@ -1,0 +1,65 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{.node.Title}}{{with .contentType}} · {{.Label}}{{end}} · {{plural .totalCount "@count version" "@count versions"}}{{with .contentType}}{{if .RevisionsKeep}} · {{t "up to @count kept" "@count" .RevisionsKeep}}{{end}}{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="{{.node.URL}}" class="btn btn-outline-secondary">{{t "Open content"}}</a>
+<a href="/node/{{.node.ID}}/edit" class="btn btn-primary">{{t "Edit"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "reverted" (t "The version is brought back: it is the current one now.")) "Errors" (dict "revert" (t "The version could not be brought back.") "compare" (t "Choose two different versions to compare.")))}}
+{{if .dropped}}<div class="alert alert-warning" role="alert">{{plural .dropped "@count term, content item or file of that version no longer exists and was left out." "@count terms, content items or files of that version no longer exist and were left out."}}</div>{{end}}
+{{with .contentType}}{{if not .Revisions}}<div class="alert alert-info" role="alert">{{t "The history of changes is off for this type: new saves are not kept."}} <a href="/admin/config/content-types/{{.ID}}">{{t "Content type settings"}}</a></div>{{end}}{{end}}
+
+{{if .revisions}}
+<form method="get" action="/node/{{.node.ID}}/revisions/compare" class="admin-table-card">
+    <div class="admin-bulk-bar">
+        <span class="admin-revisions-hint">{{t "Mark two versions in the \"Was\" and \"Became\" columns and compare them."}}</span>
+        <button type="submit" class="btn btn-sm btn-primary">{{t "Compare the marked"}}</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-check">{{t "Was"}}</th>
+                    <th class="admin-table-check">{{t "Became"}}</th>
+                    <th>{{t "Version"}}</th>
+                    <th>{{t "By"}}</th>
+                    <th>{{t "Changes"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $i, $r := .revisions}}
+                <tr>
+                    <td class="admin-table-check"><input type="radio" name="from" value="{{$r.ID}}" class="form-check-input" aria-label="{{t "Was: version of @date" "@date" (formatDate $r.CreatedAt)}}"{{if eq $i 1}} checked{{end}}{{if $r.Current}} disabled{{end}}></td>
+                    <td class="admin-table-check"><input type="radio" name="to" value="{{$r.ID}}" class="form-check-input" aria-label="{{t "Became: version of @date" "@date" (formatDate $r.CreatedAt)}}"{{if eq $i 0}} checked{{end}}></td>
+                    <td class="text-nowrap">
+                        <span class="admin-table-title">{{formatDate $r.CreatedAt}}</span>
+                        {{if $r.Current}}<span class="admin-pill admin-pill--ok">{{t "current"}}</span>{{end}}
+                    </td>
+                    <td>{{with $r.User}}{{if .Username}}<a href="{{userURL .Slug}}">{{.Username}}</a>{{else}}-{{end}}{{else}}-{{end}}</td>
+                    <td>{{template "revision_summary" $r.Summary}}</td>
+                    <td class="text-end text-nowrap">
+                        {{if and $.canRevert (not $r.Current)}}<button type="submit" form="revert-{{$r.ID}}" class="admin-icon-btn" title="{{t "Bring this version back"}}" aria-label="{{t "Bring this version back"}}">{{template "admin_icon_revert"}}</button>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</form>
+{{/* Bringing a version back: a form of its own per row (forms can't nest). */}}
+{{if .canRevert}}{{range .revisions}}{{if not .Current}}
+<form id="revert-{{.ID}}" method="post" action="/node/{{$.node.ID}}/revisions/{{.ID}}/revert" data-confirm="{{t "Bring back the version of @date? The current one stays in the history." "@date" (formatDate .CreatedAt)}}"></form>
+{{end}}{{end}}{{end}}
+{{else}}
+<div class="admin-surface"><p class="mb-0">{{t "No versions yet: the first one appears on the next save of the content."}}</p></div>
+{{end}}
+{{end}}

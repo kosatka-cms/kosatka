@@ -1,0 +1,176 @@
+{{/* The private messages module's parts of the core's pages (moduleHook,
+     renderOptional). */}}
+
+{{/* user_menu_private_messages - "Messages" in the user menu (the
+     user_menu block), with the unread threads; data-mobile-user-menu: the
+     mobile menu copies it (app.js). */}}
+{{define "user_menu_private_messages"}}
+<a href="/me/messages" class="dropdown-item dropdown-item-messages" data-mobile-user-menu>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+    </svg>
+    {{t "Messages"}}
+    {{if gt (or .unreadCount 0) 0}}
+    <span class="badge bg-danger ms-1">{{.unreadCount}}</span>
+    {{end}}
+</a>
+{{end}}
+
+{{/* admin_user_menu_private_messages - "Messages" in the admin header's
+     user menu. */}}
+{{define "admin_user_menu_private_messages"}}
+<a href="/me/messages" class="dropdown-item dropdown-item-messages">{{t "Messages"}}{{if gt (or .unreadCount 0) 0}} <span class="badge bg-danger ms-1">{{.unreadCount}}</span>{{end}}</a>
+{{end}}
+
+{{/* profile_tab_private_messages - the profile's messages tab (the
+     module's ProfileTab): the threads of the profile's user, active or
+     archived, filtered by a participant; another user's tab (an
+     administrator of users) - the list only (.pmOwn). */}}
+{{define "profile_tab_private_messages"}}{{attach "private_messages"}}
+<div class="pm-container mt-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">{{t "Private messages"}}</h5>
+        {{if .pmOwn}}
+        <a href="/me/messages/new" class="btn btn-primary btn-sm">
+            <i class="bi bi-pencil"></i> {{t "Write a message"}}
+        </a>
+        {{end}}
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link {{if eq .filterStatus "active"}}active{{end}}" href="{{.pmTabURL}}?status=active{{if .filterParticipant}}&participant={{.filterParticipant}}{{end}}">{{tc "private messages" "Active"}}</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{if eq .filterStatus "archived"}}active{{end}}" href="{{.pmTabURL}}?status=archived{{if .filterParticipant}}&participant={{.filterParticipant}}{{end}}">{{t "Archived"}}</a>
+        </li>
+    </ul>
+
+    <form method="GET" action="{{.pmTabURL}}" class="pm-filters">
+        <input type="hidden" name="status" value="{{.filterStatus}}">
+        <div class="form-group">
+            <label for="filter-participant-display">{{t "Participant"}}</label>
+            <div class="d-flex align-items-center gap-1" style="min-width: 220px;">
+                <input type="text" id="filter-participant-display" class="form-control" placeholder="{{t "Start typing a name..."}}" value="{{.filterParticipantName}}" autocomplete="off" data-user-autocomplete data-user-id-input="filter-participant">
+                <input type="hidden" name="participant" id="filter-participant" value="{{.filterParticipant}}">
+                <button type="button" class="btn btn-sm btn-outline-danger" id="filter-participant-clear" title="{{t "Clear participant"}}" aria-label="{{t "Clear participant"}}" {{if not .filterParticipant}}style="visibility: hidden;"{{end}}>×</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Apply"}}</button>
+            <a href="{{.pmTabURL}}?status={{.filterStatus}}" class="btn btn-sm btn-outline-secondary">{{t "Reset filter"}}</a>
+        </div>
+    </form>
+
+    {{if .threads}}
+    <form id="pm-form" action="{{if eq .filterStatus "archived"}}/me/messages/unarchive{{else}}/me/messages/archive{{end}}" method="POST" class="pm-bulk-actions">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        {{if $.pmOwn}}
+        <div class="mb-2" id="bulk-action-bar" style="display: none;">
+            {{if eq .filterStatus "archived"}}
+            <button type="submit" class="btn btn-sm btn-outline-secondary" id="bulk-action-btn">
+                <i class="bi bi-archive"></i> {{t "Unarchive"}}
+            </button>
+            {{else}}
+            <button type="submit" class="btn btn-sm btn-secondary" id="bulk-action-btn">
+                <i class="bi bi-archive"></i> {{t "Archive"}}
+            </button>
+            {{end}}
+        </div>
+        {{end}}
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                {{if $.pmOwn}}
+                <th style="width: 40px;">
+                    <input type="checkbox" class="form-check-input" id="select-all" title="{{t "Select all"}}">
+                </th>
+                {{end}}
+                <th>{{t "Subject"}}</th>
+                <th>{{t "Participants"}}</th>
+                <th style="width: 160px;">{{t "Updated"}}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .threads}}
+            <tr class="{{if .IsUnread}}fw-bold{{end}}">
+                {{if $.pmOwn}}
+                <td>
+                    <input type="checkbox" class="form-check-input pm-checkbox" name="thread_ids[]" value="{{.ID}}" aria-label="{{t "Select"}}">
+                </td>
+                {{end}}
+                <td>
+                    {{if $.pmOwn}}
+                    <a href="/me/messages/thread/{{.ID}}" class="text-decoration-none text-body">
+                        {{if .IsUnread}}
+                        <span class="badge bg-primary me-1">{{t "New"}}</span>
+                        {{end}}
+                        {{.Subject}}
+                    </a>
+                    {{else}}
+                    {{.Subject}}
+                    {{end}}
+                    {{if .LastMessage}}
+                    <div class="text-muted small text-truncate" style="max-width: 400px;">
+                        {{plainPreview .LastMessage.Body 300}}
+                    </div>
+                    {{end}}
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap gap-1">
+                        {{range .Members}}
+                        {{if .User}}
+                        <a href="/{{.User.Slug}}" class="badge bg-secondary text-decoration-none">
+                            {{.User.Username}}
+                        </a>
+                        {{end}}
+                        {{end}}
+                    </div>
+                </td>
+                <td class="text-muted small">
+                    {{date .UpdatedAt "datetime"}}
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </form>
+
+    {{template "pagination.html" .}}
+
+    {{else}}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-envelope fs-1"></i>
+        {{if .pmOwn}}
+        <p class="mt-2">{{t "You have no messages yet"}}</p>
+        <a href="/me/messages/new" class="btn btn-outline-primary btn-sm">{{t "Write your first message"}}</a>
+        {{else}}
+        <p class="mt-2">{{t "No conversations"}}</p>
+        {{end}}
+    </div>
+    {{end}}
+
+</div>
+{{end}}
+
+{{/* user_actions_private_messages - "Send private message" next to a
+     user's name (moduleHook "user_actions" <user>, e.g. a forum topic's
+     author): the new message form with them as the recipient. */}}
+{{define "user_actions_private_messages"}}<a href="/me/messages/new?to={{.ID}}">{{t "Send private message"}}</a>{{end}}
+
+{{/* user_settings_private_messages - the user's new message e-mail
+     switch on their profile form (.moduleSettings.private_messages:
+     userSettingsForm); pm_user_settings marks the section shown. */}}
+{{define "user_settings_private_messages"}}
+{{with .moduleSettings}}{{with .private_messages}}
+<section class="node-edit-card" aria-labelledby="pm-settings-title">
+    <h2 class="node-edit-card-title" id="pm-settings-title">{{t "Private messages"}}</h2>
+    <input type="hidden" name="pm_user_settings" value="1">
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="pm_mail_new_message" name="pm_mail_new_message" value="1" {{if .MailNewMessage}}checked{{end}}>
+        <label class="form-check-label" for="pm_mail_new_message">{{t "E-mail me about new private messages"}}</label>
+    </div>
+</section>
+{{end}}{{end}}
+{{end}}

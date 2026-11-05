@@ -1,0 +1,20 @@
+{{/* block_tag_cloud - plugin block "tag_cloud" (entity.PluginBlockTagCloud):
+     the terms on the most published materials (.Data -
+     []entity.TagCloudTerm, loaded by the cache refresh from the
+     placement's settings, service.RegisterTagCloudBlock), by name, each
+     sized by its level: tag-cloud-level-1 (the fewest materials) to
+     tag-cloud-level-N (the most; base.css sizes up to 10, a theme restyles
+     them). A term of a vocabulary without public pages isn't a link.
+     Nothing while no term is used. Takes (dict "PluginID" "Ctx"
+     "Placement" "Data"). */}}
+{{define "block_tag_cloud"}}
+{{with .Data}}
+<div class="block tag-cloud">
+    <ul class="tag-cloud-list">
+        {{range .}}
+        <li class="tag-cloud-item tag-cloud-level-{{.Level}}">{{if .Linked}}<a href="{{localURL (print "/" .Term.Slug)}}" title="{{plural .Count "@count material" "@count materials"}}">{{termName .Term}}</a>{{else}}<span>{{termName .Term}}</span>{{end}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+{{end}}

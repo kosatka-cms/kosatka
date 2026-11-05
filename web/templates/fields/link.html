@@ -1,0 +1,11 @@
+{{/* field_link - a link field's value (dict "Field" <FieldInstanceDef>
+     "Value" <[]entity.Link> "Formatter" <name> "Layout" <entity.FieldLayout>):
+     the module's formatter when it's on (formatField), else the links -
+     renderSuggestion "field_links" <machine name>, the theme's
+     "field_links_<machine name>" if defined, else field_links_default. */}}
+{{define "field_link"}}{{$out := formatField .Field.FieldType .Formatter .Value .Layout}}{{if $out}}{{$out}}{{else}}{{renderSuggestion "field_links" .Field.MachineName (fieldLinks .Value .Layout)}}{{end}}{{end}}
+
+{{/* Default links of a link field: . - its links ([]entity.Link, only the
+     first for the "first" layout); one is a link, several a list. Each
+     shows its title, else its address. */}}
+{{define "field_links_default"}}{{if eq (len .) 1}}{{with index . 0}}<a href="{{.URL}}" class="field-link" rel="nofollow noopener">{{.Text}}</a>{{end}}{{else if .}}<ul class="field-links">{{range .}}<li><a href="{{.URL}}" class="field-link" rel="nofollow noopener">{{.Text}}</a></li>{{end}}</ul>{{end}}{{end}}

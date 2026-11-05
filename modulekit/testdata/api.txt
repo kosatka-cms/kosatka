@@ -1,0 +1,1457 @@
+package modulekit
+	func modulekit.AbsoluteAssetURL(base string, uri string) string
+	type AccountSettings = internal/domain/entity.AccountSettings
+		field RegistrationMode string
+		field RequireEmailVerification bool
+		field UserTimezones bool
+		field RegistrationBlockedDomains string
+		field AvatarAllowedExtensions []string
+		field AvatarMaxFileSizeBytes int
+		field TwoFactorRoles []int
+		field TwoFactorIssuer string
+		field CancelContent string
+		field SubjWelcomeAdmin string
+		field BodyWelcomeAdmin string
+		field SubjWelcomePending string
+		field BodyWelcomePending string
+		field SubjWelcomeOpen string
+		field BodyWelcomeOpen string
+		field SubjActivation string
+		field BodyActivation string
+		field SubjPasswordReset string
+		field BodyPasswordReset string
+		field SubjEmailConfirm string
+		field BodyEmailConfirm string
+		field SubjAdminNotify string
+		field BodyAdminNotify string
+		method AvatarAllowedExtensionsString() string
+		method AvatarMaxFileSizeMB() float64
+		method BlockedDomains() []string
+		method EmailDomainBlocked(email string) bool
+	type AccountSettingsSection = internal/interfaces.AccountSettingsSection
+		field Module string
+		field Load func(ctx context.Context) (any, error)
+		field Save func(ctx context.Context, r *net/http.Request) error
+	type Action = internal/domain/audit.Action
+		field Type string
+		field Object internal/domain/audit.Object
+		field Changes []internal/domain/audit.Change
+	type ActionActor = internal/domain/audit.Actor
+		field UserID int
+		field IP string
+	func modulekit.ActionActorFrom(ctx context.Context) modulekit.ActionActor
+	type ActionChange = internal/domain/audit.Change
+		field Field string
+		field From string
+		field To string
+	type ActionEvent = internal/domain/audit.Event
+		field Action internal/domain/audit.Action
+		field Actor internal/domain/audit.Actor
+		field At time.Time
+	type ActionGroup = internal/domain/audit.Group
+		field Name string
+		field Module string
+		field Label string
+		field Description string
+	func modulekit.ActionGroups() []modulekit.ActionGroup
+	type ActionObject = internal/domain/audit.Object
+		field Kind string
+		field ID string
+		field Label string
+		field Subtype string
+		field URL string
+	const modulekit.ActionToneAccess untyped string
+	const modulekit.ActionToneChange untyped string
+	const modulekit.ActionToneCreate untyped string
+	const modulekit.ActionToneDelete untyped string
+	const modulekit.ActionToneFail untyped string
+	const modulekit.ActionToneLogin untyped string
+	type ActionType = internal/domain/audit.Type
+		field Name string
+		field Group string
+		field Label string
+		field Tone string
+	func modulekit.ActionTypeOf(name string) (modulekit.ActionType, bool)
+	func modulekit.AddAccountSettingsSection(s modulekit.AccountSettingsSection)
+	func modulekit.AddActionGroup(g modulekit.ActionGroup)
+	func modulekit.AddActionType(t modulekit.ActionType)
+	func modulekit.AddAdminMenuCount(module string, path string, count func(ctx context.Context) (int, error), label ...string)
+	func modulekit.AddContentTypeSettings(s modulekit.ContentTypeSettings)
+	func modulekit.AddCreateLinks(module string, fn func(ctx context.Context, user *modulekit.User, auth modulekit.AuthService) []modulekit.CreatableMaterialLink)
+	func modulekit.AddDashboardBlock(b modulekit.DashboardBlock)
+	func modulekit.AddEmbedKind(k modulekit.EmbedKind)
+	func modulekit.AddFieldFormatter(f modulekit.FieldFormatter)
+	func modulekit.AddFormSection(s modulekit.FormSection)
+	func modulekit.AddJob(module string, j modulekit.Job)
+	func modulekit.AddMail(d modulekit.MailDef)
+	func modulekit.AddNodePage(module string, fn func(ctx context.Context, node modulekit.Node) modulekit.NodePageParts)
+	func modulekit.AddNodeSettings(s modulekit.NodeSettings)
+	func modulekit.AddPageData(module string, fn func(r *net/http.Request, data map[string]any))
+	func modulekit.AddPathOwner(module string, answers func(ctx context.Context, path string) (bool, error))
+	func modulekit.AddProfileTab(t modulekit.ProfileTab)
+	func modulekit.AddSitemapPaths(module string, fn func(ctx context.Context) ([]string, error))
+	func modulekit.AddTermPage(module string, fn func(ctx context.Context, term modulekit.TaxonomyTerm) any)
+	func modulekit.AddTextFilter(f modulekit.TextFilter)
+	func modulekit.AddUserMenuCount(data map[string]any, n int)
+	func modulekit.AddUserSettingsSection(s modulekit.UserSettingsSection)
+	func modulekit.AddViewField(f modulekit.ViewField)
+	func modulekit.AddViewFilter(f modulekit.ViewFilter)
+	func modulekit.AddViewSort(s modulekit.ViewSort)
+	type AdminNodesFilter = internal/domain/entity.AdminNodesFilter
+		field Status *int
+		field OnModeration *int
+		field Scheduled bool
+		field Type *string
+		field Path string
+		field Search string
+		field SortBy string
+		field Desc bool
+		field Limit int
+		field Offset int
+	const modulekit.AdminNodesSortTitle untyped string
+	func modulekit.ApplySiteLanguages(def string, others []modulekit.SiteLanguage)
+	func modulekit.AsGuest(ctx context.Context) (context.Context, error)
+	func modulekit.AuthJSONMiddleware(store *github.com/gorilla/sessions.CookieStore) func(net/http.Handler) net/http.Handler
+	func modulekit.AuthMiddleware(store *github.com/gorilla/sessions.CookieStore) func(net/http.Handler) net/http.Handler
+	type AuthService = internal/domain/service.AuthService
+		method CanCreateNode(ctx context.Context, contentType internal/domain/entity.ContentType, user *internal/domain/entity.User) bool
+		method CanDeleteNode(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method CanEditNode(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method CanPublishNode(ctx context.Context, user *internal/domain/entity.User) bool
+		method CanUseSiteInMaintenanceMode(ctx context.Context, user *internal/domain/entity.User) bool
+		method CanUseTextFormat(ctx context.Context, user *internal/domain/entity.User, format internal/domain/entity.TextFormatDef) bool
+		method CanViewNode(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method CancelSecondFactor(w net/http.ResponseWriter, r *net/http.Request)
+		method CompleteSecondFactor(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, code string) (*internal/domain/entity.User, error)
+		method ContentVisitor(ctx context.Context, user *internal/domain/entity.User) (internal/domain/entity.ContentVisitor, error)
+		method CreatableNodeTypes(ctx context.Context, user *internal/domain/entity.User) []internal/domain/entity.CreatableMaterialLink
+		method EndSessions(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, userID int) error
+		method GetCurrentUser(ctx context.Context, r *net/http.Request) (*internal/domain/entity.User, error)
+		method GetUserID(r *net/http.Request) (int, bool)
+		method HasPermission(ctx context.Context, user *internal/domain/entity.User, permission string) bool
+		method Login(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, loginIdentity string, password string) (*internal/domain/entity.User, error)
+		method LoginUser(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, user *internal/domain/entity.User) error
+		method Logout(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request) error
+		method PendingSecondFactor(ctx context.Context, r *net/http.Request) (*internal/domain/entity.User, bool)
+		method VerifyPassword(ctx context.Context, userID int, password string) (bool, error)
+	type BaseController = internal/interfaces.BaseController
+		method AddFormSectionsData(ctx context.Context, data map[string]any, form string, ref string)
+		method AdminPageData(r *net/http.Request) map[string]any
+		method ApplyEditorPageSEOFromTitle(data map[string]any, r *net/http.Request)
+		method AuthService() internal/domain/service.AuthService
+		method CommentsService() internal/domain/service.CommentsService
+		method CreateMaterialsHub(w net/http.ResponseWriter, r *net/http.Request)
+		method DBContext(r *net/http.Request) (context.Context, context.CancelFunc)
+		method EditDeletePermissions(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) (canEdit bool, canDelete bool)
+		method EditorPageSEO(r *net/http.Request, actionTitle string) internal/domain/entity.PageSEO
+		method GetCommonData(r *net/http.Request) map[string]any
+		method GetCommonDataWithUser(r *net/http.Request, user *internal/domain/entity.User) map[string]any
+		method GetCurrentUser(r *net/http.Request) (*internal/domain/entity.User, error)
+		method GetPageNumber(r *net/http.Request) int
+		method IsNodeVisible(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method IsViewVisible(ctx context.Context, view *internal/domain/entity.ViewDisplayDef, user *internal/domain/entity.User) bool
+		method LoadAccountSettingsSections(ctx context.Context) map[string]any
+		method LoadContentTypeSettings(ctx context.Context, ct internal/domain/entity.ContentTypeDef) map[string]any
+		method LoadFormSections(ctx context.Context, form string, ref string) map[string]any
+		method LogFailure(err error, msg string, args ...any)
+		method Logger() *log/slog.Logger
+		method MayViewRevisions(ctx context.Context, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method NodeRepo() internal/domain/entity.NodesRepository
+		method PathID(r *net/http.Request) (int, bool)
+		method RenderBadForm(w net/http.ResponseWriter, r *net/http.Request)
+		method RenderBadRequest(w net/http.ResponseWriter, r *net/http.Request, message string)
+		method RenderExpiredForm(w net/http.ResponseWriter, r *net/http.Request)
+		method RenderForbidden(w net/http.ResponseWriter, r *net/http.Request)
+		method RenderLoadFailure(w net/http.ResponseWriter, r *net/http.Request, err error, msg string, args ...any)
+		method RenderNotFound(w net/http.ResponseWriter, r *net/http.Request)
+		method RenderOrFail(w net/http.ResponseWriter, r *net/http.Request, tmpl string, data map[string]any) bool
+		method RenderRejected(w net/http.ResponseWriter, r *net/http.Request, status int, message string)
+		method RenderTooLarge(w net/http.ResponseWriter, r *net/http.Request)
+		method RequireVisibleOrModerator(w net/http.ResponseWriter, r *net/http.Request, node *internal/domain/entity.Node, user *internal/domain/entity.User) bool
+		method SetChildTrail(data map[string]any, parents []internal/domain/entity.BreadcrumbItem, title string)
+		method SetCreateFormTrail(data map[string]any, title string)
+		method SetLogger(l *log/slog.Logger)
+		method SetNodeRefTrail(ctx context.Context, data map[string]any, node internal/domain/entity.Node)
+		method SetNodeSubpageTrail(ctx context.Context, data map[string]any, node internal/domain/entity.Node, title string, extra ...internal/domain/entity.BreadcrumbItem)
+		method SetPathTrail(data map[string]any, path string, title string)
+		method SetViewTrackNID(data map[string]any, node internal/domain/entity.Node)
+		method Store() *github.com/gorilla/sessions.CookieStore
+		method TemplateService() internal/domain/service.TemplateService
+		method UserService() internal/domain/service.UserService
+	type BaseDeps = internal/interfaces.BaseDeps
+		field Auth internal/domain/service.AuthService
+		field Templates internal/domain/service.TemplateService
+		field Users internal/domain/service.UserService
+		field Comments internal/domain/service.CommentsService
+		field Cache internal/interfaces.BlockCache
+		field ViewCounting internal/domain/service.ViewCountingService
+		field Store *github.com/gorilla/sessions.CookieStore
+		field Logger *log/slog.Logger
+		field SiteInformation internal/domain/entity.SiteInformationRepository
+		field Nodes internal/domain/entity.NodesRepository
+		field Breadcrumbs *internal/domain/service.BreadcrumbService
+	type BlockPlacement = internal/domain/entity.BlockPlacementDef
+		field ID int
+		field Theme string
+		field Region internal/domain/entity.Region
+		field Weight int
+		field PluginConfig map[string]string
+		field PlacementType internal/domain/entity.BlockPlacementType
+		field BlockID *int
+		field PluginID *internal/domain/entity.PluginBlockID
+		field ViewDisplayID *int
+		field MenuID *int
+		field MenuStartLevel int
+		field MenuLevelsToShow int
+		field Title string
+		field ShowTitle bool
+		field VisibilityScope internal/domain/entity.BlockVisibilityScope
+		field VisibilityContentType *string
+		field VisibilityPages string
+		field VisibilityPagesMode internal/domain/entity.BlockVisibilityPagesMode
+		field VisibilityRoles string
+		field Lazy bool
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method HasRole(name string) bool
+		method IsMenu() bool
+		method IsPlugin() bool
+		method IsView() bool
+		method MatchesContentType(contentType string) bool
+		method MenuIDValue() int
+		method PluginIDValue() internal/domain/entity.PluginBlockID
+		method PluginSetting(key string) string
+		method PluginSettingOr(s internal/domain/entity.PluginBlockSetting) string
+		method Roles() []string
+		method ViewDisplayIDValue() int
+		method VisibilityContentTypeValue() string
+		method VisibilityContentTypes() []string
+		method VisibleToRoles(roles []string) bool
+	const modulekit.BlockPlacementPlugin internal/domain/entity.BlockPlacementType
+	const modulekit.BlockVisibilityAll internal/domain/entity.BlockVisibilityScope
+	type BreadcrumbItem = internal/domain/entity.BreadcrumbItem
+		field URL string
+		field Label string
+	func modulekit.Captcha() *modulekit.CaptchaService
+	type CaptchaService = internal/domain/service.CaptchaService
+		method KeysFromConfig() bool
+		method Reload(ctx context.Context) error
+		method Save(ctx context.Context, settings internal/domain/entity.CaptchaSettings) error
+		method Saved(ctx context.Context) (*internal/domain/entity.CaptchaSettings, error)
+		method SiteKey(form string) string
+		method Verify(ctx context.Context, form string, token string, remoteIP string) (bool, error)
+	func modulekit.ChangeNode(ctx context.Context, nodeID int, user *modulekit.User, change func(ctx context.Context) error) error
+	func modulekit.CheckBotTrap(r *net/http.Request) error
+	func modulekit.CheckWritableDir(title string, dir func() string) modulekit.StatusCheck
+	func modulekit.CheckWritableStore(title string, store func() pkg/filestore.Store) modulekit.StatusCheck
+	type Comment = internal/domain/entity.Comment
+		field ID int
+		field Nid int
+		field ParentID *int
+		field CreatedBy int
+		field Subject *string
+		field Content string
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		field Status int8
+		field HoldReason string
+		field Depth int
+		field Node *internal/domain/entity.Node
+		field Author *internal/domain/entity.User
+		field Parent *internal/domain/entity.Comment
+		field Children internal/domain/entity.Comments
+		method Summary() string
+	type CommentMode = internal/domain/entity.CommentMode
+		method OrDefault() internal/domain/entity.CommentMode
+	const modulekit.CommentModeClosed internal/domain/entity.CommentMode
+	const modulekit.CommentModeHidden internal/domain/entity.CommentMode
+	const modulekit.CommentModeOpen internal/domain/entity.CommentMode
+	const modulekit.CommentPending int8
+	const modulekit.CommentPublished int8
+	func modulekit.CommentReason(code string, detail string) string
+	const modulekit.CommentReasonReported untyped string
+	const modulekit.CommentSpam int8
+	type Comments = internal/domain/entity.Comments
+	func modulekit.CommentsPerPage() int
+	type CommentsService interface
+		method Approve(ctx context.Context, id int) error
+		method ByID(ctx context.Context, id int) (*modulekit.Comment, error)
+		method ByNodeIDPaginated(ctx context.Context, nid int, status int8, page int) (modulekit.Comments, int, error)
+		method CountByNodeID(ctx context.Context, nid int, status int8, rootOnly bool) (int, error)
+		method Delete(ctx context.Context, id int) error
+		method Hold(ctx context.Context, id int, reason string) error
+		method MarkSpam(ctx context.Context, id int) error
+		method OnCommentPosted(module string, fn func(ctx context.Context, c modulekit.Comment) error)
+		method OnNodeCommentsChanged(module string, fn func(ctx context.Context, nodeID int) error)
+	type ContentType = internal/domain/entity.ContentType
+		method ToString() string
+	type ContentTypeDef = internal/domain/entity.ContentTypeDef
+		field ID int
+		field MachineName string
+		field Label string
+		field PathPattern string
+		field Description string
+		field Status int
+		field DefaultPromote bool
+		field DefaultSticky bool
+		field DefaultPublishing internal/domain/entity.NodePublishing
+		field DefaultCommentMode internal/domain/entity.CommentMode
+		field HideEmptyComments bool
+		field TitleDisplay internal/domain/entity.TitleDisplay
+		field RedirectField string
+		field AltTitleField string
+		field ShowSubmitted bool
+		field ShowViewCount bool
+		field Revisions bool
+		field RevisionsKeep int
+		field Embedded bool
+		field ViewRoles []string
+		field CreatedBy int
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method Creatable() bool
+		method ViewableBy(roles []string) bool
+	type ContentTypeDefs = internal/domain/entity.ContentTypeDefs
+	type ContentTypeFieldType = internal/domain/entity.ContentTypeFieldType
+		method AllowsMultiple() bool
+	type ContentTypeService interface
+		method ContentTypeByMachineName(ctx context.Context, machineName string) (*modulekit.ContentTypeDef, error)
+		method ContentTypes(ctx context.Context) (modulekit.ContentTypeDefs, error)
+		method FieldValues(ctx context.Context, nodeID int, fields modulekit.FieldInstanceDefs) (map[int]any, error)
+		method FieldsByContentTypeID(ctx context.Context, contentTypeID int) (modulekit.FieldInstanceDefs, error)
+		method NodeTypeLabels(ctx context.Context) map[string]string
+		method SetFieldValues(ctx context.Context, nodeID int, fields modulekit.FieldInstanceDefs, values map[int]any, textFormats map[int]int) error
+	type ContentTypeSettings = internal/interfaces.ContentTypeSettings
+		field Module string
+		field Load func(ctx context.Context, ct internal/domain/entity.ContentTypeDef) (any, error)
+		field Save func(ctx context.Context, ct internal/domain/entity.ContentTypeDef, r *net/http.Request) error
+	type ContentVisitor = internal/domain/entity.ContentVisitor
+		field HiddenTypes []string
+		field ItemRoles bool
+		field Roles []string
+		field UserID int
+		field AllItems bool
+		field ItemTypes []string
+		method Key() string
+		method Restricts() bool
+		method RestrictsItems() bool
+		method Shared() internal/domain/entity.ContentVisitor
+	func modulekit.ContextUserID(ctx context.Context) (int, bool)
+	func modulekit.CopyNode(ctx context.Context, nodeID int, user *modulekit.User, title string) (int, error)
+	type CreatableMaterialLink = internal/domain/entity.CreatableMaterialLink
+		field URL string
+		field Label string
+	func modulekit.DBDialect() string
+	type DashboardBlock = internal/domain/service.DashboardBlock
+		field Name string
+		field Module string
+		field Title string
+		field Link string
+		field LinkLabel string
+		field Side bool
+		field Weight int
+		field Permission string
+		field Data func(ctx context.Context) (any, error)
+	func modulekit.DeletedUser() *modulekit.User
+	type Deps struct
+		field Base modulekit.BaseDeps
+		field DB *database/sql.DB
+		field Logger *log/slog.Logger
+		field Auth modulekit.AuthService
+		field Templates modulekit.TemplateService
+		field SiteInformation modulekit.SiteInformationRepository
+		field RefreshBlocks func()
+		field Nodes modulekit.NodesService
+		field NodeRepo modulekit.NodesRepository
+		field NodeDeleter modulekit.NodeDeleter
+		field ContentTypes modulekit.ContentTypeService
+		field Taxonomy modulekit.TaxonomyService
+		field Teasers modulekit.TeaserBuilder
+		field ImageStyles modulekit.ImageStyleService
+		field Comments modulekit.CommentsService
+		field FileUpload modulekit.FileUploader
+		field Files modulekit.FileRepository
+		field Users modulekit.UserRepository
+		field Mail modulekit.Mailer
+		field UploadSettings modulekit.UploadSettingsRepository
+		field Redirects modulekit.RedirectService
+		field Roles interface{Roles(ctx context.Context) (modulekit.Roles, error)}
+		field Vocabularies interface{DeleteVocabularyIfUnused(ctx context.Context, vid int) (bool, error)}
+	func modulekit.DocumentAllowed(name string, head []byte) bool
+	func modulekit.Driver(ctx context.Context, db *database/sql.DB) entgo.io/ent/dialect.Driver
+	type DynamicContent = internal/domain/entity.DynamicContent
+		field Node internal/domain/entity.Node
+		field ContentType internal/domain/entity.ContentTypeDef
+		field Fields internal/domain/entity.FieldInstanceDefs
+		field Values map[int]any
+		field TextFormats map[int]int
+		field Tags internal/domain/entity.TaxonomyTerms
+		method FieldValueByMachineName(machineName string) any
+		method GetAltTitle() string
+		method GetContent() string
+		method GetNode() internal/domain/entity.Node
+	type EmbedKind = internal/domain/service.EmbedKind
+		field Name string
+		field Module string
+		field Render func(ctx context.Context, name string) (html/template.HTML, error)
+		field Label string
+		field Search func(ctx context.Context, query string, limit int) ([]internal/domain/service.EmbedOption, error)
+		field Describe func(ctx context.Context, name string) (internal/domain/service.EmbedOption, error)
+	type EmbedOption = internal/domain/service.EmbedOption
+		field Name string
+		field Title string
+		field Meta string
+		field Thumbs []string
+		field Lines []string
+		field More int
+		field Note string
+	func modulekit.EmbedTemplate(ctx context.Context, templates modulekit.TemplateService, define string, data map[string]any) (html/template.HTML, error)
+	var modulekit.ErrEntityNotFound error
+	var modulekit.ErrNodeNotCopyable error
+	func modulekit.EscapePathSegments(rel string) string
+	type FeedNodeFilter = internal/domain/entity.FeedNodeFilter
+		field Types []string
+		field TermIDs []int
+		field Since time.Time
+		field Limit int
+	type FieldFormatter = internal/domain/service.FieldFormatter
+		field Name string
+		field Module string
+		field Label string
+		field FieldType internal/domain/entity.ContentTypeFieldType
+		field Render func(ctx context.Context, value any, layout internal/domain/entity.FieldLayout) html/template.HTML
+		field Hosts func(ctx context.Context) []string
+		field EditorScript string
+	type FieldInstanceDef = internal/domain/entity.FieldInstanceDef
+		field ID int
+		field ContentTypeID int
+		field FieldStorageID int
+		field MachineName string
+		field Label string
+		field FieldType internal/domain/entity.ContentTypeFieldType
+		field Required bool
+		field HiddenInForm bool
+		field DefaultImageID *int
+		field ShowOnDetail bool
+		field ShowLabel bool
+		field RendersInBody bool
+		field ShowLabelInList bool
+		field ExcludeFromDisplay bool
+		field FallbackFieldKey string
+		field TrimLength int
+		field DetailImageStyle string
+		field ListImageStyle string
+		field DetailFormatter string
+		field DetailLayout internal/domain/entity.FieldLayout
+		field DateFormat string
+		field SortOrder int
+		field DisplayOrder int
+		field Config map[string]any
+		field WidgetConfig map[string]any
+		field ParentGroupID *int
+		field FormGroupID *int
+		field UsableInForm bool
+		field UsableInDetail bool
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method AllowedFileExtensions() []string
+		method AllowedFileExtensionsString() string
+		method AllowedHosts() []string
+		method AllowedHostsString() string
+		method AllowedTextFormatIDs() []int
+		method AllowedValueLabel(value string) string
+		method AllowedValues() []internal/domain/entity.FieldAllowedValue
+		method AllowedValuesText() string
+		method AllowsLibrary() bool
+		method AllowsUpload() bool
+		method BlockTypes() []string
+		method DateEnd() internal/domain/entity.DatePart
+		method DateList() bool
+		method DateRangeFull() bool
+		method DateRich() bool
+		method DateTime() internal/domain/entity.DatePart
+		method EmailPlain() bool
+		method FileDirectory() string
+		method FormGroupIDValue() int
+		method HasExplicitMaxLen() bool
+		method HasMaxUploadSize() bool
+		method HostAllowed(host string) bool
+		method LinkTitle() internal/domain/entity.LinkTitleMode
+		method ListItems(v any) internal/domain/entity.ListItems
+		method MaxLen() int
+		method MaxResolution() (width int, height int)
+		method MaxResolutionString() string
+		method MaxUploadSizeBytes() int
+		method MaxUploadSizeMB() float64
+		method MaxValues() int
+		method MediaSource() internal/domain/entity.MediaSource
+		method MinResolution() (width int, height int)
+		method MinResolutionString() string
+		method Multiple() bool
+		method NumberDecimals() int
+		method NumberKind() internal/domain/entity.NumberKind
+		method NumberMax() (float64, bool)
+		method NumberMaxAttr() string
+		method NumberMin() (float64, bool)
+		method NumberMinAttr() string
+		method NumberPrefix() string
+		method NumberStep() string
+		method NumberSuffix() string
+		method ParentGroupIDValue() int
+		method Pattern() string
+		method PatternMessage() string
+		method PrivateFiles() bool
+		method RichText() bool
+		method RoundNumber(v float64) float64
+		method Symmetric() bool
+		method TargetContentType() string
+		method TimeFormat() string
+		method UserRoles() []int
+		method VocabularyID() int
+		method Widget() internal/domain/entity.FieldWidget
+	type FieldInstanceDefs = internal/domain/entity.FieldInstanceDefs
+		method SortByDisplayOrder() internal/domain/entity.FieldInstanceDefs
+		method SortBySortOrder() internal/domain/entity.FieldInstanceDefs
+	type FieldLayout = internal/domain/entity.FieldLayout
+	const modulekit.FieldLayoutAll internal/domain/entity.FieldLayout
+	const modulekit.FieldLayoutFeatured internal/domain/entity.FieldLayout
+	const modulekit.FieldLayoutFirst internal/domain/entity.FieldLayout
+	const modulekit.FieldTypeImage internal/domain/entity.ContentTypeFieldType
+	const modulekit.FieldTypeLink internal/domain/entity.ContentTypeFieldType
+	const modulekit.FieldTypeTaxonomy internal/domain/entity.ContentTypeFieldType
+	const modulekit.FieldTypeText internal/domain/entity.ContentTypeFieldType
+	type FieldUploadPolicy = internal/domain/entity.FieldUploadPolicy
+		field AllowedExtensions []string
+		field MaxFileSizeBytes int
+		field MaxWidth int
+		field MaxHeight int
+		field MinWidth int
+		field MinHeight int
+	type File = internal/domain/entity.File
+		field ID int
+		field URI string
+		field MimeType string
+		field Width int
+		field Height int
+		field SizeBytes int
+		field Alt string
+		field OriginalFilename string
+		field Focal *internal/domain/entity.FocalPoint
+		field CreatedBy *internal/domain/entity.User
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+	func modulekit.FileIDs(v any) []int
+	type FileRepository interface
+		method ByIDs(ctx context.Context, ids []int) (map[int]modulekit.File, error)
+		method Create(ctx context.Context, uri string, mimeType string, width int, height int, sizeBytes int, createdBy int) (*modulekit.File, error)
+	type FileUploader interface
+		method ImageTypes(ctx context.Context) ([]string, error)
+		method UploadImage(ctx context.Context, file mime/multipart.File, header *mime/multipart.FileHeader, dir string, policy modulekit.FieldUploadPolicy) (string, *modulekit.UploadResult, error)
+	func modulekit.FirstFileID(v any) int
+	const modulekit.FormBlock untyped string
+	const modulekit.FormBlockPlacement untyped string
+	const modulekit.FormField untyped string
+	const modulekit.FormMenuLink untyped string
+	type FormSection = internal/interfaces.FormSection
+		field Module string
+		field Form string
+		field Load func(ctx context.Context, ref string) (any, error)
+		field Save func(ctx context.Context, ref string, r *net/http.Request) error
+	const modulekit.FormSiteInformation untyped string
+	const modulekit.FormTerm untyped string
+	const modulekit.FormView untyped string
+	func modulekit.ImageFormatsLabel(mimes []string) string
+	func modulekit.ImageMIME(uri string) string
+	type ImageStyleDef = internal/domain/entity.ImageStyleDef
+		field ID int
+		field Name string
+		field Label string
+		field Description string
+		field Width int
+		field Height int
+		field Mode string
+		field Anchor string
+		field Quality int
+		field Format string
+		field HiDPI bool
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+	type ImageStyleDefs = internal/domain/entity.ImageStyleDefs
+	type ImageStyleService interface
+		method ImageStyleByName(ctx context.Context, name string) (*modulekit.ImageStyleDef, error)
+		method ImageStyles(ctx context.Context) (modulekit.ImageStyleDefs, error)
+	func modulekit.InTx(ctx context.Context, db *database/sql.DB, fn func(ctx context.Context) error) error
+	func modulekit.IsDuplicateKey(err error) bool
+	func modulekit.IsNotFound(err error) bool
+	func modulekit.IsValidCommentMode(s string) bool
+	type Job = internal/domain/service.Job
+		field Name string
+		field Module string
+		field Every time.Duration
+		field Run func(ctx context.Context) error
+	type Link = internal/domain/entity.Link
+		field URL string
+		field Title string
+		method Host() string
+		method Text() string
+	func modulekit.Links(v any) []modulekit.Link
+	func modulekit.LocalPath(code string, path string) string
+	func modulekit.LogFallback(logger *log/slog.Logger, err error, msg string, args ...any)
+	func modulekit.MailBaseURL() string
+	type MailDef = internal/domain/entity.MailDef
+		field Key string
+		field Module string
+		field Label string
+		field Description string
+		field Recipient string
+		field Optional bool
+		field Placeholders []string
+		field Sample map[string]string
+		field Default internal/domain/entity.MailTemplate
+		field Load func(ctx context.Context) (internal/domain/entity.MailTemplate, error)
+		field Save func(ctx context.Context, t internal/domain/entity.MailTemplate) error
+		field Weight int
+	var modulekit.MailSitePlaceholders []string
+	type MailTemplate = internal/domain/entity.MailTemplate
+		field Subject string
+		field Body string
+	func modulekit.MailTemplatePath(key string) string
+	var modulekit.MailUserPlaceholders []string
+	type Mailer interface
+		method Send(ctx context.Context, key string, to string, data pkg/mailtemplate.TokenData) error
+		method SendPlain(to string, subject string, body string) error
+	const modulekit.MaxMetaDesc untyped int
+	func modulekit.ModuleEnabled(name string) bool
+	func modulekit.ModuleNodeData(ctx context.Context, node modulekit.Node) map[string]any
+	func modulekit.ModuleNodeTypePathPrefix(nodeType string) string
+	func modulekit.MoveDefaultLanguage(others []modulekit.SiteLanguage, oldDef string, newDef string) []modulekit.SiteLanguage
+	type Mux interface
+		method Handle(pattern string, handler net/http.Handler)
+		method HandleFunc(pattern string, handler func(net/http.ResponseWriter, *net/http.Request))
+	func modulekit.NewBaseController(d modulekit.BaseDeps) *modulekit.BaseController
+	type Node = internal/domain/entity.Node
+		field ID int
+		field Type internal/domain/entity.ContentType
+		field Title string
+		field Slug string
+		field PageSEO internal/domain/entity.PageSEO
+		field Status int
+		field OnModeration int
+		field Counter internal/domain/entity.Counter
+		field CreatedBy internal/domain/entity.User
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		field CommentMode internal/domain/entity.CommentMode
+		field PathAuto bool
+		field Promote bool
+		field Sticky bool
+		field PublishOn time.Time
+		field UnpublishOn time.Time
+		field ParentID int
+		field ViewRoles []string
+		field DeletedAt time.Time
+		field DeletedBy int
+		field Langcode string
+		method InTrash() bool
+		method IsPublic() bool
+		method URL() string
+		method ViewableBy(roles []string) bool
+	func modulekit.NodeActionObject(n modulekit.Node) modulekit.ActionObject
+	type NodeDeleter interface
+		method AfterDelete(fn func(ctx context.Context, n modulekit.Node))
+		method Delete(ctx context.Context, nodeID int) error
+		method Remove(ctx context.Context, nodeID int, user *modulekit.User) (trashed bool, err error)
+	type NodeLink = internal/interfaces.NodeLink
+		field URL string
+		field Label string
+	type NodeMetaFields = internal/interfaces/form.NodeMetaFields
+		field MetaTitle string
+		field MetaDescription string
+		method ParseNodeMeta(r *net/http.Request)
+	func modulekit.NodeMetaFromPageSEO(ps modulekit.PageSEO) modulekit.NodeMetaFields
+	type NodePageParts = internal/interfaces.NodePageParts
+		field Data any
+		field Links []internal/interfaces.NodeLink
+	func modulekit.NodeRelPath(nodeType modulekit.ContentType, slug string) string
+	type NodeSettings = internal/interfaces.NodeSettings
+		field Module string
+		field Load func(ctx context.Context, contentType string, node *internal/domain/entity.Node, submitted net/url.Values) (any, error)
+		field Save func(ctx context.Context, node internal/domain/entity.Node, r *net/http.Request) error
+		field Default func(ctx context.Context, node internal/domain/entity.Node) error
+	type NodeTypeController = internal/interfaces.NodeTypeController
+		method Create(w net/http.ResponseWriter, r *net/http.Request)
+		method CreateForm(w net/http.ResponseWriter, r *net/http.Request)
+		method Delete(w net/http.ResponseWriter, r *net/http.Request)
+		method Detail(w net/http.ResponseWriter, r *net/http.Request)
+		method Edit(w net/http.ResponseWriter, r *net/http.Request)
+		method Save(w net/http.ResponseWriter, r *net/http.Request)
+	func modulekit.NodeTypeEnabled(nodeType string) bool
+	func modulekit.NodeTypesByLabel(labels map[string]string) []modulekit.ContentType
+	type NodeWorkflow = internal/interfaces.NodeWorkflow
+		field Module string
+		field Handles func(ctx context.Context, contentType string) bool
+		field Load func(ctx context.Context, contentType string, node *internal/domain/entity.Node, user *internal/domain/entity.User) (any, error)
+		field Validate func(ctx context.Context, contentType string, node *internal/domain/entity.Node, user *internal/domain/entity.User, r *net/http.Request) string
+		field Apply func(ctx context.Context, node internal/domain/entity.Node, user *internal/domain/entity.User, r *net/http.Request, isNew bool) error
+	type Nodes = internal/domain/entity.Nodes
+	type NodesRepository = internal/domain/entity.NodesRepository
+		method AltTitles(ctx context.Context, nodes internal/domain/entity.Nodes) (map[int]string, error)
+		method ByID(ctx context.Context, nodeID int) (*internal/domain/entity.Node, error)
+		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.Node, error)
+		method BySlug(ctx context.Context, slug string) (*internal/domain/entity.Node, error)
+		method ByType(ctx context.Context, nodeType string) (internal/domain/entity.Nodes, error)
+		method CountByType(ctx context.Context, nodeType string) (int, error)
+		method CountPathNodes(ctx context.Context, nodeType string, onlyAuto bool) (int, error)
+		method CountPublicSitemapNodes(ctx context.Context, excludeTypes []string) (int, error)
+		method CreateRow(ctx context.Context, n internal/domain/entity.Node) (int, error)
+		method ListForAdmin(ctx context.Context, filter internal/domain/entity.AdminNodesFilter) (*internal/domain/entity.Nodes, int, error)
+		method ListForFeed(ctx context.Context, filter internal/domain/entity.FeedNodeFilter) (internal/domain/entity.Nodes, error)
+		method ListPublicSitemapNodes(ctx context.Context, excludeTypes []string, limit int, offset int) ([]internal/domain/entity.SitemapNodeRow, error)
+		method PageSEO(ctx context.Context, nodeID int) (internal/domain/entity.PageSEO, error)
+		method PathBatch(ctx context.Context, nodeType string, afterID int, limit int, onlyAuto bool) (internal/domain/entity.Nodes, error)
+		method ProfileMaterialDisplayTitle(ctx context.Context, n internal/domain/entity.Node) string
+		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
+		method SetLangcode(ctx context.Context, nodeID int, code string) error
+		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error
+		method SlugExists(ctx context.Context, slug string) (bool, error)
+		method SlugExistsExcludingNode(ctx context.Context, slug string, excludeNodeID int) (bool, error)
+		method URLsByIDs(ctx context.Context, ids []int) (map[int]string, error)
+		method UpdateOnModeration(ctx context.Context, nodeID int, onModeration int) error
+		method UpdateRow(ctx context.Context, n internal/domain/entity.Node) error
+		method UpdateStatus(ctx context.Context, nodeID int, status int) error
+		method UpsertPageSEO(ctx context.Context, nodeID int, metaTitle string, metaDescription string) error
+	type NodesService = internal/domain/service.NodesService
+		method ByID(ctx context.Context, nodeID int) (*internal/domain/entity.Node, error)
+		method BySlug(ctx context.Context, slug string) (*internal/domain/entity.Node, error)
+		method GenerateUniqueSlug(ctx context.Context, title string, contentType internal/domain/entity.ContentType) (string, error)
+		method Publish(ctx context.Context, nodeID int) error
+		method Unpublish(ctx context.Context, nodeID int) error
+		method UpsertPageSEO(ctx context.Context, nodeID int, metaTitle string, metaDescription string) error
+	func modulekit.OnAction(module string, fn func(ctx context.Context, e modulekit.ActionEvent))
+	func modulekit.OnNodeFormSaved(module string, fn func(ctx context.Context, node modulekit.Node, isNew bool) error)
+	func modulekit.OnNodePublished(module string, fn func(ctx context.Context, node modulekit.Node) error)
+	func modulekit.OnNotFound(module string, fn func(ctx context.Context, path string, referrer string))
+	func modulekit.OptionalAuthMiddleware(store *github.com/gorilla/sessions.CookieStore) func(net/http.Handler) net/http.Handler
+	func modulekit.OrderRandom(s *entgo.io/ent/dialect/sql.Selector)
+	func modulekit.OriginalImage(f modulekit.File) modulekit.File
+	func modulekit.OriginalPicture(f modulekit.File) modulekit.Picture
+	type PageSEO = internal/domain/entity.PageSEO
+		field Title string
+		field Description string
+		field Canonical string
+		field OGImage string
+		field OGURL string
+		field PreloadImage string
+		field PreloadImageSrcset string
+		field NoIndex bool
+	func modulekit.PageSEOForList(title string, path string) modulekit.PageSEO
+	func modulekit.PageSEOForPaginatedList(title string, path string, page int, query net/url.Values) modulekit.PageSEO
+	type Parts struct
+		field Routes func(modulekit.Routes)
+		field NodeTypes map[internal/domain/entity.ContentType]internal/interfaces.NodeTypeController
+		field Fallback func(w net/http.ResponseWriter, r *net/http.Request) bool
+		field Uninstall func(ctx context.Context) error
+		field Requirements modulekit.StatusCheck
+		field UserContent *modulekit.UserContent
+	func modulekit.PathOwner(ctx context.Context, path string, module string) (string, error)
+	const modulekit.PermAccessAdmin untyped string
+	const modulekit.PermAdministerComments untyped string
+	const modulekit.PermAdministerContent untyped string
+	func modulekit.PermEditAny(nodeType string) string
+	const modulekit.PermFullAccess untyped string
+	const modulekit.PermViewUnpublished untyped string
+	type Picture = internal/domain/imageurl.Picture
+		field Src string
+		field Srcset string
+		field Width int
+		field Height int
+	func modulekit.PlainPreview(s string, limit int) string
+	type PluginBlockID = internal/domain/entity.PluginBlockID
+	type PluginBlockSetting = internal/domain/entity.PluginBlockSetting
+		field Key string
+		field Label string
+		field Type internal/domain/entity.PluginBlockSettingType
+		field Default string
+		field Min int
+		field Max int
+		field Options []internal/domain/entity.PluginBlockTarget
+		method Check(value string) bool
+	const modulekit.PluginBlockSettingNumber internal/domain/entity.PluginBlockSettingType
+	const modulekit.PluginBlockSettingSelect internal/domain/entity.PluginBlockSettingType
+	const modulekit.PluginBlockSettingText internal/domain/entity.PluginBlockSettingType
+	type PluginBlockSettingType = internal/domain/entity.PluginBlockSettingType
+	type PluginBlockTarget = internal/domain/entity.PluginBlockTarget
+		field Value string
+		field Label string
+	func modulekit.PrivateFiles() pkg/filestore.Store
+	type ProfileTab = internal/interfaces.ProfileTab
+		field Module string
+		field Path string
+		field Label string
+		field Allowed func(ctx context.Context, viewer *internal/domain/entity.User, profile *internal/domain/entity.User, isOwner bool, canAdminister bool) bool
+		field Badge func(ctx context.Context, viewer *internal/domain/entity.User) int
+		field Load func(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, profile *internal/domain/entity.User, data map[string]any) error
+	func modulekit.PublicBaseURL(r *net/http.Request) string
+	func modulekit.PublicFiles() pkg/filestore.Store
+	func modulekit.PublicFilesURL() string
+	type RSSChannel = internal/interfaces.RSSChannel
+		field Title string
+		field Link string
+		field Description string
+		field Language string
+		field LastBuildDate string
+		field Items []internal/interfaces.RSSItem
+	type RSSDoc = internal/interfaces.RSSDoc
+		field XMLName encoding/xml.Name
+		field Version string
+		field Channel internal/interfaces.RSSChannel
+	type RSSEnclosure = internal/interfaces.RSSEnclosure
+		field URL string
+		field Length string
+		field Type string
+	type RSSGUID = internal/interfaces.RSSGUID
+		field IsPermaLink string
+		field Value string
+	type RSSItem = internal/interfaces.RSSItem
+		field Title string
+		field Link string
+		field Description string
+		field PubDate string
+		field GUID internal/interfaces.RSSGUID
+		field Enclosure *internal/interfaces.RSSEnclosure
+	func modulekit.RSSPostURL(base string, n modulekit.Node) string
+	func modulekit.Rebind(query string) string
+	func modulekit.RecordAction(ctx context.Context, a modulekit.Action)
+	func modulekit.RecordNodeCreated(ctx context.Context, n modulekit.Node)
+	func modulekit.RecordNodeSaved(ctx context.Context, before modulekit.Node, after modulekit.Node)
+	type RedirectService interface
+		method Create(ctx context.Context, from string, to string) error
+		method GetRedirect(fromPath string) (toPath string, ok bool)
+	type Region = internal/domain/entity.Region
+	func modulekit.Register(r modulekit.Registration)
+	func modulekit.Registered() []modulekit.Registration
+	type Registration struct
+		field Module modulekit/manifestkit.Module
+		field Steps func()
+		field Wire func(modulekit.Deps) modulekit.Parts
+		field Catalog io/fs.FS
+		field Assets io/fs.FS
+	const modulekit.RequestLanguageKey untyped string
+	const modulekit.RequestLocationKey untyped string
+	func modulekit.RequestNode(r *net/http.Request) (*modulekit.Node, bool)
+	func modulekit.RequestTheme(ctx context.Context) string
+	const modulekit.RequestThemeKey untyped string
+	func modulekit.RequestUser(r *net/http.Request) (*modulekit.User, bool)
+	type Requirement = internal/domain/entity.Requirement
+		field Title string
+		field Value string
+		field Description string
+		field Severity internal/domain/entity.RequirementSeverity
+		field Module string
+		method IsError() bool
+		method IsWarning() bool
+	const modulekit.RequirementError internal/domain/entity.RequirementSeverity
+	const modulekit.RequirementOK internal/domain/entity.RequirementSeverity
+	type RequirementSeverity = internal/domain/entity.RequirementSeverity
+	const modulekit.RequirementWarning internal/domain/entity.RequirementSeverity
+	type Role = internal/domain/entity.Role
+		field ID int
+		field Name string
+		field Description string
+		field Permissions map[string]any
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method Label() string
+	const modulekit.RoleAnonymous untyped string
+	const modulekit.RoleUser untyped string
+	type Roles = internal/domain/entity.Roles
+	type Routes struct
+		field Mux modulekit.Mux
+		field Store *github.com/gorilla/sessions.CookieStore
+		field AdminOnly func(net/http.Handler) net/http.Handler
+	func modulekit.SafeRedirectPath(destination string) string
+	func modulekit.SetContentListFilter(module string, fn func(ctx context.Context) func(*entgo.io/ent/dialect/sql.Selector))
+	func modulekit.SetLanguageVisibility(module string, fn func(kind string, ref string, lang string) bool)
+	func modulekit.SetLanguagesSwitch(module string)
+	func modulekit.SetNodeURLsInLanguage(module string, fn func(ctx context.Context, ids []int, lang string) map[int]string)
+	func modulekit.SetNodeWorkflow(w modulekit.NodeWorkflow)
+	func modulekit.SetPluginBlockData(id modulekit.PluginBlockID, load func(ctx context.Context, p modulekit.BlockPlacement) (any, error))
+	func modulekit.SetPluginBlockSettings(id modulekit.PluginBlockID, list func(ctx context.Context) ([]modulekit.PluginBlockSetting, error))
+	func modulekit.SetPluginBlockTargets(id modulekit.PluginBlockID, list func(ctx context.Context) ([]modulekit.PluginBlockTarget, error))
+	func modulekit.SetTextTranslator(module string, fn func(lang string, kind string, ref string) (string, bool))
+	func modulekit.SiteDomain() string
+	type SiteInformation = internal/domain/entity.SiteInformation
+		field SiteName string
+		field Slogan string
+		field SiteEmail string
+		field Logo internal/domain/entity.File
+		field Icon internal/domain/entity.File
+		field FrontFeedView string
+		field Timezone string
+		field DefaultLanguage string
+		field Languages []internal/domain/entity.SiteLanguage
+		field Page404 string
+		field Page403 string
+		field Theme *string
+		field BaseURL string
+		field RobotsExtra string
+		field SchemaOrg internal/domain/entity.SiteSchemaOrg
+	type SiteInformationRepository interface
+		method Get(ctx context.Context) (*modulekit.SiteInformation, error)
+		method SetLanguages(ctx context.Context, languages []modulekit.SiteLanguage) error
+		method Update(ctx context.Context, s *modulekit.SiteInformation) error
+	type SiteLanguage = internal/domain/entity.SiteLanguage
+		field Code string
+		field Prefix string
+	func modulekit.SiteLanguages() (string, []modulekit.SiteLanguage)
+	const modulekit.SiteTextRef untyped string
+	type StatusCheck = internal/domain/service.StatusCheck
+	func modulekit.StyledImage(f modulekit.File, styleName string) modulekit.File
+	func modulekit.StyledPicture(f modulekit.File, styleName string) modulekit.Picture
+	type TaxonomyService interface
+		method FieldTermIDsForNode(ctx context.Context, nodeID int) ([]int, error)
+		method NodeTermsByID(ctx context.Context, nodeID int) (modulekit.TaxonomyTerms, error)
+		method TermByID(ctx context.Context, id int) (*modulekit.TaxonomyTerm, error)
+		method TermBySlug(ctx context.Context, slug string) (*modulekit.TaxonomyTerm, error)
+		method TermsByIDs(ctx context.Context, ids []int) (map[int]modulekit.TaxonomyTerm, error)
+		method TermsByVocabularyID(ctx context.Context, vocabularyID int) (modulekit.TaxonomyTerms, error)
+		method UpdateNodeTerms(ctx context.Context, nodeID int, termIDs []int) error
+		method Vocabularies(ctx context.Context) (modulekit.TaxonomyVocabularies, error)
+		method VocabularyByID(ctx context.Context, id int) (*modulekit.TaxonomyVocabulary, error)
+	type TaxonomyTerm = internal/domain/entity.TaxonomyTerm
+		field ID int
+		field Vocabulary internal/domain/entity.TaxonomyVocabulary
+		field Name string
+		field Desc string
+		field PageTitle string
+		field Weight int
+		field Slug string
+		field ParentID int
+		field CreatedBy internal/domain/entity.User
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method HasPublicPage() bool
+	type TaxonomyTerms = internal/domain/entity.TaxonomyTerms
+		method BuildDepths() map[int]int
+		method BuildHierarchy() map[int]string
+		method FilterByVID(vID int) internal/domain/entity.TaxonomyTerms
+		method IDs() []int
+		method SortByHierarchy() internal/domain/entity.TaxonomyTerms
+	type TaxonomyVocabularies = internal/domain/entity.TaxonomyVocabularies
+	type TaxonomyVocabulary = internal/domain/entity.TaxonomyVocabulary
+		field ID int
+		field Name string
+		field Desc string
+		field Weight int
+		field Slug string
+		field TermPathPrefix string
+		field PublicTermPages bool
+		field CreatedBy internal/domain/entity.User
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+	type TeaserBuilder interface
+		method Build(ctx context.Context, nodes modulekit.Nodes) ([]modulekit.TeaserItem, error)
+	type TeaserItem = internal/domain/entity.TeaserItem
+		field Node internal/domain/entity.Node
+		field TypeLabel string
+		field Fields map[string]any
+		field Labels map[string]string
+		field Terms map[string]internal/domain/entity.TaxonomyTerms
+		field CommentCount int
+		field Images map[string]internal/domain/entity.File
+		field DefaultImages map[string]internal/domain/entity.File
+		field AltTitle string
+		field BodyField string
+		field ImageField string
+		field ImageStyle string
+		field DateFormats map[string]string
+		method Body() string
+		method Image(machineName string) internal/domain/entity.File
+		method MainImage() internal/domain/entity.File
+		method OwnImage(machineName string) internal/domain/entity.File
+		method Text(machineName string) string
+	type TemplateService = internal/domain/service.TemplateService
+		method Render(w io.Writer, name string, data any, r *net/http.Request, funcMap html/template.FuncMap) error
+		method RenderNamed(w io.Writer, blockName string, data any, templateFiles ...string) error
+	const modulekit.TextBlockTitle untyped string
+	const modulekit.TextFieldLabel untyped string
+	type TextFilter = internal/domain/service.TextFilter
+		field Name string
+		field Module string
+		field Label string
+		field Description string
+		field Apply func(ctx context.Context, html string) string
+		field EditorButton string
+		field EditorPlugin string
+	const modulekit.TextMenuLinkTitle untyped string
+	const modulekit.TextPlacementTitle untyped string
+	const modulekit.TextSiteName untyped string
+	const modulekit.TextSiteSlogan untyped string
+	const modulekit.TextTermDescription untyped string
+	const modulekit.TextTermName untyped string
+	const modulekit.TextViewDescription untyped string
+	const modulekit.TextViewTitle untyped string
+	func modulekit.TruncateMeta(s string, n int) string
+	type UploadResult = internal/domain/files.UploadResult
+		field Width int
+		field Height int
+		field SizeBytes int
+		field MimeType string
+		field Key string
+	type UploadSettings = internal/domain/entity.UploadSettings
+		field MaxFileSizeBytes int
+		field MaxImageDimension int
+		field AllowedMimeTypes []string
+		field UserFileExtensions []string
+	type UploadSettingsRepository interface
+		method Get(ctx context.Context) (*modulekit.UploadSettings, error)
+	type User = internal/domain/entity.User
+		field ID int
+		field UUID github.com/google/uuid.UUID
+		field Username string
+		field Slug string
+		field Avatar internal/domain/entity.File
+		field AvatarStored string
+		field Email string
+		field PasswordHash string
+		field Timezone string
+		field Metadata map[string]any
+		field Signature string
+		field Role *internal/domain/entity.Role
+		field RoleID int
+		field Status int
+		field EmailVerified bool
+		field SessionVersion int
+		field AvatarUpdateHint string
+		field LastActivity time.Time
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+	type UserContent = internal/domain/service.ModuleUserContent
+		field Label string
+		field Count func(ctx context.Context, userID int) (int, error)
+		field Delete func(ctx context.Context, userID int) error
+	func modulekit.UserMailTokens(baseURL string, site *modulekit.SiteInformation, u *modulekit.User) pkg/mailtemplate.TokenData
+	type UserRepository interface
+		method ByID(ctx context.Context, id int) (*modulekit.User, error)
+		method ByIDs(ctx context.Context, ids []int) (map[int]modulekit.User, error)
+	func modulekit.UserRoleNames(u *modulekit.User) []string
+	type UserService = internal/domain/service.UserService
+		method BumpSessionVersion(ctx context.Context, id int) (int, error)
+		method ByID(ctx context.Context, id int) (*internal/domain/entity.User, error)
+		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.User, error)
+		method ConfirmEmail(ctx context.Context, id int) (*internal/domain/entity.User, error)
+		method CountWithStatus(ctx context.Context, status int) (int, error)
+		method Create(ctx context.Context, ct internal/domain/entity.User) (*internal/domain/entity.User, error)
+		method Edit(ctx context.Context, ct internal/domain/entity.User) (*internal/domain/entity.User, error)
+		method Find(ctx context.Context, filter internal/domain/entity.UserFilter) (*internal/domain/entity.User, error)
+		method FindByEmailOrUsername(ctx context.Context, identity string) (*internal/domain/entity.User, error)
+		method FindBySlug(ctx context.Context, slug string) (*internal/domain/entity.User, error)
+		method FindByUsername(ctx context.Context, username string) (*internal/domain/entity.User, error)
+		method List(ctx context.Context) (*internal/domain/entity.Users, error)
+		method Search(ctx context.Context, query string, roles []int, limit int) (*internal/domain/entity.Users, error)
+	type UserSettingsSection = internal/interfaces.UserSettingsSection
+		field Module string
+		field Load func(ctx context.Context, user internal/domain/entity.User) (any, error)
+		field Save func(ctx context.Context, user internal/domain/entity.User, r *net/http.Request) error
+	const modulekit.UserStatusActive untyped int
+	type ViewDisplayDef = internal/domain/entity.ViewDisplayDef
+		field ID int
+		field BaseEntity internal/domain/entity.ViewBaseEntity
+		field ViewID *int
+		field IsDefault bool
+		field OverrideSettings bool
+		field OverrideFilters bool
+		field OverrideSort bool
+		field OverrideFields bool
+		field MachineName string
+		field Label string
+		field MetaTitle string
+		field MetaDescription string
+		field URLPath string
+		field DisplayType internal/domain/entity.ViewDisplayType
+		field AttachContentTypes string
+		field AttachWeight int
+		field AttachTitle string
+		field AttachShowTitle bool
+		field TermVocabularies string
+		field ProfileTabPath string
+		field ProfileTabAccess internal/domain/entity.ViewProfileTabAccess
+		field ThemeTemplate string
+		field DisplayStyle internal/domain/entity.ViewDisplayStyle
+		field GridColumns int
+		field OverflowAfter int
+		field CarouselSlidesPerView int
+		field CarouselAutoplay bool
+		field CarouselLoop bool
+		field CarouselShowNavigation bool
+		field CarouselShowPagination bool
+		field CarouselLinkFieldStorageID *int
+		field CarouselEffect string
+		field ShowPagination bool
+		field PaginationAjax bool
+		field ShowGlossary bool
+		field GlossaryFieldStorageID *int
+		field PageSize int
+		field HeaderText string
+		field FooterText string
+		field OverflowHeaderText string
+		field CustomCSS string
+		field RowTemplate string
+		field GroupByField string
+		field GroupDateFormat string
+		field PublishedSnapshot string
+		field PublishedAt *time.Time
+		field Status int
+		field CreatedBy int
+		field CreatedAt time.Time
+		field UpdatedAt time.Time
+		method AttachContentTypeList() []string
+		method CanEditFields() bool
+		method CanEditFilters() bool
+		method CanEditSettings() bool
+		method CanEditSort() bool
+		method CarouselLinkFieldStorageIDValue() int
+		method GlossaryFieldStorageIDValue() int
+		method HasGroup() bool
+		method HasPublishedSnapshot() bool
+		method IsComment() bool
+		method MatchesContentType(contentType string) bool
+		method MatchesVocabulary(vid int) bool
+		method TermVocabularyIDs() []int
+		method ViewIDValue() int
+		method WithSettingsOf(from internal/domain/entity.ViewDisplayDef) internal/domain/entity.ViewDisplayDef
+	type ViewField = internal/domain/entity.ViewModuleField
+		field Module string
+		field Key string
+		field Label string
+		field Params []internal/domain/entity.ViewModuleParam
+		field Render func(ctx context.Context, ids []int, params map[string]string) (map[int]html/template.HTML, error)
+	type ViewFilter = internal/domain/entity.ViewModuleFilter
+		field Module string
+		field Key string
+		field Label string
+		field Values func(ctx context.Context, ids []int) (map[int]float64, error)
+		field Options func(ctx context.Context) ([]internal/domain/entity.ViewModuleOption, error)
+		field Choices func(ctx context.Context, ids []int) (map[int]string, error)
+		method Choice() bool
+	type ViewOption = internal/domain/entity.ViewModuleOption
+		field Value string
+		field Label string
+	type ViewParam = internal/domain/entity.PluginBlockSetting
+		field Key string
+		field Label string
+		field Type internal/domain/entity.PluginBlockSettingType
+		field Default string
+		field Min int
+		field Max int
+		field Options []internal/domain/entity.PluginBlockTarget
+		method Check(value string) bool
+	type ViewSort = internal/domain/entity.ViewModuleSort
+		field Module string
+		field Key string
+		field Label string
+		field Params []internal/domain/entity.ViewModuleParam
+		field Values func(ctx context.Context, ids []int, params map[string]string) (map[int]float64, error)
+	const modulekit.VisibilityBlockPlacement untyped string
+	const modulekit.VisibilityMenuLink untyped string
+	func modulekit.WithContentVisitor(ctx context.Context, v modulekit.ContentVisitor) context.Context
+package modulekit/demokit
+	type Comment = internal/infrastructure/demo.Comment
+		field Author string
+		field Body string
+		field Replies []internal/infrastructure/demo.Comment
+	func modulekit/demokit.Content(env modulekit/demokit.Env, fsys io/fs.FS, v any) error
+	func modulekit/demokit.CreateComments(ctx context.Context, env modulekit/demokit.Env, nodeID int, list []modulekit/demokit.Comment, at time.Time) (int, time.Time, error)
+	func modulekit/demokit.CreateNode(ctx context.Context, env modulekit/demokit.Env, n modulekit/demokit.Node) (int, error)
+	func modulekit/demokit.Driver(env modulekit/demokit.Env) entgo.io/ent/dialect.Driver
+	type Env struct
+		field Lang string
+		field CreatedBy int
+		field Users map[string]int
+		field Articles []int
+		field Theme string
+		field MainMenu int
+		field FooterMenu int
+		field Now time.Time
+		method Node(key string) (int, error)
+		method User(name string) (int, error)
+	func modulekit/demokit.ImageFile(ctx context.Context, env modulekit/demokit.Env, rel string, w int, h int, i int, alt string, at time.Time) (int, error)
+	func modulekit/demokit.IndexTerm(ctx context.Context, env modulekit/demokit.Env, nodeID int, tid int, at time.Time) error
+	func modulekit/demokit.Load(fsys io/fs.FS, lang string, v any) error
+	func modulekit/demokit.MenuLink(ctx context.Context, env modulekit/demokit.Env, menuID int, title string, url string, nodeID int, weight int) error
+	type Node = internal/infrastructure/demo.Node
+		field Type string
+		field Title string
+		field Author int
+		field Comments internal/domain/entity.CommentMode
+		field At time.Time
+		field Views int
+	func modulekit/demokit.PlacePlugin(ctx context.Context, env modulekit/demokit.Env, plugin modulekit/manifestkit.PluginBlockID, config map[string]string, p modulekit/demokit.Placement) error
+	func modulekit/demokit.PlaceView(ctx context.Context, env modulekit/demokit.Env, v modulekit/demokit.ViewBlock, p modulekit/demokit.Placement) error
+	type Placement = internal/infrastructure/demo.Placement
+		field Region string
+		field Title string
+		field ShowTitle bool
+		field Weight int
+		field Visibility internal/domain/entity.BlockVisibilityScope
+	func modulekit/demokit.Register(set string, run modulekit/demokit.Step)
+	type Step func(ctx context.Context, env modulekit/demokit.Env) error
+	func modulekit/demokit.Term(ctx context.Context, env modulekit/demokit.Env, vid int, name string, description string, path string, parent *int, weight int) (int, error)
+	type ViewBlock = internal/infrastructure/demo.ViewBlock
+		field Name string
+		field Label string
+		field PageSize int
+		field Fields []internal/infrastructure/demo.ViewBlockField
+		field Filters []internal/infrastructure/demo.ViewBlockFilter
+		field Sorts []internal/infrastructure/demo.ViewBlockSort
+	type ViewBlockField = internal/infrastructure/demo.ViewBlockField
+		field Builtin string
+		field Label string
+		field ShowLabel bool
+		field LinkTo string
+		field Params map[string]string
+	type ViewBlockFilter = internal/infrastructure/demo.ViewBlockFilter
+		field Builtin string
+		field Operator string
+		field Value string
+	type ViewBlockSort = internal/infrastructure/demo.ViewBlockSort
+		field Builtin string
+		field Direction string
+		field Params map[string]string
+	func modulekit/demokit.Vocabulary(ctx context.Context, env modulekit/demokit.Env, name string, slug string, prefix string) (int, error)
+package modulekit/manifestkit
+	var modulekit/manifestkit.AdminGroupModules string
+	var modulekit/manifestkit.AdminGroupSite string
+	var modulekit/manifestkit.AdminGroupTexts string
+	type AdminMenuItem = internal/domain/entity.AdminMenuItem
+		field Label string
+		field Path string
+		field Group string
+		field Module string
+		field Feature string
+		field Permission string
+		field Count int
+		field CountLabel string
+	var modulekit/manifestkit.AdminSectionConfiguration string
+	var modulekit/manifestkit.AdminSectionContent string
+	var modulekit/manifestkit.AdminSectionReports string
+	var modulekit/manifestkit.AdminSectionStructure string
+	const modulekit/manifestkit.BlockVisibilityHomepage internal/domain/entity.BlockVisibilityScope
+	const modulekit/manifestkit.CategoryAdministration untyped string
+	const modulekit/manifestkit.CategoryCommunity untyped string
+	const modulekit/manifestkit.CategoryContent untyped string
+	const modulekit/manifestkit.CategoryIntegrations untyped string
+	const modulekit/manifestkit.CategoryMedia untyped string
+	const modulekit/manifestkit.CategoryOther untyped string
+	type CommentMode = internal/domain/entity.CommentMode
+		method OrDefault() internal/domain/entity.CommentMode
+	const modulekit/manifestkit.CommentModeClosed internal/domain/entity.CommentMode
+	const modulekit/manifestkit.CommentModeHidden internal/domain/entity.CommentMode
+	const modulekit/manifestkit.CommentModeOpen internal/domain/entity.CommentMode
+	type ContentType = internal/domain/entity.ContentType
+		method ToString() string
+	type Dialect = internal/infrastructure/sqldialect.Dialect
+		method CurrentDate() string
+		method InsertID(ctx context.Context, db internal/infrastructure/sqldialect.Execer, query string, args ...any) (int64, error)
+		method Random() string
+		method Rebind(query string) string
+		method Upsert(table string, cols []string, conflict []string, update []string) string
+	const modulekit/manifestkit.DialectPostgres internal/infrastructure/sqldialect.Dialect
+	func modulekit/manifestkit.Driver(env modulekit/manifestkit.InstallEnv) entgo.io/ent/dialect.Driver
+	func modulekit/manifestkit.EnableTextFilter(ctx context.Context, env modulekit/manifestkit.InstallEnv, name string) error
+	func modulekit/manifestkit.EnsureImageStyle(ctx context.Context, env modulekit/manifestkit.InstallEnv, st modulekit/manifestkit.ImageStyle) error
+	func modulekit/manifestkit.GrantPermission(ctx context.Context, env modulekit/manifestkit.InstallEnv, role string, perm string) error
+	type ImageStyle struct
+		field Name string
+		field Label string
+		field Mode string
+		field Anchor string
+		field Width int
+		field Height int
+	type InstallEnv struct
+		field DB *database/sql.DB
+		field Dialect modulekit/manifestkit.Dialect
+	type Module = internal/domain/entity.Module
+		field Name string
+		field Label string
+		field Description string
+		field Category string
+		field External bool
+		field Requires []string
+		field NodeTypes []internal/domain/entity.ModuleNodeType
+		field PluginBlocks []internal/domain/entity.ModulePluginBlock
+		field Permissions []internal/domain/entity.ModulePermission
+		field AdminMenu []internal/domain/entity.ModuleMenuItem
+		field CaptchaForms []internal/domain/entity.ModuleCaptchaForm
+		field FileSources []internal/domain/entity.ModuleFileSource
+		field NodeFiles []internal/domain/entity.ModuleNodeFiles
+		field MaintenancePaths []string
+		field Paths []string
+		field RobotsDisallow []string
+		field LabelColumns []internal/domain/entity.ModuleLabelColumn
+		field Tables []string
+		field Data []internal/domain/entity.ModuleData
+		field OffByDefault bool
+		field InstallByDefault bool
+		field CoreData []string
+		field CSS []string
+		field JS []string
+		method CategoryName() string
+		method PermissionKeys() []string
+	type ModuleCaptchaForm = internal/domain/entity.ModuleCaptchaForm
+		field Key string
+		field Label string
+		field Default bool
+	type ModuleData = internal/domain/entity.ModuleData
+		field Label string
+		field Table string
+	type ModuleFileSource = internal/domain/entity.ModuleFileSource
+		field Source string
+		field Table string
+		field IDColumn string
+		field Columns []string
+		field Label string
+		field NodeBacked bool
+		field TitleColumn string
+		field EditPath string
+	type ModuleLabelColumn = internal/domain/entity.ModuleLabelColumn
+		field Table string
+		field Column string
+	type ModuleMenuItem = internal/domain/entity.ModuleMenuItem
+		field Section string
+		field Item internal/domain/entity.AdminMenuItem
+	type ModuleNodeFiles = internal/domain/entity.ModuleNodeFiles
+		field Table string
+		field FileColumn string
+		field NodeColumn string
+		field Via string
+		field ViaColumn string
+	type ModuleNodeType = internal/domain/entity.ModuleNodeType
+		field Name string
+		field Label string
+		field CreatePath string
+		field PathPrefix string
+		field OwnDiscussion bool
+		field EditPath string
+		field DeletePath string
+	type ModulePermission = internal/domain/entity.ModulePermission
+		field Key string
+		field Label string
+	type ModulePluginBlock = internal/domain/entity.ModulePluginBlock
+		field ID internal/domain/entity.PluginBlockID
+		field Label string
+		field Region internal/domain/entity.Region
+	func modulekit/manifestkit.PlaceModuleBlocks(ctx context.Context, env modulekit/manifestkit.InstallEnv, module string) error
+	type PluginBlockID = internal/domain/entity.PluginBlockID
+	const modulekit/manifestkit.PluginBlockTargetKey untyped string
+	func modulekit/manifestkit.Register(m modulekit/manifestkit.Module, steps func())
+	func modulekit/manifestkit.RegisterInstall(set string, run func(ctx context.Context, env modulekit/manifestkit.InstallEnv) error)
+	func modulekit/manifestkit.RegisterSchema(set string, s modulekit/manifestkit.Schema)
+	func modulekit/manifestkit.RegisterUpdate(set string, u modulekit/manifestkit.Update)
+	func modulekit/manifestkit.Registered() ([]modulekit/manifestkit.Module, []func())
+	const modulekit/manifestkit.RoleUser untyped string
+	type Schema = internal/infrastructure/migrations.Schema
+		field Tables []*entgo.io/ent/dialect/sql/schema.Table
+		field Files io/fs.FS
+		field Dir string
+	type Update struct
+		field Version string
+		field Description string
+		field Run func(ctx context.Context, env modulekit/manifestkit.InstallEnv) error
+package modulekit/schemakit
+	var modulekit/schemakit.ErrEntityNotFound error
+	func modulekit/schemakit.FixedChar(n int) map[string]string
+	func modulekit/schemakit.MySQLType(t string) map[string]string
+	func modulekit/schemakit.NotIncremental() *entgo.io/ent/dialect/entsql.Annotation
+	func modulekit/schemakit.Table(name string) entgo.io/ent/dialect/entsql.Annotation
+package modulekit/testkit
+	type Auth struct
+		field AuthService modulekit.AuthService
+		field UserID int
+		field Allow bool
+		field Permissions map[string]bool
+		method CanCreateNode(context.Context, modulekit.ContentType, *modulekit.User) bool
+		method CanDeleteNode(context.Context, *modulekit.Node, *modulekit.User) bool
+		method CanEditNode(context.Context, *modulekit.Node, *modulekit.User) bool
+		method CanPublishNode(ctx context.Context, user *internal/domain/entity.User) bool
+		method CanUseSiteInMaintenanceMode(context.Context, *modulekit.User) bool
+		method CanUseTextFormat(ctx context.Context, user *internal/domain/entity.User, format internal/domain/entity.TextFormatDef) bool
+		method CanViewNode(_ context.Context, n *modulekit.Node, _ *modulekit.User) bool
+		method CancelSecondFactor(w net/http.ResponseWriter, r *net/http.Request)
+		method CompleteSecondFactor(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, code string) (*internal/domain/entity.User, error)
+		method ContentVisitor(context.Context, *modulekit.User) (modulekit.ContentVisitor, error)
+		method CreatableNodeTypes(context.Context, *modulekit.User) []modulekit.CreatableMaterialLink
+		method EndSessions(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, userID int) error
+		method GetCurrentUser(ctx context.Context, r *net/http.Request) (*internal/domain/entity.User, error)
+		method GetUserID(*net/http.Request) (int, bool)
+		method HasPermission(_ context.Context, _ *modulekit.User, perm string) bool
+		method Login(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, loginIdentity string, password string) (*internal/domain/entity.User, error)
+		method LoginUser(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request, user *internal/domain/entity.User) error
+		method Logout(ctx context.Context, w net/http.ResponseWriter, r *net/http.Request) error
+		method PendingSecondFactor(ctx context.Context, r *net/http.Request) (*internal/domain/entity.User, bool)
+		method VerifyPassword(ctx context.Context, userID int, password string) (bool, error)
+	func modulekit/testkit.CaptureActions(t *testing.T) *[]modulekit.ActionEvent
+	func modulekit/testkit.EngineRoot() string
+	func modulekit/testkit.Logger() *log/slog.Logger
+	func modulekit/testkit.ModuleMux(mux *net/http.ServeMux, module string, notFound net/http.HandlerFunc) modulekit.Mux
+	func modulekit/testkit.NodeDeleter(nodes modulekit.NodesRepository, deleteNode func(ctx context.Context, id int) error) modulekit.NodeDeleter
+	type Nodes struct
+		field NodesRepository modulekit.NodesRepository
+		field Known map[int]*modulekit.Node
+		method AltTitles(ctx context.Context, nodes internal/domain/entity.Nodes) (map[int]string, error)
+		method ByID(_ context.Context, id int) (*modulekit.Node, error)
+		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.Node, error)
+		method BySlug(ctx context.Context, slug string) (*internal/domain/entity.Node, error)
+		method ByType(ctx context.Context, nodeType string) (internal/domain/entity.Nodes, error)
+		method CountByType(ctx context.Context, nodeType string) (int, error)
+		method CountPathNodes(ctx context.Context, nodeType string, onlyAuto bool) (int, error)
+		method CountPublicSitemapNodes(ctx context.Context, excludeTypes []string) (int, error)
+		method CreateRow(ctx context.Context, n internal/domain/entity.Node) (int, error)
+		method ListForAdmin(ctx context.Context, filter internal/domain/entity.AdminNodesFilter) (*internal/domain/entity.Nodes, int, error)
+		method ListForFeed(ctx context.Context, filter internal/domain/entity.FeedNodeFilter) (internal/domain/entity.Nodes, error)
+		method ListPublicSitemapNodes(ctx context.Context, excludeTypes []string, limit int, offset int) ([]internal/domain/entity.SitemapNodeRow, error)
+		method PageSEO(ctx context.Context, nodeID int) (internal/domain/entity.PageSEO, error)
+		method PathBatch(ctx context.Context, nodeType string, afterID int, limit int, onlyAuto bool) (internal/domain/entity.Nodes, error)
+		method ProfileMaterialDisplayTitle(ctx context.Context, n internal/domain/entity.Node) string
+		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
+		method SetLangcode(ctx context.Context, nodeID int, code string) error
+		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error
+		method SlugExists(ctx context.Context, slug string) (bool, error)
+		method SlugExistsExcludingNode(ctx context.Context, slug string, excludeNodeID int) (bool, error)
+		method URLsByIDs(ctx context.Context, ids []int) (map[int]string, error)
+		method UpdateOnModeration(ctx context.Context, nodeID int, onModeration int) error
+		method UpdateRow(ctx context.Context, n internal/domain/entity.Node) error
+		method UpdateStatus(ctx context.Context, nodeID int, status int) error
+		method UpsertPageSEO(ctx context.Context, nodeID int, metaTitle string, metaDescription string) error
+	func modulekit/testkit.PageData() map[string]any
+	func modulekit/testkit.PostForm(path string, form net/url.Values, cookies []*net/http.Cookie) *net/http.Request
+	func modulekit/testkit.RegisterModules()
+	func modulekit/testkit.RenderNamed(t testing.TB, name string, data any, files ...string) string
+	func modulekit/testkit.RenderPageBlock(t testing.TB, page string, block string, data any) string
+	func modulekit/testkit.RenderPageContent(t testing.TB, page string, data any) string
+	func modulekit/testkit.RenderPlacement(t testing.TB, p modulekit.BlockPlacement, pageData map[string]any) string
+	func modulekit/testkit.ResolveTemplate(path string) (string, error)
+	func modulekit/testkit.Session(t testing.TB) (*github.com/gorilla/sessions.CookieStore, []*net/http.Cookie, string)
+	func modulekit/testkit.Templates() modulekit.TemplateService
+	func modulekit/testkit.UseEngineRoot(t testing.TB)
+	func modulekit/testkit.UseImageStyleFormats(t testing.TB, formats map[string]pkg/imagestyle.Format)
+	func modulekit/testkit.UseImageStyleVersions(t testing.TB, versions map[string]string)
+	func modulekit/testkit.UseModuleAssets(t testing.TB, assets map[string]io/fs.FS)
+	func modulekit/testkit.UseTheme(t testing.TB, themesDir string, theme string)
+	type Users struct
+		field UserService modulekit.UserService
+		field Known map[int]*modulekit.User
+		method BumpSessionVersion(ctx context.Context, id int) (int, error)
+		method ByID(_ context.Context, id int) (*modulekit.User, error)
+		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.User, error)
+		method ConfirmEmail(ctx context.Context, id int) (*internal/domain/entity.User, error)
+		method CountWithStatus(ctx context.Context, status int) (int, error)
+		method Create(ctx context.Context, ct internal/domain/entity.User) (*internal/domain/entity.User, error)
+		method Edit(ctx context.Context, ct internal/domain/entity.User) (*internal/domain/entity.User, error)
+		method Find(ctx context.Context, filter internal/domain/entity.UserFilter) (*internal/domain/entity.User, error)
+		method FindByEmailOrUsername(ctx context.Context, identity string) (*internal/domain/entity.User, error)
+		method FindBySlug(ctx context.Context, slug string) (*internal/domain/entity.User, error)
+		method FindByUsername(ctx context.Context, username string) (*internal/domain/entity.User, error)
+		method List(ctx context.Context) (*internal/domain/entity.Users, error)
+		method Search(ctx context.Context, query string, roles []int, limit int) (*internal/domain/entity.Users, error)
+	func modulekit/testkit.WithModules(t testing.TB, states map[string]bool)

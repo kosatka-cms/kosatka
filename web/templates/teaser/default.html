@@ -1,0 +1,17 @@
+{{/* Default teaser for a type without its own teaser/<type>.html
+     (entity.TeaserItem): the type's first image field in its list style,
+     title (marked with its language when it isn't the page's, an
+     original shown where there's no translation) and the start of the
+     body text. A theme can override this file. */}}
+{{define "teaser_default"}}
+{{$it := .}}
+{{$title := or $it.AltTitle $it.Node.Title}}
+{{$href := $it.Node.URL}}
+<article class="node node-teaser">
+    {{with $it.MainImage}}{{if .URI}}
+    <a href="{{$href}}" class="node-teaser-image">{{img (styledPicture . $it.ImageStyle) (or .Alt $title)}}</a>
+    {{end}}{{end}}
+    <h3 class="node-teaser-title"><a href="{{$href}}"{{with $it.Node.Langcode}} lang="{{.}}"{{end}}>{{$title}}</a>{{with otherLanguage $it.Node.Langcode}} <span class="badge text-bg-secondary node-teaser-language">{{.}}</span>{{end}}</h3>
+    {{with plainPreview $it.Body 300}}<p class="node-teaser-text">{{.}}</p>{{end}}
+</article>
+{{end}}

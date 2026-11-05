@@ -1,0 +1,19 @@
+{{/* admin_alerts - an admin page's result notices after a redirect
+     (?saved=1, ?error=<code>; the controller copies them into the page
+     data): (dict "Ctx" . "Done" (dict "<flag>" <message>…) "Info" (dict …)
+     "Errors" (dict "<code>" <message>…) "Warnings" (dict …) "Fallback"
+     <message>). Done / Info - a success / info notice while .<flag> is
+     set; Errors / Warnings - a danger / warning notice for .error equal to
+     the code; Fallback - for any other non-empty .error. Every part is
+     optional; the messages are the page's own. */}}
+{{define "admin_alerts"}}
+{{$ctx := .Ctx}}
+{{range $flag, $msg := .Done}}{{if index $ctx $flag}}<div class="alert alert-success" role="alert">{{$msg}}</div>{{end}}{{end}}
+{{range $flag, $msg := .Info}}{{if index $ctx $flag}}<div class="alert alert-info" role="alert">{{$msg}}</div>{{end}}{{end}}
+{{with index $ctx "error"}}{{$code := print .}}{{$level := ""}}{{$msg := ""}}
+{{with $.Errors}}{{with index . $code}}{{$level = "danger"}}{{$msg = .}}{{end}}{{end}}
+{{if not $msg}}{{with $.Warnings}}{{with index . $code}}{{$level = "warning"}}{{$msg = .}}{{end}}{{end}}{{end}}
+{{if not $msg}}{{with $.Fallback}}{{$level = "danger"}}{{$msg = .}}{{end}}{{end}}
+{{if $msg}}<div class="alert alert-{{$level}}" role="alert">{{$msg}}</div>{{end}}
+{{end}}
+{{end}}

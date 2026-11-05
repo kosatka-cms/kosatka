@@ -1,0 +1,75 @@
+{{/* admin/error_reports.html - the error reports (AdminList): the new
+     ones (.showAll false) or all, on a table card; a new one has the
+     "Fixed" button (POST …/{id}/resolve), a fixed one - dimmed, its date
+     and "Back to the new ones" (POST …/{id}/reopen); both back to this
+     page (.backURL). The admin menu counts the new ones
+     (AddAdminMenuCount). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count report" "@count reports"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "resolve" (t "Could not mark the report fixed.")
+        "reopen" (t "Could not return the report to the new ones."))
+    "Fallback" (t "Could not mark the report fixed."))}}
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{{if not .showAll}} active{{end}}" href="/admin/error-reports"{{if not .showAll}} aria-current="page"{{end}}>{{tc "error reports" "New"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if .showAll}} active{{end}}" href="/admin/error-reports?status=all"{{if .showAll}} aria-current="page"{{end}}>{{t "All"}}</a></li>
+</ul>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Selection"}}</th>
+                    <th>{{t "Page"}}</th>
+                    <th>{{t "User"}}</th>
+                    <th>{{t "Date"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Status"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .reports}}
+                <tr{{if .ResolvedAt}} class="admin-row-muted"{{end}}>
+                    <td>
+                        <span class="admin-table-title" title="{{.SelectedText}}">{{truncateText .SelectedText 80}}</span>
+                        {{if .Comment}}<span class="admin-table-sub" title="{{.Comment}}">{{truncateText .Comment 100}}</span>{{end}}
+                    </td>
+                    <td><a href="{{.PageURL}}" target="_blank" rel="noopener"><code>{{truncateText .PageURL 60}}</code></a></td>
+                    <td>
+                        {{if .UserID}}<a href="/{{.UserSlug}}">{{.Username}}</a>{{else}}{{t "Guest"}}{{end}}
+                        {{if .ClientIP}}<span class="admin-table-sub">{{.ClientIP}}</span>{{end}}
+                    </td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                    <td class="text-end text-nowrap">
+                        {{if .ResolvedAt}}
+                        <span class="admin-pill admin-pill--ok">{{t "Fixed @date" "@date" (formatDate .ResolvedAt)}}</span>
+                        <form method="post" action="/admin/error-reports/{{.ID}}/reopen" class="d-inline">
+                            <input type="hidden" name="back" value="{{$.backURL}}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Back to the new ones"}}</button>
+                        </form>
+                        {{else}}
+                        <form method="post" action="/admin/error-reports/{{.ID}}/resolve" class="d-inline">
+                            <input type="hidden" name="back" value="{{$.backURL}}">
+                            <button type="submit" class="btn btn-sm btn-outline-success">{{t "Fixed"}}</button>
+                        </form>
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{if .showAll}}{{t "No reports yet"}}{{else}}{{t "No new reports"}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

@@ -1,0 +1,101 @@
+{{/* admin/config/breadcrumbs - the breadcrumb rules (BreadcrumbRuleList):
+     adding one (a card over the list, how the trails are built folded in
+     it), on a table card each rule - the content type, its condition, the
+     menu link, edit, delete; dragged by ☰, the first matching from the top
+     applies, saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .rows) "@count rule" "@count rules"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Rule deleted."))
+    "Errors" (dict
+        "create" (t "Error creating the rule.")
+        "delete" (t "Error deleting the rule.")
+        "reorder" (t "Error saving the order."))
+    "Warnings" (dict
+        "empty" (t "Select a content type and a menu link.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="bc-add">
+    <h2 class="admin-add-title" id="bc-add">{{t "Add rule"}}</h2>
+    <form method="post" action="/admin/config/breadcrumbs" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Content type"}}</span>
+            <select name="content_type" id="bc-new-type" class="form-select" required>
+                <option value="">{{t "- content type -"}}</option>
+                {{range .contentTypes}}<option value="{{.MachineName}}">{{.Label}}</option>{{end}}
+            </select>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Condition"}}</span>
+            <select name="field_storage_id" id="bc-new-field" class="form-select" data-filter-by="bc-new-type">
+                <option value="">{{t "- any content of the type -"}}</option>
+                {{range .fields}}<option value="{{.FieldStorageID}}" data-filter-value="{{.ContentType}}">{{.Label}}</option>{{end}}
+            </select>
+        </label>
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Menu link"}}</span>
+            <select name="menu_link_id" class="form-select" required>
+                <option value="">{{t "- menu link -"}}</option>
+                {{range .menuLinks}}<option value="{{.ID}}">[{{.Menu}}] {{.Indent}}{{.Title}} ({{.URL}})</option>{{end}}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "If a field is selected, the rule page opens after creation - terms are selected there."}}</p>
+    <details class="admin-add-more">
+        <summary>{{t "How breadcrumbs are built"}}</summary>
+        <div class="admin-setting-help">
+            <p>{{t "Breadcrumbs are built from menus. A page whose address is in some menu (a listing, a term page) gets the trail of that link and its parents automatically - it needs no rule."}}</p>
+            <p>{{t "A rule sets the menu position for <strong>content</strong>: the content type and, if needed, a term field value (child terms of the selected ones match too). The first matching rule from the top applies - reorder by dragging."}}</p>
+            <p class="mb-0">{{t "No matching rule - \"Home › title\". Details - <code>docs/guides/urls-and-seo.md</code>."}}</p>
+        </div>
+    </details>
+</section>
+
+<form id="bc-reorder-form" method="post" action="/admin/config/breadcrumbs/reorder" class="admin-table-card">
+    <input type="hidden" name="order" id="bc-order-input" value="">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to change the order"}}</span></th>
+                    <th>{{t "Content type"}}</th>
+                    <th>{{t "Condition"}}</th>
+                    <th>{{t "Menu link"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="bc-tbody" data-sortable data-order-input="bc-order-input">
+                {{range .rows}}
+                <tr draggable="true" data-rule-id="{{.Rule.ID}}" data-sort-id="{{.Rule.ID}}">
+                    <td class="drag-handle admin-table-drag" title="{{t "Drag to change the order"}}">&#9776;</td>
+                    <td><span class="admin-table-title">{{.TypeLabel}}</span></td>
+                    <td>{{if .Field}}{{.Field}}: {{range $i, $t := .Terms}}{{if $i}}, {{end}}{{$t}}{{else}}<span class="admin-pill admin-pill--warn">{{t "no terms selected"}}</span>{{end}}{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
+                    <td>{{if .Link}}{{.Link}}{{else}}<span class="admin-pill admin-pill--warn">{{t "link not found or disabled"}}</span>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/breadcrumbs/{{.Rule.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/breadcrumbs/{{.Rule.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "No rules yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .rows}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "The first matching rule from the top applies - drag a row by ☰ to change the order."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</form>
+{{end}}

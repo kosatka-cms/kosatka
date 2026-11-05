@@ -1,0 +1,3 @@
+{{/* The galleries of a content page (GalleriesEmbedHTML: the "Galleries
+     of the content" block loads them on scroll). */}}
+{{if .item}}{{template "galleries_list" (dict "Galleries" .item.Galleries)}}{{end}}

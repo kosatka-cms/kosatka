@@ -1,0 +1,225 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+{{/* The profile edit form under the profile's header and tabs
+     (profile_head), in the content form's two columns (node-edit-layout,
+     components.css): the profile and the sign-in on cards, an
+     administrator's settings of another user; the save card, then the
+     modules' sections (AddUserSettingsSection), each a card of its own. The
+     current password is asked for only to change the e-mail or the
+     password (UserController.EditSave). */}}
+
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+
+<div class="user-profile-page user-profile-edit">
+    {{template "profile_head" .}}
+
+    {{range .formErrors}}
+    <div class="alert alert-danger mt-3" role="alert">{{.}}</div>
+    {{end}}
+
+    <form method="POST" action="{{if .isSelf}}/me/edit{{else}}/user/{{.editUser.ID}}/edit{{end}}" enctype="multipart/form-data" class="profile-edit-form node-edit-layout">
+        <div class="node-edit-main">
+            <section class="node-edit-card" aria-labelledby="profile-edit-profile">
+                <h2 class="node-edit-card-title" id="profile-edit-profile">{{t "Profile"}}</h2>
+                {{/* The picture: one row like an image field's - the
+                     preview, "Replace" (the file input as a button), the ✕
+                     of the "delete" tick (field-image-single in app.js
+                     previews a picked file). */}}
+                <div class="form-group">
+                    <label for="field-avatar">{{t "Picture"}}</label>
+                    <div class="field-image-single profile-edit-avatar" data-field-image-single>
+                        <div class="field-image-row">
+                            <img src="{{if .editUser.Avatar.URI}}{{.editUser.Avatar.URI}}{{else}}{{avatarPlaceholder}}{{end}}" alt="" class="field-image-thumb" data-field-image-preview>
+                            <span class="field-image-drop-text">{{t "Pictures larger than 300×300 pixels will be scaled down automatically."}}</span>
+                            <div class="field-image-actions">
+                                <label class="field-image-choose">{{if .editUser.Avatar.URI}}{{t "Replace"}}{{else}}{{t "Upload picture"}}{{end}}<input id="field-avatar" type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp" class="field-image-file"></label>
+                                {{if .editUser.Avatar.URI}}
+                                <input type="checkbox" id="delete_avatar" name="delete_avatar" value="1" class="field-image-delete-input visually-hidden">
+                                <label for="delete_avatar" class="field-image-btn field-image-delete" title="{{t "Delete picture"}}"><span aria-hidden="true">✕</span><span class="visually-hidden">{{t "Delete picture"}}</span></label>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">{{t "Username"}} <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{.editUser.Username}}" required>
+                    <small class="form-text text-muted">{{tc "profile edit" "Spaces are allowed; punctuation is not allowed except for periods, hyphens, apostrophes, and underscores."}}</small>
+                </div>
+
+                {{if .userTimezonesEnabled}}
+                <div class="form-group">
+                    <label for="timezone">{{t "Time zone"}}</label>
+                    <select class="form-select" id="timezone" name="timezone">
+                        <option value=""{{if eq .editUser.Timezone ""}} selected{{end}}>{{t "Site default"}}</option>
+                        {{/* Grouped by region (sitetime.ZoneOption.Group); UTC ungrouped. */}}{{$group := "-"}}{{range .timezones}}{{if ne .Group $group}}{{if and (ne $group "-") (ne $group "")}}</optgroup>{{end}}{{if .Group}}<optgroup label="{{.Group}}">{{end}}{{$group = .Group}}{{end}}<option value="{{.Name}}"{{if eq .Name $.editUser.Timezone}} selected{{end}}>{{.Label}}</option>{{end}}{{if and (ne $group "-") (ne $group "")}}</optgroup>{{end}}
+                    </select>
+                    <div class="form-text">{{t "Dates and times on the site (comments, forum, posts) will be shown in this time zone."}}</div>
+                </div>
+                {{end}}
+
+                <div class="form-group">
+                    <label for="signature">{{t "Signature"}}</label>
+                    <textarea id="signature" name="signature" class="form-control tinymce-editor" rows="4" data-editor-autoload data-editor-config="{{json (dict "plugins" "link lists image" "toolbar" "undo redo | blocks | bold italic | bullist numlist | link image" "height" 150)}}">{{.editUser.Signature}}</textarea>
+                    <small class="form-text text-muted">{{t "Your signature is shown below your comments. HTML is allowed."}}</small>
+                </div>
+
+                {{/* Admin-defined profile fields (/admin/people/fields). */}}
+                {{range .userFields}}
+                <div class="form-group">
+                    <label for="user_field_{{.Field.ID}}">{{.Field.Label}}{{if .Field.Required}} <span class="required">*</span>{{end}}</label>
+                    <input type="text" class="form-control" id="user_field_{{.Field.ID}}" name="user_field_{{.Field.ID}}" value="{{.Value}}"{{if .Field.MaxLen}} maxlength="{{.Field.MaxLen}}"{{end}}{{if .Field.Required}} required{{end}}>
+                </div>
+                {{end}}
+            </section>
+
+            <section class="node-edit-card" aria-labelledby="profile-edit-signin">
+                <h2 class="node-edit-card-title" id="profile-edit-signin">{{t "Sign-in and password"}}</h2>
+                <div class="form-group">
+                    <label for="email">{{t "Email address"}} <span class="required">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{.editUser.Email}}" required>
+                    <small class="form-text text-muted">{{t "A valid email address. All emails from the system will be sent to this address."}}</small>
+                </div>
+                <div class="profile-edit-passwords">
+                    <div class="form-group">
+                        <label for="password">{{t "New password"}}</label>
+                        <input type="password" class="form-control" id="password" name="password" autocomplete="new-password" placeholder="{{t "Leave blank to keep the current password"}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="password_confirm">{{t "Confirm password"}}</label>
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" autocomplete="new-password">
+                    </div>
+                </div>
+                {{template "password_strength" "password"}}
+                {{if .isSelf}}
+                {{/* The current password: only to change the e-mail or the
+                     password (self-edit only). */}}
+                <div class="form-group profile-edit-current">
+                    <label for="current_password">{{t "Current password"}}</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password" autocomplete="current-password">
+                    <small class="form-text text-muted">{{t "Needed to change the e-mail or the password."}}</small>
+                </div>
+                {{end}}
+                {{if .twoFactor}}
+                {{/* Two-factor sign-in: the user's own page, or an
+                     administrator's reset of someone else's. */}}
+                <div class="form-group profile-edit-two-factor">
+                    {{if .twoFactorReset}}<div class="alert alert-success" role="status">{{t "The two-factor sign-in is reset: the user turns it on again after signing in."}}</div>{{end}}
+                    <span class="profile-edit-two-factor-label">{{t "Two-factor sign-in"}}
+                        {{if .twoFactorOn}}<span class="badge text-bg-success">{{tc "two-factor" "on"}}</span>{{else}}<span class="badge text-bg-secondary">{{tc "two-factor" "off"}}</span>{{end}}</span>
+                    {{if .isSelf}}
+                    <small class="form-text text-muted">{{t "Signing in takes a code from an app on your phone as well."}}</small>
+                    <a href="/me/two-factor" class="btn btn-sm btn-outline-primary">{{if .twoFactorOn}}{{t "Manage"}}{{else}}{{t "Turn on"}}{{end}}</a>
+                    {{else if .canResetTwoFactor}}
+                    <small class="form-text text-muted">{{t "Lost the phone and the recovery codes? A reset turns it off; the user turns it on again after signing in."}}</small>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" formaction="/admin/people/{{.editUser.ID}}/two-factor/reset" formmethod="post" formnovalidate data-confirm="{{t "Reset the two-factor sign-in of @name?" "@name" .editUser.Username}}">{{t "Reset two-factor sign-in"}}</button>
+                    {{end}}
+                </div>
+                {{end}}
+                {{with .oauthServices}}
+                {{/* The social networks to sign in with (one's own
+                     profile): connected - disconnect; not - connect
+                     (/auth/<name>, signed in: it is connected). */}}
+                <div class="form-group profile-edit-oauth">
+                    <span class="profile-edit-two-factor-label">{{t "Social networks"}}</span>
+                    {{with $.oauthMessage}}<div class="alert {{if .Error}}alert-danger{{else}}alert-success{{end}}" role="status">{{.Text}}</div>{{end}}
+                    <small class="form-text text-muted">{{t "A connected one signs you in to this account."}}</small>
+                    <ul class="list-unstyled profile-edit-oauth-list">
+                        {{range .}}
+                        <li>
+                            <img src="/static/images/oauth/{{.Name}}.svg" alt="" width="16" height="16"> {{.Label}}
+                            {{if .Connected}}
+                            <span class="badge text-bg-success">{{tc "social network" "connected"}}</span>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" formaction="/auth/{{.Name}}/disconnect" formmethod="post" formnovalidate>{{t "Disconnect"}}</button>
+                            {{else}}
+                            <a class="btn btn-sm btn-outline-primary" href="/auth/{{.Name}}?destination=/me/edit">{{t "Connect"}}</a>
+                            {{end}}
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+                {{end}}
+            </section>
+
+            {{if .isAdmin}}
+            <section class="node-edit-card" aria-labelledby="profile-edit-admin">
+                <h2 class="node-edit-card-title" id="profile-edit-admin">{{t "Administrative settings"}}</h2>
+                <div class="form-group">
+                    <span class="form-label d-block fw-semibold">{{t "Status"}}</span>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="status" id="status_active" value="1" {{if eq .editUser.Status 1}}checked{{end}}>
+                        <label class="form-check-label" for="status_active">{{t "Active"}}</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="status" id="status_blocked" value="0" {{if eq .editUser.Status 0}}checked{{end}}>
+                        <label class="form-check-label" for="status_blocked">{{t "Blocked"}}</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" name="status" id="status_pending" value="2" {{if eq .editUser.Status 2}}checked{{end}}>
+                        <label class="form-check-label" for="status_pending">{{t "Pending approval"}}</label>
+                    </div>
+                </div>
+                {{/* roles - the ones the editor may give (roleChoices); none: the
+                     role isn't theirs to change. */}}
+                {{if .roles}}
+                <div class="form-group">
+                    <span class="form-label d-block fw-semibold">{{t "Roles"}}</span>
+                    {{range .roles}}
+                    <div class="form-check">
+                        <input type="radio" class="form-check-input" name="role_id" value="{{.ID}}" id="role_{{.ID}}"
+                               {{if $.editUser.Role}}{{if eq $.editUser.Role.ID .ID}}checked{{end}}{{else}}{{if eq .Name $.defaultRoleName}}checked{{end}}{{end}}>
+                        <label class="form-check-label" for="role_{{.ID}}">{{.Label}}</label>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+            </section>
+            {{end}}
+        </div>
+
+        <aside class="node-edit-aside" aria-label="{{t "Saving and settings"}}">
+            <div class="node-edit-card node-edit-save">
+                <div class="node-edit-buttons">
+                    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+                    <a href="{{if .isSelf}}/me{{else}}/{{.editUser.Slug}}{{end}}" class="btn btn-outline-secondary">{{t "Cancel"}}</a>
+                </div>
+            </div>
+            {{/* The modules' settings of the user (AddUserSettingsSection):
+                 each a card (node-edit-card) with its heading. */}}
+            {{moduleHook "user_settings" .}}
+        </aside>
+    </form>
+
+    {{/* Deleting one's own account (UserController.CancelAccount, the
+         permission "cancel own account"): a form of its own, under the
+         profile's; what it leaves - the site's account settings. */}}
+    {{if .canCancelAccount}}
+    <section class="node-edit-card profile-cancel" id="account-cancel" aria-labelledby="account-cancel-title">
+        <h2 id="account-cancel-title" class="node-edit-card-title">{{t "Delete account"}}</h2>
+        <p>{{if .cancelDeletesContent}}{{t "Your profile, content, comments, private messages and files are deleted for good."}}{{else}}{{t "Your profile and comments are deleted for good. Your content and your messages in conversations stay on the site without an author."}}{{end}}</p>
+        {{with .cancelError}}<div class="alert alert-danger" role="alert">{{if eq . "password"}}{{t "The password is wrong."}}{{else if eq . "confirm"}}{{t "Tick that you understand it can't be undone."}}{{else}}{{t "The account could not be deleted."}}{{end}}</div>{{end}}
+        <form method="POST" action="/me/cancel" class="profile-cancel-form" data-confirm="{{t "Delete your account for good?"}}">
+            <div class="mb-3">
+                <label for="cancel-password" class="form-label">{{t "Password"}}</label>
+                <input type="password" id="cancel-password" name="password" class="form-control" autocomplete="current-password" required>
+                <div class="form-text">{{t "Signed in with Google, VK or Yandex and have no password? Set one with \"Forgot your password?\" first."}}</div>
+            </div>
+            <div class="form-check mb-3">
+                <input type="checkbox" id="cancel-confirm" name="confirm" value="1" class="form-check-input" required>
+                <label for="cancel-confirm" class="form-check-label">{{t "I understand it can't be undone"}}</label>
+            </div>
+            <button type="submit" class="btn btn-outline-danger">{{t "Delete account"}}</button>
+        </form>
+    </section>
+    {{end}}
+</div>
+
+{{template "tinymce_user_files.html" .}}
+
+{{end}}

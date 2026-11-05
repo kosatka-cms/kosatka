@@ -1,0 +1,75 @@
+{{/* view_preview - admin live preview of a View. Rendered only via
+     TemplateService.RenderNamed (DynamicContentController.ViewPreview)
+     together with dynamic/list.html, so "dynamic_list_field_value" is
+     reused rather than copied. Not part of admin/views/page.html's page
+     render (it needs draft settings from the request body), so
+     pageFilesToParse in internal/domain/service/template.go doesn't list it. */}}
+{{define "view_preview"}}
+{{/* customCSS - draft value, like headerText/footerText below. safeCSS
+     (template.CSS), not html, or html/template's CSS-context escaping
+     breaks it (same as dynamic/list.html). */}}
+{{if .customCSS}}<style>{{.customCSS | safeCSS}}</style>{{end}}
+{{/* Exposed filters. The preview has no real URL, so instead of
+     dynamic/list.html's GET form, admin_views.js intercepts submit and
+     re-requests the preview with these values. Values come from
+     req.ExposedFilters (the previous preview request), not the query string. */}}
+{{if .exposedFilters}}
+<div class="view-exposed-filters mb-3">
+    <form class="row g-2 align-items-end flex-wrap preview-exposed-filters-form">
+        {{range .exposedFilters}}
+        <div class="col-12 col-md-4">
+            <label for="ef-preview-{{.Param}}" class="form-label">{{.Label}}</label>
+            {{if eq .Kind "select"}}
+            <select name="{{.Param}}" id="ef-preview-{{.Param}}" class="form-select form-select-sm">
+                <option value="">{{t "All"}}</option>
+                {{$current := .Value}}
+                {{range .Options}}
+                <option value="{{.Value}}" {{if eq .Value $current}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+            </select>
+            {{else}}
+            <input type="{{if .InputType}}{{.InputType}}{{else}}text{{end}}" name="{{.Param}}" id="ef-preview-{{.Param}}" class="form-control form-control-sm" value="{{.Value}}" autocomplete="off">
+            {{end}}
+        </div>
+        {{end}}
+        <div class="col-12 col-md-3 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">{{t "Find"}}</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm preview-exposed-filters-reset">{{t "Reset"}}</button>
+        </div>
+    </form>
+</div>
+{{end}}
+{{/* Glossary bar - JS-driven buttons (no real URL, like the pager below),
+     same markup as dynamic/list.html's view_glossary: only the letter is a
+     link, "(count)" is text, " | " separators. admin_views.js's
+     #view-list-container click delegation reads data-target-letter and
+     re-requests the preview. */}}
+{{if .showGlossary}}
+<div class="view-glossary mb-3">
+    {{range $index, $item := .glossaryItems}}{{if $index}} | {{end}}<a href="#" class="glossary-letter preview-glossary-letter{{if eq $item.Letter $.activeLetter}} active{{end}}" data-target-letter="{{$item.Letter}}">{{$item.Letter}}</a> ({{$item.Count}}){{end}}
+</div>
+{{end}}
+<p class="text-muted">{{t "Total items: @total" "@total" .total}}</p>
+
+{{/* The list as the published page has it (dynamic/list.html's
+     view_list_body: its style, the fields shown, the overflow, the header
+     and footer texts, the pager - pagination.html, whose links
+     admin_views.js loads by their data-page, re-POSTing the draft). */}}
+{{template "view_list_body" .}}
+{{end}}
+
+{{/* view_preview_head - the <head> content of the preview frame
+     (admin_views.js): the public pages' stylesheets with the active theme
+     (site_styles), carousels and the engine script, so the preview looks
+     and behaves as the list does on the site; .attachModules - the
+     modules the list attaches (their stylesheets and scripts). */}}
+{{define "view_preview_head"}}
+{{range .attachModules}}{{attach .}}{{end}}
+{{template "site_styles" .}}
+<link rel="stylesheet" href="{{ staticCSS "swiper-bundle" }}">
+<style>body { padding: 16px; }</style>
+<script src="{{jsTranslationsURL}}"></script>
+<script src="/static/js/swiper-bundle.min.js"></script>
+<script src="{{ staticJS "app" }}" defer></script>
+{{ moduleScripts }}
+{{end}}

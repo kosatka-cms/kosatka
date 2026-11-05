@@ -1,0 +1,23 @@
+{{/* subscriptions/unsubscribe.html - the unsubscribe link of an e-mail
+     (Controller.Unsubscribe): asks, and the form posts back; no login
+     needed, the token is the key. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{t "Unsubscribe"}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}{{attach "subscriptions"}}
+<div class="subscriptions-unsubscribe">
+    {{if .unsubscribed}}
+    <p>{{if .subscriptionTerm}}{{t "You no longer follow \"@title\"." "@title" .subscriptionTitle}}{{else}}{{t "You are unsubscribed from \"@title\"." "@title" .subscriptionTitle}}{{end}}</p>
+    {{else}}
+    {{if .unsubscribeFailed}}<p class="alert alert-danger">{{t "The subscription could not be changed. Please try again later."}}</p>{{end}}
+    <p>{{if .subscriptionTerm}}{{t "Stop following \"@title\": no more e-mails of new content with it?" "@title" .subscriptionTitle}}{{else}}{{t "Unsubscribe from the comments of \"@title\"?" "@title" .subscriptionTitle}}{{end}}</p>
+    <form method="post">
+        <button type="submit" class="btn btn-primary">{{t "Unsubscribe"}}</button>
+    </form>
+    {{end}}
+    {{with .subscriptionURL}}<p class="mt-3"><a href="{{.}}">{{t "Go to the page"}}</a></p>{{end}}
+</div>
+{{end}}

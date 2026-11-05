@@ -1,0 +1,11 @@
+{{/* block_error_report_hint - plugin block "error_report_hint" (the error
+     reports module): how to report an error in the text. The keys are the
+     ones web/static/js/app.js listens to (Ctrl/Cmd+Shift+E) - change both
+     together. .error-report-hint is styled by themes. */}}
+{{define "block_error_report_hint"}}
+<div class="block">
+    <div class="block-content">
+        <p class="error-report-hint mb-0">{{t "Found an error in the text? Select it and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>."}}</p>
+    </div>
+</div>
+{{end}}

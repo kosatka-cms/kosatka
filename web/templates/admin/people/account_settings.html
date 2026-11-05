@@ -1,0 +1,139 @@
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="account-settings-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Fallback" (t "Error while saving."))}}
+{{if .selfTwoFactor}}<div class="alert alert-warning" role="alert">{{t "Your own role now requires two-factor sign-in, and it's off for you: the next page will ask you to turn it on."}} <a href="/me/two-factor">{{t "Turn on"}}</a></div>{{end}}
+
+<form method="post" action="/admin/config/account" id="account-settings-form" class="admin-settings">
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Registration and profiles"}}</h2>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting">
+                <legend class="admin-setting-text"><span class="admin-setting-label">{{t "Who can register accounts?"}}</span></legend>
+                <div class="admin-setting-control">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="registration_mode" id="rm_admin" value="admin_only" {{if eq .account.RegistrationMode "admin_only"}}checked{{end}}>
+                        <label class="form-check-label" for="rm_admin">{{t "Administrators only"}}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="registration_mode" id="rm_vis" value="visitors" {{if eq .account.RegistrationMode "visitors"}}checked{{end}}>
+                        <label class="form-check-label" for="rm_vis">{{t "Visitors"}}</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="registration_mode" id="rm_app" value="visitors_approval" {{if eq .account.RegistrationMode "visitors_approval"}}checked{{end}}>
+                        <label class="form-check-label" for="rm_app">{{t "Visitors, but administrator approval is required"}}</label>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="req_ev" class="admin-setting-label">{{t "Require email verification when a visitor creates an account"}}</label>
+                    <span class="admin-setting-help">{{t "If checked, an email with a confirmation link is sent to the given address. If not, the user can log in right away with the chosen password (when registration is open without approval)."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input role="switch" class="form-check-input" type="checkbox" name="require_email_verification" id="req_ev" value="1" {{if .account.RequireEmailVerification}}checked{{end}}>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="user_tz" class="admin-setting-label">{{t "Users may set their own time zone"}}</label>
+                    <span class="admin-setting-help">{{t "The user picks a time zone in the profile (the browser time zone is preselected on registration), and times on pages are shown to them in it. Guests and users without their own time zone get the site time zone (\"Site information\")."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input role="switch" class="form-check-input" type="checkbox" name="user_timezones" id="user_tz" value="1" {{if .account.UserTimezones}}checked{{end}}>
+                </div>
+            </div>
+            {{/* A user's own account deletion (the permission "cancel own
+                 account"): what it leaves (entity.AccountSettings.CancelContent). */}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="cancel_content" class="admin-setting-label">{{t "When users delete their own account"}}</label>
+                    <span class="admin-setting-help">{{t "Who may do it - the permission \"Delete their own account\" of the roles (nobody by default). The administrators' accounts are deleted only by another administrator."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="cancel_content" name="cancel_content" class="form-select admin-min-sm">
+                        <option value="keep" {{if ne .account.CancelContent "delete"}}selected{{end}}>{{t "Keep their content without an author (comments are deleted)"}}</option>
+                        <option value="delete" {{if eq .account.CancelContent "delete"}}selected{{end}}>{{t "Delete their content too"}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="reg_blocked_domains" class="admin-setting-label">{{t "Block registration from email domains"}}</label>
+                    <span class="admin-setting-help">{{t "One domain per line (without the <code>@</code> of the address). Lines starting with <code>#</code> are comments. The block applies only to public registration by visitors, not to accounts created by an administrator. An entry <code>example.com</code> also blocks subdomains (for example <code>mail.example.com</code>)."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <textarea class="form-control font-monospace" id="reg_blocked_domains" name="registration_blocked_domains" rows="6" placeholder="comcast.net">{{.account.RegistrationBlockedDomains}}</textarea>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Avatar upload (independent of the <a href=\":url\">site-wide policy</a>)" ":url" "/admin/config/upload-settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="avatar_allowed_extensions" class="admin-setting-label">{{t "Allowed extensions"}}</label>
+                    <span class="admin-setting-help">{{t "Separated by spaces, without a dot. Empty: the site-wide list of allowed types is used."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="avatar_allowed_extensions" name="avatar_allowed_extensions" class="form-control" value="{{.account.AvatarAllowedExtensionsString}}" placeholder="jpg jpeg png gif webp"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="avatar_max_filesize_mb" class="admin-setting-label">{{t "Max file size (MB)"}}</label>
+                    <span class="admin-setting-help">{{t "The avatar crop size (300×300) is set by the theme layout and is not configured here."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="number" id="avatar_max_filesize_mb" name="avatar_max_filesize_mb" class="form-control admin-max-xs" value="{{if .account.AvatarMaxFileSizeBytes}}{{.account.AvatarMaxFileSizeMB}}{{end}}" step="0.1" min="0.1" placeholder="{{t "site-wide"}}"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group" id="two-factor">
+        <h2 class="admin-settings-title">{{t "Two-factor sign-in"}}</h2>
+        <p class="admin-setting-help">{{t "Signing in takes a code from an authenticator app as well as the password. Anyone may turn it on in their profile."}}</p>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Required for roles"}}</span>
+                    <span class="admin-setting-help">{{t "A user of such a role without two-factor sign-in is sent to turn it on after signing in, and can't open anything else until they do."}}</span>
+                </legend>
+                <div class="admin-setting-control admin-setting-control--choices">
+                    {{range .roles}}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="two_factor_roles" id="tfr_{{.ID}}" value="{{.ID}}"{{if index $.twoFactorRoles .ID}} checked{{end}}>
+                        <label class="form-check-label" for="tfr_{{.ID}}">{{.Label}}</label>
+                    </div>
+                    {{end}}
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="two_factor_issuer" class="admin-setting-label">{{t "The site's name in the app"}}</label>
+                    <span class="admin-setting-help">{{t "How the authenticator app names the site. Empty - the site's name."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="two_factor_issuer" name="two_factor_issuer" class="form-control" value="{{.account.TwoFactorIssuer}}" maxlength="100" placeholder="{{.siteName}}"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Emails"}}</h2>
+        <p class="admin-setting-help">{{t "The texts of the account emails are on the <a href=\":url\">Mail</a> page." ":url" "/admin/config/mail/templates"}}</p>
+    </section>
+    {{/* The modules' sections (AddAccountSettingsSection). */}}
+    {{moduleHook "account_settings" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

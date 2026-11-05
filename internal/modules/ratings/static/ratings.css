@@ -1,0 +1,140 @@
+/* The ratings module: a content item's rating and its vote stars. A theme
+   restyles them through the custom properties, or with a more specific
+   rule: this file is linked after the theme's CSS. */
+.rating-block,
+.rating-summary {
+    --rating-star-on: #f59e0b;
+    --rating-star-off: rgba(127, 127, 127, .3);
+}
+
+.rating-widget {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem 1.75rem;
+    margin: 0 0 1.25rem;
+}
+
+.rating-total {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.rating-total .rating-average {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.rating-total-detail {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.rating-count {
+    font-size: .875rem;
+    opacity: .75;
+}
+
+/* The average's stars: the filled ones over the empty ones, cut to the
+   share. */
+.rating-stars {
+    position: relative;
+    display: inline-block;
+    font-size: 1.25rem;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.rating-stars-empty {
+    color: var(--rating-star-off);
+}
+
+.rating-stars-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+    color: var(--rating-star-on);
+}
+
+.rating-stars svg {
+    display: inline-block;
+}
+
+/* The vote: a star button per score; hovering lights it and the ones
+   before it. */
+.rating-vote {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem .75rem;
+    margin: 0;
+}
+
+.rating-vote-label {
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.rating-vote-stars {
+    display: inline-flex;
+}
+
+.rating-star {
+    padding: .15rem;
+    border: 0;
+    background: none;
+    color: var(--rating-star-off);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.rating-star.is-on {
+    color: var(--rating-star-on);
+}
+
+.rating-vote-stars:hover .rating-star:not(:disabled) {
+    color: var(--rating-star-on);
+}
+
+.rating-vote-stars .rating-star:hover ~ .rating-star:not(:disabled) {
+    color: var(--rating-star-off);
+}
+
+.rating-star:disabled {
+    cursor: default;
+}
+
+.rating-star:focus-visible {
+    outline: 2px solid var(--rating-star-on);
+    outline-offset: 2px;
+}
+
+.rating-message:empty {
+    display: none;
+}
+
+.rating-message {
+    font-size: .875rem;
+    color: #b02a37;
+}
+
+.rating-login {
+    margin: 0;
+    font-size: .875rem;
+}
+
+/* The rating field of a View row. */
+.rating-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.rating-summary .rating-stars {
+    font-size: 1rem;
+}

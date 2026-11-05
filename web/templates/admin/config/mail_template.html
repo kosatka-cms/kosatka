@@ -1,0 +1,77 @@
+{{/* admin/config/mail_template - one of the site's emails
+     (MailTemplateEdit, .def: entity.MailDef) on the Mail page's "Emails"
+     tab: its subject and text (.template; blank - the default's, "Default
+     text" restores it), its placeholders (a click puts one into the field
+     edited last), how it looks with sample values (.preview) and a test
+     email to an address (.testTo). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t .def.Description}} {{t "Who gets it:"}} {{t .def.Recipient}}.{{if not .def.Optional}} {{t "Always sent."}}{{else if not .enabled}} {{t "Switched off: not sent."}}{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="mail-template-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "admin_mail_tabs" "templates"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Fallback" (t "Could not save."))}}
+{{if .testSent}}<div class="alert alert-success" role="status">{{t "The test email was sent to @email." "@email" .testTo}}</div>{{end}}
+{{if .testError}}<div class="alert alert-danger" role="alert">{{t "The test email was not sent: @error" "@error" .testError}}</div>{{end}}
+
+<div class="admin-mail-edit">
+    <form method="post" action="/admin/config/mail/templates/{{.def.Key}}" id="mail-template-form" class="admin-settings">
+        <div class="admin-settings-card">
+            <div class="admin-setting admin-setting--stacked">
+                <div class="admin-setting-text"><label for="mail-subject" class="admin-setting-label">{{t "Subject"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="mail-subject" name="subject" class="form-control" value="{{.template.Subject}}" maxlength="512" data-token-target></div>
+            </div>
+            <div class="admin-setting admin-setting--stacked">
+                <div class="admin-setting-text">
+                    <label for="mail-body" class="admin-setting-label">{{t "Text"}}</label>
+                    <span class="admin-setting-help">{{t "Plain text. A placeholder in square brackets is replaced by its value when the email is sent; a blank field - the default text."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="mail-body" name="body" class="form-control font-monospace" rows="14" data-token-target>{{.template.Body}}</textarea></div>
+            </div>
+        </div>
+        <div class="admin-settings-actions">
+            {{/* Its own form (mail-template-reset): Enter in a field saves. */}}
+            <button type="submit" form="mail-template-reset" class="btn btn-outline-secondary">{{t "Default text"}}</button>
+            <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+        </div>
+    </form>
+    <form method="post" action="/admin/config/mail/templates/{{.def.Key}}" id="mail-template-reset" data-confirm="{{t "Restore the default text?"}}" hidden>
+        <input type="hidden" name="reset" value="1">
+    </form>
+
+    <aside class="admin-mail-side">
+        <section class="admin-settings-card admin-mail-card" aria-labelledby="mail-tokens-title">
+            <h2 class="admin-mail-card-title" id="mail-tokens-title">{{t "Placeholders"}}</h2>
+            <p class="admin-setting-help">{{t "A click puts it into the subject or the text, where the cursor is."}}</p>
+            <div class="admin-mail-tokens">
+                {{range .def.Placeholders}}<button type="button" class="admin-mail-token" data-insert-token="{{.}}">{{.}}</button>{{end}}
+            </div>
+        </section>
+        <section class="admin-settings-card admin-mail-card" aria-labelledby="mail-preview-title">
+            <h2 class="admin-mail-card-title" id="mail-preview-title">{{t "How it looks"}}</h2>
+            <p class="admin-setting-help">{{t "With sample values, as saved."}}</p>
+            <div class="admin-mail-preview">
+                <div class="admin-mail-preview-subject">{{.preview.Subject}}</div>
+                <div class="admin-mail-preview-body">{{.preview.Body}}</div>
+            </div>
+            <form method="post" action="/admin/config/mail/templates/{{.def.Key}}/test" class="admin-mail-test">
+                <label for="mail-test-to" class="admin-setting-label">{{t "Send a test email"}}</label>
+                <div class="admin-mail-test-row">
+                    <input type="email" id="mail-test-to" name="to" class="form-control" value="{{.testTo}}" required>
+                    <button type="submit" class="btn btn-outline-primary">{{t "Send"}}</button>
+                </div>
+            </form>
+        </section>
+    </aside>
+</div>
+{{end}}

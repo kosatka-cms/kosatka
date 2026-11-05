@@ -1,0 +1,79 @@
+{{/* admin/config/text-formats - the text formats (TextFormatList): adding
+     one (a card over the list), on a table card each format - its name and
+     machine name, allowed tags, whether class is allowed, whether it is
+     available, edit, delete; dragged by ☰ (the higher one is the default),
+     saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .textFormats) "@count text format" "@count text formats"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Format deleted."))
+    "Errors" (dict
+        "duplicate" (t "A format with this machine_name already exists.")
+        "create" (t "Error creating the format.")
+        "delete" (t "Error deleting the format.")
+        "reorder" (t "Error saving the order."))
+    "Warnings" (dict
+        "empty" (t "machine_name and name are required.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="text-format-add">
+    <h2 class="admin-add-title" id="text-format-add">{{t "Add format"}}</h2>
+    <form method="post" action="/admin/config/text-formats" class="admin-add-form">
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "machine_name, allowed tags, TinyMCE buttons and other settings are on the format's own page after creation."}}</p>
+</section>
+
+<form id="text-formats-reorder-form" method="post" action="/admin/config/text-formats/reorder" class="admin-table-card">
+    <input type="hidden" name="order" id="text-formats-order-input" value="">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to reorder"}}</span></th>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Allowed tags"}}</th>
+                    <th>class</th>
+                    <th>{{t "Status"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="text-formats-tbody" data-sortable data-order-input="text-formats-order-input">
+                {{range .textFormats}}
+                <tr draggable="true" data-format-id="{{.ID}}" data-sort-id="{{.ID}}">
+                    <td class="drag-handle admin-table-drag" title="{{t "Drag to reorder"}}">&#9776;</td>
+                    <td><a href="/admin/config/text-formats/{{.ID}}/edit" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><code>{{.MachineName}}</code></span></td>
+                    <td class="admin-table-muted"><code>{{if .AllowedTags}}{{.AllowedTags}}{{else}}-{{end}}</code></td>
+                    <td>{{if .AllowClassAttribute}}{{t "Yes"}}{{else}}{{t "No"}}{{end}}</td>
+                    <td>{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Available"}}</span>{{else}}<span class="admin-pill">{{t "Unavailable"}}</span>{{end}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/text-formats/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/text-formats/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="6" class="admin-table-empty">{{t "No formats yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .textFormats}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "The format higher in the list is selected by default when a value has no choice of its own yet (see the hint about \"Weight\" on the format page)."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</form>
+{{end}}

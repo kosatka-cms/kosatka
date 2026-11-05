@@ -1,0 +1,44 @@
+{{/* search/results.html - the search results page (GET /search?q=,
+     SearchController.SearchPage): the live search's results (types, fields
+     of /admin/config/search; their limits are for the live search, here
+     up to searchPageMax results, searchPerPage a page; a result's snippet -
+     its text around the query's words, marked). A theme restyles it through the
+     .search-page classes (css/components.css) or replaces the file. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+<section class="search-page">
+    <form class="search-page-form" action="/search" method="get" role="search">
+        <input type="search" name="q" value="{{.query}}" class="form-control" placeholder="{{t "Search the site"}}" aria-label="{{t "Search the site"}}" minlength="{{.searchMinChars}}" required>
+        <button type="submit" class="btn btn-primary">{{tc "verb" "Search"}}</button>
+    </form>
+
+    {{if .queryTooShort}}
+    <p class="search-page-hint">{{plural .searchMinChars "Enter at least @count character." "Enter at least @count characters."}}</p>
+    {{else if .searched}}
+        {{if .results}}
+        <p class="search-page-count">{{plural .total "@count result" "@count results"}}</p>
+        <ul class="search-results">
+            {{range .results}}
+            <li class="search-result search-result-{{.Type}}">
+                {{if .ImageURL}}<a href="{{.URL}}" class="search-result-image" tabindex="-1" aria-hidden="true"><img src="{{.ImageURL}}" alt="" loading="lazy"></a>{{end}}
+                <div class="search-result-body">
+                    <a href="{{.URL}}" class="search-result-title">{{.Title}}</a>
+                    {{with .Subtitle}}<div class="search-result-subtitle">{{.}}</div>{{end}}
+                    {{with .Snippet}}{{if .Parts}}<p class="search-result-snippet">{{if .Before}}...{{end}}{{range .Parts}}{{if .Match}}<mark>{{.Text}}</mark>{{else}}{{.Text}}{{end}}{{end}}{{if .After}}...{{end}}</p>{{end}}{{end}}
+                    <div class="search-result-meta">{{.TypeLabel}}{{with .Badge}} · {{.}}{{end}}</div>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+        {{with .pagination}}{{template "pagination.html" $}}{{end}}
+        {{else}}
+        <p class="search-page-empty">{{t "Nothing found."}}</p>
+        {{end}}
+    {{end}}
+</section>
+{{end}}

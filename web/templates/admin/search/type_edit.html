@@ -1,0 +1,108 @@
+{{/* admin/config/search/types/{type}/edit - how a content type is
+     searched (SearchTypeEdit): the limit and its label in the results, the
+     fields searched, the result's title, second line, image and badge - as
+     rows; removing the type from the search over the page. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="search-type-delete" class="btn btn-outline-danger">{{t "Remove type from search"}}</button>
+<button type="submit" form="search-type-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "success" (t "Saved.")))}}
+
+{{$def := .def}}
+<form method="post" action="/admin/config/search/types/{{$def.NodeType}}/delete" id="search-type-delete"></form>
+<form method="post" action="/admin/config/search/types/{{$def.NodeType}}" id="search-type-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="search-limit">{{t "Limit"}}</label>
+                <span class="admin-setting-help">{{t "Limit: how many items of this type are taken from the field search; title matches are added on top of it (within 50 for the whole search)."}}</span>
+            </div>
+            <div class="admin-setting-control"><input type="number" id="search-limit" name="result_limit" class="form-control admin-max-xs" value="{{$def.Limit}}" min="0"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-label">{{t "Label in results"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="search-label" name="label" class="form-control" value="{{$def.Label}}"></div>
+        </div>
+        {{if .textFields}}
+        <fieldset class="admin-setting">
+            <legend class="admin-setting-text">
+                <span class="admin-setting-label">{{t "Also search in fields"}}</span>
+                <span class="admin-setting-help">{{t "The content title is always searched. All text fields include the ones added to the type later."}}</span>
+            </legend>
+            <div class="admin-setting-control admin-setting-control--choices">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="match_mode" id="search-match-all" value="all"{{if $def.AllFields}} checked{{end}}>
+                    <label class="form-check-label" for="search-match-all">{{t "All text fields"}}</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="match_mode" id="search-match-chosen" value="chosen"{{if not $def.AllFields}} checked{{end}}>
+                    <label class="form-check-label" for="search-match-chosen">{{t "Only the ticked ones (none ticked - the title only):"}}</label>
+                </div>
+                <div class="ms-4">
+                    {{range .textFields}}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="match_fields" id="search-match-{{.MachineName}}" value="{{.MachineName}}"{{if index $.match .MachineName}} checked{{end}}>
+                        <label class="form-check-label" for="search-match-{{.MachineName}}">{{.Label}} <code>{{.MachineName}}</code></label>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </fieldset>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-title-field">{{t "Result title"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="search-title-field" name="title_field" class="form-select">
+                    <option value="">{{t "content title"}}</option>
+                    {{range .textFields}}<option value="{{.MachineName}}"{{if eq .MachineName $def.TitleField}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-subtitle-field">{{t "Second line"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="search-subtitle-field" name="subtitle_field" class="form-select">
+                    <option value="">{{t "- None -"}}</option>
+                    {{range .textFields}}<option value="{{.MachineName}}"{{if eq .MachineName $def.SubtitleField}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        {{end}}
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-image-field">{{t "Image"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="search-image-field" name="image_field" class="form-select">
+                    <option value="">{{tc "search" "no image"}}</option>
+                    {{range .imageFields}}<option value="{{.MachineName}}"{{if eq .MachineName $def.ImageField}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-image-style">{{tc "search" "Image style"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="search-image-style" name="image_style" class="form-select">
+                    <option value="">{{t "original"}}</option>
+                    {{range .imageStyles}}<option value="{{.Name}}"{{if eq .Name $def.ImageStyle}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="search-badge">{{t "Badge: vocabulary terms"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="search-badge" name="badge_vocabulary_id" class="form-select">
+                    <option value="">{{t "- None -"}}</option>
+                    {{range .vocabularies}}<option value="{{.ID}}"{{if eq .ID $def.BadgeVocabularyID}} selected{{end}}>{{.Name}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

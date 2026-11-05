@@ -1,0 +1,36 @@
+/* The polls module's default look. The block (blocks/poll.html, the
+   poll's embed): its question at the size of a block's text, not a page
+   heading's (it is an h3), the results' heading small; the results' bars.
+   Mostly in :where() (zero specificity), so a theme's rule wins whatever
+   the load order; the question's own class counts (one class, 0,1,0) to
+   beat Bootstrap's h3 - a theme restyles it under its own class
+   (.sidebar .poll-block-question). */
+:where(.poll-block) .poll-block-question {
+    margin: 0 0 .75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+:where(.poll-block .poll-block-question) a {
+    color: inherit;
+    text-decoration: none;
+}
+
+:where(.poll-block .poll-results) h4 {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+}
+
+:where(.poll-result-bar-bg) {
+    height: 8px;
+    overflow: hidden;
+    background: var(--bs-secondary-bg);
+    border-radius: 4px;
+}
+
+:where(.poll-result-bar-fill) {
+    height: 100%;
+    background: #4a6fa5;
+}

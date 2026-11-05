@@ -1,0 +1,24 @@
+{{/* block_demo.html - region demo mode (see admin.Controller.BlockRegionDemo):
+     renders through the public layout so visitors' regions are shown as-is,
+     with region_blocks.html's blockDemoMode overlay on top. Kept at the top
+     level (no "admin/" prefix) so pageFilesToParse picks the public layout. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<p>{{t "Each theme region is highlighted with a frame showing its machine name. Empty regions are marked \"(empty)\". This is the real front page - regular content is rendered as is."}}</p>
+<p>{{t "Blocks visible only on certain content types or pages are not shown on the front page. To see them, open the page you need in demo mode - <code>?blocks_demo=1</code> is added to its address (works for administrators only):"}}</p>
+{{/* Bootstrap's form classes: the theme's look of fields and buttons. */}}
+<form class="block-demo-open-form d-flex flex-wrap gap-2 mb-4" onsubmit="var p=this.path.value.trim();if(!p)return false;if(p.charAt(0)!=='/')p='/'+p;window.location=p+(p.indexOf('?')<0?'?':'&')+'blocks_demo=1';return false;">
+    <input type="text" name="path" class="form-control" style="flex: 1 1 16rem; max-width: 24rem;" aria-label="{{t "Page path"}}" placeholder="{{t "/path/to/page"}}" required>
+    <button type="submit" class="btn btn-primary">{{t "Open in demo mode"}}</button>
+</form>
+<p>{{t "All theme regions:"}}</p>
+<ul>
+    {{range .allRegions}}<li>{{index $.regionLabels .}} (<code>{{.}}</code>)</li>{{end}}
+</ul>
+{{end}}
+

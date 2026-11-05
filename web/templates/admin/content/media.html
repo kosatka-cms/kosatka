@@ -1,0 +1,145 @@
+{{/* admin/content/media.html - the media library (Controller.MediaList):
+     the files uploaded to the site as tiles, the newest first, found by
+     name or alt text, kind, uploader or as used nowhere; a file's card
+     beside them (?file=<id>): its alt text, where it's used, deleting it
+     when nothing uses it. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+{{with .totals}}<span class="admin-page-meta">{{plural .Count "@count file" "@count files"}} · {{humanFileSize .Bytes}}</span>{{end}}
+{{end}}
+
+{{define "page_actions"}}
+{{if and .filter.Unused .tiles}}
+<form method="post" action="/admin/content/media/delete-unused" data-confirm="{{tjs "Delete every file nothing uses, for good?"}}">
+    <input type="hidden" name="back" value="{{.listQuery}}">
+    <button type="submit" class="btn btn-outline-danger">{{t "Delete all unused"}}</button>
+</form>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved.")
+        "deleted" (t "The file is deleted.")
+        "unused_deleted" (plural .deletedCount "@count unused file deleted." "@count unused files deleted."))
+    "Errors" (dict
+        "save" (t "The file could not be saved.")
+        "delete" (t "The file could not be deleted.")
+        "delete_unused" (t "The unused files could not be deleted.")
+        "in_use" (t "The file is in use: take it out of the places below first.")))}}
+
+<form method="get" action="/admin/content/media" class="admin-filters" data-autosubmit>
+    <div class="admin-filter admin-filter--wide">
+        <label for="media-q" class="admin-filter-label">{{t "Search"}}</label>
+        <input type="search" id="media-q" name="q" value="{{.filter.Search}}" class="form-control" placeholder="{{t "Name or alt text"}}">
+    </div>
+    <div class="admin-filter">
+        <label for="media-kind" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="media-kind" name="kind" class="form-select">
+            <option value="">{{t "All files"}}</option>
+            <option value="images" {{if eq (print .filter.Kind) "images"}}selected{{end}}>{{t "Images"}}</option>
+            <option value="documents" {{if eq (print .filter.Kind) "documents"}}selected{{end}}>{{t "Documents"}}</option>
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="media-by" class="admin-filter-label">{{t "Uploaded by"}}</label>
+        <select id="media-by" name="by" class="form-select">
+            <option value="">{{t "Anyone"}}</option>
+            {{range .uploaders}}<option value="{{.ID}}" {{if eq .ID $.filter.CreatedBy}}selected{{end}}>{{.Username}}</option>{{end}}
+        </select>
+    </div>
+    <div class="admin-filter admin-filter--check">
+        <label class="form-check-label"><input type="checkbox" name="unused" value="1" class="form-check-input" {{if .filter.Unused}}checked{{end}}> {{t "Used nowhere"}}</label>
+    </div>
+    {{if .filtered}}<a href="/admin/content/media" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="media-library{{if .selected}} media-library--card{{end}}">
+    <div class="media-library-main">
+        {{if .tiles}}
+        <ul class="media-grid">
+            {{range .tiles}}
+            <li class="media-tile{{if and $.selected (eq .File.ID $.selected.File.ID)}} is-selected{{end}}">
+                <a href="/admin/content/media?{{if $.listQuery}}{{$.listQuery}}&amp;{{end}}file={{.File.ID}}" class="media-tile-link">
+                    <span class="media-tile-preview">{{if .Picture.Src}}{{img .Picture ""}}{{else}}<span class="media-tile-ext">{{or .Ext "?"}}</span>{{end}}</span>
+                    <span class="media-tile-name">{{.Name}}</span>
+                    <span class="media-tile-meta{{if not .Uses}} is-unused{{end}}">{{if and .File.Width .File.Height}}{{.File.Width}}×{{.File.Height}} · {{end}}{{if .Uses}}{{plural .Uses "@count place" "@count places"}}{{else}}{{t "Used nowhere"}}{{end}}</span>
+                </a>
+            </li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p class="admin-table-empty">{{if .filtered}}{{t "Nothing found."}}{{else}}{{t "No files uploaded yet."}}{{end}}</p>
+        {{end}}
+        {{template "admin_list_foot" (dict "Ctx" .)}}
+    </div>
+
+    {{with .selected}}
+    <aside class="media-card admin-settings-card" aria-label="{{t "The file"}}">
+        <div class="media-card-head">
+            <strong class="media-card-name">{{.Name}}</strong>
+            <a href="/admin/content/media?{{$.listQuery}}" class="btn-close" aria-label="{{t "Close"}}"></a>
+        </div>
+        {{if not .Picture.Src}}<a href="{{$.selectedURL}}" class="media-card-preview" target="_blank" rel="noopener"><span class="media-tile-ext">{{or .Ext "?"}}</span></a>{{end}}
+        <p class="media-card-info">
+            {{if and .File.Width .File.Height}}{{.File.Width}}×{{.File.Height}} · {{end}}{{or .Ext .File.MimeType}} · {{humanFileSize .File.SizeBytes}}<br>
+            {{with .File.CreatedBy}}{{if .Username}}{{t "Uploaded by @name" "@name" .Username}}, {{end}}{{end}}{{formatDate .File.CreatedAt}}
+            · <a href="{{$.selectedURL}}" target="_blank" rel="noopener">{{t "Open the file"}}</a>
+        </p>
+        {{if .Picture.Src}}
+        <form method="post" action="/admin/content/media/{{.File.ID}}" class="media-card-form">
+            <input type="hidden" name="back" value="{{$.listQuery}}">
+            {{/* The focal point (admin.js, data-focal-picker): a click on the
+                 whole image; the crops of the styles cropping at it. */}}
+            <div class="media-focal" data-focal-picker>
+                <div class="media-focal-image" data-focal-image title="{{t "Click where the focal point is"}}">
+                    {{img $.selectedOriginal .File.Alt "loading" "eager"}}
+                    <span class="media-focal-dot" data-focal-dot hidden></span>
+                </div>
+                <input type="hidden" name="focal_x" value="{{with .File.Focal}}{{.X}}{{end}}">
+                <input type="hidden" name="focal_y" value="{{with .File.Focal}}{{.Y}}{{end}}">
+                <span class="form-text">{{t "Focal point: click the image. Styles cropping at it keep it in the picture."}} <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-focal-clear hidden>{{t "Remove the point"}}</button></span>
+                {{if $.focalStyles}}
+                <div class="media-focal-crops">
+                    {{range $.focalStyles}}
+                    <figure class="media-focal-crop-figure">
+                        <div class="media-focal-crop" data-focal-crop style="aspect-ratio: {{.Width}} / {{.Height}}"><img src="{{$.selectedOriginal.Src}}" alt="" loading="lazy" decoding="async"></div>
+                        <figcaption>{{.Label}}</figcaption>
+                    </figure>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            <label for="media-alt" class="form-label">{{t "Alternative text"}}</label>
+            <input type="text" id="media-alt" name="alt" value="{{.File.Alt}}" maxlength="255" class="form-control">
+            <span class="form-text">{{t "The same wherever the image is used."}}</span>
+            <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+        </form>
+        {{end}}
+        <div class="media-card-uses">
+            <strong>{{if .Uses}}{{plural .Uses "Used in @count place" "Used in @count places"}}{{else}}{{t "Used nowhere"}}{{end}}</strong>
+            {{if $.uses}}
+            <ul>
+                {{range $.uses}}
+                <li>
+                    {{if .NodeID}}<a href="{{.URL}}">{{.Title}}</a>{{if .InTrash}} <span class="badge text-bg-secondary">{{t "in the trash"}}</span>{{end}}{{end}}
+                    {{if .TypeLabel}}{{t "Default image of @field in @type" "@field" .Field "@type" .TypeLabel}}
+                    {{else if .Field}} · {{.Field}}
+                    {{else if .Module}}{{if .NodeID}} · {{end}}{{or (index $.moduleLabels .Module) .Module}}{{end}}
+                </li>
+                {{end}}
+            </ul>
+            {{end}}
+        </div>
+        <form method="post" action="/admin/content/media/{{.File.ID}}/delete" data-confirm="{{tjs "Delete \"@name\" for good?" "@name" .Name}}">
+            <input type="hidden" name="back" value="{{$.listQuery}}">
+            <button type="submit" class="btn btn-outline-danger"{{if .Uses}} disabled title="{{t "In use: take it out of the places above first."}}"{{end}}>{{t "Delete"}}</button>
+        </form>
+    </aside>
+    {{end}}
+</div>
+{{end}}

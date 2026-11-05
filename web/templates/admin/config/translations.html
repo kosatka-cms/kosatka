@@ -1,0 +1,117 @@
+{{/* admin/config/translations - the Interface translations page's
+     "Languages" tab (InterfaceLanguages): the interface's languages
+     (.page.Languages, service.InterfaceLanguage) - English (the source),
+     the built-in ones, the downloaded ones (their version; an update in
+     the catalog; removed unless it is the site's language), the
+     translations catalog's others (downloaded here); how many of the
+     site's strings each translates (its untranslated ones a link to the
+     "Strings" tab), how many the site changed. Under it the catalog: its
+     address, when it was read, how a file is checked. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}{{template "admin_translations_meta"}}{{end}}
+
+{{define "page_actions"}}
+{{if not .noCatalog}}<form method="post" action="/admin/config/translations/check"><button type="submit" class="btn btn-outline-primary">{{t "Check for updates"}}</button></form>{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "admin_translations_tabs" "languages"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{with .done}}<div class="alert alert-success" role="status">{{.}}{{if $.downloaded}} {{t "It can be chosen as the interface language in <a href=\"@url\">Site information</a>." "@url" "/admin/config/system/site-information"}}{{end}}</div>{{end}}
+{{with .dropped}}<div class="alert alert-warning" role="status">{{.}}</div>{{end}}
+{{with .error}}<div class="alert alert-danger" role="alert">{{.}}</div>{{end}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Language"}}</th>
+                    <th>{{t "Translated"}}</th>
+                    <th>{{t "Version"}}</th>
+                    <th>{{t "State"}}</th>
+                    <th><span class="visually-hidden">{{t "Actions"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .page.Languages}}
+                <tr>
+                    <td>
+                        <span class="admin-table-title">{{.Name}}</span>
+                        <span class="admin-table-sub font-monospace">{{.Code}}</span>
+                    </td>
+                    <td>
+                        {{if .Source}}<span class="admin-table-muted">{{t "the source strings"}}</span>
+                        {{else}}
+                        <div class="admin-meter" aria-hidden="true"><span style="width: {{.Percent}}%"></span></div>
+                        {{$done := (t "@percent% - @translated of @total" "@percent" .Percent "@translated" .Translated "@total" .Total)}}
+                        {{if eq .State "available"}}{{$done}}
+                        {{else if .Untranslated}}<a href="/admin/config/translations/strings?lang={{.Code}}&amp;show=untranslated" title="{{t "Untranslated: @count" "@count" .Untranslated}}">{{$done}}</a>
+                        {{else}}{{$done}}{{end}}
+                        {{end}}
+                        {{with .Catalog}}{{if .Draft}}<span class="admin-table-sub">{{t "a draft (machine translated)"}}</span>{{end}}{{end}}
+                        {{if .Edited}}<span class="admin-table-sub"><a href="/admin/config/translations/strings?lang={{.Code}}&amp;show=edited">{{t "Changed on the site: @count" "@count" .Edited}}</a></span>{{end}}
+                    </td>
+                    <td class="text-nowrap">
+                        {{if .Pack}}{{.Pack.Version}}{{if eq .State "update"}} <span class="admin-table-muted">&rarr; {{.Catalog.Version}}</span>{{end}}
+                        {{else if eq .State "available"}}{{.Catalog.Version}}
+                        {{else}}<span class="admin-table-muted">-</span>{{end}}
+                    </td>
+                    <td>
+                        {{if eq .State "source" "builtin"}}<span class="admin-pill">{{t "Built in"}}</span>
+                        {{else if eq .State "update"}}<span class="admin-pill admin-pill--warn">{{t "Update available"}}</span>
+                        {{else if eq .State "available"}}<span class="admin-pill">{{t "Available"}}</span>
+                        {{else}}<span class="admin-pill admin-pill--ok">{{t "Installed"}}</span>{{end}}
+                    </td>
+                    <td class="text-end text-nowrap"><div class="d-inline-flex align-items-center gap-2">
+                        {{if eq .State "available" "update"}}
+                        <form method="post" action="/admin/config/translations/download" class="d-inline">
+                            <input type="hidden" name="lang" value="{{.Code}}">
+                            <button type="submit" class="btn btn-sm btn-primary">{{if eq .State "update"}}{{t "Update"}}{{else}}{{t "Download"}}{{end}}</button>
+                        </form>
+                        {{end}}
+                        {{if eq .State "installed" "update"}}
+                        {{if eq .Code $.siteLanguage}}<span class="admin-table-muted small">{{t "the site's language"}}</span>
+                        {{else}}
+                        <form method="post" action="/admin/config/translations/delete" class="d-inline" data-confirm="{{t "Remove the @language translation? The site's own changes of its strings stay." "@language" .Name}}">
+                            <input type="hidden" name="lang" value="{{.Code}}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Remove"}}</button>
+                        </form>
+                        {{end}}
+                        {{end}}
+                    </div></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="admin-table-muted mt-2">{{t "Strings without a translation are shown in English. The site's language is chosen in <a href=\"@url\">Site information</a>." "@url" "/admin/config/system/site-information"}}</p>
+
+<section class="admin-settings-group mt-4">
+    <h2 class="admin-settings-title">{{t "Translations catalog"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <span class="admin-setting-label">{{t "Address"}}</span>
+                <span class="admin-setting-help">{{t "Set in the server configuration (translations_catalog_url)."}}</span>
+            </div>
+            <div class="admin-setting-control">{{with .page.CatalogURL}}<code>{{.}}</code>{{else}}<span class="admin-table-muted">{{t "not set: other languages can't be downloaded"}}</span>{{end}}</div>
+        </div>
+        {{if not .noCatalog}}
+        <div class="admin-setting">
+            <div class="admin-setting-text"><span class="admin-setting-label">{{t "Checked"}}</span></div>
+            <div class="admin-setting-control">
+                {{if .page.CatalogErr}}<span class="text-danger">{{t "The translations catalog couldn't be read. Try again later."}}</span>
+                {{else}}{{date .page.CatalogChecked "datetime"}}{{end}}
+            </div>
+        </div>
+        {{end}}
+        <div class="admin-setting">
+            <div class="admin-setting-text"><span class="admin-setting-label">{{t "Checks of a file"}}</span></div>
+            <div class="admin-setting-control admin-table-muted">{{t "A downloaded file is checked against the catalog's checksum. A translated string keeps the English string's placeholders and has no HTML but its tags; a string that doesn't is left out."}}</div>
+        </div>
+    </div>
+</section>
+{{end}}

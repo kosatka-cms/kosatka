@@ -1,0 +1,109 @@
+{{/* admin/complaints.html - the complaints' queue (Controller.Queue): a
+     row per content item or comment complained about (.rows), the newest
+     complaint first - what it is and its author, how many complaints and
+     why, the visitors' newest notes, whether the complaints hid it; the
+     decisions (POST …/{id}/<action>; Keep of a hidden one shows it
+     again). ?tab=resolved - the decided ones,
+     with what was done. The admin menu counts the new ones
+     (AddAdminMenuCount). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "What visitors report: a row per content item or comment - how many complaints and why."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/complaints" class="btn btn-outline-secondary">{{t "Complaint settings"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}{{attach "complaints"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict "done" (t "Done: the complaint has left the queue."))
+    "Fallback" (t "Could not carry out the decision."))}}
+
+{{$resolved := eq .tab "resolved"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{{if not $resolved}} active{{end}}" href="/admin/content/complaints"{{if not $resolved}} aria-current="page"{{end}}>{{tc "complaints" "New"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if $resolved}} active{{end}}" href="/admin/content/complaints?tab=resolved"{{if $resolved}} aria-current="page"{{end}}>{{t "Resolved"}}</a></li>
+</ul>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table align-top">
+            <thead>
+                <tr>
+                    <th>{{t "What"}}</th>
+                    <th>{{t "Reasons"}}</th>
+                    <th class="text-center">{{t "Complaints"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Actions"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .rows}}
+                <tr>
+                    <td>
+                        <span class="complaints-what-kind">{{if eq .Kind "comment"}}{{t "Comment"}}{{else}}{{t "Content"}}{{with .TypeLabel}} · {{.}}{{end}}{{end}}</span>
+                        {{if .Gone}}
+                        <span class="admin-table-title admin-table-muted">{{t "Gone already"}}</span>
+                        {{else if eq .Kind "comment"}}
+                        <span class="admin-table-sub">{{if .AuthorName}}<a href="{{.AuthorURL}}">{{.AuthorName}}</a>{{else}}{{t "Guest"}}{{end}} · <a href="{{.URL}}" target="_blank" rel="noopener">{{.Title}}</a></span>
+                        <span class="admin-table-title">"{{.Excerpt}}"</span>
+                        {{else}}
+                        <a href="{{.URL}}" class="admin-table-title" target="_blank" rel="noopener">{{.Title}}</a>
+                        <span class="admin-table-sub">{{if .AuthorName}}{{t "author:"}} <a href="{{.AuthorURL}}">{{.AuthorName}}</a>{{end}}</span>
+                        {{end}}
+                    </td>
+                    <td>
+                        <div class="complaints-reason-chips">
+                            {{range .Reasons}}<span class="complaints-chip">{{t .Reason}} · {{.Count}}</span>{{end}}
+                            {{if .Hidden}}<span class="admin-pill admin-pill--warn">{{t "Hidden by the complaints"}}</span>{{end}}
+                        </div>
+                        {{with .Notes}}
+                        <ul class="complaints-notes">
+                            {{range .}}<li>"{{truncateText .Text 200}}" <span class="admin-table-muted">· {{formatDate .At}}</span></li>{{end}}
+                        </ul>
+                        {{end}}
+                        <span class="admin-table-sub">{{t "the latest - @date" "@date" (formatDate .LastAt)}}</span>
+                    </td>
+                    <td class="text-center"><span class="complaints-count">{{.Count}}</span></td>
+                    <td class="text-end">
+                        {{if eq .Status "resolved"}}
+                        <span class="admin-pill admin-pill--ok">{{.Decision}}</span>
+                        <span class="admin-table-sub">{{with .ResolvedByName}}{{.}} · {{end}}{{with .ResolvedAt}}{{formatDate .}}{{end}}</span>
+                        {{else}}
+                        <div class="complaints-actions">
+                            {{if not .Gone}}
+                            {{if eq .Kind "comment"}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "spam" "Label" (t "Spam") "Class" "btn-outline-danger")}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "unpublished" "Label" (t "Unpublish") "Class" "btn-outline-secondary")}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "deleted" "Label" (t "Delete") "Class" "btn-outline-danger" "Confirm" (t "Delete the comment and its replies?"))}}
+                            {{else}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "unpublished" "Label" (t "Unpublish") "Class" "btn-outline-secondary")}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "deleted" "Label" (t "Delete") "Class" "btn-outline-danger" "Confirm" (t "Move the content to the trash?"))}}
+                            {{end}}
+                            {{if .AuthorID}}<a href="/user/{{.AuthorID}}/edit" class="btn btn-sm btn-outline-secondary">{{t "Block the author"}}</a>{{end}}
+                            {{end}}
+                            {{template "complaints_decide" (dict "ID" .ID "Action" "kept" "Label" (or (and .Hidden (t "Show again")) (t "Keep")) "Class" "btn-outline-success")}}
+                        </div>
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{if $resolved}}{{t "Nothing resolved yet"}}{{else}}{{t "No new complaints"}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}
+
+{{/* complaints_decide - a decision's button: .ID the target, .Action,
+     .Label, .Class (the button's), .Confirm (asked first). */}}
+{{define "complaints_decide"}}
+<form method="post" action="/admin/content/complaints/{{.ID}}/{{.Action}}"{{with .Confirm}} data-confirm="{{.}}"{{end}}>
+    <button type="submit" class="btn btn-sm {{.Class}}">{{.Label}}</button>
+</form>
+{{end}}

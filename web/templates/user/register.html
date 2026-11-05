@@ -1,0 +1,82 @@
+{{/* user/register.html - the sign-up form (/user/register): the name, the
+     e-mail, the required profile fields, the password (with its strength
+     and the eye) twice, the CAPTCHA, the social networks; a card like the
+     login page's, wider for the hints. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<div class="auth-card auth-card--wide">
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Registration"}}</h1>
+        {{with .siteName}}<p class="auth-card-sub">{{t "on the site @site" "@site" .}}</p>{{end}}
+    </div>
+
+    {{if .errors.form}}
+    <div class="alert alert-danger" role="alert">{{.errors.form}}</div>
+    {{end}}
+
+    <form method="POST" action="/user/register" class="auth-form">
+        <input type="hidden" name="destination" value="{{.destination}}">
+        {{/* timezone - the browser's zone, the new user's own time zone
+             when user time zones are on (changed later in the profile). */}}
+        <input type="hidden" name="timezone" id="register-timezone" value="">
+        <script>try{document.getElementById("register-timezone").value=Intl.DateTimeFormat().resolvedOptions().timeZone||"";}catch(e){}</script>
+
+        {{/* The bot trap (service.BotTrap): checked by handleSignupPost. */}}
+        {{botTrap}}
+
+        <div class="auth-field">
+            <label for="username" class="form-label">{{t "Username"}} *</label>
+            <input type="text" class="form-control {{if .errors.username}}is-invalid{{end}}" id="username" name="username"
+                   value="{{if .form}}{{.form.username}}{{end}}" required autocomplete="username" autofocus
+                   pattern="[\p{L}\p{N}\s.\-_']+"
+                   title="{{t "Spaces are allowed; punctuation is not allowed except for periods, hyphens, apostrophes, and underscores"}}">
+            <small class="form-text text-muted">{{t "Spaces are allowed; punctuation is not allowed except for periods, hyphens, apostrophes, and underscores."}}</small>
+            {{if .errors.username}}<div class="invalid-feedback">{{.errors.username}}</div>{{end}}
+        </div>
+
+        <div class="auth-field">
+            <label for="email" class="form-label">{{t "Email address"}} *</label>
+            <input type="email" class="form-control {{if .errors.email}}is-invalid{{end}}" id="email" name="email"
+                   value="{{if .form}}{{.form.email}}{{end}}" required autocomplete="email">
+            <small class="form-text text-muted">{{t "A valid email address. All emails from the system will be sent to this address. The email address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by email."}}</small>
+            {{if .errors.email}}<div class="invalid-feedback">{{.errors.email}}</div>{{end}}
+        </div>
+
+        {{template "required_user_fields" .}}
+
+        <div class="auth-field">
+            <label for="password" class="form-label">{{t "Password"}} *</label>
+            <div class="auth-password">
+                <input type="password" class="form-control {{if .errors.password}}is-invalid{{end}}" id="password" name="password"
+                       autocomplete="new-password" required minlength="{{minPasswordLength}}">
+                {{template "auth_password_toggle" "password"}}
+            </div>
+            <div class="mt-1">{{template "password_strength" "password"}}</div>
+            {{if .errors.password}}<div class="invalid-feedback d-block">{{.errors.password}}</div>{{end}}
+        </div>
+
+        <div class="auth-field">
+            <label for="password_confirm" class="form-label">{{t "Confirm password"}} *</label>
+            <input type="password" class="form-control {{if .errors.password_confirm}}is-invalid{{end}}" id="password_confirm" name="password_confirm"
+                   autocomplete="new-password" required>
+            {{if .errors.password_confirm}}<div class="invalid-feedback">{{.errors.password_confirm}}</div>{{end}}
+        </div>
+
+        {{template "recaptcha" (dict "key" .recaptcha_site_key "class" "")}}
+
+        <button type="submit" class="btn btn-primary auth-submit">{{t "Register"}}</button>
+    </form>
+
+    {{template "user/social_login.html" .}}
+
+    <p class="auth-card-foot">{{t "Already have an account?"}} <a href="/login{{with .destination}}?destination={{.}}{{end}}">{{t "Log in"}}</a></p>
+</div>
+</div>
+{{end}}

@@ -1,0 +1,10 @@
+{{/* Default value templates for e-mail and phone fields: renderSuggestion
+     "field_email" <machine name> (fieldEmail <field> <value>) and
+     "field_phone" <machine name> (fieldPhone <value>), the theme's
+     "field_email_<…>"/"field_phone_<…>" if defined. An address hidden
+     from harvesters (.Hidden) is a link app.js makes from .Reversed;
+     without the script - .Masked. A phone - a tel: link to .Tel, shown
+     as typed. */}}
+{{define "field_email_default"}}{{if .Hidden}}<a href="#" class="field-email" data-email="{{.Reversed}}">{{.Masked}}</a>{{else if .Address}}<a href="mailto:{{.Address}}" class="field-email">{{.Address}}</a>{{end}}{{end}}
+
+{{define "field_phone_default"}}{{if .Tel}}<a href="{{.Tel}}" class="field-phone">{{.Number}}</a>{{else}}{{.Number}}{{end}}{{end}}

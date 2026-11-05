@@ -1,0 +1,173 @@
+{{/* admin/config/translations_strings - the Interface translations page's
+     "Strings" tab (InterfaceStringsPage): the site's interface strings in
+     a language (.filter: the language, a text, untranslated or changed
+     only, where they come from), 50 a page - the English text, the
+     translation shown (the site's own over the default), where the string
+     comes from; a string's translation edited in place (.rows: a plural
+     one - a field per plural form, labelled with numbers it is for; the
+     one refused - open, with why) or set back to the default. Under the
+     table - the site's changes no longer in use (.page.Outdated: their
+     English text changed). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}{{template "admin_translations_meta"}}{{end}}
+
+{{define "page_body"}}{{template "admin_translations_tabs" "strings"}}{{template "content" .}}{{end}}
+
+{{/* admin_string_keys - the hidden fields of a string's form: which
+     string (.Context, .Source) and the tab's filter to come back to
+     (.Ctx). */}}
+{{define "admin_string_keys"}}
+{{$f := .Ctx.filter}}
+<input type="hidden" name="lang" value="{{$f.Lang}}">
+{{with $f.Query}}<input type="hidden" name="q" value="{{.}}">{{end}}
+{{with $f.Show}}<input type="hidden" name="show" value="{{.}}">{{end}}
+{{with $f.From}}<input type="hidden" name="from" value="{{.}}">{{end}}
+{{if gt $f.Page 1}}<input type="hidden" name="page" value="{{$f.Page}}">{{end}}
+<input type="hidden" name="context" value="{{.Context}}">
+<input type="hidden" name="source" value="{{.Source}}">
+{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved.")
+        "reset" (t "The default text is back."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="get" action="/admin/config/translations/strings" class="admin-filters" role="search" data-autosubmit>
+    <div class="admin-filter">
+        <label for="strings-lang" class="admin-filter-label">{{t "Language"}}</label>
+        <select id="strings-lang" name="lang" class="form-select">
+            {{range .languages}}<option value="{{.Code}}"{{if eq .Code $.filter.Lang}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+    </div>
+    <div class="admin-filter admin-filter--wide">
+        <label for="strings-q" class="admin-filter-label">{{t "Text"}}</label>
+        <input type="search" id="strings-q" name="q" value="{{.filter.Query}}" class="form-control" placeholder="{{t "The English text or the translation"}}">
+    </div>
+    <div class="admin-filter">
+        <label for="strings-show" class="admin-filter-label">{{t "Show"}}</label>
+        <select id="strings-show" name="show" class="form-select">
+            <option value="">{{t "All strings"}}</option>
+            <option value="untranslated"{{if eq .filter.Show "untranslated"}} selected{{end}}>{{t "Untranslated"}}</option>
+            <option value="edited"{{if eq .filter.Show "edited"}} selected{{end}}>{{t "Changed on the site"}}</option>
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="strings-from" class="admin-filter-label">{{t "From"}}</label>
+        <select id="strings-from" name="from" class="form-select">
+            <option value="">{{t "Anywhere"}}</option>
+            {{range .origins}}<option value="{{.Value}}"{{if eq .Value $.filter.From}} selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">{{t "Find"}}</button>
+    {{if .filtered}}<a href="/admin/config/translations/strings?lang={{.filter.Lang}}" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-strings-summary">
+    {{if and .page.Untranslated (ne .filter.Show "untranslated")}}<a href="/admin/config/translations/strings?lang={{.filter.Lang}}&amp;show=untranslated">{{t "Untranslated: @count" "@count" .page.Untranslated}}</a>{{end}}
+    {{with .page.Outdated}}<a href="#outdated" class="admin-pill admin-pill--warn">{{plural (len .) "@count change no longer in use" "@count changes no longer in use"}}</a>{{end}}
+</div>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table admin-strings">
+            <thead>
+                <tr>
+                    <th class="admin-strings-source">{{t "English text"}}</th>
+                    <th>{{t "Translation"}}</th>
+                    <th class="admin-strings-from">{{t "From"}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $i, $r := .rows}}
+                <tr>
+                    <td>
+                        {{if .IsPlural}}<span class="d-block">{{.Source.Source}}</span><span class="d-block">{{.Plural}}</span><span class="admin-table-sub">{{t "Plural"}}</span>
+                        {{else}}{{.Source.Source}}{{end}}
+                        {{with .Context}}<span class="admin-table-sub">{{t "Context: @context" "@context" .}}</span>{{end}}
+                    </td>
+                    <td>
+                        {{if .Edited}}
+                        <span class="admin-strings-text">{{.SiteShown}}</span> <span class="admin-pill admin-pill--ok">{{t "Changed on the site"}}</span>
+                        <span class="admin-table-sub">{{if $.sourceLanguage}}{{t "The English text: @text" "@text" .DefaultShown}}{{else if .DefaultShown}}{{t "Default translation: @text" "@text" .DefaultShown}}{{else}}{{t "No default translation"}}{{end}}</span>
+                        {{else if .Untranslated}}<span class="admin-table-muted">{{t "no translation - shown in English"}}</span>
+                        {{else}}{{.DefaultShown}}{{end}}
+                        <div class="admin-strings-actions">
+                            <details class="admin-strings-edit"{{if .Open}} open{{end}}>
+                                <summary class="btn btn-sm btn-outline-secondary">{{if .Untranslated}}{{t "Translate"}}{{else}}{{t "Edit"}}{{end}}</summary>
+                                <form method="post" action="/admin/config/translations/strings" class="admin-strings-form">
+                                    {{template "admin_string_keys" (dict "Ctx" $ "Context" .Context "Source" .Source.Source)}}
+                                    {{if .Forms}}
+                                    {{range $j, $f := .Forms}}
+                                    <label for="string-{{$i}}-form-{{$j}}" class="admin-filter-label">{{$f.Label}}</label>
+                                    <input type="text" id="string-{{$i}}-form-{{$j}}" name="form_{{$j}}" value="{{$f.Value}}" class="form-control{{if $r.Error}} is-invalid{{end}}"{{if $r.Error}} aria-describedby="string-{{$i}}-error"{{if eq $j 0}} autofocus{{end}}{{end}}>
+                                    {{end}}
+                                    {{else}}
+                                    <label for="string-{{$i}}-text" class="admin-filter-label">{{t "Translation"}}</label>
+                                    <textarea id="string-{{$i}}-text" name="text" rows="2" class="form-control{{if .Error}} is-invalid{{end}}"{{if .Error}} aria-describedby="string-{{$i}}-error" autofocus{{end}}>{{.Text}}</textarea>
+                                    {{end}}
+                                    {{with .Error}}<div id="string-{{$i}}-error" class="invalid-feedback d-block">{{.}}</div>{{end}}
+                                    <div class="admin-strings-buttons">
+                                        <button type="submit" class="btn btn-sm btn-primary">{{t "Save"}}</button>
+                                        <button type="button" class="btn btn-sm btn-link" data-close-details>{{t "Cancel"}}</button>
+                                        {{if .Edited}}<button type="submit" formaction="/admin/config/translations/strings/reset" class="btn btn-sm btn-link">{{t "Back to the default"}}</button>{{end}}
+                                    </div>
+                                </form>
+                            </details>
+                            {{if .Edited}}
+                            <form method="post" action="/admin/config/translations/strings/reset" class="admin-strings-reset">
+                                {{template "admin_string_keys" (dict "Ctx" $ "Context" .Context "Source" .Source.Source)}}
+                                <button type="submit" class="btn btn-sm btn-link">{{t "Back to the default"}}</button>
+                            </form>
+                            {{end}}
+                        </div>
+                    </td>
+                    <td class="admin-table-muted small">{{index $.originLabels .Origin}}</td>
+                </tr>
+                {{else}}
+                <tr><td colspan="3" class="admin-table-empty">{{t "Nothing found."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+
+{{with .page.Outdated}}
+<section id="outdated" class="admin-table-card mt-4" aria-labelledby="outdated-title">
+    <div class="admin-strings-outdated-head">
+        <h2 id="outdated-title" class="admin-add-title">{{t "Changes no longer in use"}}</h2>
+        <p class="admin-setting-help">{{t "The English text of these strings changed in a new version, or the string is gone: the site's changes aren't shown. Change the new text if needed and remove these."}}</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table admin-strings">
+            <thead>
+                <tr>
+                    <th class="admin-strings-source">{{t "English text"}}</th>
+                    <th>{{t "Translation"}}</th>
+                    <th>{{t "Changed"}}</th>
+                    <th><span class="visually-hidden">{{t "Actions"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                <tr>
+                    <td>{{.Source}}{{with .Context}}<span class="admin-table-sub">{{t "Context: @context" "@context" .}}</span>{{end}}</td>
+                    <td>{{if .Forms}}{{range $k, $v := .Forms}}{{if $k}} / {{end}}{{$v}}{{end}}{{else}}{{.Text}}{{end}}</td>
+                    <td class="text-nowrap">{{date .UpdatedAt "datetime"}}</td>
+                    <td class="text-end">
+                        <form method="post" action="/admin/config/translations/strings/reset">
+                            {{template "admin_string_keys" (dict "Ctx" $ "Context" .Context "Source" .Source)}}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{t "Remove"}}</button>
+                        </form>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{end}}
+{{end}}

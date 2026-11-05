@@ -1,0 +1,60 @@
+{{/* admin/config/date-formats - the date formats (DateFormatList): on a
+     table card each format - its name (the default marked) and machine
+     name, pattern, an example, delete (not the default); "+ Add format"
+     over the page. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Named date output formats. A content type date field and a View field select a format by name; without a choice - \"@format\"." "@format" .defaultFormat}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/date-formats/new" class="btn btn-primary">+ {{t "Add format"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if eq .success "deleted"}}<div class="alert alert-success">{{t "Format deleted."}}</div>{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "default" (t "The default format cannot be deleted.")
+        "in-use" (t "The format is selected by fields and cannot be deleted: @usage." "@usage" .usage))
+    "Fallback" (t "Could not delete the format."))}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th>{{tc "date format" "Pattern"}}</th>
+                    <th>{{t "Example"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .formats}}
+                <tr>
+                    <td>
+                        <a href="/admin/config/date-formats/{{.ID}}" class="admin-table-title">{{.Label}}</a>
+                        {{if eq .MachineName $.defaultFormat}}<span class="admin-pill admin-pill--ok">{{t "default"}}</span>{{end}}
+                        <span class="admin-table-sub"><code>{{.MachineName}}</code></span>
+                    </td>
+                    <td><code>{{.Pattern}}</code></td>
+                    <td class="admin-table-muted">{{.Example}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/date-formats/{{.ID}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        {{if ne .MachineName $.defaultFormat}}
+                        <form method="post" action="/admin/config/date-formats/{{.ID}}/delete" class="d-inline" data-confirm="{{t "Delete format \"@label\"?" "@label" .Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{t "No formats yet."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

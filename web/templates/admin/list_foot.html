@@ -1,0 +1,14 @@
+{{/* admin_list_foot - a paged admin list's foot, the same on every list:
+     which of how many the page shows ("@from-@to of @total", from
+     .Ctx.pagination), then .Note if any, on the left; the pager on the
+     right. Inside an .admin-table-card it is the card's last row.
+     {{template "admin_list_foot" (dict "Ctx" . "Note" "…")}} */}}
+{{define "admin_list_foot"}}
+{{$p := .Ctx.pagination}}
+{{if or $p.TotalItems .Note}}
+<div class="admin-table-foot">
+    <span>{{if $p.TotalItems}}{{$to := add $p.Offset $p.ItemsPerPage}}{{if gt $to $p.TotalItems}}{{$to = $p.TotalItems}}{{end}}{{t "@from-@to of @total" "@from" (add $p.Offset 1) "@to" $to "@total" $p.TotalItems}}{{end}}{{with .Note}}{{if $p.TotalItems}} · {{end}}{{.}}{{end}}</span>
+    {{template "pagination.html" .Ctx}}
+</div>
+{{end}}
+{{end}}

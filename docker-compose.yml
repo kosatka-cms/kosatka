@@ -1,0 +1,52 @@
+# A local Kosatka site with MySQL: docker compose up --build, then
+# http://localhost:8080 (the administrator's password: docker compose logs app).
+# The data stays in the volumes; docker compose down -v starts over.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: kosatka
+      MYSQL_USER: kosatka
+      MYSQL_PASSWORD: kosatka
+      MYSQL_ROOT_PASSWORD: kosatka-root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: ["db:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pkosatka-root"]
+      interval: 2s
+      retries: 60
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_PASSWORD: kosatka
+      SESSION_SECRET_KEY: change-me-local-only-0123456789abcdef
+      SECRETS_KEY: change-me-local-only-secrets-0123456789
+      SITE_NAME: Kosatka
+      SITE_LANGUAGE: ${SITE_LANGUAGE:-en}
+      DEMO_CONTENT: ${DEMO_CONTENT:-1}
+      DEMO_SET: ${DEMO_SET:-}
+      SITE_THEME: ${SITE_THEME:-}
+      # Every module by default: the local site shows the whole engine
+      # (a poll in the sidebar, galleries, a form...); MODULES= (empty) -
+      # the standard ones, as app install gives a site.
+      MODULES: ${MODULES-all}
+      TEMPLATES_DEBUG: ${TEMPLATES_DEBUG:-false}
+      APP_ENV: ${APP_ENV:-prod}
+      # The catalogs of themes and of languages to download: Kosatka's by
+      # default, none when set empty.
+      THEMES_CATALOG_URL: ${THEMES_CATALOG_URL-https://kosatka-cms.github.io/themes/index.json}
+      TRANSLATIONS_CATALOG_URL: ${TRANSLATIONS_CATALOG_URL-https://kosatka-cms.github.io/translations/index.json}
+      ADMIN_NAME: admin
+      ADMIN_EMAIL: admin@example.com
+    # Local only: the session key above is everyone's, so the port is
+    # this machine's, not the network's.
+    ports: ["127.0.0.1:8080:3333"]
+    # The uploads, and the private files (sent with forms).
+    volumes: ["files:/app/web/uploads", "private:/app/private"]
+volumes:
+  db:
+  files:
+  private:

@@ -1,0 +1,289 @@
+{{/* admin/config/blocks - the block layout of a theme (BlockList): the
+     themes' tabs, adding a block (a card over the regions: a custom one;
+     a system, View or menu block folded in it), a table card per region -
+     each placement's name and kind, region, visibility, whether it is
+     published, edit, delete; dragged by ☰ within a region or into
+     another, all saved by "Save order" (over the page and under it). */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<a href="/admin/config/blocks/demo" class="btn btn-outline-secondary">{{t "Region demo mode"}}</a>
+{{if .blocks}}<button form="blocks-reorder-form" type="submit" class="btn btn-primary">{{t "Save order"}}</button>{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{with .themeTabs}}{{if gt (len .) 1}}
+<ul class="nav nav-tabs mb-3">
+    {{range .}}<li class="nav-item"><a class="nav-link{{if .Selected}} active{{end}}" href="/admin/config/blocks?theme={{.Key}}">{{.Name}}{{if .Active}} <span class="badge text-bg-success">{{t "active"}}</span>{{end}}</a></li>{{end}}
+</ul>
+{{end}}{{end}}
+{{if and .blocksTheme (not .blocksThemeActive)}}
+<div class="alert alert-info">{{t "This is the block layout of an inactive theme: the site shows it once the theme is made the default on the <a href=\":url\">Appearance</a> page." ":url" "/admin/config/appearance"}}</div>
+{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Block deleted."))
+    "Errors" (dict
+        "create" (t "Error creating the block.")
+        "delete" (t "Error deleting the block.")
+        "theme-regions" (t "Could not read the theme regions (theme.yaml) - the order was not saved.")
+        "reorder" (t "Error saving the order.")
+        "plugin" (t "Error adding the system block.")
+        "view" (t "Error adding the View block - check that the View has a \"Block\" display.")
+        "delete-placement" (t "Error deleting the placement."))
+    "Warnings" (dict
+        "empty" (t "Enter a title.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="block-add">
+    <h2 class="admin-add-title" id="block-add">{{t "Add block"}}</h2>
+    <form method="post" action="/admin/config/blocks" class="admin-add-form">
+        <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="title" class="form-control" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "Content, visibility and publishing are set on the block's own page after creation. A new block is placed right away at the end of the \"@region\" region, visible to everyone." "@region" (index .regionLabels .defaultRegion)}}</p>
+
+    <details class="admin-add-more">
+        <summary>{{t "Add system block"}}</summary>
+        <form method="post" action="/admin/config/blocks/plugin" class="admin-add-form">
+            <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Block"}}</span>
+                <select name="plugin_id" class="form-select" required>
+                    {{range .allPluginBlocks}}
+                    <option value="{{.}}">{{index $.pluginBlockLabels .}}</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Region"}}</span>
+                <select name="region" class="form-select" required>
+                    {{range .allRegions}}
+                    <option value="{{.}}">{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <p class="admin-setting-help">{{t "A system block (search/user menu/comments) is rendered by code - its text cannot be edited, only the region/order/visibility."}}</p>
+    </details>
+
+    <details class="admin-add-more">
+        <summary>{{t "Add View block"}}</summary>
+        {{if .viewBlockOptions}}
+        <form method="post" action="/admin/config/blocks/view" class="admin-add-form">
+            <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{tc "views" "View"}}</span>
+                <select name="view_display_id" class="form-select" required>
+                    {{range .viewBlockOptions}}
+                    <option value="{{.ID}}">{{.Label}}</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Region"}}</span>
+                <select name="region" class="form-select" required>
+                    {{range .allRegions}}
+                    <option value="{{.}}">{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Visibility"}}</span>
+                <select id="view-block-visibility-scope" name="visibility_scope" class="form-select">
+                    <option value="all">{{t "Everywhere"}}</option>
+                    <option value="homepage">{{t "Front page only"}}</option>
+                    <option value="content_type">{{t "Only on content types"}}</option>
+                </select>
+            </label>
+            <label class="admin-filter" id="view-block-visibility-content-type-wrap" style="display:none;" data-show-when="view-block-visibility-scope=content_type">
+                <span class="admin-filter-label">{{t "Comma-separated type machine_names"}}</span>
+                <input type="text" name="visibility_content_type" class="form-control">
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <p class="admin-setting-help">{{t "Shows the selected View as a block - fields/filters/sorting and \"List\"/\"Table\"/\"Grid\" come from the View's own settings (the \"Fields\" card)."}}</p>
+        {{else}}
+        <p class="admin-setting-help">{{t "There are no Views with a \"Block\" display - create one on the View page and duplicate the current display as \"Block\" (the \"Duplicate\" button / \"Display type\" section)."}}</p>
+        {{end}}
+    </details>
+
+    <details class="admin-add-more">
+        <summary>{{t "Add menu block"}}</summary>
+        {{if .menuOptions}}
+        <form method="post" action="/admin/config/blocks/menu" class="admin-add-form">
+            <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Menu"}}</span>
+                <select name="menu_id" class="form-select" required>
+                    {{range .menuOptions}}
+                    <option value="{{.ID}}">{{.Label}} ({{.MachineName}})</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Region"}}</span>
+                <select name="region" class="form-select" required>
+                    {{range .allRegions}}
+                    <option value="{{.}}">{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Initial level"}}</span>
+                <input type="number" name="start_level" class="form-control" min="1" max="10" value="1">
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Number of levels (0 = unlimited)"}}</span>
+                <input type="number" name="levels_to_show" class="form-control" min="0" max="9" value="0">
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Visibility"}}</span>
+                <select id="menu-block-visibility-scope" name="visibility_scope" class="form-select">
+                    <option value="all">{{t "Everywhere"}}</option>
+                    <option value="homepage">{{t "Front page only"}}</option>
+                    <option value="content_type">{{t "Only on content types"}}</option>
+                </select>
+            </label>
+            <label class="admin-filter" id="menu-block-visibility-content-type-wrap" style="display:none;" data-show-when="menu-block-visibility-scope=content_type">
+                <span class="admin-filter-label">{{t "Comma-separated type machine_names"}}</span>
+                <input type="text" name="visibility_content_type" class="form-control">
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <p class="admin-setting-help">{{t "Initial level (1-10): 1 - the whole tree as is; N&gt;1 - only the current active trail at that level (empty on pages outside it). Number of levels (0-9, 0 = unlimited) - how many nesting levels to show from the initial one."}}</p>
+        {{else}}
+        <p class="admin-setting-help">{{t "There are no menus - create one on the <a href=\"/admin/config/menus\">/admin/config/menus</a> page."}}</p>
+        {{end}}
+    </details>
+</section>
+
+<div id="blocks-unsaved" class="alert alert-warning py-2" role="status" hidden>{{t "The changes aren't saved yet: press \"Save order\"."}}</div>
+<form id="blocks-reorder-form" method="post" action="/admin/config/blocks/reorder" data-empty-label="- {{t "empty"}}">
+    <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+    <input type="hidden" name="order" id="blocks-order-input" value="">
+    {{range .allRegionsWithDisabled}}
+    {{$region := .}}
+    <div class="admin-table-card block-zone" data-region="{{$region}}">
+        <div class="block-zone-header">
+            <span class="block-zone-label">{{index $.regionLabels $region}}</span>
+            <span class="block-zone-machine">{{$region}}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to move to another region or change the order"}}</span></th>
+                        <th>{{t "Name"}}</th>
+                        <th>{{t "Region"}}</th>
+                        <th>{{t "Visibility"}}</th>
+                        <th>{{t "Status"}}</th>
+                        <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                    </tr>
+                </thead>
+                <tbody data-region="{{$region}}" class="block-zone-body">
+                    {{range index $.blocksByRegion $region}}
+                    {{$currentRegion := .Placement.Region}}
+                    {{$isPlugin := eq (print .Placement.PlacementType) "plugin"}}
+                    {{$isView := eq (print .Placement.PlacementType) "view"}}
+                    {{$isMenu := eq (print .Placement.PlacementType) "menu"}}
+                    <tr draggable="true" data-placement-id="{{.Placement.ID}}">
+                        <td class="drag-handle admin-table-drag" title="{{t "Drag to move to another region or change the order"}}">&#9776;</td>
+                        <td>
+                            {{if $isPlugin}}
+                            <a href="/admin/config/blocks/plugin/{{.Placement.ID}}/edit" class="admin-table-title">{{index $.pluginBlockLabels .Placement.PluginIDValue}}</a><span class="admin-table-sub">{{t "(system)"}}</span>
+                            {{else if $isView}}
+                            {{if .ViewDisplay}}<a href="/admin/config/views/{{.ViewDisplay.ID}}" class="admin-table-title">{{.ViewDisplay.Label}}</a>{{else}}<span class="admin-table-muted">{{t "(View deleted)"}}</span>{{end}}<span class="admin-table-sub">{{tc "views" "View"}}</span>
+                            {{else if $isMenu}}
+                            {{if .Menu}}<span class="admin-table-title">{{.Menu.Label}}</span>{{else}}<span class="admin-table-muted">{{t "(menu deleted)"}}</span>{{end}}<span class="admin-table-sub">{{t "(menu)"}}</span>
+                            {{else}}
+                            <a href="/admin/config/blocks/{{.Block.ID}}/edit?theme={{$.blocksTheme}}" class="admin-table-title">{{.Block.Title}}</a>
+                            {{end}}
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm admin-min-md" name="region_{{.Placement.ID}}">
+                                {{range $.allRegionsWithDisabled}}
+                                <option value="{{.}}" {{if eq . $currentRegion}}selected{{end}}>{{index $.regionLabels .}} ({{.}})</option>
+                                {{end}}
+                            </select>
+                        </td>
+                        <td>
+                            {{if eq (print .Placement.VisibilityScope) "all"}}{{t "Everywhere"}}
+                            {{else if eq (print .Placement.VisibilityScope) "homepage"}}{{tc "visibility summary" "Front page only"}}
+                            {{else if eq (print .Placement.VisibilityScope) "pages"}}{{t "Pages"}} ({{if eq (print .Placement.VisibilityPagesMode) "hide"}}{{tc "visibility summary" "except"}}{{else}}{{tc "visibility summary" "only"}}{{end}})
+                            {{else}}{{t "Content types:"}} {{.Placement.VisibilityContentTypeValue}}
+                            {{end}}
+                            {{with .Placement.Roles}}<span class="admin-table-sub">{{t "Roles:"}} {{range $i, $r := .}}{{if $i}}, {{end}}{{index $.roleLabels $r}}{{end}}</span>{{end}}
+                            {{if .Placement.Lazy}}<span class="admin-pill" title="{{t "Loaded on scroll"}}">{{t "on scroll"}}</span>{{end}}
+                        </td>
+                        <td>
+                            {{if or $isPlugin $isMenu}}<span class="admin-table-muted">-</span>
+                            {{else if $isView}}{{if .ViewDisplay}}{{if eq .ViewDisplay.Status 1}}<span class="admin-pill admin-pill--ok">{{tc "masculine" "Published"}}</span>{{else}}<span class="admin-pill">{{tc "masculine" "Unpublished"}}</span>{{end}}{{else}}<span class="admin-table-muted">-</span>{{end}}
+                            {{else if .Block.Status}}<span class="admin-pill admin-pill--ok">{{tc "masculine" "Published"}}</span>{{else}}<span class="admin-pill">{{tc "masculine" "Unpublished"}}</span>{{end}}
+                        </td>
+                        <td class="text-nowrap text-end">
+                            {{if $isMenu}}
+                            <a href="/admin/config/blocks/menu/{{.Placement.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                                {{template "admin_icon_edit"}}
+                            </a>
+                            <form method="post" action="/admin/config/blocks/placement/{{.Placement.ID}}/delete" class="d-inline">
+                                <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+                                <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                                    {{template "admin_icon_delete"}}
+                                </button>
+                            </form>
+                            {{else if $isPlugin}}
+                            <a href="/admin/config/blocks/plugin/{{.Placement.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                                {{template "admin_icon_edit"}}
+                            </a>
+                            <form method="post" action="/admin/config/blocks/placement/{{.Placement.ID}}/delete" class="d-inline">
+                                <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+                                <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                                    {{template "admin_icon_delete"}}
+                                </button>
+                            </form>
+                            {{else if $isView}}
+                            <a href="/admin/config/blocks/view/{{.Placement.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                                {{template "admin_icon_edit"}}
+                            </a>
+                            <form method="post" action="/admin/config/blocks/placement/{{.Placement.ID}}/delete" class="d-inline">
+                                <input type="hidden" name="theme" value="{{$.blocksTheme}}">
+                                <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                                    {{template "admin_icon_delete"}}
+                                </button>
+                            </form>
+                            {{else}}
+                            <a href="/admin/config/blocks/{{.Block.ID}}/edit?theme={{$.blocksTheme}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">
+                                {{template "admin_icon_edit"}}
+                            </a>
+                            <a href="/admin/config/blocks/{{.Block.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                                {{template "admin_icon_delete"}}
+                            </a>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr class="block-zone-empty"><td colspan="6" class="admin-table-empty">- {{t "empty"}}</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{end}}
+    {{if .blocks}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "Drag a block to another region to move it there (including \"Hidden\" - the placement is not shown on any page but is not deleted); the order within a region is changed the same way. Saved with one button."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</form>
+
+<script src="{{ staticJS "admin_blocks" }}" defer></script>
+{{end}}

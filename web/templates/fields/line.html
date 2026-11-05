@@ -1,0 +1,82 @@
+{{/* field_line_<type> - a field's compact "Label: value" line on the
+     content page (factBoxFieldLine's dict: Field, Value, and the type's
+     resolved data - Terms, FileLink, Users, Nodes): the compact flow and a
+     group's members (buildDisplaySections, pageFieldType.line). A theme's
+     or a module's fields/*.html replaces one by defining it; a type
+     without one has none (field_line_default). */}}
+{{define "field_line_text"}}
+{{if .Field.RichText}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{.Value | rawHTML}}</p>
+{{else}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{.Value}}</p>
+{{end}}
+{{end}}
+
+{{define "field_line_number"}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_number" .Field.MachineName (fieldNumber .Field .Value)}}</p>
+{{end}}
+
+{{define "field_line_email"}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_email" .Field.MachineName (fieldEmail .Field .Value)}}</p>
+{{end}}
+
+{{define "field_line_phone"}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_phone" .Field.MachineName (fieldPhone .Value)}}</p>
+{{end}}
+
+{{define "field_line_bool"}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_bool" .Field.MachineName .Value}}</p>
+{{end}}
+
+{{define "field_line_date"}}
+{{if .Field.Multiple}}
+{{/* Several dates: as the field's layout says (fields/date.html). */}}
+<div class="field-dates-line">{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_dates" .Field.MachineName (dict "Field" .Field "List" (fieldDatesFor .Field .Value .Field.DetailLayout))}}</div>
+{{else}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_date" .Field.MachineName (fieldDateFor .Field .Value "")}}</p>
+{{end}}
+{{end}}
+
+{{define "field_line_taxonomy"}}
+{{/* Multiple fields resolve to several terms (see
+     DynamicContentController.taxonomyFieldTerms); a single-value field
+     holds 0 or 1, so the same {{range}} covers both. A term links to
+     its page only if its vocabulary has public term pages
+     (TaxonomyTerm.HasPublicPage). */}}
+{{if .Terms}}<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{range $i, $t := .Terms}}{{if $i}}, {{end}}{{if $t.HasPublicPage}}<a href="{{localURL (print "/" $t.Slug)}}">{{termName $t}}</a>{{else}}{{termName $t}}{{end}}{{end}}</p>{{end}}
+{{end}}
+
+{{define "field_line_list"}}
+{{/* .Value is []string for a Multiple() list field, else a string;
+     ListItems gives the chosen options with their labels (fields/list.html). */}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_list" .Field.MachineName (.Field.ListItems .Value)}}</p>
+{{end}}
+
+{{define "field_line_file"}}
+{{/* A File field is an inline download link in the normal field flow
+     (unlike images, which get their own section). .FileLink is a zero
+     struct when empty, so check .FileLink.URI (a struct is always truthy). */}}
+{{if .FileLink.URI}}
+<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} <a href="{{.FileLink.URI}}" download>{{.FileLink.Name}}</a> ({{humanFileSize .FileLink.SizeBytes}})</p>
+{{end}}
+{{end}}
+
+{{define "field_line_user"}}
+{{/* A user field: its users (.Users, resolved in order) - links to their
+     profiles (fields/user.html). */}}
+{{if .Users}}<div class="field-users-line">{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{renderSuggestion "field_users" .Field.MachineName .Users}}</div>{{end}}
+{{end}}
+
+{{define "field_line_reference"}}
+{{/* Content a block names (.Nodes, its public ones; a node page's
+     references are shown by Views instead): links to it. */}}
+{{if .Nodes}}<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{range $i, $n := .Nodes}}{{if $i}}, {{end}}<a href="{{$n.URL}}">{{$n.Title}}</a>{{end}}</p>{{end}}
+{{end}}
+
+{{define "field_line_link"}}
+{{/* A link field in the compact flow: its links (fields/link.html; a
+     module's formatter gets a section of its own, $section.Formatted). */}}
+<div class="field-link-line">{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{template "field_link" (dict "Field" .Field "Value" .Value "Formatter" "" "Layout" .Field.DetailLayout)}}</div>
+{{end}}
+
+{{define "field_line_default"}}{{end}}

@@ -1,0 +1,40 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{t "Edit comment"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<article class="comment-edit node">
+    <h2 class="node-title">{{t "Edit comment"}}</h2>
+    
+    {{if .comment.Author}}
+    <p class="mb-4">
+        <strong>{{t "Author:"}}</strong> {{.comment.Author.Username}}<br>
+        <strong>{{t "Created on:"}}</strong> {{date .comment.CreatedAt "datetime"}}
+    </p>
+    {{end}}
+    
+    <form action="/comment/{{.comment.ID}}/edit" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <div class="form-group">
+            <label for="content">{{t "Comment"}} <span class="required">*</span></label>
+            <textarea id="content" name="content" class="form-control comment-editor" data-editor-autoload data-editor-config="{{json (dict "preset" "comment" "height" 400)}}">{{.comment.Content}}</textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+            {{if .comment.Node}}
+            <a href="{{.comment.Node.URL}}" class="btn btn-secondary">{{t "Cancel"}}</a>
+            {{else}}
+            <a href="/" class="btn btn-secondary">{{t "Cancel"}}</a>
+            {{end}}
+        </div>
+    </form>
+</article>
+
+{{template "tinymce_user_files.html" .}}
+
+{{end}}

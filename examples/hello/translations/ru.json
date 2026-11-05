@@ -1,0 +1,13 @@
+{
+  "contexts": {},
+  "strings": {
+    "An example module from outside the engine: the greetings page (/hello).": "Пример модуля не из движка: страница приветствий (/hello).",
+    "Greetings": "Приветствия",
+    "Greetings from a module of its own repository.": "Приветствия от модуля из своего репозитория.",
+    "Hello": "Привет",
+    "How many": "Сколько",
+    "Latest greetings": "Последние приветствия",
+    "No greetings yet.": "Приветствий пока нет.",
+    "Unavailable": "Недоступно"
+  }
+}

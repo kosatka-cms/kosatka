@@ -1,0 +1,106 @@
+{{/* webform/detail.html - a form of the forms module (WebformController):
+     its text and elements posted to /node/{id}/form as element_<id>; after
+     a submission (.sent) the confirmation instead. .values/.fieldErrors -
+     what was entered and the errors (by element ID; 0 - the form's), when
+     shown again. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}{{attach "forms"}}
+{{$wf := .webform}}
+<div id="content" class="{{template "node_status_class" .}}">
+    {{template "node_moderation_notice" .}}
+    <article class="node webform">
+        <h1 class="node-title">{{$wf.Node.Title}}</h1>
+
+        {{template "node_actions" .}}
+
+        {{if .sent}}
+        <div class="alert alert-success webform-confirmation">{{if $wf.Confirmation}}<div class="webform-text">{{$wf.Confirmation}}</div>{{else}}{{t "Thank you, the form has been sent."}}{{end}}</div>
+        <p><a href="{{$wf.Node.URL}}">{{t "Send once more"}}</a></p>
+        {{else}}
+        {{with $wf.Description}}<div class="webform-text webform-description">{{.}}</div>{{end}}
+
+        {{template "webform_form" .}}
+        {{end}}
+    </article>
+</div>
+
+{{if ne (print .item.Node.CommentMode) "hidden"}}
+<div class="clearfix">{{template "comments-placeholder" .}}</div>
+{{end}}
+{{end}}
+
+
+{{/* webform_form - the form itself (or why it takes nothing now), for the
+     form's page and for the "Form" block (WebformController.Embed renders
+     it alone). Takes the page's data: .webform, .values, .fieldErrors,
+     .unavailable, .loginRequired, .recaptcha_site_key. */}}
+{{define "webform_form"}}
+{{$wf := .webform}}
+{{if .unavailable}}
+<div class="alert alert-secondary webform-unavailable">{{t .unavailable}}{{if .loginRequired}} <a href="/login?destination={{$wf.Node.URL}}">{{t "Log in"}}</a>{{end}}</div>
+{{else}}
+{{with index .fieldErrors 0}}<div class="alert alert-danger">{{t .}}</div>{{end}}
+<form method="POST" action="/node/{{$wf.Node.ID}}/form" class="webform-form" novalidate{{if $wf.HasFileElement}} enctype="multipart/form-data"{{end}}>
+    {{botTrap}}
+    {{/* webform_source - the page the form is sent from: forms.js puts the
+         page it's embedded in, or the one that linked to its own page
+         (data-form-path); empty - the server takes the Referer. */}}
+    <input type="hidden" name="webform_source" value="" data-webform-source data-form-path="{{$wf.Node.URL}}">
+    {{range $wf.Elements}}
+    {{$name := print "element_" .ID}}
+    {{$err := index $.fieldErrors .ID}}
+    {{/* data-visible-if: shown only when that element has the value
+         (web/static/modules/forms/forms.js; the server checks it too);
+         data-prefill: the address's query parameter forms.js fills the
+         element from, unless it has an answer already. */}}
+    <div class="form-group mb-3 webform-element webform-element-{{.Type}}{{if $err}} has-error{{end}}"{{if .VisibleIfElement}} data-visible-if="element_{{$wf.ElementIDByName .VisibleIfElement}}" data-visible-value="{{.VisibleIfValue}}"{{end}}{{with .PrefillParam}} data-prefill="{{.}}"{{end}}>
+        {{if .Type.HasOptions}}{{if ne (print .Type) "select"}}
+        <div class="form-label">{{.Label}}{{if .Required}} <span class="required">*</span>{{end}}</div>
+        {{end}}{{end}}
+        {{if and (or (not .Type.HasOptions) (eq (print .Type) "select")) (ne (print .Type) "consent")}}
+        <label for="{{$name}}" class="form-label">{{.Label}}{{if .Required}} <span class="required">*</span>{{end}}</label>
+        {{end}}
+
+        {{if eq (print .Type) "file"}}
+        <input type="file" id="{{$name}}" name="{{$name}}" class="form-control"{{if .Required}} required{{end}} accept="{{.FileTypes}}"{{with $.uploadLimit}} data-max-size="{{.}}"{{end}}>
+        <div class="form-text">{{t "Allowed: @types; up to @size." "@types" .FileTypes "@size" (humanFileSize $.uploadLimit)}}</div>
+        {{else if eq (print .Type) "consent"}}
+        <div class="form-check webform-consent">
+            <input class="form-check-input" type="checkbox" id="{{$name}}" name="{{$name}}" value="1" required {{if $.values.Has .ID "1"}}checked{{end}}>
+            <label class="form-check-label" for="{{$name}}">{{.Label}} <span class="required">*</span>{{with .ConsentLink}} (<a href="{{.}}" target="_blank" rel="noopener">{{t "privacy policy"}}</a>){{end}}</label>
+        </div>
+        {{else if eq (print .Type) "textarea"}}
+        <textarea id="{{$name}}" name="{{$name}}" rows="5" class="form-control"{{if .Required}} required{{end}}>{{$.values.First .ID}}</textarea>
+        {{else if eq (print .Type) "select"}}
+        {{$id := .ID}}
+        <select id="{{$name}}" name="{{$name}}" class="form-select"{{if .Required}} required{{end}}>
+            <option value="">{{t "- choose -"}}</option>
+            {{range .Options}}<option value="{{.}}" {{if $.values.Has $id .}}selected{{end}}>{{.}}</option>{{end}}
+        </select>
+        {{else if .Type.HasOptions}}
+        {{$id := .ID}}{{$multiple := .Type.Multiple}}
+        {{range $i, $opt := .Options}}
+        <div class="form-check">
+            <input class="form-check-input" type="{{if $multiple}}checkbox{{else}}radio{{end}}" id="{{$name}}_{{$i}}" name="{{$name}}" value="{{$opt}}" {{if $.values.Has $id $opt}}checked{{end}}>
+            <label class="form-check-label" for="{{$name}}_{{$i}}">{{$opt}}</label>
+        </div>
+        {{end}}
+        {{else}}
+        <input type="{{.Type.InputType}}" id="{{$name}}" name="{{$name}}" value="{{$.values.First .ID}}" class="form-control"{{if .Required}} required{{end}}{{if eq (print .Type) "number"}} step="any"{{with .NumberMin}} min="{{.}}"{{end}}{{with .NumberMax}} max="{{.}}"{{end}}{{end}}>
+        {{end}}
+
+        {{with .Description}}<div class="form-text">{{.}}</div>{{end}}
+        {{with $err}}<div class="invalid-feedback d-block">{{t .}}</div>{{end}}
+    </div>
+    {{end}}
+    {{if .recaptcha_site_key}}<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <div class="g-recaptcha mb-3" data-sitekey="{{.recaptcha_site_key}}"></div>{{end}}
+    <button type="submit" class="btn btn-primary">{{if $wf.SubmitLabel}}{{$wf.SubmitLabel}}{{else}}{{t "Send"}}{{end}}</button>
+</form>
+{{end}}
+{{end}}

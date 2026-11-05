@@ -1,0 +1,124 @@
+{{/* region_blocks - renders one block region. Published placements in
+     .Ctx.blockPlacements come from CacheService unfiltered (see cache.go's
+     SidebarData.BlockPlacements); visibility (roles, scope, content types,
+     pages, languages) is checked here per request by placementVisible
+     (service.PlacementVisible) against the visitor and the current page. An empty region
+     renders nothing.
+     Placement kinds:
+     - custom block (Block.Title/Body; the <h2> is controlled by
+       Block.ShowTitle, see entity.BlockDef.ShowTitle);
+     - plugin block (dispatched by Placement.PluginID via "plugin_block");
+     - View block (PlacementType "view"): pre-rendered by CacheService into
+       .Ctx.viewBlockContent[Placement.ID] (see resolveViewBlockContent);
+     - menu block (PlacementType "menu"): rendered per request since the
+       active trail depends on the URL (see service.ResolveMenuBlockRoot);
+       a theme can override markup with "menu_block_<region>".
+     Lazy placements render a placeholder and load separately (below).
+     .Ctx.blockDemoMode wraps output in a labeled frame (see
+     admin/block_demo.html).
+     Takes (dict "Region" entity.Region "Ctx" .). */}}
+{{define "region_blocks"}}
+{{$ctx := .Ctx}}
+{{$region := .Region}}
+{{$items := index $ctx.blockPlacements $region}}
+{{if $ctx.blockDemoMode}}
+<div class="block-region-demo">
+    <span class="block-region-demo-label">{{index $ctx.regionLabels $region}} ({{$region}}){{if not $items}} - {{t "empty"}}{{end}}</span>
+{{end}}
+{{range $items}}
+{{if placementVisible .Placement $ctx}}
+{{if and .Placement.Lazy (not .Placement.IsMenu)}}
+{{/* Lazy placement (BlockPlacementDef.Lazy; a menu never is: rendered
+     on its own it would miss the theme's "menu_block_<region>"): renders the theme's
+     "block_placeholder_<region>" if defined; app.js (the lazyBlocks behavior) loads
+     the content from /api/block-placement/{id} when it scrolls into view.
+     Visibility is already checked above. The page gets a plugin block's
+     module assets now (attachBlock): its content comes later. */}}
+{{attachBlock .Placement.PluginIDValue}}
+<div class="lazy-block" data-lazy-block="/api/block-placement/{{.Placement.ID}}{{with $ctx.currentPath}}?path={{queryEscape .}}{{end}}">{{renderOptional "block_placeholder" $region $ctx}}</div>
+{{else if eq (print .Placement.PlacementType) "plugin"}}
+{{if .Placement.ShowTitle}}<h2>{{placementTitle .Placement ""}}</h2>{{end}}
+{{template "plugin_block" (dict "PluginID" (print .Placement.PluginIDValue) "Ctx" $ctx "Placement" .Placement "Data" .PluginData)}}
+{{else if eq (print .Placement.PlacementType) "view"}}
+{{if .ViewDisplay}}
+<div class="block">
+    {{if .Placement.ShowTitle}}<h2>{{placementTitle .Placement (viewTitle .ViewDisplay)}}</h2>{{end}}
+    <div class="block-content">{{index $ctx.viewBlockContent .Placement.ID}}</div>
+</div>
+{{end}}
+{{else if eq (print .Placement.PlacementType) "menu"}}
+{{if .Menu}}
+{{$rawTree := index $ctx.menuTreesAnnotated .Menu.MachineName}}
+{{$root := resolveMenuBlockRoot $rawTree .Placement.MenuStartLevel}}
+{{$remaining := .Placement.MenuLevelsToShow}}{{if le $remaining 0}}{{$remaining = -1}}{{end}}
+{{/* A theme can define "menu_block_<region>" for its own menu block
+     markup; it receives Items/Remaining (for menu_tree_items), Menu,
+     Placement, Ctx. Otherwise the generic menu block is used. */}}
+{{$themed := renderOptional "menu_block" $region (dict "Items" $root "Remaining" $remaining "Menu" .Menu "Placement" .Placement "Ctx" $ctx)}}
+{{if $themed}}{{$themed}}
+{{else}}
+{{$menuTitle := placementTitle .Placement .Menu.Label}}
+<nav class="block block-menu" aria-label="{{$menuTitle}}">
+    {{if .Placement.ShowTitle}}<h2>{{$menuTitle}}</h2>{{end}}
+    {{template "menu_tree_items" (dict "Items" $root "Remaining" $remaining "Depth" 0)}}
+</nav>
+{{end}}
+{{end}}
+{{else}}
+<div class="block">
+    {{if .Block.ShowTitle}}<h2>{{blockTitle .Block}}</h2>{{end}}
+    {{/* The body as saved, through its format's text filters. */}}
+    <div class="block-content">{{textFilters .Block.Body .Block.TextFormatIDValue}}</div>
+</div>
+{{end}}
+{{end}}
+{{end}}
+{{if $ctx.blockDemoMode}}
+</div>
+{{end}}
+{{end}}
+
+{{/* plugin_block - dispatches a plugin placement to its partial by
+     machine ID (entity.PluginBlockID). Takes (dict "PluginID" string "Ctx"
+     . "Placement" entity.BlockPlacementDef "Data" its PluginData) - a block
+     with settings reads them from Placement.PluginConfig, one with data
+     loaded by the cache refresh (service.SetPluginBlockData) from Data. A module's block is its
+     "block_<ID>" define (the module's templates/blocks/*.html, parsed with
+     every page), given the whole dict; the block's module's assets are
+     attached (attachBlock). */}}
+{{define "plugin_block"}}
+{{- attachBlock .PluginID -}}
+{{if eq .PluginID "logo"}}{{template "block_logo" .Ctx}}
+{{else if eq .PluginID "search_form"}}{{template "block_search_form" .Ctx}}
+{{else if eq .PluginID "user_menu"}}{{template "block_user_menu" .Ctx}}
+{{else if eq .PluginID "last_comments"}}{{template "block_last_comments" .Ctx}}
+{{else if eq .PluginID "tag_cloud"}}{{template "block_tag_cloud" .}}
+{{else if eq .PluginID "copyright"}}{{template "block_copyright" .}}
+{{else}}{{renderOptional "block" .PluginID .}}
+{{end}}
+{{end}}
+
+{{/* menu_tree_items - recursive: renders one <ul class="menu ul-depth-N">
+     for .Items ([]service.MenuTreeItem). .Remaining is the number of levels
+     left including this one (-1 = unlimited), so children are rendered
+     only when it is -1 or >1, passing N-1 down. .Depth (0-based) only sets
+     the ul-depth-N class; deeper levels reuse ul-depth-1 styling.
+     <span class="drop-arrow"> is rendered only at depth 0.
+     Takes (dict "Items" []service.MenuTreeItem "Remaining" int "Depth" int). */}}
+{{define "menu_tree_items"}}
+{{$remaining := .Remaining}}
+{{$depth := .Depth}}
+<ul class="menu {{if le $depth 1}}ul-depth-{{$depth}}{{else}}ul-depth-1{{end}}">
+    {{range .Items}}
+    <li class="{{if .First}}first {{end}}{{if .Last}}last {{end}}{{if and .HasChildren (or (eq $remaining -1) (gt $remaining 1))}}expanded{{else}}leaf{{end}}{{if .Active}} active{{end}}{{if .ActiveTrail}} active-trail{{end}}">
+        <a href="{{if .Broken}}#{{else}}{{.URL}}{{end}}"{{if .Active}} class="active"{{end}}>{{.Title}}</a>
+        {{if and .HasChildren (or (eq $remaining -1) (gt $remaining 1))}}
+        {{$nextRemaining := $remaining}}
+        {{if gt $remaining 1}}{{$nextRemaining = sub $remaining 1}}{{end}}
+        {{template "menu_tree_items" (dict "Items" .Children "Remaining" $nextRemaining "Depth" (add $depth 1))}}
+        {{if eq $depth 0}}<span class="drop-arrow"></span>{{end}}
+        {{end}}
+    </li>
+    {{end}}
+</ul>
+{{end}}

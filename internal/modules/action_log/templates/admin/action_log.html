@@ -1,0 +1,75 @@
+{{/* admin/action_log.html - the action log (Controller.List): the filter
+     (who, the group, the object, the days), the entries newest first -
+     when, who and from where, the action (its tone's colour), the object
+     (its link while it exists), what changed (folded). .filter.ActorID /
+     .filter.ObjectKind - one user's or one object's own log. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<a href="/admin/reports/action-log/settings" class="btn btn-outline-secondary">{{t "Settings"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{attach "action_log"}}
+<form method="get" action="/admin/reports/action-log" class="admin-filters" aria-label="{{t "Filter"}}">
+    {{with .filter}}
+    <label class="admin-filter"><span class="admin-filter-label">{{t "Who"}}</span><input type="text" name="actor" value="{{.Actor}}" class="form-control" placeholder="{{t "Username"}}"></label>
+    <label class="admin-filter"><span class="admin-filter-label">{{t "Action"}}</span>
+        <select name="group" class="form-select">
+            <option value="">{{t "All"}}</option>
+            {{$g := .Group}}{{range $.groups}}<option value="{{.Name}}"{{if eq .Name $g}} selected{{end}}>{{t .Label}}</option>{{end}}
+        </select>
+    </label>
+    <label class="admin-filter"><span class="admin-filter-label">{{t "Object"}}</span><input type="text" name="object" value="{{.Object}}" class="form-control" placeholder="{{t "Name or ID"}}"></label>
+    {{end}}
+    <label class="admin-filter"><span class="admin-filter-label">{{tc "action log" "From"}}</span><input type="date" name="from" value="{{.fromValue}}" class="form-control"></label>
+    <label class="admin-filter"><span class="admin-filter-label">{{tc "action log" "To"}}</span><input type="date" name="to" value="{{.toValue}}" class="form-control"></label>
+    <button type="submit" class="btn btn-primary">{{tc "action log" "Show"}}</button>
+    <a href="/admin/reports/action-log" class="admin-filter-reset">{{t "Reset"}}</a>
+</form>
+{{if .filter.ActorID}}<p class="action-log-scope">{{t "The actions of one user."}} <a href="/admin/reports/action-log">{{t "Show all"}}</a></p>{{end}}
+{{if .filter.ObjectKind}}<p class="action-log-scope">{{t "The actions on one object."}} <a href="/admin/reports/action-log">{{t "Show all"}}</a></p>{{end}}
+
+<div class="admin-table-card">
+<div class="table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr><th>{{t "When"}}</th><th>{{t "Who"}}</th><th>{{t "Action"}}</th><th>{{t "Object"}}</th></tr>
+        </thead>
+        <tbody>
+            {{range .rows}}
+            <tr>
+                <td class="text-nowrap admin-table-muted">{{formatDate .At}}</td>
+                <td>
+                    {{if .ActorID}}<a href="/admin/reports/action-log?actor_id={{.ActorID}}" class="fw-semibold">{{or .ActorName (print "#" .ActorID)}}</a>{{else}}-{{end}}
+                    {{with .IP}}<span class="admin-table-sub">{{.}}</span>{{end}}
+                </td>
+                <td><span class="action-log-badge action-log-badge--{{or .Tone "change"}}">{{.Action}}</span></td>
+                <td>
+                    {{if .Object.URL}}<a href="{{.Object.URL}}">{{.Object.Label}}</a>{{else}}{{.Object.Label}}{{end}}
+                    <span class="admin-table-sub">{{.Kind}}{{if and .Kind .Object.ID (ne .Object.Kind "settings")}} · {{end}}{{if ne .Object.Kind "settings"}}{{with .Object.ID}}ID {{.}}{{end}}{{end}}</span>
+                    {{/* One change without a "was" (a failed sign-in's reason): a line. */}}
+                    {{if and (eq (len .Changes) 1) (not (index .Changes 0).From)}}
+                    {{with index .Changes 0}}<span class="admin-table-sub">{{.Field}}: {{.To}}</span>{{end}}
+                    {{else if .Changes}}
+                    <details class="action-log-changes">
+                        <summary>{{t "What changed"}}</summary>
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>{{t "Field"}}</th><th>{{t "Was"}}</th><th>{{t "Now"}}</th></tr></thead>
+                            <tbody>{{range .Changes}}<tr><td>{{.Field}}</td><td class="action-log-from">{{or .From "-"}}</td><td class="action-log-to">{{or .To "-"}}</td></tr>{{end}}</tbody>
+                        </table>
+                    </details>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="4" class="admin-table-empty">{{t "No entries."}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{template "admin_list_foot" (dict "Ctx" . "Note" (and .keepDays (t "kept @days days" "@days" .keepDays)))}}
+</div>
+{{end}}

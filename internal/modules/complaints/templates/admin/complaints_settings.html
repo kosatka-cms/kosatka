@@ -1,0 +1,85 @@
+{{/* admin/complaints_settings.html - the complaints' settings
+     (Controller.Settings): who may report (the roles' permission), what
+     (comments, content types), the reasons, how many complaints hide an
+     item, the moderators' e-mail; Save at the top and the bottom. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Visitors report what breaks the rules; moderators handle it on the <a href=\":url\">Content → Complaints</a> page." ":url" "/admin/content/complaints"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="complaints-settings" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}{{attach "complaints"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict "saved" (t "Settings saved."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="post" action="/admin/config/complaints" id="complaints-settings" class="admin-settings">
+    <section class="admin-settings-group" aria-labelledby="cs-what">
+        <h2 class="admin-settings-title" id="cs-what">{{t "Who and what"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Who may report"}}</span>
+                    <span class="admin-setting-help">{{t "Signed-in users of the roles with the \"Report content and comments\" permission (<a href=\":url\">Permissions</a>); installing the module gives it to every signed-in user." ":url" "/admin/people/permissions"}}</span>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "What may be reported"}}</span>
+                    <span class="admin-setting-help">{{t "A Report link under the comments and the content of the types chosen."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <label class="complaints-check"><input type="checkbox" class="form-check-input" id="cs-comments" name="comments" value="1"{{if .settings.Comments}} checked{{end}}> {{t "Comments"}}</label>
+                    {{$on := .settings.NodeTypes}}{{$labels := .typeLabels}}
+                    {{range .types}}<label class="complaints-check"><input type="checkbox" class="form-check-input" id="cs-type-{{.}}" name="node_types" value="{{.}}"{{if stringContains $on (print .)}} checked{{end}}> {{index $labels (print .)}}</label>{{end}}
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label class="admin-setting-label" for="cs-reasons">{{t "Reasons"}}</label>
+                    <span class="admin-setting-help">{{t "One per line; \"Other\", with a field to say what is wrong, is always added. Empty - the ones shown."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <textarea id="cs-reasons" name="reasons" class="form-control" rows="4" placeholder="{{.reasonsPlaceholder}}">{{.settings.Reasons}}</textarea>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group mt-4" aria-labelledby="cs-handle">
+        <h2 class="admin-settings-title" id="cs-handle">{{t "What is done with complaints"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label class="admin-setting-label" for="cs-hide">{{t "Hide automatically"}}</label>
+                    <span class="admin-setting-help">{{t "When different people complained: a comment goes back to waiting for approval, a content item is unpublished - until a moderator decides."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    {{$hide := .settings.HideAfter}}
+                    <select id="cs-hide" name="hide_after" class="form-select w-auto">
+                        {{range .hideAfterChoices}}<option value="{{.}}"{{if eq . $hide}} selected{{end}}>{{if eq . 0}}{{t "don't hide"}}{{else}}{{plural . "after @count complaint" "after @count complaints"}}{{end}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "E-mail to the moderators"}}</span>
+                    <span class="admin-setting-help">{{t "The \"New complaint\" e-mail goes to the site's address on the first complaint about a content item or a comment."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <a href="{{.mailURL}}">{{t "The e-mail's text"}}</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

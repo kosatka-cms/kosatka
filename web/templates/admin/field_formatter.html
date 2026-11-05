@@ -1,0 +1,36 @@
+{{/* field_formatter_controls - how a link field shows: its formatter
+     (links, or a module's - service.FieldFormatters) and how its several
+     values show (entity.FieldLayout). Takes (dict): Formatters - the
+     choices, FormatterName/FormatterID and LayoutName/LayoutID - the
+     selects' names and ids, Formatter/Layout - the current ones, Small -
+     the selects of a table row (no labels of their own, aria-labels). */}}
+{{define "field_formatter_controls"}}
+{{if not .Small}}<label class="form-label" for="{{.FormatterID}}">{{t "How to show"}}</label>{{end}}
+<select name="{{.FormatterName}}" id="{{.FormatterID}}" class="form-select{{if .Small}} form-select-sm admin-min-sm{{end}}"{{if .Small}} aria-label="{{t "How to show"}}"{{end}}>
+    <option value="">{{t "Link"}}</option>
+    {{range .Formatters}}
+    <option value="{{.Name}}"{{if eq .Name $.Formatter}} selected{{end}}>{{t .Label}}</option>
+    {{end}}
+</select>
+{{if not .Small}}<label class="form-label mt-2" for="{{.LayoutID}}">{{t "Several values"}}</label>{{end}}
+<select name="{{.LayoutName}}" id="{{.LayoutID}}" class="form-select{{if .Small}} form-select-sm admin-min-sm mt-1{{end}}"{{if .Small}} aria-label="{{t "Several values"}}"{{end}}>
+    <option value=""{{if eq (print .Layout) ""}} selected{{end}}>{{t "Several: one after another"}}</option>
+    <option value="featured"{{if eq (print .Layout) "featured"}} selected{{end}}>{{t "Several: the first large, the others small"}}</option>
+    <option value="first"{{if eq (print .Layout) "first"}} selected{{end}}>{{t "Several: only the first"}}</option>
+</select>
+{{if not .Small}}<div class="form-text">{{t "A way to show from a module is used while the module is on; otherwise the field shows as links."}}</div>{{end}}
+{{end}}
+
+{{/* field_dates_layout_control - how a date field's several dates show
+     (entity.FieldLayout: all, the upcoming, the nearest, the first). Takes
+     (dict): Name, ID, Layout - the current one, Small - a table row's. */}}
+{{define "field_dates_layout_control"}}
+{{if not .Small}}<label class="form-label" for="{{.ID}}">{{t "Several dates"}}</label>{{end}}
+<select name="{{.Name}}" id="{{.ID}}" class="form-select{{if .Small}} form-select-sm admin-min-sm{{end}}"{{if .Small}} aria-label="{{t "Several dates"}}"{{end}}>
+    <option value=""{{if eq (print .Layout) ""}} selected{{end}}>{{t "All, the past ones marked"}}</option>
+    <option value="upcoming"{{if eq (print .Layout) "upcoming"}} selected{{end}}>{{t "Only those not ended"}}</option>
+    <option value="nearest"{{if eq (print .Layout) "nearest"}} selected{{end}}>{{t "The nearest and \"N more\""}}</option>
+    <option value="first"{{if eq (print .Layout) "first"}} selected{{end}}>{{t "Only the first"}}</option>
+</select>
+{{if not .Small}}<div class="form-text">{{t "For a field with several dates. With none not ended, \"only those not ended\" and \"the nearest\" show the last one."}}</div>{{end}}
+{{end}}

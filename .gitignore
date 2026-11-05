@@ -1,0 +1,48 @@
+.idea
+.cursor
+.claude/
+# The instructions for Claude Code - kept locally, not published.
+CLAUDE.md
+.DS_Store
+# app assets export ./web/static writes the modules' static files here.
+web/static/modules/
+web/static/css/*.min.css
+# Vendored libraries (not minified here): Swiper's CSS, like its JS in
+# web/static/js; Bootstrap 5.3.5 (the JS's version) and its Bootswatch
+# Cosmo skin, served from the site rather than a CDN.
+!web/static/css/swiper-bundle.min.css
+!web/static/css/bootstrap.min.css
+!web/static/css/bootswatch-cosmo.min.css
+themes/*/static/css/*.min.css
+themes/*/static/js/*.min.js
+internal/modules/*/static/*.min.js
+internal/modules/*/static/*.min.css
+web/static/js/*.min.js
+# Vendored libraries, shipped minified.
+!web/static/js/bootstrap.bundle.min.js
+!web/static/js/photoswipe.umd.min.js
+!web/static/js/photoswipe-lightbox.umd.min.js
+!web/static/js/swiper-bundle.min.js
+
+# Local build output (go build ./cmd/...) left in repo root
+/app
+/kosatka
+/i18n-extract
+/migrations-gen
+
+# Local/deploy env files with real secrets
+*.env.local
+# Local config with real secrets (config/local.yaml.example is the template)
+/config/local.yaml
+
+# Runtime user-uploaded files
+web/uploads/
+
+# Private files (files sent with forms; config files.private_dir).
+/private/
+
+# Coverage profiles (scripts/coverage_summary.sh)
+cover-*.out
+
+# The example site's binary (go build in examples/hello-site)
+/examples/hello-site/kosatka-hello-site

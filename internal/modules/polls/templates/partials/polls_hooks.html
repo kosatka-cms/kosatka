@@ -1,0 +1,10 @@
+{{/* node_actions_polls - a poll's actions among the node's (node_actions):
+     on its vote log, back to the poll; on the poll, its vote log for those
+     who may see it. */}}
+{{define "node_actions_polls"}}
+{{if .pollVotesPage}}
+<a href="{{.item.Node.URL}}" class="action-link">{{t "Back to poll"}}</a>
+{{else if .canViewPollVotes}}
+<a href="/node/{{.item.Node.ID}}/poll/votes" class="action-link">{{t "Votes"}}</a>
+{{end}}
+{{end}}

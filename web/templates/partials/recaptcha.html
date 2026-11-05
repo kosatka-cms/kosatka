@@ -1,0 +1,7 @@
+{{/* recaptcha - a form's reCAPTCHA widget and its script, when the
+     CAPTCHA is on for the form. Takes (dict): key - the site key
+     (captcha.SiteKey; empty - off), class - the widget's extra classes. */}}
+{{define "recaptcha"}}{{if .key}}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<div class="g-recaptcha {{.class}}" data-sitekey="{{.key}}"></div>
+{{end}}{{end}}

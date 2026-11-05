@@ -1,0 +1,127 @@
+/* Complaints module: the complaint's window on the site (complaints.js)
+   and the queue in the admin (admin/complaints.html). */
+
+/* The window (Kosatka.window, overlays.css): narrow, as tall as the
+   form. */
+.kosatka-window.complaints-window {
+    width: 480px;
+    height: auto;
+}
+
+.complaints-window .kosatka-window-body {
+    display: block;
+    padding: 16px 18px;
+    overflow: auto;
+}
+
+.complaints-about {
+    margin: 0 0 .75rem;
+    color: #5d6b74;
+    font-size: .9rem;
+    overflow-wrap: anywhere;
+}
+
+.complaints-reasons {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin: 0 0 .9rem;
+    padding: 0;
+    border: 0;
+}
+
+.complaints-reason {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+}
+
+.complaints-note-label {
+    display: block;
+    width: 100%;
+    font-weight: 600;
+}
+
+.complaints-note-label textarea {
+    margin-top: .3rem;
+    font-weight: 400;
+}
+
+.complaints-optional {
+    color: #5d6b74;
+    font-weight: 400;
+}
+
+.complaints-error {
+    margin: .6rem 0 0;
+    color: #b42318;
+}
+
+.complaints-hint {
+    margin: .6rem 0 0;
+    color: #5d6b74;
+    font-size: .85rem;
+}
+
+/* The queue. */
+
+.complaints-what-kind {
+    display: block;
+    color: var(--admin-muted, #5d6b74);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+.complaints-reason-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+    margin-bottom: .3rem;
+}
+
+.complaints-chip {
+    display: inline-block;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    background: var(--admin-line-soft, #edf1f3);
+    font-size: .82rem;
+    white-space: nowrap;
+}
+
+.complaints-notes {
+    margin: .3rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: .85rem;
+}
+
+.complaints-count {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.complaints-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .35rem;
+}
+
+.complaints-actions form {
+    margin: 0;
+}
+
+.complaints-check {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: .15rem 0;
+}
+
+.complaints-check .form-check-input {
+    margin: 0;
+}

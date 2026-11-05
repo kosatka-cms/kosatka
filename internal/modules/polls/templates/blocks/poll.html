@@ -1,0 +1,14 @@
+{{/* block_poll - plugin block "poll" (the polls module): the poll chosen
+     on the placement page (PluginConfig "target": its node ID), loaded by
+     the module's polls.js from /node/<id>/poll/embed. Nothing while no
+     poll is chosen. Takes (dict "PluginID" "Ctx" "Placement"). */}}
+{{define "block_poll"}}
+{{with .Placement.PluginSetting "target"}}{{template "poll_embed" (dict "NodeID" .)}}{{end}}
+{{end}}
+
+{{/* poll_embed - a poll's place, loaded by polls.js (each visitor their
+     vote; the address checks they may see it): the "Poll" block's, and
+     [[poll:<node ID>]] in a text (embedKind). Takes (dict "NodeID"). */}}
+{{define "poll_embed"}}
+{{attach "polls"}}<div class="block poll-block" data-poll-embed="/node/{{.NodeID}}/poll/embed"></div>
+{{end}}

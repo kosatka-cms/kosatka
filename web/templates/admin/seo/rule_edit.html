@@ -1,0 +1,84 @@
+{{/* admin/config/seo/rules/{id}/edit - an SEO rule (SEORuleEdit): the content
+     type, the term field and its terms, the title and description
+     templates, as rows; delete over the page; the tokens under them. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<a href="/admin/config/seo/rules/{{.rule.ID}}/delete" class="btn btn-outline-danger">{{t "Delete"}}</a>
+<button type="submit" form="seo-rule-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "update" (t "Error while saving the rule."))
+    "Warnings" (dict
+        "empty" (t "Select a content type and fill in at least one template.")
+        "terms" (t "Select terms: without them a rule with a field matches no content.")))}}
+
+{{$rule := .rule}}
+<form method="post" action="/admin/config/seo/rules/{{$rule.ID}}" id="seo-rule-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="seo-type">{{tc "seo" "Content type"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <select name="content_type" id="seo-type" class="form-select" required>
+                    {{range .contentTypes}}<option value="{{.MachineName}}"{{if eq .MachineName $rule.ContentType}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="seo-field">{{t "Term field"}}</label>
+                <span class="admin-setting-help">{{t "After changing the field, save the rule: the term list will be updated."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select name="field_storage_id" id="seo-field" class="form-select" data-filter-by="seo-type">
+                    <option value="">{{t "- any content of the type -"}}</option>
+                    {{range .fields}}<option value="{{.FieldStorageID}}" data-filter-value="{{.ContentType}}"{{if and (eq .ContentType $rule.ContentType) (eq .FieldStorageID $rule.FieldStorageIDValue)}} selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        {{if .terms}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="seo-terms">{{t "Terms"}}</label>
+                <span class="admin-setting-help">{{t "Ctrl/⌘ to select several. Child terms of the selected ones match too."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select name="term_ids" id="seo-terms" class="form-select" multiple size="10">
+                    {{range .terms}}<option value="{{.ID}}"{{if .Selected}} selected{{end}}>{{.Indent}}{{.Name}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        {{end}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="seo-rule-title">{{t "Title"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="seo-rule-title" name="title_template" class="form-control" value="{{$rule.TitleTemplate}}" placeholder="{{t "empty - type template"}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label class="admin-setting-label" for="seo-rule-desc">{{t "Description"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="seo-rule-desc" name="description_template" class="form-control" value="{{$rule.DescriptionTemplate}}" placeholder="{{t "empty - type template"}}">
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+{{template "seo_tokens_help" .}}
+{{end}}

@@ -1,0 +1,7 @@
+<section class="sidebar">
+    {{/* The whole sidebar is one "sidebar" region: blocks and View blocks
+         (including contextual ones rendered per request -
+         DynamicContentController.attachContextualViewBlocks), ordered by
+         placement weight, managed at /admin/config/blocks. */}}
+    {{template "region_blocks" (dict "Region" (region "sidebar") "Ctx" .)}}
+</section>

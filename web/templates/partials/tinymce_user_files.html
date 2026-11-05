@@ -1,0 +1,6 @@
+{{/* tinymce_user_files.html - the editors' uploads, file picker and the
+     theme's stylesheets (cmsTinyMCEUserFiles.mergeConfig) on a page with
+     TinyMCE; it takes the CSRF token from csrf_head's meta tag. */}}
+{{define "tinymce_user_files.html"}}
+<script src="{{ staticJS "tinymce-user-files" }}" data-editor-css="{{template "theme_editor_css" .}}"></script>
+{{end}}

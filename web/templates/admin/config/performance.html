@@ -1,0 +1,36 @@
+{{/* admin/config/performance - the site's caches (PerformanceSettings): clearing the
+     generated thumbnails, refreshing the cached blocks - a row each with
+     its button. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Clearing generated thumbnails on disk and resetting data in process memory (sidebar and front page blocks)."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if .perfMessage}}
+<div class="alert {{if .perfAlertSuccess}}alert-success{{else}}alert-danger{{end}} alert-dismissible fade show" role="alert">{{.perfMessage}}{{if .perfDetail}}<pre class="small mb-0 mt-2 text-wrap" style="white-space:pre-wrap;">{{.perfDetail}}</pre>{{end}}</div>
+{{if and .perfMessage (not .perfAlertSuccess)}}
+<p class="admin-setting-help">{{t "If the text above contains \"permission denied\" / \"operation not permitted\": the application process usually runs as the <code>www-data</code> user, which needs write access to the site files directory, including deleting the <code>resize/</code>, <code>styles/</code>, <code>STYLES/</code> subdirectories."}}</p>
+{{end}}
+{{end}}
+
+<div class="admin-settings-card">
+    <form method="post" action="/admin/performance/clear-thumbnails" class="admin-setting">
+        <div class="admin-setting-text">
+            <span class="admin-setting-label">{{t "Clear thumbnails"}}</span>
+            <span class="admin-setting-help">{{t "The <code>resize/</code> directory and the style cache (<code>styles/</code>) are deleted. After upgrading to WebP thumbnails, clear them once: old JPEG thumbnails are not used. Originals are not affected."}}</span>
+        </div>
+        <div class="admin-setting-control text-end"><button type="submit" class="btn btn-outline-danger">{{t "Clear thumbnails"}}</button></div>
+    </form>
+    <form method="post" action="/admin/performance/refresh-memory-cache" class="admin-setting">
+        <div class="admin-setting-text">
+            <span class="admin-setting-label">{{t "Clear cache"}}</span>
+            <span class="admin-setting-help">{{t "Cached sidebar data is refreshed and the front page cache is reset."}}</span>
+        </div>
+        <div class="admin-setting-control text-end"><button type="submit" class="btn btn-outline-primary">{{t "Clear cache"}}</button></div>
+    </form>
+</div>
+{{end}}

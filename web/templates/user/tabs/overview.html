@@ -1,0 +1,32 @@
+{{define "profile_overview"}}
+<div class="profile-overview">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="profile-card">
+                <h3>{{t "About the user"}}</h3>
+
+                {{/* Admin-defined profile fields (/admin/people/fields). */}}
+                {{range .profileFields}}
+                <div class="profile-field">
+                    <label>{{.Field.Label}}:</label>
+                    <p>{{if .Value}}{{.Value}}{{else}}{{t "Not specified"}}{{end}}</p>
+                </div>
+                
+                {{end}}
+                
+                {{if .profileUser.Signature}}
+                <div class="profile-field">
+                    <label>{{t "Signature:"}}</label>
+                    <div class="user-signature">{{.profileUser.Signature | rawHTML}}</div>
+                </div>
+                {{end}}
+                
+                <div class="profile-field">
+                    <label>{{t "Member for:"}}</label>
+                    <p>{{if .membershipDuration}}{{.membershipDuration}}{{else}}{{t "Recently joined"}}{{end}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

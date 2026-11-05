@@ -1,0 +1,8 @@
+/* The forms module: its forms (webform/detail.html) and submissions. A
+   theme restyles these classes in its own CSS. */
+:where(.webform-text) {
+    white-space: pre-line;
+}
+:where(.webform-description) {
+    margin-bottom: 1rem;
+}

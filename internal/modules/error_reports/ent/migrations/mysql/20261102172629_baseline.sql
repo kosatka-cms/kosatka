@@ -1,0 +1,2 @@
+-- Create "error_reports" table
+CREATE TABLE `error_reports` (`id` int NOT NULL AUTO_INCREMENT, `user_id` int unsigned NULL, `page_url` varchar(2048) NOT NULL, `selected_text` mediumtext NOT NULL, `comment` text NULL, `client_ip` varchar(45) NULL, `user_agent` varchar(512) NULL, `created_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP), `resolved_at` datetime NULL, PRIMARY KEY (`id`), INDEX `error_reports_created_at` (`created_at` DESC), INDEX `error_reports_user_id` (`user_id`), INDEX `error_reports_resolved_at` (`resolved_at`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;

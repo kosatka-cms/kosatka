@@ -1,0 +1,78 @@
+{{template "layout.html" .}}
+
+{{/* The themes' catalog (admin AppearanceCatalog, themes.Catalog):
+     a card per theme of the index - its screenshot, title, release, stars,
+     last update, description, author, license, tags - and the command
+     that installs or updates it (app theme add/update: the admin doesn't
+     install themes). */}}
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{if .notConfigured}}
+<div class="alert alert-info">{{t "No themes catalog is configured: set its address in the config (themes_catalog_url, THEMES_CATALOG_URL) - an index.json built by app theme index from a list of the themes' repositories."}}</div>
+{{else if .fetchError}}
+<div class="alert alert-danger">{{t "Could not read the themes catalog. Try again later."}}</div>
+{{else}}
+<p class="admin-page-meta">{{t "Themes kept in their own repositories. A theme is installed from the project's directory with the command on its card; commit the theme and themes/themes.lock, deploy, then activate it on the Appearance page."}}
+    {{if not .generated.IsZero}}<br>{{t "The catalog was built @date." "@date" (date .generated "datetime")}}{{end}}</p>
+
+<form method="get" action="/admin/config/appearance/catalog" class="admin-filters" role="search">
+    <div class="admin-filter admin-filter--wide">
+        <label class="admin-filter-label" for="catalog-q">{{t "Search the themes"}}</label>
+        <input type="search" id="catalog-q" name="q" value="{{.query}}" class="form-control" placeholder="{{t "Name, description, tag"}}">
+    </div>
+    <button type="submit" class="btn btn-primary">{{t "Search"}}</button>
+</form>
+
+{{if not .entries}}
+<p>{{if .query}}{{t "No themes match."}}{{else}}{{t "The catalog has no themes yet."}}{{end}}</p>
+{{end}}
+
+<div class="theme-cards mb-4">
+    {{range .entries}}
+    <div>
+        <div class="card h-100 theme-card">
+            {{if .Screenshot}}
+            <img src="{{.Screenshot}}" class="card-img-top theme-card-screenshot" alt="{{t "Screenshot of the @theme theme" "@theme" .Title}}" loading="lazy" width="1500" height="1000" referrerpolicy="no-referrer">
+            {{else}}
+            <div class="card-img-top theme-card-screenshot theme-card-noshot">{{t "No screenshot"}}</div>
+            {{end}}
+            <div class="card-body">
+                <h5 class="card-title mb-1">{{.Title}}
+                    {{if .Installed}}<span class="badge text-bg-success align-middle">{{t "installed @version" "@version" .Installed}}</span>{{end}}
+                </h5>
+                <div class="small text-muted mb-2">
+                    {{.Version}}{{if not .Released.IsZero}} · {{date .Released "datetime"}}{{end}}
+                    {{if .Stars}} · ★ {{.Stars}}{{end}}
+                    {{if not .Updated.IsZero}} · {{t "updated @date" "@date" (date .Updated "datetime")}}{{end}}
+                </div>
+                {{with .Description}}<p class="card-text">{{.}}</p>{{end}}
+                <dl class="theme-card-meta small mb-2">
+                    {{with .Base}}<dt>{{t "Subtheme of"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .Author}}<dt>{{t "Author"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .Homepage}}<dt>{{t "Homepage"}}</dt><dd><a href="{{.}}" rel="noopener noreferrer" target="_blank">{{.}}</a></dd>{{end}}
+                    {{with .License}}<dt>{{t "License"}}</dt><dd>{{.}}</dd>{{end}}
+                    {{with .MinVersion}}<dt>{{t "Requires"}}</dt><dd>Kosatka {{.}}+</dd>{{end}}
+                    <dt>{{t "Repository"}}</dt><dd><code>{{.Source}}</code></dd>
+                </dl>
+                {{with .Tags}}<div class="theme-card-tags">{{range .}}<span class="badge text-bg-light border">{{.}}</span> {{end}}</div>{{end}}
+                {{if not .Compatible}}
+                <div class="alert alert-warning small mt-3 mb-0">{{t "The theme needs Kosatka @version or newer." "@version" .MinVersion}}</div>
+                {{end}}
+                {{if .Taken}}
+                <div class="alert alert-warning small mt-3 mb-0">{{t "The directory themes/@name is another theme's: install this one under another name." "@name" .Name}}</div>
+                {{end}}
+            </div>
+            {{if .Command}}
+            <div class="card-footer bg-transparent">
+                <div class="small text-muted mb-1">{{if .Update}}{{t "A newer release: update it with"}}{{else}}{{t "Install it with"}}{{end}}</div>
+                <code class="d-block user-select-all">{{.Command}}</code>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}
+{{end}}

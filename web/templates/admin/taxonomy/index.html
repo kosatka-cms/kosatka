@@ -1,0 +1,101 @@
+{{/* admin/config/taxonomy - the vocabularies (TaxonomyVocabularyList):
+     adding one (a card over the list), on a table card each vocabulary -
+     its name and slug, description, its terms, edit, delete; dragged by ☰
+     into another order, saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .vocabularies) "@count vocabulary" "@count vocabularies"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Vocabulary deleted."))
+    "Errors" (dict
+        "create" (t "Error creating the vocabulary (perhaps this slug already exists).")
+        "empty-order" (t "Could not save the order - the list is empty.")
+        "display-update" (t "Error saving the order."))
+    "Warnings" (dict
+        "empty" (t "Vocabulary name is required.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="vocabulary-add">
+    <h2 class="admin-add-title" id="vocabulary-add">{{t "Add vocabulary"}}</h2>
+    <form method="post" action="/admin/config/taxonomy" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="name" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Slug (optional)"}}</span>
+            <input type="text" name="slug" class="form-control">
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Term path prefix"}}</span>
+            <input type="text" name="term_path_prefix" class="form-control">
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        <details class="admin-add-more">
+            <summary>{{t "More"}}</summary>
+            <div class="admin-add-form">
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "Description"}}</span>
+                    <input type="text" name="description" class="form-control">
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Weight"}}</span>
+                    <input type="number" name="weight" class="form-control" value="0">
+                </label>
+                <div class="form-check">
+                    <input type="checkbox" id="new_public_term_pages" name="public_term_pages" value="1" class="form-check-input">
+                    <label for="new_public_term_pages" class="form-check-label">{{t "Term pages"}}</label>
+                </div>
+            </div>
+        </details>
+    </form>
+</section>
+
+<form id="vocabularies-reorder-form" method="post" action="/admin/config/taxonomy/reorder">
+    <input type="hidden" name="order" id="vocabularies-order-input" value="">
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to reorder"}}</span></th>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Description"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="vocabularies-order-tbody" data-sortable data-order-input="vocabularies-order-input">
+                {{range .vocabularies}}
+                <tr data-vocabulary-id="{{.ID}}" data-sort-id="{{.ID}}">
+                    <td class="drag-handle admin-table-drag" draggable="true" title="{{t "Drag to reorder"}}">&#9776;</td>
+                    <td><a href="/admin/config/taxonomy/{{.ID}}/terms" class="admin-table-title">{{.Name}}</a><span class="admin-table-sub"><code>{{.Slug}}</code></span></td>
+                    <td class="admin-table-muted">{{.Desc}}</td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/taxonomy/{{.ID}}/terms" class="btn btn-sm btn-outline-primary">{{t "Terms"}}</a>
+                        <a href="/admin/config/taxonomy/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/taxonomy/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{t "No vocabularies"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .vocabularies}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "Drag a row by &#9776; to change the order."}}</span>
+        <button form="vocabularies-reorder-form" type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</div>
+{{end}}

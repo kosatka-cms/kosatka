@@ -1,0 +1,7 @@
+{{/* node_actions_forms - a form's submissions among the node's actions
+     (node_actions), for those who may see them. */}}
+{{define "node_actions_forms"}}
+{{if .canViewSubmissions}}
+<a href="/node/{{.item.Node.ID}}/form/submissions" class="action-link">{{t "Submissions (@count)" "@count" .submissionsCount}}</a>
+{{end}}
+{{end}}

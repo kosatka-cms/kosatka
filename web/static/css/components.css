@@ -1,0 +1,972 @@
+/* The engine's default look of its own components on public pages:
+   comment notices and form, moderation notices and highlighting, poll
+   result bars, delete confirmations, the site's dialog, the style guide's
+   layout. Every rule's classes are inside :where() (zero specificity; a
+   few rules name an element too), so any theme rule for these classes
+   wins whatever the load order. Colors are Bootstrap's variables, so the components
+   follow the light or dark scheme (data-bs-theme). */
+
+/* Comments: "closed" / "log in" notices, the comment form, the "reply
+   to" line (also the forum topic's). */
+:where(.comments-closed-notice, .auth-notice) {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 5px;
+}
+:where(.auth-notice-bottom) {
+    margin-top: 30px;
+    padding: 15px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 5px;
+}
+:where(.comment-form) {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 5px;
+}
+:where(.reply-info, .reply-info-container) {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: var(--bs-primary-bg-subtle);
+    border-radius: 5px;
+}
+/* Password rules met so far (partials/password_strength.html). */
+:where(.password-strength li.is-met) {
+    color: var(--bs-success);
+}
+
+/* User autocomplete (app.js userAutocomplete): the picked users' tags
+   (the suggestions - Kosatka.autocomplete, overlays.css). */
+:where(.user-autocomplete-tag) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--bs-secondary-bg);
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+button:where(.user-autocomplete-tag *) {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    color: var(--bs-secondary-color);
+    font-size: 1.1em;
+    line-height: 1;
+    cursor: pointer;
+}
+button:where(.user-autocomplete-tag *):hover {
+    color: var(--bs-danger);
+}
+/* button:where(…) - as specific as the framework's button rule it
+   overrides (font-size, line-height), still below any theme class rule. */
+button:where(.cancel-reply-btn) {
+    float: right;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+:where(.required) {
+    color: var(--bs-danger);
+}
+
+/* Loading skeletons: grey bars pulsing until the content arrives - the
+   comments (comments.html); modules reuse the animation (the random
+   quote, quotes.css). */
+:where(.comments-loading) {
+    padding: 20px 0;
+}
+:where(.comments-loaded .comments-loading) {
+    display: none;
+}
+:where(.loading-skeleton) {
+    animation: kosatka-skeleton-pulse 1.5s ease-in-out infinite;
+}
+:where(.skeleton-comment) {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 8px;
+}
+:where(.skeleton-avatar) {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: var(--bs-secondary-bg);
+    border-radius: 50%;
+}
+:where(.skeleton-content) {
+    flex: 1;
+}
+:where(.skeleton-header, .skeleton-text) {
+    background: var(--bs-secondary-bg);
+    border-radius: 4px;
+}
+:where(.skeleton-header) {
+    width: 150px;
+    height: 16px;
+    margin-bottom: 10px;
+}
+:where(.skeleton-text) {
+    height: 12px;
+    margin-bottom: 8px;
+}
+:where(.skeleton-text.short) {
+    width: 60%;
+}
+@keyframes kosatka-skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Unpublished content and content pending moderation, shown to editors. */
+:where(.moderation-notice) {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: var(--bs-warning-bg-subtle);
+    border: 1px solid var(--bs-warning-border-subtle);
+    border-radius: 4px;
+}
+:where(.moderation-notice.is-unpublished) {
+    background-color: var(--bs-danger-bg-subtle);
+    border-color: var(--bs-danger-border-subtle);
+}
+:where(.node-unpublished, .node-on-moderation) {
+    border-radius: 4px;
+}
+:where(.node-unpublished) {
+    background-color: var(--bs-danger-bg-subtle);
+}
+:where(.node-on-moderation) {
+    background-color: var(--bs-warning-bg-subtle);
+}
+
+/* Content scheduled to be published or unpublished, shown to its
+   editors: the notice above it, the pills of the form's "On schedule",
+   its fields (a <details> in the form's "Publishing" card). */
+:where(.moderation-notice.node-schedule-notice) {
+    background-color: var(--bs-info-bg-subtle);
+    border-color: var(--bs-info-border-subtle);
+}
+:where(.node-schedule-pill) {
+    padding: 0 .5em;
+    border-radius: 1em;
+    background-color: var(--bs-info-bg-subtle);
+    font-weight: 600;
+}
+:where(.node-schedule) {
+    margin-top: .25rem;
+    padding-top: .75rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+:where(.node-schedule[open]) {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+:where(.node-schedule-title) {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Delete confirmations (comments, quotes). */
+:where(.delete-confirm) {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bs-warning-bg-subtle);
+    border: 1px solid var(--bs-warning-border-subtle);
+    border-radius: 5px;
+}
+:where(.delete-confirm-preview) {
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 5px;
+}
+:where(.delete-confirm-danger) {
+    margin-top: 15px;
+    color: var(--bs-danger);
+    font-weight: bold;
+}
+
+/* The search results page (search/results.html). */
+:where(.search-page-form) {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+:where(.search-page-count, .search-page-hint, .search-page-empty) {
+    color: var(--bs-secondary-color);
+}
+/* ul:where(…) - as specific as the framework's ul rule it resets, still
+   below any theme class rule. */
+ul:where(.search-results) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+:where(.search-result) {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+:where(.search-result-image img) {
+    display: block;
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+:where(.search-result-title) {
+    font-weight: bold;
+}
+:where(.search-result-subtitle) {
+    color: var(--bs-secondary-color);
+}
+:where(.search-result-meta) {
+    margin-top: 2px;
+    color: var(--bs-secondary-color);
+    font-size: 0.9em;
+}
+:where(.search-result-snippet) {
+    margin: 4px 0 0;
+}
+
+/* The style guide (styleguide.html): a contents line, a section a kind,
+   rows of samples (every theme loads this file, not all base.css). */
+:where(.styleguide-toc ul) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+:where(.styleguide-section) {
+    margin-top: 2.5rem;
+}
+
+:where(.styleguide-section > h2:first-child) {
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+:where(.styleguide-row) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: center;
+}
+
+/* Kosatka.confirm / alert / prompt (app.js): the site's own dialog. */
+:where(.kosatka-dialog) {
+    max-width: min(32rem, calc(100vw - 2rem));
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: var(--bs-border-radius-lg, .5rem);
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .2);
+}
+:where(.kosatka-dialog)::backdrop {
+    background: rgba(0, 0, 0, .4);
+}
+:where(.kosatka-dialog-message) {
+    margin: 0 0 1rem;
+    white-space: pre-line;
+}
+:where(.kosatka-dialog-input) {
+    margin-bottom: 1rem;
+}
+:where(.kosatka-dialog-buttons) {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+
+/* An image field with several images on the content page
+   (dynamic/page.html): a grid of square previews, each opening in the
+   lightbox. */
+:where(.dynamic-field-images-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: .5rem;
+    margin: .5rem 0 2rem;
+}
+:where(.dynamic-field-images-grid img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
+/* A blocks field on the content page (fields/blocks.html): its blocks one
+   after another, or cards in a grid (field-blocks-view--grid); a block's
+   picture fills its card. */
+:where(.field-blocks-view) {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: .5rem 0 2rem;
+}
+:where(.field-blocks-view--grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+:where(.field-blocks-view--grid .component) :where(img.dynamic-field-image) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+/* The content form's image field with several images (node/edit_dynamic.html):
+   a row each - its preview, its alt text, ↑/↓ and the ✕ of its "delete"
+   tick (a row to be deleted fades) - in a framed list. */
+:where(.field-images) {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    overflow: hidden;
+}
+:where(.field-images:not(:has(.field-image-row))) {
+    display: none;
+}
+:where(.field-image-row) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    padding: .625rem .75rem;
+}
+:where(.field-image-row + .field-image-row) {
+    border-top: 1px solid var(--bs-border-color);
+}
+:where(.field-image-thumb) {
+    flex: 0 0 4rem;
+    width: 4rem;
+    height: 3rem;
+    object-fit: cover;
+    border-radius: .5rem;
+}
+:where(.field-image-alt) {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+:where(.field-image-actions) {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: .25rem;
+}
+/* The buttons are labels too (the file input's, the delete tick's): two
+   classes, so a theme's rule for a form's labels (".form-group label")
+   doesn't make them blocks with a margin. */
+.field-image-actions > .field-image-btn {
+    display: inline-grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
+    font-weight: 400;
+    line-height: 1;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    cursor: pointer;
+}
+:where(.field-image-btn:hover) {
+    border-color: var(--bs-secondary-color);
+    color: var(--bs-body-color);
+}
+.field-image-actions > .field-image-delete {
+    color: var(--bs-danger);
+}
+.field-image-actions > .field-image-delete-input:checked + .field-image-delete {
+    border-color: var(--bs-danger);
+    background: var(--bs-danger);
+    color: #fff;
+}
+:where(.field-image-delete-input:focus-visible + .field-image-delete) {
+    outline: 2px solid var(--kosatka-accent, var(--bs-primary));
+    outline-offset: 2px;
+}
+:where(.field-image-row:has(.field-image-delete-input:checked)) :where(.field-image-thumb, .field-image-alt) {
+    opacity: .4;
+}
+/* The content form's link field (node/edit_dynamic.html): a row each - its
+   address, its title (a field with titles), a module's preview - and, with
+   several, ↑/↓/✕ (the image rows' buttons); "Add a link" under them. */
+:where(.field-links-rows) {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+:where(.field-link-row) {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+}
+:where(.field-link-inputs) {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: .375rem;
+    min-width: 0;
+}
+/* What a module says about an address under it ([data-field-link-preview],
+   filled by the script of the formatter showing the field): a thumbnail
+   and a text - or, --warn, a note. */
+:where(.field-link-preview) {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .875rem;
+}
+:where(.field-link-preview-thumb) {
+    flex: 0 0 8rem;
+    width: 8rem;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: .5rem;
+    background: var(--bs-secondary-bg);
+}
+:where(.field-link-preview-text) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--bs-secondary-color);
+}
+:where(.field-link-preview-text strong) {
+    overflow: hidden;
+    color: var(--bs-body-color);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+:where(.field-link-preview--warn) {
+    padding: .375rem .625rem;
+    border-radius: .5rem;
+    background: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+}
+:where(.field-links-add) {
+    margin-top: .5rem;
+    padding: .375rem .75rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: .5rem;
+    background: transparent;
+    color: var(--kosatka-accent, var(--bs-primary));
+    font-weight: 600;
+}
+:where(.field-links-add:hover) {
+    border-color: var(--kosatka-accent, var(--bs-primary));
+}
+/* The content form's blocks field: a card per block - its heading (its
+   set, its summary, ↑/↓/✕) folds its fields; "Add: <set>" buttons under
+   them. */
+:where(.field-blocks-list) {
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+}
+:where(.field-blocks-list:empty) {
+    display: none;
+}
+:where(.field-block) {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    background: var(--bs-tertiary-bg);
+}
+:where(.field-block) > summary {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    padding: .5rem .75rem;
+    list-style: none;
+    cursor: pointer;
+}
+:where(.field-block) > summary::-webkit-details-marker {
+    display: none;
+}
+:where(.field-block) > summary::before {
+    content: "▸";
+    color: var(--bs-secondary-color);
+}
+:where(.field-block[open]) > summary::before {
+    content: "▾";
+}
+:where(.field-block-set) {
+    flex: none;
+    padding: .125rem .5rem;
+    border-radius: .375rem;
+    background: var(--bs-secondary-bg);
+    font-size: .8125rem;
+    font-weight: 700;
+}
+:where(.field-block-summary) {
+    flex: auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--bs-secondary-color);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+:where(.field-block-body) {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: .875rem 1rem 1rem;
+    border-top: 1px solid var(--bs-border-color);
+    background: var(--kosatka-surface, var(--bs-body-bg));
+    border-radius: 0 0 .75rem .75rem;
+}
+:where(.field-block-body .form-group) > label {
+    display: block;
+    margin-bottom: .375rem;
+    font-weight: 600;
+}
+:where(.field-blocks-add) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .5rem;
+}
+:where(.field-blocks-add-label) {
+    color: var(--kosatka-accent, var(--bs-primary));
+    font-weight: 600;
+}
+/* The content form's date with a time or an end: the start's date and
+   time, "-", the end's, in a row that wraps. */
+:where(.field-date-range) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+/* A number with its units beside the input. */
+:where(.field-number) {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.field-number > .form-control {
+    width: auto;
+    max-width: 14rem;
+}
+:where(.field-number-unit) {
+    color: var(--bs-secondary-color);
+}
+/* Several dates: a row each - the inputs, then ↑/↓/✕. */
+:where(.field-dates-rows) {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+:where(.field-date-row) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+:where(.field-date-row) > :where(.field-date-range) {
+    flex: 1 1 auto;
+}
+/* A class, not :where: Bootstrap's .form-control is full width. */
+.field-date-range > .form-control {
+    width: auto;
+    flex: 0 1 auto;
+}
+:where(.field-date-sep) {
+    color: var(--bs-secondary-color);
+}
+/* An image field with one image: the row framed on its own; without an
+   image a dashed drop area, the file input over it (a click or a drop
+   picks it), "+" for the preview. "Replace" / "Choose a file" - the file
+   input as a button. */
+:where(.field-image-single .field-image-row) {
+    position: relative;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+}
+:where(.field-image-single.is-empty .field-image-row) {
+    border: 1.5px dashed var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+}
+:where(.field-image-single.is-empty .field-image-row:hover) {
+    border-color: var(--kosatka-accent, var(--bs-primary));
+}
+:where(.field-image-row:has(.field-image-file:focus-visible)) {
+    outline: 2px solid var(--kosatka-accent, var(--bs-primary));
+    outline-offset: 2px;
+}
+:where(.field-image-placeholder) {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    border: 1.5px dashed var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: 1.375rem;
+}
+:where(.field-image-drop-text) {
+    flex: 1 1 10rem;
+    min-width: 0;
+    color: var(--bs-secondary-color);
+    font-size: .875rem;
+}
+.field-image-actions > .field-image-choose {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 2.25rem;
+    margin: 0;
+    padding: .375rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    color: var(--kosatka-accent, var(--bs-primary));
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.field-image-actions > .field-image-choose.is-primary {
+    border-color: transparent;
+    background: var(--kosatka-accent, var(--bs-primary));
+    color: #fff;
+}
+:where(.field-image-file) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+/* "From the media library" over the empty row's file input. */
+:where(.field-image-row .field-media-pick) {
+    position: relative;
+    z-index: 1;
+}
+:where(.field-image-single.is-empty .field-image-file) {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: none;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* The content item's form (node/edit_dynamic.html and the modules' own
+   types' forms): node-edit-layout - the fields' column (node-edit-main)
+   and the side column (node-edit-aside, edit_node_settings.html), one
+   under the other on a phone, the save card then at the screen's
+   bottom. node-edit-card - a card on the page: --kosatka-surface (a
+   theme's surface; else the page's background). The save card stays in
+   view below a sticky header: --node-edit-sticky-top (a theme's header
+   height). node-settings-section - a setting of the side column (a
+   module's too): its title, its value, its fields. */
+:where(.node-edit-title) {
+    margin: 0 0 1.25rem;
+}
+:where(.node-edit-layout) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 1.5rem;
+}
+:where(.node-edit-main) {
+    display: flex;
+    flex: 999 1 560px;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+:where(.node-edit-aside) {
+    display: flex;
+    flex: 1 1 300px;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 380px;
+}
+:where(.node-edit-card) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--kosatka-radius, .75rem);
+    background: var(--kosatka-surface, var(--bs-body-bg));
+}
+:where(.node-edit-card) :is(.form-control, .form-select) {
+    background-color: var(--kosatka-surface, var(--bs-body-bg));
+}
+:where(.node-edit-card .form-group) > label {
+    display: block;
+    margin-bottom: .375rem;
+    font-weight: 600;
+}
+:where(.node-edit-card) .node-edit-title-input {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+:where(.node-edit-card) input[type="file"]:not(.field-image-file) {
+    width: 100%;
+    padding: .875rem;
+    border: 1.5px dashed var(--bs-border-color);
+    border-radius: .75rem;
+    background: var(--bs-tertiary-bg);
+}
+:where(.node-edit-card) input[type="file"]:not(.field-image-file)::file-selector-button {
+    margin: 0 .75rem 0 0;
+    padding: .375rem .875rem;
+    border: 0;
+    border-radius: .5rem;
+    background: var(--kosatka-accent, var(--bs-primary));
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+:where(.node-edit-card .current-image img) {
+    border-radius: .5rem;
+}
+:where(.node-edit-card) .node-edit-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+:where(.node-edit-group) {
+    gap: 0;
+    padding: 0;
+}
+:where(.node-edit-group) > summary {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+}
+:where(.node-edit-group-body) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+    padding: 0 1.5rem 1.25rem;
+}
+:where(.node-edit-save) {
+    position: sticky;
+    top: calc(var(--admin-bar-offset, 0px) + var(--node-edit-sticky-top, 1rem));
+    z-index: 2;
+    gap: .75rem;
+    box-shadow: var(--kosatka-shadow, 0 6px 18px rgba(16, 32, 43, .08));
+}
+:where(.node-edit-state) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+:where(.node-edit-pill) {
+    padding: .125rem .625rem;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+    font-weight: 600;
+}
+:where(.node-edit-pill--published) {
+    background: var(--bs-success-bg-subtle);
+    color: var(--bs-success-text-emphasis);
+}
+:where(.node-edit-meta) {
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+}
+:where(.node-edit-buttons) {
+    display: flex;
+    gap: .5rem;
+}
+:where(.node-edit-buttons .btn-primary) {
+    flex: 1 1 auto;
+}
+:where(.node-edit-publishing) {
+    gap: .5rem;
+}
+:where(.node-settings) {
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+:where(.node-settings-section + .node-settings-section) {
+    border-top: 1px solid var(--bs-border-color);
+}
+:where(.node-settings-section) > summary {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .8rem 1.125rem;
+    list-style: none;
+    cursor: pointer;
+}
+/* A setting of the side column that is a link (a module's page about the
+   content, node-settings-link): laid out as a summary. Its colour and
+   underline on the class: Bootstrap's rule for links is an element's. */
+:where(.node-settings-link) {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .8rem 1.125rem;
+}
+.node-settings-link,
+.node-settings-link:hover {
+    color: inherit;
+    text-decoration: none;
+}
+.node-settings-link:hover .node-settings-title {
+    text-decoration: underline;
+}
+:where(.node-settings-section) > summary::-webkit-details-marker {
+    display: none;
+}
+:where(.node-settings-title) {
+    flex: none;
+    font-weight: 600;
+}
+:where(.node-settings-value) {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--bs-secondary-color);
+    font-size: .875rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+:where(.node-settings-value)::after {
+    content: " ›";
+}
+:where(.node-settings-section[open] .node-settings-value)::after {
+    content: " ⌄";
+}
+:where(.node-settings-body) {
+    display: flex;
+    flex-direction: column;
+    gap: .875rem;
+    padding: 0 1.125rem 1rem;
+}
+@media (max-width: 767.98px) {
+    :where(.node-edit-aside) {
+        display: contents;
+    }
+    :where(.node-edit-publishing, .node-settings) {
+        flex: 1 1 100%;
+        order: 1;
+    }
+    :where(.node-edit-save) {
+        flex: 1 1 100%;
+        order: 2;
+        top: auto;
+        bottom: 0;
+        padding: .75rem 1rem;
+    }
+    /* At the screen's bottom only the buttons; the state is in the
+       "Publishing" card. "Back to top" moves above the card. */
+    :where(.node-edit-save .node-edit-state, .node-edit-save .node-edit-meta) {
+        display: none;
+    }
+    :where(body:has(.node-edit-save)) .back-to-top {
+        bottom: 6rem;
+    }
+}
+
+/* A View field showing every image of a field with several
+   (dynamic/list.html, image_display "all"): a row of them, wrapping. */
+:where(.item-field-images) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+}
+:where(.item-field-images .item-field-image) {
+    width: 4rem;
+    height: 4rem;
+    object-fit: cover;
+}
+
+/* The cookie banner (partials/html.html consent_banner, app.js consent):
+   a bar at the bottom over the page. :where() - a theme's rule wins. */
+:where(.kosatka-consent) {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1080;
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #17171c);
+    border-top: 1px solid var(--bs-border-color, #d5e0e6);
+    box-shadow: 0 -8px 28px rgba(6, 32, 51, .1);
+}
+:where(.kosatka-consent[hidden]) {
+    display: none;
+}
+:where(.kosatka-consent-inner) {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+}
+:where(.kosatka-consent-text) {
+    flex: 1 1 480px;
+    margin: 0;
+    line-height: 1.5;
+}
+:where(.kosatka-consent-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+:where(.kosatka-consent-customize) {
+    border: 0;
+    background: none;
+    padding: 8px 10px;
+    color: var(--kosatka-accent, var(--bs-link-color));
+    text-decoration: underline;
+}
+:where(.kosatka-consent-groups) {
+    flex: 1 1 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+:where(.kosatka-consent-group) {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+:where(.kosatka-consent-group input) {
+    margin-top: .3em;
+}
+
+/* The language of content shown on a page in another language (a list
+   showing an original where there's no translation; the otherLanguage
+   template function): a small badge after the title, whatever the
+   heading's size. */
+.badge.node-teaser-language {
+    font-size: .75rem;
+    font-weight: 600;
+    vertical-align: middle;
+}

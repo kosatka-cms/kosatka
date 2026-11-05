@@ -1,0 +1,42 @@
+# Theme manifest: the regions this theme's templates render
+# ({{template "region_blocks" (dict "Region" (region "<id>") ...)}}) - the
+# catalog for the blocks admin, in /admin/config/blocks order. A theme with
+# its own templates ships themes/<theme>/theme.yaml, which
+# replaces this file entirely. The engine's service region "disabled" is not listed.
+# name - the theme's name in the admin (Appearance, Blocks), in English and
+# translated like the region labels: "Base" - the engine's bare templates
+# every theme falls back to.
+name: Base
+# The theme's description (Appearance page; entity.ThemeInfo).
+description: The engine's own templates - plain Bootstrap, light or dark as the visitor's device is.
+author: Kosatka
+license: MIT
+tags: [light, dark, minimal, responsive]
+screenshot: images/theme-base.jpg
+# default_region - where new blocks go.
+default_region: sidebar
+regions:
+  - id: header
+    label: Header
+  # The whole sidebar is one region (sidebar.html), ordered by weight.
+  - id: sidebar
+    label: Sidebar
+  # Between the page's title and its content.
+  - id: content_top
+    label: Content top
+  - id: content_bottom
+    label: Content bottom
+  # Inside the node page (dynamic/page.html, forum/topic.html).
+  - id: content_inline
+    label: Inside content (content page)
+  - id: footer
+    label: Footer
+  # The footer's last line (the copyright block on a new site).
+  - id: footer_bottom
+    label: Footer bottom line
+# blocks - the blocks the theme comes with (entity.ThemeBlock): placed
+# when the theme gets its layout for the first time, unless the layout
+# has them.
+blocks:
+  - plugin: copyright
+    region: footer_bottom

@@ -1,0 +1,256 @@
+{{/* view_fragments - the re-renderable parts of admin/views/page.html's cards.
+     Used by the full-page render (ViewEdit) and by the AJAX responses of
+     filter/field/settings mutations (the admin view handlers' render*Fragment, via
+     TemplateService.RenderNamed); see the shared templates in
+     internal/domain/service/template.go for why it's listed there. */}}
+
+{{define "view_settings_summary"}}
+<dl class="admin-summary">
+    <div class="admin-summary-item"><dt>{{t "Name"}}</dt><dd>{{.view.Label}}</dd></div>
+    <div class="admin-summary-item"><dt>machine_name</dt><dd><code>{{.view.MachineName}}</code></dd></div>
+    {{if eq (print .view.DisplayType) "page"}}
+    <div class="admin-summary-item"><dt>URL</dt><dd><a href="/{{.view.URLPath}}" target="_blank" rel="noopener"><code>/{{.view.URLPath}}</code></a></dd></div>
+    {{end}}
+    <div class="admin-summary-item"><dt>{{t "Display type"}}</dt><dd>{{if eq (print .view.DisplayType) "block"}}{{t "Block"}}{{else if eq (print .view.DisplayType) "attachment"}}{{t "Attached to content"}}{{else if eq (print .view.DisplayType) "term"}}{{t "Term page"}}{{else if eq (print .view.DisplayType) "user_tab"}}{{t "Profile tab"}}{{else}}{{t "Page"}}{{end}}</dd></div>
+    {{if eq (print .view.DisplayType) "attachment"}}
+    <div class="admin-summary-item"><dt>{{t "Attached to"}}</dt><dd>{{with .view.AttachContentTypeList}}{{range $i, $t := .}}{{if $i}}, {{end}}<code>{{$t}}</code>{{end}}{{else}}<span class="text-muted">{{t "no content types"}}</span>{{end}} · {{t "weight @weight" "@weight" .view.AttachWeight}}</dd></div>
+    {{end}}
+    {{if eq (print .view.DisplayType) "user_tab"}}
+    <div class="admin-summary-item"><dt>{{t "Profile tab"}}</dt><dd><code>/{{userPathPrefix}}/&lt;{{t "user"}}&gt;/{{.view.ProfileTabPath}}</code> · {{if eq (print .view.ProfileTabAccess) "owner"}}{{t "owner and administrators"}}{{else}}{{t "everyone"}}{{end}} · {{t "weight @weight" "@weight" .view.AttachWeight}}</dd></div>
+    {{end}}
+    {{if eq (print .view.DisplayType) "term"}}
+    <div class="admin-summary-item"><dt>{{t "Vocabularies"}}</dt><dd>{{with .view.TermVocabularies}}<code>{{.}}</code>{{else}}<span class="text-muted">{{t "all"}}</span>{{end}} · {{t "weight @weight" "@weight" .view.AttachWeight}}</dd></div>
+    {{end}}
+    {{with .view.ThemeTemplate}}
+    <div class="admin-summary-item"><dt>{{t "Theme template"}}</dt><dd><code>views/{{.}}.html</code></dd></div>
+    {{end}}
+    <div class="admin-summary-item"><dt>{{t "List display"}}</dt><dd>{{if eq (print .view.DisplayStyle) "table"}}{{t "Table"}}{{else if eq (print .view.DisplayStyle) "list"}}{{t "List"}}{{else}}{{t "Grid (@columns)" "@columns" (plural .view.GridColumns "@count column" "@count columns")}}{{end}}</dd></div>
+    <div class="admin-summary-item"><dt>{{t "Pagination"}}</dt><dd>{{if .view.ShowPagination}}{{t "Shown"}}{{if .view.PaginationAjax}} ({{t "AJAX, without reload"}}){{end}}{{else}}{{tc "pagination" "Disabled"}}{{end}}</dd></div>
+    <div class="admin-summary-item"><dt>{{t "Items per page"}}</dt><dd>{{.view.PageSize}}</dd></div>
+    <div class="admin-summary-item"><dt>{{t "Glossary"}}</dt><dd>{{if .view.ShowGlossary}}{{$glossaryField := (t "Name")}}{{if .view.GlossaryFieldStorageID}}{{$glossaryField = index .fieldLabels .view.GlossaryFieldStorageIDValue}}{{end}}{{t "Enabled - by field \"@field\"" "@field" $glossaryField}}{{else}}{{tc "glossary" "Disabled"}}{{end}}</dd></div>
+    <div class="admin-summary-item"><dt>{{t "Status"}}</dt><dd>{{if eq .view.Status 1}}{{t "Published"}}{{else}}{{t "Unpublished"}}{{end}}</dd></div>
+    {{if .view.MetaTitle}}
+    <div class="admin-summary-item"><dt>{{t "SEO title"}}</dt><dd>{{.view.MetaTitle}}</dd></div>
+    {{end}}
+    {{if .view.MetaDescription}}
+    <div class="admin-summary-item"><dt>{{t "SEO description"}}</dt><dd>{{.view.MetaDescription}}</dd></div>
+    {{end}}
+</dl>
+{{end}}
+
+{{define "view_filters_list"}}
+{{/* A content list without a status filter lists unpublished items too:
+     a View has no filter it isn't given (said here, not changed). */}}
+{{if and .view (not .view.IsComment)}}
+{{$status := false}}{{range .filters}}{{if eq (print .BuiltinField) "status"}}{{$status = true}}{{end}}{{end}}
+{{if not $status}}<div class="alert alert-warning py-2" role="status" id="filters-no-status">{{t "No <code>status</code> filter: the list shows unpublished content too, to everyone who sees it. Add <code>status</code> equal to 1 to list only published items."}}</div>{{end}}
+{{end}}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width:32px;"></th>
+                <th>{{t "Field"}}</th>
+                <th>{{t "Operator"}}</th>
+                <th>{{t "Value"}}</th>
+                <th>{{t "Exposed to visitors"}}</th>
+                <th class="text-end">{{t "Operations"}}</th>
+            </tr>
+        </thead>
+        <tbody id="filters-tbody">
+            {{range .filters}}
+            {{$fsID := .FieldStorageIDValue}}
+            {{$target := .Target}}
+            <tr data-filter-id="{{.ID}}" data-target="{{$target}}" data-operator="{{.Operator}}" data-value="{{.Value}}" data-value-relative="{{if .ValueIsRelative}}1{{else}}0{{end}}" data-exposed="{{if .Exposed}}1{{else}}0{{end}}" data-exposed-param="{{.ExposedParam}}" data-exposed-label="{{.ExposedLabel}}" data-contextual="{{if .Contextual}}1{{else}}0{{end}}">
+                {{/* Drag handle/edit/delete are hidden while the section is inherited
+                     from Default - override it first via the section's banner. */}}
+                <td class="drag-handle admin-drag-cursor" {{if $.view.CanEditFilters}}draggable="true"{{end}}>{{if $.view.CanEditFilters}}&#9776;{{end}}</td>
+                <td>
+                    {{$moduleLabel := ""}}{{if $.moduleLabels}}{{$moduleLabel = index $.moduleLabels (print .BuiltinField)}}{{end}}
+                    {{if $fsID}}{{with .ViaFieldStorageIDValue}}{{index $.fieldLabels .}} › {{end}}{{index $.fieldLabels $fsID}}{{else if $moduleLabel}}{{$moduleLabel}} <code class="small text-muted">{{.BuiltinField}}</code>{{else}}<code>{{.BuiltinField}}</code>{{end}}
+                </td>
+                <td><code>{{.Operator}}</code></td>
+                <td>{{if .Contextual}}<span class="text-muted">{{t "context (value from <code>@field</code>)" "@field" .BuiltinField}}</span>{{else if .Exposed}}<span class="text-muted">{{t "query parameter:"}} <code>{{.ExposedParam}}</code>{{if .ExposedLabel}} - "{{.ExposedLabel}}"{{end}}</span>{{else}}{{index $.filterValueDisplays .ID}}{{end}}</td>
+                <td class="text-center">{{if .Exposed}}{{t "Yes"}}{{else}}{{t "No"}}{{end}}</td>
+                <td class="text-nowrap text-end">
+                    {{if $.view.CanEditFilters}}
+                    <button type="button" class="admin-icon-btn filter-edit-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                        {{template "admin_icon_edit"}}
+                    </button>
+                    <button type="button" class="admin-icon-btn admin-icon-btn--danger filter-delete-btn" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                        {{template "admin_icon_delete"}}
+                    </button>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="6">{{t "No filters - the view shows all content of all types, unpublished too: add a status filter"}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
+{{define "view_fields_list"}}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width:32px;"></th>
+                <th>{{t "Field"}}</th>
+                <th>{{t "Label"}}</th>
+                <th>{{t "Show label"}}</th>
+                <th>{{t "Image style"}}</th>
+                <th>{{t "Tag format"}}</th>
+                <th>{{t "Link"}}</th>
+                <th>{{t "CSS class"}}</th>
+                <th>{{t "Rewrite HTML"}}</th>
+                {{if .view.IsComment}}<th>{{t "Trimming"}}</th>{{end}}
+                <th class="text-end">{{t "Operations"}}</th>
+            </tr>
+        </thead>
+        <tbody id="fields-tbody">
+            {{range .fields}}
+            {{$fsID := .FieldStorageIDValue}}
+            {{$target := printf "builtin:%s" (print .BuiltinField)}}
+            {{if $fsID}}{{$target = printf "field:%d" $fsID}}{{end}}
+            {{$fieldStorageLabel := index $.fieldBuiltinLabels .BuiltinField}}
+            {{/* A module's field: its label; its module off - none, its key shown. */}}
+            {{if and (not $fieldStorageLabel) $.moduleLabels}}{{$fieldStorageLabel = index $.moduleLabels (print .BuiltinField)}}{{end}}
+            {{$fieldStorageType := ""}}
+            {{if or (eq (print .BuiltinField) "comment_created_at") (eq (print .BuiltinField) "created_at")}}{{$fieldStorageType = "date"}}{{end}}
+            {{if $fsID}}{{$fieldStorageLabel = index $.fieldStorageLabels $fsID}}{{$fieldStorageType = index $.fieldStorageTypes $fsID}}{{end}}
+            {{$linkToLabel := "-"}}
+            {{if eq (print .LinkTo) "content"}}{{$linkToLabel = (t "To content")}}{{else if eq (print .LinkTo) "file"}}{{$linkToLabel = (t "To the original image")}}{{end}}
+            <tr data-field-id="{{.ID}}" data-target="{{$target}}" data-field-storage-type="{{$fieldStorageType}}" data-field-storage-label="{{$fieldStorageLabel}}" data-label="{{.Label}}" data-show-label="{{if .ShowLabel}}1{{else}}0{{end}}" data-image-style="{{.ImageStyle}}" data-date-format="{{.DateFormat}}" data-tag-format="{{.TagFormat}}" data-image-display="{{.ImageDisplay}}" data-formatter="{{.Formatter}}" data-layout="{{.Layout}}" data-link-to="{{.LinkTo}}" data-css-class="{{.CSSClass}}" data-rewrite-html="{{.RewriteHTML}}" data-trim-length="{{.TrimLength}}" data-exclude-from-display="{{if .ExcludeFromDisplay}}1{{else}}0{{end}}" data-hide-in-overflow="{{if .HideInOverflow}}1{{else}}0{{end}}" data-fallback-field-key="{{.FallbackFieldKey}}" data-params="{{json .Params}}">
+                <td class="drag-handle admin-drag-cursor" {{if $.view.CanEditFields}}draggable="true"{{end}}>{{if $.view.CanEditFields}}&#9776;{{end}}</td>
+                <td>{{$fieldStorageLabel}} <code class="small text-muted">{{if $fsID}}{{index $.fieldStorageMachineNames $fsID}}{{else}}{{.BuiltinField}}{{end}}</code></td>
+                <td>{{.Label}}{{if .ExcludeFromDisplay}} <span class="badge text-bg-light border" title="{{t "Resolved but not rendered - available only as a token in another field's Rewrite HTML"}}">{{t "excl."}}</span>{{end}}</td>
+                <td class="text-center">{{if .ShowLabel}}{{t "Yes"}}{{else}}{{t "No"}}{{end}}</td>
+                <td>{{.ImageStyle}}</td>
+                <td>{{.TagFormat}}</td>
+                <td>{{$linkToLabel}}</td>
+                <td><code>{{.CSSClass}}</code></td>
+                <td class="text-center">{{if .RewriteHTML}}{{t "Yes"}}{{else}}-{{end}}</td>
+                {{if $.view.IsComment}}<td>{{if .TrimLength}}{{t "@length chars" "@length" .TrimLength}}{{else}}-{{end}}</td>{{end}}
+                <td class="text-nowrap text-end">
+                    {{if $.view.CanEditFields}}
+                    <button type="button" class="admin-icon-btn field-edit-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                        {{template "admin_icon_edit"}}
+                    </button>
+                    <button type="button" class="admin-icon-btn admin-icon-btn--danger field-delete-btn" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                        {{template "admin_icon_delete"}}
+                    </button>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="{{if .view.IsComment}}11{{else}}10{{end}}">{{t "No fields selected - the page will show nothing. Add at least the built-in \"Title\"."}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
+{{/* view_sorts_list - repeatable sort criteria, same
+     FieldStorageID/BuiltinField shape and drag-to-reorder as the filter and
+     field lists, but order matters: the first row is the primary key, the
+     rest are tie-breakers (see entity.ViewSortDef) - hence the "#" column. */}}
+{{define "view_sorts_list"}}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width:32px;"></th>
+                <th>{{t "Field"}}</th>
+                <th>{{t "Direction"}}</th>
+                <th class="text-end">{{t "Operations"}}</th>
+            </tr>
+        </thead>
+        <tbody id="sorts-tbody">
+            {{range $i, $s := .sorts}}
+            {{$fsID := $s.FieldStorageIDValue}}
+            {{$target := printf "builtin:%s" (print $s.BuiltinField)}}
+            {{$targetLabel := index $.sortBuiltinLabels $s.BuiltinField}}
+            {{/* A module's criterion: its label; its module off - its key. */}}
+            {{if and (not $targetLabel) $.moduleLabels}}{{$targetLabel = index $.moduleLabels (print $s.BuiltinField)}}{{end}}
+            {{if not $targetLabel}}{{$targetLabel = print $s.BuiltinField}}{{end}}
+            {{if $fsID}}{{$target = printf "field:%d" $fsID}}{{$targetLabel = index $.fieldLabels $fsID}}{{end}}
+            <tr data-sort-id="{{$s.ID}}" data-target="{{$target}}" data-target-label="{{$targetLabel}}" data-direction="{{$s.Direction}}" data-params="{{json $s.Params}}" data-exposed-key="{{$s.ExposedKey}}" data-exposed-label="{{$s.ExposedLabel}}">
+                <td class="drag-handle admin-drag-cursor" {{if $.view.CanEditSort}}draggable="true"{{end}}>{{if $.view.CanEditSort}}&#9776;{{end}}</td>
+                <td><code>{{$targetLabel}}</code>{{if $s.Params}} <span class="small text-muted">{{range $k, $v := $s.Params}}{{$k}}={{$v}} {{end}}</span>{{end}}{{if $s.Exposed}}<div class="small text-muted">{{t "For visitors:"}} {{$s.ExposedLabel}} <code>?sort={{$s.ExposedKey}}</code></div>{{end}}</td>
+                <td>{{if eq $s.Direction "asc"}}{{t "Ascending"}}{{else}}{{t "Descending"}}{{end}}</td>
+                <td class="text-nowrap text-end">
+                    {{if $.view.CanEditSort}}
+                    <button type="button" class="admin-icon-btn sort-edit-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">
+                        {{template "admin_icon_edit"}}
+                    </button>
+                    <button type="button" class="admin-icon-btn admin-icon-btn--danger sort-delete-btn" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                        {{template "admin_icon_delete"}}
+                    </button>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="4">{{t "No sort criteria - newest first by default (by creation date)"}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
+{{/* view_module_params - the settings of the modules' criteria
+     (.options: viewModuleOption) in a sort or field modal, a group per
+     criterion; admin_views.js shows and enables the group of the chosen
+     one. */}}
+{{define "view_module_params"}}
+{{range .options}}{{if .Params}}
+<div class="view-module-params d-none" data-module-target="{{.Target}}">
+    {{$target := .Target}}
+    {{range .Params}}
+    {{$id := printf "%s-%s-%s" $.prefix $target .Key}}
+    <div class="mb-3">
+        <label for="{{$id}}" class="form-label">{{.Label}}</label>
+        {{if eq (print .Type) "select"}}
+        {{$default := .Default}}
+        <select id="{{$id}}" name="param_{{.Key}}" class="form-select" data-param="{{.Key}}" disabled>
+            {{range .Options}}<option value="{{.Value}}" {{if eq .Value $default}}selected{{end}}>{{.Label}}</option>{{end}}
+        </select>
+        {{else if eq (print .Type) "text"}}
+        <input type="text" id="{{$id}}" name="param_{{.Key}}" class="form-control" value="{{.Default}}" maxlength="{{.Max}}" data-param="{{.Key}}" disabled>
+        {{else}}
+        <input type="number" id="{{$id}}" name="param_{{.Key}}" class="form-control admin-max-sm" value="{{.Default}}" min="{{.Min}}" max="{{.Max}}" data-param="{{.Key}}" disabled>
+        <div class="form-text">{{t "From @min to @max." "@min" .Min "@max" .Max}}</div>
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{end}}{{end}}
+{{end}}
+
+{{/* view_publish_status - the action bar's publish/discard buttons and
+     status text. Re-rendered after publishing and after every
+     settings/filters/sorts/fields mutation, since any of them can change
+     .hasUnpublishedChanges. Not shown for the Default display (no page of
+     its own). */}}
+{{define "view_publish_status"}}
+{{if not .view.IsDefault}}
+<div class="admin-publish-status">
+    {{if .hasUnpublishedChanges}}
+    <span class="admin-publish-state admin-publish-state--pending">{{t "There are unpublished changes."}}</span>
+    {{else if .view.PublishedAt}}
+    <span class="admin-publish-state">{{t "Published:"}} {{date .view.PublishedAt "datetime"}}</span>
+    {{else}}
+    <span class="admin-publish-state">{{t "Not published yet - visitors see the current (live) version."}}</span>
+    {{end}}
+    {{/* Discard needs both a snapshot to revert to and an actual
+         difference from it. */}}
+    <form method="post" action="/admin/config/views/{{.view.ID}}/discard" class="mb-0 {{if not (and .view.HasPublishedSnapshot .hasUnpublishedChanges)}}d-none{{end}}">
+        <button type="submit" class="btn btn-outline-secondary">{{t "Discard changes"}}</button>
+    </form>
+    <form method="post" action="/admin/config/views/{{.view.ID}}/publish" id="view-publish-form" class="mb-0">
+        <button type="submit" class="btn btn-primary">{{t "Publish changes"}}</button>
+    </form>
+</div>
+{{end}}
+{{end}}

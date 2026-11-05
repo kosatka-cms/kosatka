@@ -1,0 +1,12 @@
+{{/* profile_files - the current user's files (/me/files): the file
+     browser (file-browser.js) on the /api/user/files API. */}}
+{{define "profile_files"}}
+<link rel="stylesheet" href="{{ staticCSS "file-browser" }}">
+<div class="mt-3">
+    <div id="user-files-browser" class="kfb-host"></div>
+</div>
+<script src="{{ staticJS "file-browser" }}"></script>
+<script>
+KosatkaFileBrowser.mount(document.getElementById('user-files-browser'), {mode: 'page', csrfToken: {{.CSRFToken}}});
+</script>
+{{end}}

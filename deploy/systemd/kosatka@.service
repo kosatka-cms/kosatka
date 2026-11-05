@@ -1,0 +1,21 @@
+# A Kosatka site as a systemd service: one instance per site, named after
+# it - kosatka@<site> runs /opt/<site>/<site> with /opt/<site>/<site>.env.
+#   cp deploy/systemd/kosatka@.service /etc/systemd/system/
+#   systemctl enable --now kosatka@<site>
+[Unit]
+Description=Kosatka CMS site %i
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/%i
+Environment=CONFIG_PATH=/opt/%i/prod.yaml
+EnvironmentFile=-/opt/%i/%i.env
+ExecStart=/opt/%i/%i
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

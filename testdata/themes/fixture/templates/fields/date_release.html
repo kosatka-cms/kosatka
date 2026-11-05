@@ -1,0 +1,3 @@
+{{/* A date field's own template (field_date_<machine name>): "release"
+     wraps the date, in the field's display format, in a <time>. */}}
+{{define "field_date_release"}}{{if not .IsZero}}<time class="release">{{.Formatted}}</time>{{end}}{{end}}

@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/blocks" "BackLabel" (t "All blocks")
+    "Heading" (t "Delete block \"@title\"?" "@title" .block.Title)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/blocks/%v/delete" .block.ID)
+    "Submit" (t "Yes, delete block"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">{{t "The block and its placement will be permanently deleted."}}</p>
+{{end}}

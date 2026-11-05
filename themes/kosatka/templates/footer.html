@@ -1,0 +1,21 @@
+{{/* The kosatka footer: a wave over the deep, the footer region, the
+     footer_bottom region in a row (the copyright block, the theme's -
+     theme.yaml "blocks"), the engine's scripts and document end
+     (html_scripts, html_end). The admin layout renders "footer" too. */}}
+{{define "footer"}}
+<footer class="site-footer k-footer">
+    <svg class="k-footer-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 240 0 480 60 720 30 S 1200 0 1440 30 V 60 H 0 Z"/></svg>
+    <div class="container">
+        {{if regionHasBlocks "footer" .}}
+        <div class="site-footer-region">
+            {{template "region_blocks" (dict "Region" (region "footer") "Ctx" .)}}
+        </div>
+        {{end}}
+        <div class="k-footer-row">
+            {{template "region_blocks" (dict "Region" (region "footer_bottom") "Ctx" .)}}
+        </div>
+    </div>
+</footer>
+{{template "html_scripts" .}}
+{{template "html_end" .}}
+{{end}}

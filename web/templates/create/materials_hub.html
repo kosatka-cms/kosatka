@@ -1,0 +1,25 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<div class="create-materials-hub">
+    {{$creatable := index . "creatableMaterials"}}
+    {{if $creatable}}
+    <ul class="list-unstyled create-materials-hub-list">
+        {{range $creatable}}
+        <li class="mb-2">
+            <a href="{{.URL}}" class="btn btn-outline-primary w-100 text-start">{{.Label}}</a>
+        </li>
+        {{end}}
+    </ul>
+    {{else}}
+    <p class="text-muted">{{t "No content types are available to create."}}</p>
+    {{end}}
+</div>
+
+{{end}}

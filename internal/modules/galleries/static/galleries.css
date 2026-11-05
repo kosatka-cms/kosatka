@@ -1,0 +1,12 @@
+/* A node's galleries on its page (the galleries module's default look):
+   the previews in a row with gaps. Wrapped in :where() (zero
+   specificity): a theme's rule for them wins whatever the load order. */
+:where(.node-gallery > div) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .625rem;
+}
+
+:where(.node-gallery .content-image-link img) {
+    display: block;
+}

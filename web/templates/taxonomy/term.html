@@ -1,0 +1,35 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+<div class="page-content">
+    <div>
+        {{/* The modules' actions on the term (following it): their
+             "term_actions_<module>". */}}
+        {{moduleHook "term_actions" .}}
+        {{if .term.Desc}}
+        <div class="term-description">
+            {{.term.Desc | rawHTML}}
+        </div>
+        {{end}}
+        
+        <div class="view-content">
+            {{range .items}}
+                {{renderTeaser .}}
+            {{end}}
+        </div>
+        
+        {{if .items}}
+            {{template "pagination.html" .}}
+        {{else}}
+            <p class="no-content">{{t "No content with this tag yet."}}</p>
+        {{end}}
+    </div>
+</div>
+
+{{end}}
+

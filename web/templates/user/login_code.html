@@ -1,0 +1,45 @@
+{{/* user/login_code.html - the second step of a sign-in
+     (UserController.LoginCode): the code of the authenticator app for
+     .username, or a recovery code (.recovery); a wrong one (.codeError);
+     signing in as someone else instead. A card like the login page's. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<div class="auth-card">
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Confirmation code"}}</h1>
+        {{if .recovery}}<p class="auth-card-sub">{{t "Enter one of your recovery codes for @name. Each works once." "@name" .username}}</p>
+        {{else}}<p class="auth-card-sub">{{t "Open the authenticator app and enter the six-digit code for @name." "@name" .username}}</p>{{end}}
+    </div>
+    {{if .codeError}}<div class="alert alert-danger" role="alert">{{.codeError}}</div>{{end}}
+    <form method="POST" action="/login/code" class="auth-form">
+        {{with .destination}}<input type="hidden" name="destination" value="{{.}}">{{end}}
+        <div class="auth-field">
+        {{if .recovery}}
+            <input type="hidden" name="recovery" value="1">
+            <label for="two-factor-code" class="form-label">{{t "Recovery code"}}</label>
+            <input type="text" class="form-control auth-code auth-code--recovery" id="two-factor-code" name="code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxx-xxxx" required autofocus>
+        {{else}}
+            <label for="two-factor-code" class="form-label">{{t "Code from the app"}}</label>
+            <input type="text" class="form-control auth-code" id="two-factor-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" placeholder="123456" required autofocus>
+        {{end}}
+        </div>
+        <button type="submit" class="btn btn-primary auth-submit">{{t "Log in"}}</button>
+    </form>
+    <p class="auth-card-foot">
+        {{if .recovery}}<a href="/login/code{{with .destination}}?destination={{.}}{{end}}">{{t "Enter a code from the app"}}</a>
+        {{else}}<a href="/login/code?recovery=1{{with .destination}}&amp;destination={{.}}{{end}}">{{t "No access to the app? Enter a recovery code"}}</a>{{end}}
+    </p>
+    <form method="POST" action="/login/code" class="auth-card-foot">
+        <input type="hidden" name="cancel" value="1">
+        <button type="submit" class="btn btn-link p-0">{{t "Cancel - sign in as someone else"}}</button>
+    </form>
+</div>
+</div>
+{{end}}

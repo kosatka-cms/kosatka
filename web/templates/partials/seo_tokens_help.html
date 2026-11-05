@@ -1,0 +1,25 @@
+{{/* seo_tokens_help - SEO template syntax help (admin/seo*.html).
+     Optional .typeFields - the content type's fields. */}}
+{{define "seo_tokens_help"}}
+<div class="card card-body bg-light small mb-4">
+    <h6>{{t "Tokens"}}</h6>
+    <table class="table table-sm mb-2">
+        <tbody>
+            <tr><td><code>[node:title]</code></td><td>{{t "content title"}}</td></tr>
+            <tr><td><code>[node:field:<i>machine_name</i>]</code></td><td>{{t "field value: text as is, terms - names separated by commas, date - 02.01.2006"}}</td></tr>
+            <tr><td><code>[node:field:<i>machine_name</i>:year]</code></td><td>{{t "year from a date field"}}</td></tr>
+            <tr><td><code>[node:field:<i>machine_name</i>:<i>{{t "format"}}</i>]</code></td><td>{{t "date in a format from <a href=\":url\">Date formats</a> by its machine name, e.g. <code>[node:field:release_date:medium]</code> → \"May 15, 2027\"" ":url" "/admin/config/date-formats"}}</td></tr>
+            <tr><td><code>[node:summary]</code></td><td>{{t "beginning of the content text"}}</td></tr>
+            <tr><td><code>[site:name]</code></td><td>{{t "site name"}}</td></tr>
+        </tbody>
+    </table>
+    <p class="mb-1"><code>[a|b]</code> {{t "- the first non-empty value, e.g. <code>[node:field:release_date_local:year|node:field:release_date:year]</code>."}}</p>
+    <p class="mb-1"><code>{ … }</code> {{t "- an optional part: dropped entirely if any token inside it is empty, e.g. <code>[node:title]{ ([node:field:release_date:year])}</code> → \"The Long Road (2008)\" or just \"The Long Road\"."}}</p>
+    <p class="mb-1"><code>{A|B}</code> {{t "- the first variant in which all tokens are filled, e.g. <code>{[node:field:title_original] ([node:title])|[node:title]}</code> → \"La Strada (The Road)\", and without an original title - \"The Road\"."}}</p>
+    <p class="mb-0">{{t "The description from the template is stripped of HTML and truncated to the meta description length."}}</p>
+    {{with .typeFields}}
+    <h6 class="mt-3">{{t "Type fields"}}</h6>
+    <p class="mb-0">{{range $i, $f := .}}{{if $i}}, {{end}}<code>{{$f.MachineName}}</code> ({{$f.Label}}){{end}}</p>
+    {{end}}
+</div>
+{{end}}

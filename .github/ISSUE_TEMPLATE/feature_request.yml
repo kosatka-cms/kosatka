@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a new feature or a change to how something works.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Kosatka is an engine for any site: a feature that one site needs
+        becomes a general mechanism (a setting, a field type, a block, a
+        module), not a special case. Describing the problem first helps us
+        find that mechanism.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do on your site and what stands in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+      description: How the engine could solve it. Mention the parts it touches (admin, themes, modules, database), if you know them.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What you tried or considered instead, such as a theme template, a module of your own or a View.

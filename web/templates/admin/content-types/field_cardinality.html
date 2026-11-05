@@ -1,0 +1,55 @@
+{{template "layout.html" .}}
+
+{{/* The confirmation for switching a field between one and several values
+     (admin.Controller.ContentTypeFieldCardinality). */}}
+
+{{define "content"}}
+<p><a href="/admin/config/content-types">&larr; {{t "All content types"}}</a></p>
+
+{{template "content_type_tabs" .}}
+
+<p><a href="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}/edit">&larr; {{t "Field \"@label\"" "@label" .field.Label}}</a></p>
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "several" (t "Not changed: some content still has several values in this field.")
+        "save" (t "Error changing the number of values.")))}}
+
+<div class="alert {{if .severalCount}}alert-warning{{else}}alert-info{{end}}">
+    {{if .toMultiple}}
+    <h5 class="alert-heading">{{t "Allow several values in \"@label\"?" "@label" .field.Label}}</h5>
+    <p class="mb-1">{{t "Each content item will be able to hold several values of this field. The values already saved stay as they are."}}</p>
+    <p class="mb-1">{{t "Widgets that are for a single value only change: \"Radio buttons\" become \"Checkboxes\"."}}</p>
+    {{else}}
+    <h5 class="alert-heading">{{t "Allow only one value in \"@label\"?" "@label" .field.Label}}</h5>
+    <p class="mb-1">{{t "Each content item will hold at most one value of this field. Content that has one value keeps it."}}</p>
+    <p class="mb-1">{{t "Widgets that are for several values only change: \"Checkboxes\" become \"Radio buttons\", \"Autocomplete\" becomes a select."}}{{if eq (print .field.FieldType) "reference"}} {{t "A mutual reference becomes one-way."}}{{end}}</p>
+    {{end}}
+    {{with .storageUsage}}{{if gt .Instances 1}}
+    <p class="mb-0"><strong>{{plural .Instances "The field is shared: the change applies to @count content type." "The field is shared: the change applies to all @count content types that use it."}}</strong></p>
+    {{end}}{{end}}
+</div>
+
+{{if .severalUnknown}}
+<div class="alert alert-danger">{{t "Could not check the saved values. Try again later."}}</div>
+{{else if .severalCount}}
+<div class="alert alert-danger">
+    <p class="mb-2"><strong>{{plural .severalCount "@count content item has several values in this field." "@count content items have several values in this field."}}</strong>
+    {{t "Leave one value in each of them, then come back."}}</p>
+    <ul class="mb-0">
+        {{range .severalNodes}}
+        <li><a href="/node/{{.ID}}/edit">{{.Title}}</a>{{with .Type}} <small class="text-muted">({{.}})</small>{{end}}</li>
+        {{end}}
+    </ul>
+    {{if gt .severalCount (len .severalNodes)}}<p class="mb-0 mt-2 text-muted">{{t "Showing the first @shown." "@shown" (len .severalNodes)}}</p>{{end}}
+</div>
+{{end}}
+
+<form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}/cardinality">
+    <input type="hidden" name="multiple" value="{{if .toMultiple}}1{{else}}0{{end}}">
+    {{if not (or .severalCount .severalUnknown)}}
+    <button type="submit" class="btn btn-primary">{{if .toMultiple}}{{t "Allow several values"}}{{else}}{{t "Allow only one value"}}{{end}}</button>
+    {{end}}
+    <a href="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}/edit" class="btn btn-secondary">{{t "Cancel"}}</a>
+</form>
+{{end}}

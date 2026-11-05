@@ -1,0 +1,46 @@
+{{/* page_end_error_reports - the module's markup at the end of every page
+     (moduleHook "page_end"): the report form. */}}
+{{define "page_end_error_reports"}}{{template "error_report_modal" .}}{{end}}
+
+{{define "error_report_modal"}}
+{{if moduleEnabled "error_reports"}}
+{{attach "error_reports"}}
+<div class="modal fade" id="error-report-modal" tabindex="-1" aria-labelledby="error-report-modal-label" aria-hidden="true"
+     data-recaptcha="{{.error_report_recaptcha_key}}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="error-report-modal-label">{{t "Report an error"}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+            </div>
+            <div class="modal-body">
+                <div id="error-report-alert" class="alert d-none" role="alert"></div>
+                <form id="error-report-form">
+                    <div class="mb-3">
+                        <label for="error-report-page-url" class="form-label">{{t "Page"}}</label>
+                        <input type="text" class="form-control form-control-sm" id="error-report-page-url" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="error-report-selected-text" class="form-label">{{t "Selected text"}}</label>
+                        <textarea class="form-control" id="error-report-selected-text" rows="4" readonly maxlength="10000"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="error-report-comment" class="form-label">{{t "Comment"}} <span class="text-muted">{{t "(optional)"}}</span></label>
+                        <textarea class="form-control" id="error-report-comment" rows="3" maxlength="2000" placeholder="{{t "Describe the error"}}"></textarea>
+                    </div>
+                    {{if .error_report_recaptcha_key}}
+                    <div class="mb-3">
+                        <div class="g-recaptcha" data-sitekey="{{.error_report_recaptcha_key}}"></div>
+                    </div>
+                    {{end}}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                <button type="button" class="btn btn-primary" id="error-report-submit">{{t "Send"}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}

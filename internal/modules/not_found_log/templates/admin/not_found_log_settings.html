@@ -1,0 +1,81 @@
+{{/* admin/not_found_log_settings.html - the 404 log's settings
+     (Controller.Settings): how long a path not asked for is kept, the
+     count by the Redirects menu item, the patterns of paths never logged,
+     and clearing the log; in the admin's setting rows, Save at the top and
+     the bottom. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="not-found-settings" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "saved" (t "Saved.")) "Fallback" (t "Error while saving."))}}
+{{with .cleared}}<div class="alert alert-success" role="status">{{t "Addresses forgotten: @count" "@count" .}}</div>{{end}}
+<p><a href="/admin/config/redirects/not-found">&larr; {{t "Not found (404)"}}</a></p>
+
+<form method="post" action="/admin/config/redirects/not-found/settings" id="not-found-settings" class="admin-settings admin-settings--form">
+    <section class="admin-settings-group" aria-labelledby="nf-keep">
+        <h2 class="admin-settings-title" id="nf-keep">{{t "Keeping"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="keep_days" class="admin-setting-label">{{t "Forget an address not asked for in"}}</label>
+                    <span class="admin-setting-help">{{t "A background job checks once an hour; it also forgets the addresses a redirect answers now."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="keep_days" name="keep_days" class="form-select">
+                        {{$keep := .settings.KeepDays}}
+                        {{range .keepChoices}}<option value="{{.}}"{{if eq . $keep}} selected{{end}}>{{plural . "@count day" "@count days"}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="show_count" class="admin-setting-label">{{t "Count in the menu"}}</label>
+                    <span class="admin-setting-help">{{t "The number of new addresses by the Redirects menu item."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="show_count" name="show_count" value="1" class="form-check-input"{{if .settings.ShowCount}} checked{{end}}>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group" aria-labelledby="nf-ignore">
+        <h2 class="admin-settings-title" id="nf-ignore">{{t "Not logged"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="ignore" class="admin-setting-label">{{t "Address patterns"}}</label>
+                    <span class="admin-setting-help">{{t "One per line; * - any characters (e.g. /wp-* or *.php). What scanners ask for on any site is here from the start."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="ignore" name="ignore" rows="10" class="form-control font-monospace small">{{.ignoreText}}</textarea></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<section class="admin-settings admin-settings-group mt-4" aria-labelledby="nf-clear">
+    <h2 class="admin-settings-title" id="nf-clear">{{t "Clearing"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <span class="admin-setting-label" id="nf-clear-label">{{t "Clear the log"}}</span>
+                <span class="admin-setting-help">{{t "Forgets every address, the ignored ones too; the redirects and the settings stay."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <form method="post" action="/admin/config/redirects/not-found/clear" data-confirm="{{t "Clear the 404 log?"}}">
+                    <button type="submit" class="btn btn-outline-danger" aria-describedby="nf-clear-label">{{t "Clear"}}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{{end}}

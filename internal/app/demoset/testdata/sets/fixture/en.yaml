@@ -1,0 +1,173 @@
+# The engine's tests' demo set (demoset.UseSets): a little of everything a
+# set may have - users, an image style, vocabularies, field storages of
+# each kind, a content type, content with field values, comments and
+# view counts, a page and a block View, blocks, menus, permissions.
+site:
+  slogan: Notes from the field
+  front_page_view: latest
+  main_menu: main
+  footer_menu: footer
+
+users:
+  - reader_ann
+  - writer_bob
+
+image_styles:
+  - name: item_cover
+    label: Item cover
+    width: 640
+    height: 360
+    mode: fill
+    anchor: focal
+
+vocabularies:
+  - name: topics
+    label: Topics
+    path: topics
+    terms:
+      - Gardens
+      - name: Rivers
+        description: Water that moves.
+  - name: tags
+    label: Tags
+    path: tags
+    terms: [spring, autumn, maps]
+
+field_storages:
+  - name: field_cover
+    type: image
+  - name: field_topic
+    type: taxonomy
+    vocabulary: topics
+  - name: field_tags
+    type: taxonomy
+    vocabulary: tags
+    multiple: true
+  - name: field_rating
+    type: list
+    options:
+      - {value: good, label: Good}
+      - {value: fine, label: Fine}
+  - name: field_seen
+    type: date
+  - name: field_source
+    type: link
+  - name: field_related
+    type: reference
+    target: [item]
+
+content_types:
+  - name: item
+    label: Item
+    description: A note with a cover, a topic, tags and a rating.
+    path: items
+    comments: open
+    show_submitted: true
+    show_view_count: true
+    promote: true
+    fields:
+      - {storage: field_cover, label: Cover, show_on_detail: true, detail_image_style: item_cover, list_image_style: item_cover, sort_order: 0, display_order: 0}
+      - {storage: field_topic, label: Topic, show_on_detail: true, show_label: true, sort_order: 10, display_order: 10}
+      - {storage: field_tags, label: Tags, widget: checkboxes, show_on_detail: true, show_label: true, sort_order: 20, display_order: 20}
+      - {storage: field_rating, label: Rating, widget: select, required: true, show_on_detail: true, show_label: true, sort_order: 30, display_order: 30}
+      - {storage: field_seen, label: Seen, show_on_detail: true, show_label: true, date_format: medium, sort_order: 40, display_order: 40}
+      - {storage: field_source, label: Source, show_on_detail: true, sort_order: 50, display_order: 50}
+      - {storage: field_related, label: Related, widget: autocomplete, show_on_detail: true, show_label: true, sort_order: 60, display_order: 60}
+      - {storage: field_body, label: Text, widget: textarea, text_formats: [basic_html, plain_text], show_on_detail: true, renders_in_body: true, sort_order: 70, display_order: 70}
+
+nodes:
+  - key: garden
+    type: item
+    title: A walled garden
+    author: writer_bob
+    ago: 10d
+    sticky: true
+    views: 120
+    fields:
+      field_cover: 1
+      field_topic: Gardens
+      field_tags: [spring, maps]
+      field_rating: good
+      field_seen: 2026-04-02
+      field_source: {url: "https://example.com/gardens", title: The gardens' map}
+      field_body: |
+        <p>Four beds and a well.</p>
+    comments:
+      - author: reader_ann
+        body: Where is the well?
+        replies:
+          - author: writer_bob
+            body: In the middle.
+  - key: river
+    type: item
+    title: The river in autumn
+    author: writer_bob
+    ago: 3d
+    fields:
+      field_topic: Rivers
+      field_tags: autumn
+      field_rating: fine
+      field_seen: -20d
+      field_related: garden
+      field_body: |
+        <p>Low water, leaves on it.</p>
+  - key: about
+    type: page
+    title: About these notes
+    ago: 30d
+    fields:
+      field_body: |
+        <p>Notes from walks.</p>
+
+views:
+  - name: latest
+    label: Latest
+    display_type: block
+    style: list
+    pager: true
+    page_size: 10
+    fields:
+      - {storage: field_cover, image_style: item_cover, link_to: content}
+      - {builtin: title, link_to: content}
+      - {storage: field_rating}
+    filters:
+      - {builtin: status, operator: eq, value: "1"}
+      - {builtin: promote, operator: eq, value: "1"}
+    sorts:
+      - {builtin: sticky, direction: desc}
+      - {builtin: created_at, direction: desc}
+  - name: items
+    label: Items
+    display_type: page
+    path: items-list
+    style: grid
+    grid_columns: 2
+    pager: true
+    page_size: 12
+    fields:
+      - {builtin: title, link_to: content}
+      - {storage: field_tags, tag_format: plain}
+    filters:
+      - {builtin: content_type, operator: in, value: item}
+      - {builtin: status, operator: eq, value: "1"}
+      - {storage: field_rating, operator: in, exposed: rating, exposed_label: Rating}
+    sorts:
+      - {builtin: created_at, direction: desc}
+
+blocks:
+  - {region: sidebar, view: latest, title: Latest notes, show_title: true}
+  - {region: sidebar, plugin: tag_cloud, vocabulary: tags, title: Tags, show_title: true, config: {count: "10"}}
+  - {region: sidebar, title: Hello, show_title: true, body: "<p>Welcome to the notes.</p>"}
+
+menus:
+  - name: main
+    links:
+      - {title: All items, view: items}
+  - name: footer
+    label: Footer links
+    region: footer
+    links:
+      - {title: About, node: about}
+
+permissions:
+  user: [create item content, edit own item content]

@@ -1,0 +1,26 @@
+{{/* block_search_form - plugin block "search_form" (see
+     entity.PluginBlockID): the live search (/api/search) while typing;
+     submitting opens the results page (/search?q=). A theme may send the
+     form elsewhere with its own copy of this file and an action (without
+     one, app.js keeps the form on the page and shows the live results).
+     #siteSearch, .search_autocomplete and
+     .search_autocomplete_results are used by web/static/js/app.js - don't
+     rename. */}}
+{{define "block_search_form"}}
+<section class="block-search">
+    <div class="search-form-wrap">
+        <form class="search-form" id="siteSearch" role="search" action="/search" method="get">
+            <span class="search-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+            </span>
+            <input aria-label="{{t "Search the site"}}" type="text" id="search-main" autocomplete="off" placeholder="{{t "Search the site"}}" name="q">
+            <button type="submit" class="search-btn">{{tc "verb" "Search"}}</button>
+        </form>
+        <div class="search_autocomplete">
+            <ul class="search_autocomplete_results"></ul>
+        </div>
+    </div>
+</section>
+{{end}}

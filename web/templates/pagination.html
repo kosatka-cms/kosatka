@@ -1,0 +1,51 @@
+{{/* pagination.html - the pager of a paged list (.pagination,
+     pkg/pagination). Every link carries its page number in data-page, so a
+     script can load that page in place (the View preview does).
+     .pagerCompact (a View block: a narrow column) - ‹ the numbers ›, no
+     first and last, the words in the links' titles only. */}}
+{{define "pagination.html"}}
+{{if gt .pagination.TotalPages 1}}
+{{$compact := .pagerCompact}}
+<div class="pagination center{{if $compact}} pagination-compact{{end}}">
+    <div class="item-list">
+        <ul class="pager">
+            {{if and .pagination.HasPrevious (not $compact)}}
+            <li class="pager-first first">
+                <a title="{{t "Go to first page"}}" href="{{localURL .pagination.FirstURL}}" data-page="1">{{t "« First"}}</a>
+            </li>
+            {{end}}
+
+            {{if .pagination.HasPrevious}}
+            <li class="pager-previous">
+                <a title="{{t "Go to previous page"}}" href="{{localURL .pagination.PreviousURL}}" data-page="{{sub .pagination.CurrentPage 1}}"{{if $compact}} aria-label="{{t "Go to previous page"}}"{{end}}>{{if $compact}}‹{{else}}{{t "‹ Previous"}}{{end}}</a>
+            </li>
+            {{end}}
+
+            {{range $page := .pagination.GetPages}}
+            {{if $page.IsEllipsis}}
+            <li class="pager-ellipsis">…</li>
+            {{else if $page.IsCurrent}}
+            <li class="pager-current">{{$page.Number}}</li>
+            {{else}}
+            <li class="pager-item">
+                <a title="{{t "Go to page @number" "@number" $page.Number}}" href="{{localURL $page.URL}}" data-page="{{$page.Number}}">{{$page.Number}}</a>
+            </li>
+            {{end}}
+            {{end}}
+
+            {{if .pagination.HasNext}}
+            <li class="pager-next">
+                <a title="{{t "Go to next page"}}" href="{{localURL .pagination.NextURL}}" data-page="{{add .pagination.CurrentPage 1}}"{{if $compact}} aria-label="{{t "Go to next page"}}"{{end}}>{{if $compact}}›{{else}}{{t "Next ›"}}{{end}}</a>
+            </li>
+            {{end}}
+
+            {{if and (ne .pagination.CurrentPage .pagination.TotalPages) (not $compact)}}
+            <li class="pager-last last">
+                <a title="{{t "Go to last page"}}" href="{{localURL .pagination.LastURL}}" data-page="{{.pagination.TotalPages}}">{{t "Last »"}}</a>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
+{{end}}
+{{end}}

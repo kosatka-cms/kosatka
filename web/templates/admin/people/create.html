@@ -1,0 +1,107 @@
+{{/* admin/people/create - a new account (PeopleCreateForm): the address,
+     the login, how the password is set - an invitation by email (the
+     default; the person sets theirs, the login may stay empty) or a
+     password typed now (its fields shown then) - the role and the
+     status. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Invite a person: they get an email and set their own password."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="user-create-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{if index .errors "form"}}
+<div class="alert alert-danger">{{index .errors "form"}}</div>
+{{end}}
+
+<form method="post" action="/admin/people/create" id="user-create-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="email" class="admin-setting-label">{{tc "admin" "Email"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="email" class="form-control{{if index .errors "email"}} is-invalid{{end}}" id="email" name="email" value="{{index .form "email"}}" required autocomplete="email">
+                {{if index .errors "email"}}<div class="invalid-feedback">{{index .errors "email"}}</div>{{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="username" class="admin-setting-label">{{t "Login"}}</label>
+                <span class="admin-setting-help" data-show-when="password_mode=invite">{{t "May stay empty: one is made of the address, and the person may change it when accepting."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" class="form-control{{if index .errors "username"}} is-invalid{{end}}" id="username" name="username" value="{{index .form "username"}}" autocomplete="username">
+                {{if index .errors "username"}}<div class="invalid-feedback">{{index .errors "username"}}</div>{{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="password_mode" class="admin-setting-label">{{t "Password"}}</label>
+                <span class="admin-setting-help" data-show-when="password_mode=invite">{{t "The \"Invitation\" email with a link: by it the person sets their password and signs in. The link works for 7 days."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select" id="password_mode" name="password_mode">
+                    <option value="invite"{{if ne (index .form "password_mode") "set"}} selected{{end}}>{{t "Invite by email"}}</option>
+                    <option value="set"{{if eq (index .form "password_mode") "set"}} selected{{end}}>{{t "Set a password now"}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting" data-show-when="password_mode=set">
+            <div class="admin-setting-text">
+                <label for="password" class="admin-setting-label">{{t "New password"}}</label>
+                <span class="admin-setting-help">{{plural minPasswordLength "At least @count character" "At least @count characters"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="password" class="form-control{{if index .errors "password"}} is-invalid{{end}}" id="password" name="password" autocomplete="new-password" minlength="{{minPasswordLength}}">
+                {{if index .errors "password"}}<div class="invalid-feedback">{{index .errors "password"}}</div>{{end}}
+            </div>
+        </div>
+        <div class="admin-setting" data-show-when="password_mode=set">
+            <div class="admin-setting-text">
+                <label for="password_confirm" class="admin-setting-label">{{t "Repeat password"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="password" class="form-control{{if index .errors "password_confirm"}} is-invalid{{end}}" id="password_confirm" name="password_confirm" autocomplete="new-password">
+                {{if index .errors "password_confirm"}}<div class="invalid-feedback">{{index .errors "password_confirm"}}</div>{{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="role_id" class="admin-setting-label">{{t "Role"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select{{if index .errors "role_id"}} is-invalid{{end}}" id="role_id" name="role_id" required>
+                    <option value="">{{t "- select a role -"}}</option>
+                    {{range .roles}}
+                    <option value="{{.ID}}" {{if eq (index $.form "role_id") (printf "%d" .ID)}}selected{{end}}>{{.Label}}</option>
+                    {{end}}
+                </select>
+                {{if index .errors "role_id"}}<div class="invalid-feedback d-block">{{index .errors "role_id"}}</div>{{end}}
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="status" class="admin-setting-label">{{t "Status"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <select class="form-select{{if index .errors "status"}} is-invalid{{end}}" id="status" name="status">
+                    <option value="1" {{if or (not (index .form "status")) (eq (index .form "status") "1")}}selected{{end}}>{{tc "admin" "Active"}}</option>
+                    <option value="0" {{if eq (index .form "status") "0"}}selected{{end}}>{{t "Blocked"}}</option>
+                </select>
+                {{if index .errors "status"}}<div class="invalid-feedback d-block">{{index .errors "status"}}</div>{{end}}
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

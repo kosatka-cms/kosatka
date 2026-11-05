@@ -1,0 +1,4 @@
+-- Create "not_found_paths" table
+CREATE TABLE `not_found_paths` (`id` int unsigned NOT NULL AUTO_INCREMENT, `path_hash` varchar(64) NOT NULL, `path` varchar(1024) NOT NULL, `hits` int NOT NULL DEFAULT 0, `first_seen` datetime NOT NULL, `last_seen` datetime NOT NULL, `referrer` varchar(1024) NOT NULL DEFAULT '', `ignored` bool NOT NULL DEFAULT false, PRIMARY KEY (`id`), UNIQUE INDEX `not_found_paths_hash` (`path_hash`), INDEX `not_found_paths_ignored_hits` (`ignored`, `hits`), INDEX `not_found_paths_last_seen` (`last_seen`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Create "not_found_settings" table
+CREATE TABLE `not_found_settings` (`id` int unsigned NOT NULL AUTO_INCREMENT, `keep_days` int NOT NULL DEFAULT 90, `show_count` bool NOT NULL DEFAULT true, `ignore_patterns` text NOT NULL, PRIMARY KEY (`id`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;

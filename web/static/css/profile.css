@@ -1,0 +1,638 @@
+/* User profile and comment cards. Colors are Bootstrap's variables
+   (light or dark scheme); a theme sets its accents with --kosatka-*
+   (accent, accent-strong, highlight, link, tint, tint-strong, line,
+   profile-header-bg) on :root. */
+
+/* overflow: clip, not hidden: the corners clip the header, and the edit
+   form's save card can still stick (hidden makes a scroll container). */
+.user-profile-page {
+    background: var(--bs-body-bg);
+    border-radius: 8px;
+    overflow: clip;
+    margin-bottom: 30px;
+}
+
+/* Profile header */
+.profile-header {
+    background: var(--kosatka-profile-header-bg, var(--bs-primary));
+    color: white;
+    padding: 30px;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.profile-avatar-section {
+    position: relative;
+}
+
+.profile-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    object-fit: cover;
+}
+
+.profile-info-section {
+    flex: 1;
+}
+
+.profile-username {
+    margin: 0 0 15px 0;
+    font-size: 32px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.profile-stats-bar {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+    text-transform: uppercase;
+}
+
+/* Tabs */
+.profile-tabs {
+    display: flex;
+    flex-wrap: wrap; /* many tabs (built-in + View tabs) don't fit one row */
+    background: var(--kosatka-tint, var(--bs-tertiary-bg));
+    border-bottom: 2px solid var(--kosatka-line, var(--bs-border-color));
+}
+
+.tab-item {
+    padding: 15px 18px;
+    white-space: nowrap;
+    color: var(--kosatka-accent, var(--bs-primary));
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.tab-item:hover {
+    background: var(--kosatka-tint-strong, var(--bs-secondary-bg));
+    color: var(--kosatka-accent-strong, var(--bs-primary));
+}
+
+.tab-item.active {
+    background: var(--bs-body-bg);
+    border-bottom-color: var(--kosatka-accent-strong, var(--bs-primary));
+    font-weight: bold;
+}
+
+.tab-item .badge {
+    background: var(--kosatka-highlight, var(--bs-danger));
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    margin-left: 5px;
+}
+
+/* Profile content */
+.profile-content {
+    padding: 20px 0 10px 0;
+}
+
+.profile-card {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--kosatka-line, var(--bs-border-color));
+    border-radius: 8px;
+    padding: 20px 20px 10px 20px;
+    margin-bottom: 20px;
+}
+
+.profile-card h3 {
+    color: var(--kosatka-accent, var(--bs-primary));
+    border-bottom: 2px solid var(--kosatka-tint, var(--bs-tertiary-bg));
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+.profile-field {
+    margin-bottom: 15px;
+}
+
+.profile-field label {
+    font-weight: bold;
+    color: var(--kosatka-accent, var(--bs-primary));
+    display: block;
+    margin-bottom: 5px;
+}
+
+.profile-field p {
+    margin: 0;
+}
+
+/* Comments tab and /comments/recent share this layout (profile_comment_card template) */
+.recent-comments-page {
+    max-width: 52rem;
+}
+
+.profile-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-comment-item {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--kosatka-line, var(--bs-border-color));
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 45, 80, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-comment-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--kosatka-accent, var(--bs-primary));
+    border-radius: 10px 0 0 10px;
+}
+
+.profile-comment-item:hover {
+    border-color: var(--bs-primary-border-subtle);
+    box-shadow: 0 4px 14px rgba(15, 60, 100, 0.08);
+}
+
+.profile-comment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.85rem 1rem 0.65rem 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color);
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    background: var(--bs-tertiary-bg);
+    margin-bottom: 0;
+}
+
+.profile-comment-date {
+    color: var(--bs-secondary-color);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.profile-comment-meta-sep {
+    color: var(--bs-border-color);
+    user-select: none;
+}
+
+.profile-comment-author {
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.profile-comment-author a {
+    color: var(--kosatka-link, var(--bs-link-color));
+    text-decoration: none;
+}
+
+.profile-comment-author a:hover {
+    color: var(--kosatka-highlight, var(--bs-link-hover-color));
+    text-decoration: underline;
+}
+
+.profile-comment-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--kosatka-accent, var(--bs-primary));
+    background: var(--kosatka-tint, var(--bs-tertiary-bg));
+    border-radius: 999px;
+}
+
+.profile-comment-material {
+    flex: 1 1 100%;
+    margin-top: 0.15rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--kosatka-link, var(--bs-link-color));
+    text-decoration: none;
+    line-height: 1.35;
+}
+
+.profile-comment-material:hover {
+    color: var(--kosatka-highlight, var(--bs-link-hover-color));
+    text-decoration: underline;
+}
+
+.profile-comment-body {
+    padding: 0.85rem 1rem 1rem 1.25rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--bs-body-color);
+}
+
+.profile-comment-body p {
+    margin: 0 0 0.5em;
+}
+
+.profile-comment-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Scale preserving aspect ratio (fit within width and height) */
+.profile-comment-body img {
+    display: block;
+    max-width: 100%;
+    width: auto;
+    /* bound the box so the whole image fits, like object-fit: contain */
+    max-height: min(75vh, 640px);
+    height: auto !important;
+    object-fit: contain;
+    object-position: center;
+    margin: 0.75em auto;
+}
+
+.profile-comment-body svg,
+.profile-comment-body video {
+    display: block;
+    max-width: 100%;
+    width: auto;
+    max-height: min(75vh, 640px);
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    margin: 0.75em auto;
+}
+
+.profile-comments .empty-state {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+    border: 1px dashed var(--kosatka-line, var(--bs-border-color));
+    border-radius: 10px;
+}
+
+.profile-comments-pagination {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--kosatka-line, var(--bs-border-color));
+}
+
+@media (max-width: 576px) {
+    .profile-comment-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-comment-meta-sep {
+        display: none;
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--bs-secondary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-stats-bar {
+        justify-content: center;
+    }
+    
+    .profile-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-item {
+        flex: 1 1 50%;
+        text-align: center;
+        padding: 12px 10px;
+    }
+}
+
+/* The profile edit form (user/edit_form.html): the content form's two
+   columns (node-edit-layout, components.css) under the profile's tabs; the
+   picture's row with a round preview; the new password and its repeat side
+   by side; the current password set apart (asked only to change the e-mail
+   or the password). */
+.user-profile-edit .node-edit-layout {
+    margin-top: 1.5rem;
+}
+
+.profile-edit-avatar .field-image-thumb {
+    flex-basis: 3.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+}
+
+.profile-edit-passwords {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1.125rem;
+}
+
+.profile-edit-current {
+    padding: .875rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    background: var(--bs-tertiary-bg);
+}
+
+/* Two-factor sign-in (user/login_code.html, user/two_factor.html,
+   user/two_factor_codes.html): the code step of a sign-in, turning it on
+   (the steps, the QR code, the key), the recovery codes. */
+.two-factor-title {
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+}
+.two-factor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    border: 1px solid var(--kosatka-line, var(--bs-border-color));
+    border-radius: 12px;
+    background: var(--bs-body-bg);
+}
+.two-factor-card > .btn {
+    align-self: flex-start;
+}
+.two-factor-code {
+    max-width: 200px;
+    font-size: 1.4rem;
+    letter-spacing: .25em;
+    text-align: center;
+}
+
+.two-factor-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.two-factor-action {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--kosatka-line, var(--bs-border-color));
+}
+.two-factor-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-left: 1.4em;
+}
+.two-factor-steps > li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.two-factor-qr-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+.two-factor-qr-row > div:last-child {
+    display: flex;
+    flex: 1 1 260px;
+    flex-direction: column;
+    gap: 6px;
+}
+.two-factor-qr {
+    width: 180px;
+    height: 180px;
+    padding: 4px;
+    border: 1px solid var(--kosatka-line, var(--bs-border-color));
+    border-radius: 10px;
+    background: #fff;
+}
+.two-factor-qr svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.two-factor-key {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--bs-tertiary-bg);
+    font-size: 1.05rem;
+    letter-spacing: .06em;
+    word-break: break-all;
+}
+.two-factor-codes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+    margin: 0;
+    padding: 16px 20px;
+    border-radius: 10px;
+    background: var(--bs-tertiary-bg);
+    list-style: none;
+}
+.two-factor-codes code {
+    color: var(--bs-body-color);
+    font-size: 1.1rem;
+    letter-spacing: .06em;
+}
+@media print {
+    .two-factor-page .btn,
+    .two-factor-page .alert {
+        display: none;
+    }
+}
+.profile-edit-two-factor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--kosatka-line, var(--bs-border-color));
+}
+.profile-edit-two-factor-label {
+    font-weight: 600;
+}
+
+/* The login page (user/login.html): a card in the middle of the page -
+   its title and the site's name, the fields, the password shown on a
+   click (passwordToggle in app.js), "or" and the social networks side by
+   side, registration at the foot. */
+.auth-page {
+    display: flex;
+    justify-content: center;
+    padding: 24px 0 56px;
+}
+.auth-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 440px;
+    padding: 32px;
+    border: 1px solid var(--kosatka-line, var(--bs-border-color));
+    border-radius: 16px;
+    background: var(--bs-body-bg);
+    box-shadow: 0 12px 32px rgba(6, 32, 51, .06);
+}
+.auth-card .alert {
+    margin: 0;
+}
+.auth-card-title {
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 800;
+}
+.auth-card-sub {
+    margin: 4px 0 0;
+    color: var(--bs-secondary-color);
+}
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.auth-field .form-label {
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.auth-field .form-control {
+    padding: 10px 12px;
+    border-radius: 10px;
+}
+.auth-field-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+}
+.auth-link-small {
+    margin-bottom: 6px;
+    font-size: .9rem;
+}
+.auth-password {
+    position: relative;
+}
+.auth-password .form-control {
+    padding-right: 44px;
+}
+.auth-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--bs-secondary-color);
+    transform: translateY(-50%);
+}
+.auth-password-toggle:hover,
+.auth-password-toggle[aria-pressed="true"] {
+    color: var(--bs-body-color);
+}
+.auth-submit {
+    padding: 11px;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+.auth-card .oauth-section {
+    margin: 0 !important;
+}
+.auth-card .oauth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 14px;
+    font-size: .9rem;
+}
+.auth-card .oauth-divider::before,
+.auth-card .oauth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--kosatka-line, var(--bs-border-color));
+}
+.oauth-buttons--row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+}
+.oauth-buttons--row .oauth-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.auth-card--wide {
+    max-width: 560px;
+}
+.auth-card p {
+    margin: 0;
+}
+.auth-card-muted {
+    color: var(--bs-secondary-color);
+}
+.auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.auth-code {
+    font-size: 1.4rem;
+    letter-spacing: .25em;
+    text-align: center;
+}
+.auth-code--recovery {
+    font-family: var(--bs-font-monospace);
+    letter-spacing: .08em;
+}
+.auth-field .form-text {
+    display: block;
+    margin-top: 6px;
+}
+.auth-card-foot {
+    margin: 0;
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+.auth-card-foot a {
+    font-weight: 700;
+}

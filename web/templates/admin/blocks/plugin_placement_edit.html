@@ -1,0 +1,96 @@
+{{/* admin/config/blocks/plugin/{id}/edit - a system block's placement
+     (PluginPlacementEdit): its region, what it shows, its own settings,
+     its title, who and where it shows to - as rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "System block: <strong>@label</strong> - rendered by code; which block it is cannot be changed (delete the placement and add a new one if you need a different one)." "@label" .pluginLabel}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="placement-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if eq .error "plugin"}}
+<div class="alert alert-danger">{{t "Error while saving."}}</div>
+{{else if eq .error "target"}}
+<div class="alert alert-danger">{{t "Choose what the block shows."}}</div>
+{{else if eq .error "settings"}}
+<div class="alert alert-danger">{{t "Check the block's settings."}}</div>
+{{else if .choose}}
+<div class="alert alert-info">{{t "The block is placed. Choose what it shows - until then it shows nothing."}}</div>
+{{end}}
+
+<form method="post" action="/admin/config/blocks/plugin/{{.placement.ID}}/edit" id="placement-form" class="admin-settings">
+    <input type="hidden" name="theme" value="{{.blocksTheme}}">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="plugin-placement-region" class="admin-setting-label">{{t "Region"}}</label></div>
+            <div class="admin-setting-control">
+                <select id="plugin-placement-region" name="region" class="form-select">
+                    {{$currentRegion := .placement.Region}}
+                    {{range .allRegions}}
+                    <option value="{{.}}" {{if eq . $currentRegion}}selected{{end}}>{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        {{if .hasTargets}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="plugin-placement-target" class="admin-setting-label">{{t "Shows"}} <span class="required">*</span></label>
+                {{if not .targets}}<span class="admin-setting-help">{{t "Nothing to choose yet: create one first."}}</span>{{end}}
+            </div>
+            <div class="admin-setting-control">
+                <select id="plugin-placement-target" name="target" class="form-select" required>
+                    <option value="">{{t "- choose -"}}</option>
+                    {{range .targets}}<option value="{{.Value}}" {{if eq .Value $.target}}selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+        {{end}}
+        {{/* The block's own settings (service.SetPluginBlockSettings). */}}
+        {{range .pluginSettings}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="plugin-setting-{{.Key}}" class="admin-setting-label">{{.Label}}</label>
+                {{if and (ne (print .Type) "select") (ne (print .Type) "text")}}<span class="admin-setting-help">{{t "From @min to @max." "@min" .Min "@max" .Max}}</span>{{end}}
+            </div>
+            <div class="admin-setting-control">
+                {{if eq (print .Type) "select"}}
+                {{$value := .Value}}
+                <select id="plugin-setting-{{.Key}}" name="setting_{{.Key}}" class="form-select">
+                    {{range .Options}}<option value="{{.Value}}" {{if eq .Value $value}}selected{{end}}>{{.Label}}</option>{{end}}
+                </select>
+                {{else if eq (print .Type) "text"}}
+                <input type="text" id="plugin-setting-{{.Key}}" name="setting_{{.Key}}" class="form-control" value="{{.Value}}" maxlength="{{.Max}}">
+                {{else}}
+                <input type="number" id="plugin-setting-{{.Key}}" name="setting_{{.Key}}" class="form-control admin-max-xs" value="{{.Value}}" min="{{.Min}}" max="{{.Max}}" required>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="plugin-placement-title" class="admin-setting-label">{{t "Title"}}</label>
+                <span class="admin-setting-help">{{t "Optional - shown above the block only if enabled below."}}</span>
+            </div>
+            <div class="admin-setting-control"><input type="text" id="plugin-placement-title" name="title" class="form-control" value="{{.placement.Title}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="plugin-placement-show-title" class="admin-setting-label">{{t "Show title"}}</label></div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="plugin-placement-show-title" name="show_title" value="1" class="form-check-input" {{if .placement.ShowTitle}}checked{{end}}></div>
+        </div>
+        {{template "visibility_roles" (dict "Placement" .placement "Roles" .visibilityRoles "IDPrefix" "plugin-placement")}}
+        {{template "visibility_scope" (dict "Placement" .placement "ContentTypes" .contentTypes "IDPrefix" "plugin-placement")}}
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection): form_block_placement_<module>. */}}
+    {{moduleHook "form_block_placement" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

@@ -1,0 +1,12 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Back" "/admin/config/image-styles" "BackLabel" (t "Image styles")
+    "Heading" (t "Delete style \"@label\"?" "@label" .style.Label)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/image-styles/%v/delete" .style.ID)
+    "Submit" (t "Yes, delete style"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">name: <code>{{.style.Name}}</code>. {{t "If it is still used somewhere, images with it will stop displaying."}}</p>
+{{end}}

@@ -1,0 +1,1142 @@
+/* The engine's neutral look for a site without a theme (loaded by the
+   default partials/theme_head.html; a theme replaces it with its own).
+   On top of plain Bootstrap 5.3, through its CSS variables, so the light
+   and dark schemes (data-bs-theme, set from the visitor's system) both
+   work. Only the engine's own page parts are styled, so the admin, which
+   loads theme_head too, is left alone. */
+
+:root {
+    --kosatka-accent: #2563eb;
+    --kosatka-accent-hover: #1d4ed8;
+    --kosatka-radius: .75rem;
+    --kosatka-reading: 46rem;
+    --kosatka-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 16px rgba(15, 23, 42, .06);
+}
+
+[data-bs-theme="dark"] {
+    --kosatka-accent: #7aa7ff;
+    --kosatka-accent-hover: #a5c3ff;
+    --kosatka-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .3);
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+}
+
+a {
+    color: var(--kosatka-accent);
+    text-underline-offset: .15em;
+}
+
+a:hover {
+    color: var(--kosatka-accent-hover);
+}
+
+/* Header: one row - the site's name, the header region (the main menu),
+   the account links; the region wraps under them on a phone. */
+.site-header {
+    position: sticky;
+    /* Below the admin bar for an administrator (app.js). */
+    top: var(--admin-bar-offset, 0px);
+    z-index: 1020;
+    background: color-mix(in srgb, var(--bs-body-bg) 88%, transparent);
+    backdrop-filter: saturate(1.6) blur(10px);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.site-header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem 2rem;
+    min-height: 4rem;
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+}
+
+.site-branding {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.site-branding:hover {
+    color: var(--bs-body-color);
+}
+
+.site-logo {
+    max-height: 40px;
+    width: auto;
+}
+
+.site-branding-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.site-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.site-slogan {
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+}
+
+.site-header-region {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem 1.5rem;
+}
+
+/* The language switcher (the languages module's block) at the region's
+   end, on the menu's line. */
+.site-header-region .language-switcher {
+    margin-left: auto;
+}
+
+.site-header-region .block {
+    margin: 0;
+}
+
+.site-header-region .block-menu ul.menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.site-header-region .block-menu ul.menu ul {
+    display: none;
+}
+
+.site-header-region .block-menu a {
+    color: var(--bs-secondary-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.site-header-region .block-menu a:hover,
+.site-header-region .block-menu .active > a {
+    color: var(--bs-body-color);
+}
+
+.site-account {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.site-account a {
+    color: var(--bs-body-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.site-account a:hover {
+    color: var(--kosatka-accent);
+}
+
+.site-account .site-account-primary {
+    padding: .375rem .875rem;
+    border-radius: 999px;
+    background: var(--kosatka-accent);
+    color: #fff;
+}
+
+.site-account .site-account-primary:hover {
+    background: var(--kosatka-accent-hover);
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .site-account .site-account-primary,
+[data-bs-theme="dark"] .site-account .site-account-primary:hover {
+    color: #0b1220;
+}
+
+/* The content form's save card stays in view below the sticky header. */
+.node-edit-layout {
+    --node-edit-sticky-top: 5rem;
+}
+
+@media (max-width: 767.98px) {
+    .site-header {
+        position: static;
+    }
+
+    .site-header-region {
+        order: 3;
+        flex-basis: 100%;
+        padding-bottom: .25rem;
+    }
+}
+
+/* Content. */
+.container-content {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+.container-content h1 {
+    font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+}
+
+/* Breadcrumbs (Bootstrap's flex row drops the spaces around the separator). */
+.breadcrumb {
+    font-size: .875rem;
+    color: var(--bs-secondary-color);
+    margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+    color: var(--bs-secondary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    color: var(--kosatka-accent);
+}
+
+.breadcrumb .separator {
+    margin: 0 .4rem;
+}
+
+/* A content page on a page without a sidebar: one reading column (its
+   comments inside), centred. Beside a sidebar the column is narrow
+   already: the content fills it, as the lists on the other pages do.
+   The content form (node-edit) has two columns: the page's width. */
+.content > div:has(> article.node:not(.node-teaser, .node-edit)) > #breadcrumbs,
+article.node:not(.node-teaser, .node-edit) {
+    max-width: var(--kosatka-reading);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.content > .col-lg-9:has(> article.node:not(.node-teaser)) > #breadcrumbs,
+.content > .col-lg-9 article.node:not(.node-teaser) {
+    max-width: none;
+    margin-left: 0;
+}
+
+.article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--bs-secondary-color);
+    font-size: .875rem;
+}
+
+.article-meta .meta-label {
+    margin-right: .25rem;
+}
+
+.article-meta a {
+    color: var(--bs-body-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.dynamic-field-image img,
+img.dynamic-field-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--kosatka-radius);
+    margin: .5rem 0 2rem;
+}
+
+.dynamic-field-richtext h3 {
+    font-size: 1.125rem;
+}
+
+.node-content {
+    font-size: 1.125rem;
+    line-height: 1.75;
+}
+
+.node-content > :first-child {
+    margin-top: 0;
+}
+
+/* Headings in a text: one scale relative to the text's size (a theme
+   changing it keeps the scale), h2 the largest (h1 is the page's title);
+   h4 the text's size, bold; h4-h6 below h3, not Bootstrap's larger
+   defaults. */
+.node-content h2,
+.node-content h3,
+.node-content h4,
+.node-content h5,
+.node-content h6 {
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin: 2.25rem 0 .75rem;
+}
+
+.node-content h2 {
+    font-size: 1.3333em;
+}
+
+.node-content h3 {
+    font-size: 1.1111em;
+}
+
+.node-content h4 {
+    font-size: 1em;
+}
+
+.node-content h5 {
+    font-size: .9em;
+}
+
+.node-content h6 {
+    font-size: .8em;
+}
+
+.node-content p,
+.node-content ul,
+.node-content ol {
+    margin-bottom: 1.25rem;
+}
+
+.node-content li + li {
+    margin-top: .375rem;
+}
+
+.node-content blockquote {
+    margin: 1.75rem 0;
+    padding: .25rem 0 .25rem 1.25rem;
+    border-left: 4px solid var(--kosatka-accent);
+    color: var(--bs-secondary-color);
+    font-size: 1.1875rem;
+    font-style: italic;
+}
+
+.node-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+.node-content pre {
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-tertiary-bg);
+    font-size: .9375rem;
+    overflow-x: auto;
+}
+
+.node-content :not(pre) > code {
+    padding: .1em .35em;
+    border-radius: .375rem;
+    background: var(--bs-tertiary-bg);
+    color: inherit;
+    font-size: .9em;
+}
+
+.node-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--kosatka-radius);
+}
+
+.node-content table {
+    width: 100%;
+    margin-bottom: 1.25rem;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+
+.node-content th,
+.node-content td {
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+/* Fields other than the body and pictures: compact lines. */
+.item-characteristic {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-tertiary-bg);
+}
+
+.item-characteristic p:last-child {
+    margin-bottom: 0;
+}
+
+.field-list {
+    color: var(--bs-secondary-color);
+}
+
+/* A link field in the compact lines: its link, or a list of several. */
+.field-link-line {
+    margin-bottom: 1rem;
+}
+
+.item-characteristic .field-link-line:last-child {
+    margin-bottom: 0;
+}
+
+.field-link-line > .field-links {
+    margin: .25rem 0 0;
+    padding-left: 1.25rem;
+}
+
+/* A user field: its people in a row, an avatar and a name each. */
+.field-users-line {
+    margin-bottom: 1rem;
+}
+
+.item-characteristic .field-users-line:last-child {
+    margin-bottom: 0;
+}
+
+.field-users {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: .375rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    vertical-align: middle;
+}
+
+.field-users-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.field-users-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* A date field with several dates: a list, the ended ones faded, the
+   current one marked. */
+.field-dates-line {
+    margin-bottom: 1rem;
+}
+
+.item-characteristic .field-dates-line:last-child {
+    margin-bottom: 0;
+}
+
+.field-dates {
+    margin: .25rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.field-dates-item.is-past {
+    color: var(--bs-secondary-color);
+}
+
+.field-dates-badge {
+    font-size: .8125rem;
+    color: var(--bs-secondary-color);
+}
+
+.field-dates-item.is-ongoing .field-dates-badge {
+    color: var(--kosatka-accent);
+    font-weight: 600;
+}
+
+.field-dates-more {
+    font-size: .875rem;
+    color: var(--bs-secondary-color);
+}
+
+/* A field a module's formatter shows (a link field's videos). */
+.dynamic-field-formatted {
+    margin-bottom: 2rem;
+}
+
+/* Comments. */
+.comment-wrapper {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.comment-wrapper > .title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.comment-wrapper .auth-notice {
+    padding: 1rem 1.25rem;
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-tertiary-bg);
+}
+
+.comment-wrapper .auth-notice p:last-child {
+    margin-bottom: 0;
+}
+
+/* A comment (comments.html, "comment"): the avatar beside the author,
+   date, text and its links; a reply is indented by its depth. */
+.comment-wrapper .message {
+    display: flex;
+    gap: .875rem;
+    margin: 0 0 1rem calc(min(var(--comment-depth, 0), 4) * 2.25rem);
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-body-bg);
+}
+
+.comment-wrapper .message .user-picture img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-wrapper .message-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-wrapper .message-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem .75rem;
+    margin-bottom: .375rem;
+    font-size: .875rem;
+}
+
+.comment-wrapper .message-title .username {
+    font-weight: 600;
+}
+
+.comment-wrapper .message-title .username a {
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.comment-wrapper .message-title .date,
+.comment-wrapper .message-title .reply-to {
+    color: var(--bs-secondary-color);
+}
+
+.comment-wrapper .comment-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* The author's own comment waiting for approval (comments.html, .Held). */
+.comment-wrapper .message.comment-held {
+    border-style: dashed;
+    border-color: var(--bs-warning-border-subtle);
+}
+
+.comment-wrapper .comment-held-badge {
+    padding: .05rem .55rem;
+    border-radius: 999px;
+    background: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.comment-wrapper .comment-held-note {
+    margin: .5rem 0 0;
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+}
+
+.comment-wrapper .message footer {
+    margin-top: .5rem;
+    font-size: .8125rem;
+}
+
+.comment-wrapper .message footer a {
+    color: var(--bs-secondary-color);
+    text-decoration: none;
+}
+
+.comment-wrapper .message footer a:hover {
+    color: var(--kosatka-accent);
+}
+
+/* The second "log in to comment" notice is for long threads: none while
+   there are no comments. */
+#comments:not(:has(.js-message)) .auth-notice-bottom {
+    display: none;
+}
+
+.auth-notice-bottom {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-tertiary-bg);
+}
+
+.auth-notice-bottom p:last-child {
+    margin-bottom: 0;
+}
+
+/* Back to top. */
+.back-to-top {
+    border-radius: 999px;
+    background: var(--kosatka-accent);
+    box-shadow: var(--kosatka-shadow);
+}
+
+/* Inline link lists (term badges, a comment's links): one row. */
+ul.links.inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem .75rem;
+    margin: 0 0 .5rem;
+    padding: 0;
+    list-style: none;
+}
+
+/* A term badge (a View field's "badges" format). */
+.taxonomy_term a {
+    display: inline-block;
+    padding: .125rem .625rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--kosatka-accent) 12%, transparent);
+    color: var(--kosatka-accent);
+    font-size: .8125rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+/* The content's actions (edit, publish, delete): links and the publish
+   buttons alike. */
+.node-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.node-actions .action-link {
+    display: inline-flex;
+    align-items: center;
+    padding: .25rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-size: .875rem;
+    line-height: 1.5;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.node-actions .action-link:hover {
+    border-color: var(--kosatka-accent);
+    color: var(--kosatka-accent);
+}
+
+.node-actions .action-link.delete:hover {
+    border-color: var(--bs-danger);
+    color: var(--bs-danger);
+}
+
+/* An exposed filter's checkboxes: the legend sized as the other filters'
+   labels (Bootstrap makes a legend a heading). */
+.view-exposed-checkboxes legend {
+    font-size: inherit;
+}
+
+/* Lists (Views). Items with a picture are cards in a grid; others are
+   rows. */
+.item-list:has(> .view-list-item .item-field-image) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+    gap: 1.5rem;
+}
+
+/* A grouped list's heading takes a whole row above its group's cards. */
+.item-list:has(> .view-list-item .item-field-image) > .view-group-heading {
+    grid-column: 1 / -1;
+    margin: .5rem 0 0;
+}
+
+.view-list-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+/* The grid style: cards in the View's number of columns
+   (--list-grid-columns), two on a tablet, one on a phone. The picture on
+   top, then the fields; the card's title (.item-field-title) larger. */
+.list-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--list-grid-columns, 3), minmax(0, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 991.98px) {
+    .list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .list-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.list-grid-item {
+    display: flex;
+    flex-direction: column;
+    gap: .375rem;
+    padding: 0 0 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-body-bg);
+    overflow: hidden;
+}
+
+.list-grid-item > .item-field {
+    padding: 0 1rem;
+}
+
+.list-grid-item > .item-field-image {
+    order: -1;
+    margin-bottom: .5rem;
+    padding: 0;
+}
+
+/* The picture in its image style's shape (a wide card, a tall cover). */
+.list-grid-item .item-field-image img,
+.list-grid-item img.item-field-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: auto;
+}
+
+.list-grid-item > .item-field-title .item-field-link {
+    color: var(--bs-body-color);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.list-grid-item > .item-field-title .item-field-link:hover {
+    color: var(--kosatka-accent);
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 1.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--kosatka-radius);
+    background: var(--bs-body-bg);
+    box-shadow: var(--kosatka-shadow);
+    overflow: hidden;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item:hover {
+    transform: translateY(-2px);
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item > .item-field {
+    padding: 0 1.25rem;
+}
+
+.view-list-item > .item-field-image {
+    order: -1;
+    margin-bottom: 1rem;
+}
+
+.item-list:has(> .view-list-item .item-field-image) > .view-list-item > .item-field.item-field-image {
+    padding: 0;
+}
+
+.view-list-item .item-field-image img,
+img.item-field-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+}
+
+/* The linked text field - the title. */
+.view-list-item .item-field-text:has(> .item-field-link) {
+    margin-bottom: .25rem;
+}
+
+.view-list-item .item-field-text .item-field-link {
+    color: var(--bs-body-color);
+    font-size: 1.1875rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.view-list-item .item-field-text .item-field-link:hover {
+    color: var(--kosatka-accent);
+}
+
+/* The builtin author (small, like the date) and link to the content (an
+   accent link) - not titles. */
+.view-list-item .item-field-name-author {
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+}
+
+.view-list-item .item-field-name-author .item-field-link,
+.view-list-item .item-field-name-link .item-field-link {
+    color: var(--kosatka-accent);
+    font-size: inherit;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+.view-list-item .item-field-name-link .item-field-link {
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.view-list-item .item-field-name-author .item-field-link:hover,
+.view-list-item .item-field-name-link .item-field-link:hover {
+    text-decoration: underline;
+}
+
+.view-list-item .item-field-date {
+    color: var(--bs-secondary-color);
+    font-size: .8125rem;
+    margin-bottom: .5rem;
+}
+
+/* An unlinked text field - the start of the body: three lines. */
+.view-list-item .item-field-text:not(:has(> .item-field-link)) {
+    color: var(--bs-secondary-color);
+    font-size: .9375rem;
+}
+
+.view-list-item .item-field-text:not(:has(> .item-field-link)) .item-field-value {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+/* Teasers (lists of teasers, e.g. a term's page). */
+.node-teaser {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.node-teaser-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+}
+
+.node-teaser-title a {
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.node-teaser-title a:hover {
+    color: var(--kosatka-accent);
+}
+
+/* The picture across the column (its list style's copy, a 2x one for a
+   sharp screen). */
+.node-teaser-image {
+    display: block;
+    margin-bottom: .75rem;
+}
+
+.node-teaser-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--kosatka-radius);
+}
+
+.node-teaser-text {
+    color: var(--bs-secondary-color);
+}
+
+/* Paging. */
+.pagination {
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.pagination .pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pagination .pager li > a,
+.pagination .pager li > span,
+.pagination .pager-current {
+    display: inline-block;
+    min-width: 2.5rem;
+    padding: .375rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    text-align: center;
+    text-decoration: none;
+}
+
+.pagination .pager-current {
+    border-color: var(--kosatka-accent);
+    background: var(--kosatka-accent);
+    color: #fff;
+}
+
+/* Sidebar blocks. */
+.sidebar .block {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--kosatka-radius);
+}
+
+.sidebar .block h2,
+.sidebar .block .block-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: .75rem;
+}
+
+/* A system block's title, shown before its .block (region_blocks.html):
+   the top of the block's card. */
+.sidebar h2:has(+ .block) {
+    margin: 0;
+    padding: 1.25rem 1.25rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+    border-radius: var(--kosatka-radius) var(--kosatka-radius) 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.sidebar h2 + .block {
+    padding-top: 0;
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* The search block: the field and its button in one row. */
+.sidebar .block-search {
+    margin-bottom: 1.5rem;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .25rem .25rem .25rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background: var(--bs-body-bg);
+}
+
+.search-form:focus-within {
+    border-color: var(--kosatka-accent);
+    box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--kosatka-accent) 20%, transparent);
+}
+
+.search-form .search-icon {
+    display: inline-flex;
+    color: var(--bs-secondary-color);
+}
+
+.search-form input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--bs-body-color);
+}
+
+.search-form .search-btn {
+    padding: .375rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--kosatka-accent);
+    color: #fff;
+    font-weight: 500;
+}
+
+.search-form .search-btn:hover {
+    background: var(--kosatka-accent-hover);
+}
+
+/* The live search's list under the field (app.js fills it): the results,
+   or the search menu's links while the query is short. Plain classes:
+   they beat Bootstrap's ul and a, and a theme's rule of the same weight,
+   loaded after, wins. */
+.search_autocomplete_results {
+    list-style: none;
+    margin: .5rem 0 0;
+    padding: 0;
+}
+
+.search_autocomplete_results a {
+    display: flex;
+    gap: .625rem;
+    align-items: center;
+    padding: .375rem .75rem;
+    border-radius: var(--bs-border-radius);
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.search_autocomplete_results a:hover {
+    background: var(--bs-tertiary-bg);
+}
+
+.search_autocomplete_results .search_img {
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: cover;
+    border-radius: var(--bs-border-radius-sm);
+}
+
+.search_autocomplete_results .search_subtitle,
+.search_autocomplete_results .search-add {
+    font-size: .8125em;
+    color: var(--bs-secondary-color);
+}
+
+.search_autocomplete_results .item_empty,
+.search_autocomplete_results .search-loading {
+    padding: .375rem .75rem;
+    color: var(--bs-secondary-color);
+}
+
+/* The latest comments block: a comment per line, its content under it. */
+.sidebar .block .item-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sidebar .block .item-list li + li {
+    margin-top: .625rem;
+}
+
+.sidebar .block .item-list li a {
+    display: block;
+    text-decoration: none;
+}
+
+/* A paged View block's pager is in an .item-list too: one row of
+   buttons, not a list's lines. */
+.sidebar .block .pagination .pager li + li {
+    margin-top: 0;
+}
+
+.sidebar .block .pagination .pager li a {
+    display: inline-block;
+}
+
+.sidebar .block .more-link {
+    margin-top: .75rem;
+    font-size: .875rem;
+}
+
+/* Footer. */
+.site-footer {
+    border-top: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    padding: 2rem 0;
+}
+
+.site-footer a {
+    color: var(--bs-secondary-color);
+}
+
+.site-footer-credit {
+    margin: 0;
+    font-size: .875rem;
+}
+
+/* The footer stays at the bottom of a short public page. */
+body:has(> .site-header) {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body:has(> .site-header) > .container-content {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 575.98px) {
+    .container-content {
+        padding-top: 1.25rem;
+    }
+
+    .node-content {
+        font-size: 1.0625rem;
+    }
+}
+
+/* Tag cloud (blocks/tag_cloud.html): the terms in a row, each level a
+   step bigger (up to 10 levels); in :where(), so a theme's rule wins -
+   but the list's reset, which must beat Bootstrap's "ul" padding. */
+.tag-cloud-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+:where(.tag-cloud-list) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem .75rem;
+    line-height: 1.2;
+}
+
+:where(.tag-cloud-level-1) { font-size: .8rem; }
+:where(.tag-cloud-level-2) { font-size: .9rem; }
+:where(.tag-cloud-level-3) { font-size: 1rem; }
+:where(.tag-cloud-level-4) { font-size: 1.15rem; }
+:where(.tag-cloud-level-5) { font-size: 1.3rem; }
+:where(.tag-cloud-level-6) { font-size: 1.45rem; }
+:where(.tag-cloud-level-7) { font-size: 1.6rem; }
+:where(.tag-cloud-level-8) { font-size: 1.75rem; }
+:where(.tag-cloud-level-9) { font-size: 1.9rem; }
+:where(.tag-cloud-level-10) { font-size: 2.05rem; }

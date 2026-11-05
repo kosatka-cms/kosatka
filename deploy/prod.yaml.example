@@ -1,0 +1,45 @@
+# Copy to /opt/<site>/prod.yaml (docs/guides/production.md).
+# Secrets: set DB_*, SESSION_SECRET_KEY, SECRETS_KEY, SMTP_*, RESEND_API_KEY
+# in the site's env file, /opt/<site>/<site>.env (they override YAML).
+
+env: prod
+port: 3333
+
+db:
+  host: your-managed-mysql.host.example
+  port: 3306
+  scheme: your_database_name
+  username: your_user
+  # password: in the env file (DB_PASSWORD)
+  max_open_conns: 15
+  max_idle_conns: 5
+  conn_max_lifetime: 5    # minutes before a pooled connection is recycled
+  conn_max_idle_time: 5   # minutes before an idle connection is closed
+  # Managed MySQL often requires TLS; skip-verify if its CA isn't system-trusted.
+  tls: skip-verify
+
+session:
+  secure: true
+  max_age: 604800
+
+# The site address; when set, it overrides the one in Site information
+# (admin). Leave it out to set the address in the admin.
+# public_base_url: https://www.example.com
+
+# Seconds; the values below are the defaults (any may be left out).
+timeouts:
+  server_read: 15       # reading a request
+  server_write: 15      # writing the whole response; steps of long jobs take half
+  server_idle: 60       # keep-alive between requests
+  shutdown: 30          # finishing requests in flight on stop
+  database_query: 30    # a page's database work
+  cache_update: 15      # one refresh of the in-memory caches
+  http_request: 30      # calls to outside services (reCAPTCHA, Resend)
+
+email:
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  from_address: ""
+  resend_api_key: ""

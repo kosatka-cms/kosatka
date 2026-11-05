@@ -1,0 +1,76 @@
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="vocabulary-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "update" (t "Error saving the vocabulary."))
+    "Warnings" (dict
+        "empty" (t "Vocabulary name is required.")))}}
+
+<form method="post" action="/admin/config/taxonomy/{{.vocabulary.ID}}" id="vocabulary-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="name" class="admin-setting-label">{{t "Name"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="name" name="name" class="form-control" value="{{.vocabulary.Name}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="slug" class="admin-setting-label">{{t "Address"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="slug" name="slug" class="form-control" value="{{.vocabulary.Slug}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="term_path_prefix" class="admin-setting-label">{{t "Term path prefix"}}</label>
+                <span class="admin-setting-help">{{t "New terms of this vocabulary get the path <code>/&lt;prefix&gt;/&lt;name&gt;</code> unless a path is set manually. Empty - a prefix from the vocabulary name. Paths of existing terms do not change."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="term_path_prefix" name="term_path_prefix" class="form-control" value="{{.vocabulary.TermPathPrefix}}" placeholder="{{t "e.g. tags"}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="public_term_pages" class="admin-setting-label">{{t "Public term pages"}}</label>
+                <span class="admin-setting-help">{{t "Each term has its own page at its path with a list of content. Off - term paths return 404 (the vocabulary is for classification only)."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="public_term_pages" name="public_term_pages" value="1" class="form-check-input" {{if .vocabulary.PublicTermPages}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="description" class="admin-setting-label">{{t "Description"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <textarea id="description" name="description" class="form-control" rows="4">{{.vocabulary.Desc}}</textarea>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="weight" class="admin-setting-label">{{t "Weight"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="weight" name="weight" class="form-control admin-max-xs" value="{{.vocabulary.Weight}}">
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

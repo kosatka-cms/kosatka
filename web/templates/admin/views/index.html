@@ -1,0 +1,126 @@
+{{/* admin/config/views - the Views (Controller.ViewList): adding one (a
+     card over the list), on a table card each View - its name (a group
+     marked), type, base table, address, status, edit, delete, duplicate;
+     a group's displays as sub-rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count View" "@count Views"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "duplicate" (t "This machine_name or URL is already used by another view.")
+        "create" (t "Error creating the view.")
+        "delete" (t "Error deleting the view.")
+        "cannot-delete-default" (t "The group's Default display cannot be deleted directly.")
+        "cannot-clone-default" (t "The group's Default display cannot be duplicated directly.")
+        "clone" (t "Error duplicating the view."))
+    "Warnings" (dict
+        "empty" (t "Enter a name and URL.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="view-add">
+    <h2 class="admin-add-title" id="view-add">{{t "Add view"}}</h2>
+    <form method="post" action="/admin/config/views" class="admin-add-form">
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Type"}}</span>
+            <select name="display_type" class="form-select">
+                <option value="page">{{t "Page"}}</option>
+                <option value="block">{{t "Block"}}</option>
+                <option value="attachment">{{t "Attachment to content"}}</option>
+                <option value="term">{{t "Term page"}}</option>
+            </select>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Base table"}}</span>
+            <select name="base_entity" class="form-select">
+                <option value="content">{{t "Content items"}}</option>
+                <option value="comment">{{t "Comments"}}</option>
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <p class="admin-setting-help">{{t "The URL is generated from the name and can be changed later on the view page. machine_name is assigned automatically from the ID and can be changed on the view page. The base table (\"Content items\"/\"Comments\") is set at creation and does not change afterwards - the other settings (sorting, page size, display, pagination, content type(s) via a filter, filters, fields) are on the view page after creation."}}</p>
+</section>
+
+<div class="admin-table-card">
+<div class="table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr>
+                <th>{{t "Name"}}</th>
+                <th>{{t "Type"}}</th>
+                <th>{{t "Base table"}}</th>
+                <th>URL</th>
+                <th>{{t "Status"}}</th>
+                <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .views}}
+            <tr>
+                <td>
+                    <a href="/admin/config/views/{{.ID}}" class="admin-table-title">{{.Label}}</a>
+                    {{if .HasGroup}}<span class="admin-pill" title="{{t "Part of a displays group - settings shared with other displays"}}">{{t "group"}}</span>{{end}}
+                </td>
+                <td>{{if eq (print .DisplayType) "block"}}{{t "Block"}}{{else if eq (print .DisplayType) "attachment"}}{{t "Attachment"}}{{else if eq (print .DisplayType) "term"}}{{t "Term"}}{{else if eq (print .DisplayType) "user_tab"}}{{t "Profile tab"}}{{else}}{{t "Page"}}{{end}}</td>
+                <td>{{if eq (print .BaseEntity) "comment"}}{{t "Comments"}}{{else}}{{t "Content items"}}{{end}}</td>
+                {{/* A grouped row is its View's Default (see ViewRepository.Views):
+                     its URLPath is an internal placeholder, never a real
+                     page, so it's not shown; each display's real URL is on
+                     its sub-row. Blocks have no URL at all
+                     (see entity.ViewDisplayDef.URLPath) - shown as "-". */}}
+                <td>{{if or .HasGroup (ne (print .DisplayType) "page")}}<span class="text-muted">-</span>{{else}}<a href="/{{.URLPath}}" target="_blank" rel="noopener"><code>/{{.URLPath}}</code></a>{{end}}</td>
+                <td>{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Published"}}</span>{{else}}<span class="admin-pill">{{t "Unpublished"}}</span>{{end}}</td>
+                <td class="text-nowrap text-end">
+                    <a href="/admin/config/views/{{.ID}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">
+                        {{template "admin_icon_edit"}}
+                    </a>
+                    {{/* A group row deletes the whole group (container, Default
+                         and all displays), not just the display that
+                         happens to represent it. */}}
+                    <a href="{{if .HasGroup}}/admin/config/view-groups/{{.ViewIDValue}}{{else}}/admin/config/views/{{.ID}}{{end}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                        {{template "admin_icon_delete"}}
+                    </a>
+                    {{/* Duplicate - the only way to add a display to a group by
+                         copying; see views.DefaultService.CloneDisplay. */}}
+                    <form method="post" action="/admin/config/views/{{.ID}}/clone" class="d-inline">
+                        <button type="submit" class="admin-icon-btn" title="{{t "Duplicate"}}" aria-label="{{t "Duplicate"}}">
+                            {{template "admin_icon_copy"}}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {{/* Sub-rows - one display per row with its own type/URL/status
+                 columns. No ID/actions here: a display is edited or deleted
+                 on its own page. Default is excluded (see displaysByRow). */}}
+            {{if .HasGroup}}
+            {{range index $.displaysByRow .ID}}
+            <tr class="admin-table-subrow">
+                <td class="ps-4"><a href="/admin/config/views/{{.ID}}">↳ {{.Label}}</a></td>
+                <td class="text-muted">{{if eq (print .DisplayType) "block"}}{{t "Block"}}{{else if eq (print .DisplayType) "attachment"}}{{t "Attachment"}}{{else if eq (print .DisplayType) "term"}}{{t "Term"}}{{else if eq (print .DisplayType) "user_tab"}}{{t "Profile tab"}}{{else}}{{t "Page"}}{{end}}</td>
+                <td class="text-muted">{{if eq (print .BaseEntity) "comment"}}{{t "Comments"}}{{else}}{{t "Content items"}}{{end}}</td>
+                <td class="text-muted">{{if ne (print .DisplayType) "page"}}<span class="text-muted">-</span>{{else}}<a href="/{{.URLPath}}" target="_blank" rel="noopener"><code>/{{.URLPath}}</code></a>{{end}}</td>
+                <td>{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Published"}}</span>{{else}}<span class="admin-pill">{{t "Unpublished"}}</span>{{end}}</td>
+                <td></td>
+            </tr>
+            {{end}}
+            {{end}}
+            {{else}}
+            <tr><td colspan="6" class="admin-table-empty">{{t "There are no views"}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

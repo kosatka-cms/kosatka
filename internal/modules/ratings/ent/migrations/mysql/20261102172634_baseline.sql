@@ -1,0 +1,6 @@
+-- Create "rating_content_types" table
+CREATE TABLE `rating_content_types` (`id` int unsigned NOT NULL AUTO_INCREMENT, `content_type` varchar(64) NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `ratingcontenttype_content_type` (`content_type`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Create "rating_settings" table
+CREATE TABLE `rating_settings` (`id` int unsigned NOT NULL, `scale` smallint NOT NULL DEFAULT 5, `allow_guests` bool NOT NULL DEFAULT false, `allow_change` bool NOT NULL DEFAULT true, `allow_withdraw` bool NOT NULL DEFAULT true, PRIMARY KEY (`id`)) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Create "rating_votes" table
+CREATE TABLE `rating_votes` (`id` int unsigned NOT NULL AUTO_INCREMENT, `guest` char(64) NULL, `score` smallint NOT NULL, `scale` smallint NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `nid` int unsigned NOT NULL, `uid` int unsigned NULL, PRIMARY KEY (`id`), UNIQUE INDEX `idx_rating_votes_node_user` (`nid`, `uid`), UNIQUE INDEX `idx_rating_votes_node_guest` (`nid`, `guest`), INDEX `ratingvote_uid` (`uid`), CONSTRAINT `rating_votes_nodes_node` FOREIGN KEY (`nid`) REFERENCES `nodes` (`id`) ON DELETE CASCADE, CONSTRAINT `rating_votes_users_user` FOREIGN KEY (`uid`) REFERENCES `users` (`id`) ON DELETE CASCADE) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;

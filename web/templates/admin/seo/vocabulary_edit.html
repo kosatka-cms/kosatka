@@ -1,0 +1,41 @@
+{{/* admin/config/seo/vocabularies/{id}/edit - a vocabulary's term page
+     templates (SEOVocabularyEdit), as rows; its tokens under them. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="seo-vocabulary-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<div class="admin-settings">
+<form method="post" action="/admin/config/seo/vocabularies/{{.vocabulary.ID}}" id="seo-vocabulary-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="seo-vocabulary-title">{{t "Title"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-vocabulary-title" name="title_template" class="form-control" value="{{.template.TitleTemplate}}" placeholder="{{t "empty - shared template"}}{{with .defaultTemplate.TitleTemplate}}: {{.}}{{end}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="seo-vocabulary-desc">{{t "Description"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-vocabulary-desc" name="description_template" class="form-control" value="{{.template.DescriptionTemplate}}" placeholder="{{t "empty - shared template"}}{{with .defaultTemplate.DescriptionTemplate}}: {{.}}{{end}}"></div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Term page tokens"}}</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <span class="admin-setting-help">{{t "<code>[term:title]</code> - the term page title (the term's \"Page title\" field, otherwise the name); <code>[term:name]</code> - the name; <code>[term:description]</code> - the description; <code>[site:name]</code> - the site name."}}</span>
+                <span class="admin-setting-help">{{t "<code>[a|b]</code> - the first non-empty one; <code>{ … }</code> - a fragment that is dropped if a token inside it is empty; <code>{A|B}</code> - the first variant where all tokens are filled."}}</span>
+            </div>
+        </div>
+    </div>
+</section>
+</div>
+{{end}}

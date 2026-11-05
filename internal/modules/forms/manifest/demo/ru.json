@@ -1,0 +1,18 @@
+{
+  "title": "Обратная связь",
+  "description": "Вопрос, идея или нашли ошибку - напишите нам.",
+  "confirmation": "Спасибо! Сообщение получено, ответим на указанную почту.",
+  "submit": "Отправить",
+  "elements": [
+    {"name": "name", "type": "text", "label": "Имя", "required": true},
+    {"name": "email", "type": "email", "label": "E-mail", "required": true},
+    {"name": "subject", "type": "select", "label": "Тема", "required": true, "options": ["Вопрос", "Идея", "Ошибка"]},
+    {"name": "message", "type": "textarea", "label": "Сообщение", "required": true}
+  ],
+  "submissions": [
+    {"author": "jim_hawkins", "values": {"name": "Джим Хокинс", "email": "jim_hawkins@example.com", "subject": "Вопрос", "message": "Можно ли поставить форму в сайдбар?"}},
+    {"author": "queequeg", "values": {"name": "Квикег", "email": "queequeg@example.com", "subject": "Идея", "message": "Добавьте в тему ещё одну схему - \"шторм\"."}},
+    {"author": "long_john_silver", "values": {"name": "Джон Сильвер", "email": "long_john_silver@example.com", "subject": "Ошибка", "message": "Карта острова не открывается. Очень нужна."}}
+  ],
+  "menu": "Обратная связь"
+}

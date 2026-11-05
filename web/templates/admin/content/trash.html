@@ -1,0 +1,71 @@
+{{/* admin/content/trash.html - the deleted content (Controller.TrashList),
+     the latest first, as the content list: its title and type, author,
+     who deleted it and when; each restored or deleted for good, and the
+     whole trash emptied. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count content item" "@count content items"}}{{if gt .trashDays 0}} · {{plural .trashDays "deleted for good after @count day" "deleted for good after @count days"}}{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+{{if .nodes}}
+<form method="post" action="/admin/content/trash/empty" data-confirm="{{tjs "Delete everything in the trash for good?"}}">
+    <button type="submit" class="btn btn-outline-danger">{{t "Empty the trash"}}</button>
+</form>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "restored" (t "Restored: the content is back on the site.")
+        "deleted" (t "Deleted for good.")
+        "emptied" (t "The trash is empty."))
+    "Errors" (dict
+        "restore" (t "The content could not be restored.")
+        "delete" (t "The content could not be deleted.")
+        "empty" (t "The trash could not be emptied.")))}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Title"}}</th>
+                    <th>{{t "Author"}}</th>
+                    <th>{{tc "trash" "Deleted"}}</th>
+                    <th>{{t "By"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .nodes}}
+                <tr>
+                    <td>
+                        <span class="admin-table-title">{{.Title}}</span>
+                        <span class="admin-table-sub">{{or (index $.typeLabels (toString .Type)) (toString .Type)}}</span>
+                    </td>
+                    <td>{{if .CreatedBy.Username}}<a href="{{userURL .CreatedBy.Slug}}">{{.CreatedBy.Username}}</a>{{else}}-{{end}}</td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .DeletedAt}}</td>
+                    <td>{{with index $.deletedBy .DeletedBy}}<a href="{{userURL .Slug}}">{{.Username}}</a>{{else}}-{{end}}</td>
+                    <td class="text-end text-nowrap">
+                        <form method="post" action="/admin/content/trash/{{.ID}}/restore" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">{{tc "trash" "Restore"}}</button>
+                        </form>
+                        <form method="post" action="/admin/content/trash/{{.ID}}/delete" class="d-inline" data-confirm="{{tjs "Delete \"@title\" for good?" "@title" .Title}}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">{{t "Delete for good"}}</button>
+                        </form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "The trash is empty."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

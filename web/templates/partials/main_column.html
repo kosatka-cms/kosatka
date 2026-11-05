@@ -1,0 +1,27 @@
+{{/* main_column - the page's content row inside a layout's container:
+     breadcrumb, title, the content_top region, content and the
+     content_bottom region, and the sidebar column when its region has
+     blocks for this page (block visibility decides which) and it isn't a
+     service page (.servicePage: admin, error pages, editor forms);
+     otherwise the content takes the full width. Shared by the engine's and the themes' layout.html. */}}
+{{define "main_column"}}
+{{$sidebar := and (not .servicePage) (regionHasBlocks "sidebar" .)}}
+<div class="row content">
+    <div class="{{if $sidebar}}col-lg-9{{else}}col-lg-12{{end}}">
+        {{template "breadcrumb" .}}
+
+        {{template "title" .}}
+
+        {{template "region_blocks" (dict "Region" (region "content_top") "Ctx" .)}}
+
+        {{template "content" .}}
+
+        {{template "region_blocks" (dict "Region" (region "content_bottom") "Ctx" .)}}
+    </div>
+    {{if $sidebar}}
+    <div class="col-lg-3 sidebar">
+        {{template "sidebar.html" .}}
+    </div>
+    {{end}}
+</div>
+{{end}}

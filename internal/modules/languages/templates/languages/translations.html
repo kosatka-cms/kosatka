@@ -1,0 +1,41 @@
+{{/* languages/translations.html - a content item's Translations tab
+     (TranslationsController.Page): its actions with the tab marked, then
+     each site language with its version - the original, a translation
+     (outdated marked: the original changed after it was saved) - or
+     Translate for who may create the type's content. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.item.Node.Title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+{{template "node_actions" .}}
+{{if eq .error "exists"}}<div class="alert alert-warning" role="alert">{{t "The content has a version in this language already."}}</div>
+{{else if .error}}<div class="alert alert-danger" role="alert">{{t "The translation could not be created."}}</div>{{end}}
+<div class="table-responsive">
+    <table class="table align-middle node-translations">
+        <thead>
+            <tr><th>{{t "Language"}}</th><th>{{t "Title"}}</th><th>{{t "State"}}</th><th><span class="visually-hidden">{{t "Operations"}}</span></th></tr>
+        </thead>
+        <tbody>
+            {{$node := .item.Node}}
+            {{range .rows}}
+            <tr{{if .Current}} class="table-active"{{end}}>
+                <td><strong lang="{{.Code}}">{{.Name}}</strong>{{with .Version}}<div class="small text-body-secondary">{{if .Original}}{{t "original"}}{{else}}{{.Node.URL}}{{end}}</div>{{end}}</td>
+                {{with .Version}}
+                <td lang="{{.Node.Langcode}}"><a href="{{.Node.URL}}">{{.Node.Title}}</a></td>
+                <td>{{if .Public}}{{t "Published"}}{{else}}{{t "Not published"}}{{end}}{{if .Outdated}}<div class="small text-warning-emphasis">{{t "Outdated: the original changed"}}</div>{{end}}</td>
+                <td class="text-end"><a href="/node/{{.Node.ID}}/edit" class="btn btn-outline-secondary btn-sm">{{t "Edit"}}</a></td>
+                {{else}}
+                <td class="text-body-secondary">{{t "Not translated"}}</td>
+                <td>-</td>
+                <td class="text-end">{{if $.canTranslate}}<form method="post" action="/node/{{$node.ID}}/translations/{{.Code}}" class="d-inline"><button type="submit" class="btn btn-primary btn-sm">{{t "Translate"}}</button></form>{{end}}</td>
+                {{end}}
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<p class="small text-body-secondary">{{t "A translation is a content item of its own: a copy of the original in the language, unpublished until you publish it. \"Outdated\" - the original was saved after the translation; saving the translation clears it. Deleting the original leaves its translations."}}</p>
+{{end}}

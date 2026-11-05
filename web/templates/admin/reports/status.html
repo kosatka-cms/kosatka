@@ -1,0 +1,72 @@
+{{/* admin/reports/status - the status report (StatusReportPage): the
+     site's checks (the core's and the enabled modules', each its level,
+     title, value and description), the engine's build and environment,
+     the modules' state and last database update - each on a table card. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "The engine's version, the environment and the site's checks: the core's and those of the enabled modules."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<div class="admin-settings">
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Checks"}}</h2>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table status-report">
+                <tbody>
+                    {{range .requirements}}
+                    <tr>
+                        <td class="text-nowrap" style="width:1%;">{{if .IsError}}<span class="admin-pill admin-pill--danger">{{t "Error"}}</span>{{else if .IsWarning}}<span class="admin-pill admin-pill--warn">{{t "Warning"}}</span>{{else}}<span class="admin-pill admin-pill--ok">{{t "OK"}}</span>{{end}}</td>
+                        <td style="width:30%;"><span class="admin-table-title">{{.Title}}</span>{{with .Module}}<span class="admin-table-sub">{{.}}</span>{{end}}</td>
+                        <td>{{.Value}}{{with .Description}}<span class="admin-table-sub">{{rawHTML .}}</span>{{end}}</td>
+                    </tr>
+                    {{else}}
+                    <tr><td class="admin-table-empty">{{t "No checks."}}</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Engine"}}</h2>
+    <div class="admin-table-card">
+        <table class="table admin-table">
+            <tbody>
+                <tr><th style="width:30%;">{{t "Version"}}</th><td>{{if .build.Version}}{{.build.Version}}{{else}}<span class="admin-table-muted">{{t "not a release build"}}</span>{{end}}</td></tr>
+                <tr><th>{{t "Commit"}}</th><td>{{if .build.Commit}}<code title="{{.build.Commit}}">{{.build.ShortCommit}}</code>{{if .build.Modified}} <span class="admin-pill admin-pill--warn">{{t "with uncommitted changes"}}</span>{{end}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+                <tr><th>{{t "Commit time"}}</th><td>{{with date .build.Time "datetime"}}{{.}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+                <tr><th>Go</th><td>{{.build.GoVersion}}</td></tr>
+                <tr><th>{{t "Database"}}</th><td>{{.dbDriver}} {{.dbVersion}}</td></tr>
+                <tr><th>{{t "Theme"}}</th><td>{{if .theme}}{{.theme}}{{else}}<span class="admin-table-muted">{{t "the engine's templates"}}</span>{{end}}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Modules"}}</h2>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>{{t "Module"}}</th><th>{{t "State"}}</th><th>{{t "Last database update"}}</th></tr></thead>
+                <tbody>
+                    {{range .modules}}
+                    <tr>
+                        <td><span class="admin-table-title">{{.Label}}</span><span class="admin-table-sub"><code>{{.Name}}</code></span></td>
+                        <td>{{if .Enabled}}<span class="admin-pill admin-pill--ok">{{t "Enabled"}}</span>{{else if .Installed}}<span class="admin-pill">{{t "Disabled"}}</span>{{else}}<span class="admin-table-muted">{{t "Not installed"}}</span>{{end}}</td>
+                        <td>{{if .SchemaVersion}}<code>{{.SchemaVersion}}</code>{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</div>
+{{end}}

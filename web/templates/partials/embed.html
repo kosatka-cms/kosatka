@@ -1,0 +1,10 @@
+{{/* embed_block - a block embedded by its machine name ([[block:<name>]]
+     in a text, {{embed "block:<name>"}} in a template; service.BlockEmbed):
+     as a region shows a block - its title when shown, its body through its
+     format's text filters. Takes (dict "Block" entity.BlockDef). */}}
+{{define "embed_block"}}
+<div class="block block-embed block-embed-{{.Block.MachineName}}">
+    {{if .Block.ShowTitle}}<h2>{{blockTitle .Block}}</h2>{{end}}
+    <div class="block-content">{{textFilters .Block.Body .Block.TextFormatIDValue}}</div>
+</div>
+{{end}}

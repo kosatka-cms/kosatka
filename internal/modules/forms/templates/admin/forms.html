@@ -1,0 +1,58 @@
+{{/* admin/forms.html - every form of the forms module
+     (WebformController.FormsList): submissions count and last time, links
+     to the submissions, the analysis, the CSV and the editor, deleting a
+     form (its confirmation page). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}<span class="admin-page-meta">{{plural (len .forms) "@count form" "@count forms"}}</span>{{end}}
+
+{{define "page_actions"}}{{if .canCreate}}<a href="/create/form" class="btn btn-primary">+ {{t "Create form"}}</a>{{end}}{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "deleted" (t "The form has been deleted."))
+    "Errors" (dict
+        "delete" (t "Error deleting.")))}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Form"}}</th>
+                    <th class="text-end">{{t "Submissions"}}</th>
+                    <th>{{t "Last submission"}}</th>
+                    <th></th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .forms}}
+                {{$n := .Webform.Node}}
+                <tr>
+                    <td>
+                        <a href="{{$n.URL}}" class="admin-table-title">{{$n.Title}}</a>
+                        {{if ne $n.Status 1}}<span class="admin-pill">{{t "Unpublished"}}</span>{{end}}
+                    </td>
+                    <td class="text-end admin-table-num">{{.Count}}</td>
+                    <td class="text-nowrap admin-table-muted">{{if .Count}}{{date .Last "datetime"}}{{else}}-{{end}}</td>
+                    <td class="text-nowrap">
+                        <a href="/node/{{$n.ID}}/form/submissions">{{t "Submissions"}}</a>
+                        {{if .Count}} · <a href="/node/{{$n.ID}}/form/analysis">{{t "Analysis"}}</a> · <a href="/node/{{$n.ID}}/form/submissions.csv">CSV</a>{{end}}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="/node/{{$n.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        {{if index $.canDelete $n.ID}}<a href="/admin/forms/{{$n.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>{{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{t "No forms yet."}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

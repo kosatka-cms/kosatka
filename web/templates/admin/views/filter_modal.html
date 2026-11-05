@@ -1,0 +1,164 @@
+{{/* view_filter_modal - the Views page's filter add/edit modal (page.html). */}}
+{{define "view_filter_modal"}}
+{{/* Filter add/edit modal - one form for both; admin_views.js switches
+       action/title/values by mode. */}}
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="filterForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalTitle">{{t "Add filter"}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{t "Field"}}</label>
+                        {{/* filter-target-search/-menu - turns the select below into a searchable
+                             combobox. The <select> stays the real (hidden) form control; see
+                             admin_views.js's setupFieldCombobox. */}}
+                        <div class="position-relative">
+                            <input type="text" id="filter-target-search" class="form-control" placeholder="{{t "Search field…"}}">
+                        </div>
+                        {{/* Not "required": a hidden required <select> is "not focusable" in Chrome
+                             and silently blocks submission. Validated in JS instead. */}}
+                        <select name="target" id="filter-target" class="d-none">
+                            {{/* Blank placeholder so no target looks pre-selected in a new filter. */}}
+                            <option value="">{{t "- field -"}}</option>
+                            <optgroup label="{{t "Built-in"}}">
+                                {{range .builtinFields}}
+                                {{$target := printf "builtin:%s" .}}
+                                <option value="{{$target}}" data-operators="{{index $.filterTargetOperators $target}}">{{.}}</option>
+                                {{end}}
+                            </optgroup>
+                            {{if .moduleFilters}}
+                            <optgroup label="{{t "Modules"}}">
+                                {{range .moduleFilters}}
+                                <option value="{{.Target}}" data-operators="{{.Operators}}"{{with .Options}} data-options="{{.}}"{{end}}>{{.Label}} ({{.Key}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                            {{if .filterFieldOptions}}
+                            <optgroup label="{{t "Fields (shared catalog)"}}">
+                                {{range .filterFieldOptions}}
+                                {{$target := printf "field:%d" .ID}}
+                                <option value="{{$target}}" data-operators="{{index $.filterTargetOperators $target}}" data-field-type="{{.FieldType}}">{{index $.fieldLabels .ID}} ({{.MachineName}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                            {{/* The fields of the blocks fields' sets: the nodes with a
+                                 block that matches (block:<blocks field>:<field>). */}}
+                            {{if .blockFilterOptions}}
+                            <optgroup label="{{t "Fields of blocks"}}">
+                                {{range .blockFilterOptions}}
+                                <option value="{{.Target}}" data-operators="{{.Operators}}" data-field-type="{{.FieldType}}">{{.Label}} ({{.MachineName}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{t "Operator"}}</label>
+                        <select name="operator" id="filter-operator" class="form-select" required>
+                            {{range .operators}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="filter-value-text-wrap">
+                        <label class="form-label">{{t "Value"}}</label>
+                        <input type="text" name="value" id="filter-value" class="form-control" placeholder="{{t "fixed value"}}">
+                    </div>
+                    {{/* Relative-date toggle - date fields only (admin_views.js). #filter-value
+                         stays the same input; when checked it holds a relative expression
+                         ("now", "+7 days", "-1 month") instead of a literal date. */}}
+                    <div class="mb-3 form-check d-none" id="filter-value-relative-wrap">
+                        <input type="checkbox" name="value_is_relative" id="filter-value-relative" value="1" class="form-check-input">
+                        <label for="filter-value-relative" class="form-check-label">{{t "Use relative date"}}</label>
+                        <div class="form-text">{{t "The value above is not a specific date but an expression: <code>now</code>, <code>+7 days</code>, <code>-1 month</code>, <code>+2 weeks</code>, <code>+1 year</code>. Recalculated on every display."}}</div>
+                    </div>
+                    {{/* Terms picker - replaces the text input for taxonomy fields. admin_views.js
+                         copies options from #taxonomy-terms-catalog and keeps #filter-value (comma-
+                         separated term IDs) in sync. */}}
+                    <div class="mb-3 d-none" id="filter-value-terms-wrap">
+                        <label class="form-label">{{t "Terms"}}</label>
+                        <select multiple id="filter-value-terms" class="form-select" size="6"></select>
+                        <div class="form-text">{{t "Ctrl/Cmd+click - select multiple."}}</div>
+                    </div>
+                    {{/* Content-type picker - replaces the text input for the content_type
+                         builtin filter, so values are picked from existing types. */}}
+                    <div class="mb-3 d-none" id="filter-value-content-types-wrap">
+                        <label class="form-label">{{t "Content types"}}</label>
+                        <select multiple id="filter-value-content-types" class="form-select" size="6">
+                            {{range .contentTypes}}
+                            <option value="{{.MachineName}}">{{.Label}} ({{.MachineName}})</option>
+                            {{end}}
+                        </select>
+                        <div class="form-text">{{t "Ctrl/Cmd+click - select multiple."}}</div>
+                    </div>
+                    {{/* A module's choice filter (entity.ViewModuleFilter.Options):
+                         its values, from the target's data-options. */}}
+                    <div class="mb-3 d-none" id="filter-value-module-options-wrap">
+                        <label for="filter-value-module-options" class="form-label">{{t "Values"}}</label>
+                        <select multiple id="filter-value-module-options" class="form-select" size="6"></select>
+                        <div class="form-text">{{t "Ctrl/Cmd+click - select multiple."}}</div>
+                    </div>
+                    {{/* Vocabulary picker - replaces the text input for the
+                         similar_to_current_node and shares_terms_with_current builtins:
+                         their value is an optional vocabulary ID (empty - every one). */}}
+                    <div class="mb-3 d-none" id="filter-value-vocabulary-wrap">
+                        <label for="filter-value-vocabulary" class="form-label">{{t "Vocabulary"}}</label>
+                        <select id="filter-value-vocabulary" class="form-select">
+                            <option value="">{{t "Any vocabulary"}}</option>
+                            {{range .vocabularies}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                        <div class="form-text">{{t "Only the terms of this vocabulary are compared with the current content's terms."}}</div>
+                    </div>
+                    {{/* Contextual - only for builtin fields with a contextual resolver (JS shows
+                         it based on the target; see entity.ViewFilterDef.Contextual), e.g. "More
+                         from this author". Mutually exclusive with "Exposed": both resolve the
+                         value per request, from different sources. */}}
+                    <div class="mb-3 form-check d-none" id="filter-contextual-wrap">
+                        <input type="checkbox" name="contextual" id="filter-contextual" value="1" class="form-check-input">
+                        <label for="filter-contextual" class="form-check-label">{{t "Contextual"}}</label>
+                        <div class="form-text">{{t "The value is taken neither from the field above nor from a query parameter, but from the context of the content BEING VIEWED (what exactly depends on the field selected above) - for View blocks, profile tabs, term pages and pages with a % in their address. Mutually exclusive with \"Exposed to visitors\"."}}</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="exposed" id="filter-exposed" value="1" class="form-check-input">
+                        <label for="filter-exposed" class="form-check-label">{{t "Exposed to visitors"}}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{t "Query parameter"}}</label>
+                        <input type="text" name="exposed_param" id="filter-exposed-param" class="form-control" placeholder="{{t "for example publisher"}}">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">{{t "Label on the public form"}}</label>
+                        <input type="text" name="exposed_label" id="filter-exposed-label" class="form-control" placeholder="{{t "for example Title"}}" maxlength="255">
+                        <div class="form-text">{{t "Optional - if empty, the field name is used."}}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{/* taxonomy-terms-catalog - one hidden <select> per taxonomy field with its
+     vocabulary's terms; admin_views.js clones options into the filter modal's
+     term picker instead of an extra AJAX request. */}}
+<div class="d-none" id="taxonomy-terms-catalog">
+    {{range .filterFieldOptions}}
+    {{if eq (print .FieldType) "taxonomy"}}
+    <select data-field-id="{{.ID}}">
+        {{range index $.taxonomyFieldTerms .ID}}
+        <option value="{{.ID}}">{{index $.taxonomyTermLabels .ID}}</option>
+        {{end}}
+    </select>
+    {{end}}
+    {{end}}
+</div>
+{{end}}

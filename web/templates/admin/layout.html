@@ -1,0 +1,37 @@
+{{template "admin_header" .}}
+
+<main id="main-content" class="admin-main container-content">
+    {{/* The status report's warning bar (interfaces.AddStatusCounts):
+         what its checks found, for those who may open it. */}}
+    {{if or .statusErrors .statusWarnings}}
+    <div class="alert {{if .statusErrors}}alert-danger{{else}}alert-warning{{end}} py-2 admin-status-bar" role="status">
+        {{if .statusErrors}}{{plural .statusErrors "@count error" "@count errors"}}{{end}}{{if and .statusErrors .statusWarnings}}, {{end}}{{if .statusWarnings}}{{plural .statusWarnings "@count warning" "@count warnings"}}{{end}}
+        {{t "in the site's checks."}} <a href="/admin/reports/status" class="alert-link">{{t "Status report"}}</a>
+    </div>
+    {{end}}
+    {{if and .isAdmin (gt .pendingPeopleCount 0)}}
+    <div class="alert alert-info py-2" role="status">
+        {{t "There are accounts awaiting approval (@count)." "@count" .pendingPeopleCount}}
+        <a href="/admin/people?status=pending" class="alert-link">{{t "Go to the list"}}</a>
+    </div>
+    {{end}}
+    {{/* A page defines "breadcrumb" (a link back, above the title),
+         "title", "page_meta" (a line under the title: what the page is
+         about) and "page_actions" (its main buttons, beside the title)
+         only when it has them; the title defaults to .title. */}}
+    {{block "breadcrumb" .}}{{end}}
+
+    <div class="admin-page-head">
+        <div class="admin-page-heading">
+            {{block "title" .}}<h1 class="article-title">{{.title}}</h1>{{end}}
+            {{block "page_meta" .}}{{end}}
+        </div>
+        <div class="admin-page-actions">{{block "page_actions" .}}{{end}}</div>
+    </div>
+
+    {{/* A page redesigned as cards defines "page_body" as its bare
+         content; the others keep theirs on a white card. */}}
+    {{block "page_body" .}}<div class="admin-surface">{{template "content" .}}</div>{{end}}
+</main>
+
+{{template "admin_footer" .}}

@@ -1,0 +1,663 @@
+{{/* admin/config/content-types/{id}/fields/{fid}/edit - a field
+     (ContentTypeFieldEdit): its machine name, type and number of values
+     under the title; its name and its type's settings (widget, formats,
+     list values, vocabulary, target, group scope, date format, default
+     file and uploads), then the general settings - as rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta"><span title="{{t "- shared by all types this field is attached to; cannot be changed after creation."}}">machine_name: <code>{{.field.MachineName}}</code></span> · <span title="{{t "- set once at creation; cannot be changed."}}">{{t "Type:"}} <span class="admin-pill">{{.field.FieldType}}</span></span>{{if .field.FieldType.AllowsMultiple}} · <span title="{{t "- for all types this field is attached to."}}">{{t "Number of values:"}} <strong>{{if .field.Multiple}}{{t "multiple values"}}{{else}}{{t "single value"}}{{end}}</strong></span> (<a href="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}/cardinality">{{t "Change"}}</a>){{end}} · {{t "Saved values: @count" "@count" .fieldValueCount}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="field-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "content_type_tabs" .}}
+
+{{template "admin_alerts" (dict "Ctx" . "Done" (dict "success" (t "Saved.")))}}
+{{if .cardinalityChanged}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "The number of values is changed."}}</div>
+{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Info" (dict
+        "created" (t "Field created - configure the settings below and save."))
+    "Errors" (dict
+        "update" (t "Error saving the field.")
+        "vocabulary-required" (t "Select a vocabulary for a field of type \"Vocabulary\".")
+        "allowed-values-required" (t "A field of type \"List\" needs at least one value.")
+        "invalid-list-widget" (t "\"Radio buttons\" is only for a single value, \"Checkboxes\" only for multiple values.")
+        "invalid-taxonomy-widget" (t "\"Radio\" is only for a single value, \"Checkboxes\"/\"Autocomplete\" only for multiple values.")
+        "block-types-required" (t "Choose the field sets of the blocks.")
+        "auth" (t "Could not determine the current user - try logging in again."))
+    "Warnings" (dict
+        "empty" (t "Fill in the field label.")))}}
+{{if eq .error "file-directory"}}
+<div class="alert alert-danger">{{if .uploadErrorDetail}}{{t "File directory not saved: @error." "@error" .uploadErrorDetail}}{{else}}{{t "File directory not saved."}}{{end}}</div>
+{{end}}
+{{if eq .error "default-image"}}
+<div class="alert alert-danger">{{if .uploadErrorDetail}}{{t "Could not upload the default image: @error." "@error" .uploadErrorDetail}}{{else}}{{t "Could not upload the default image."}}{{end}}</div>
+{{end}}
+
+<form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields/{{.field.ID}}" enctype="multipart/form-data" id="field-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="label" class="admin-setting-label">{{t "Name"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="label" name="label" class="form-control" value="{{.field.Label}}" required>
+            </div>
+        </div>
+    </div>
+
+    {{renderSuggestion "field_settings" (print .field.FieldType) .}}
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "General field settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="required" class="admin-setting-label">{{t "Required"}}</label>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="required" name="required" value="1" class="form-check-input" {{if .field.Required}}checked{{end}}></div>
+        </div>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="hidden_in_form" class="admin-setting-label">{{t "Hidden in the create/edit form"}}</label>
+                <span class="admin-setting-help">{{t "(the saved value is kept)"}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="hidden_in_form" name="hidden_in_form" value="1" class="form-check-input" {{if .field.HiddenInForm}}checked{{end}}></div>
+        </div>
+        </div>
+    </section>
+
+    {{/* The modules' sections (interfaces.AddFormSection): form_field_<module>. */}}
+    {{moduleHook "form_field" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+<p class="admin-setting-help mt-3">{{t "The order in the create/edit form and group membership (form/detail page) are on the \"Fields\" tab; display on the detail page is on the \"Display: detail page\" tab. Lists are built by Views."}}</p>
+{{end}}
+
+{{/* field_file_directory - the upload directory row of an image/file
+     field (entity.FieldInstanceDef.FileDirectory); tokens are resolved by
+     service.ResolveFileDirectory. */}}
+{{define "field_file_directory"}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="file_directory" class="admin-setting-label">{{t "File directory"}}</label>
+        <span class="admin-setting-help">{{t "Where to save new uploads, relative to the site files folder. Empty - <code>@default</code>. Tokens: <code>[date:custom:Y]</code>, <code>[date:custom:m]</code>, <code>[date:custom:d]</code>, <code>[node:type]</code>, <code>[current-user:uid]</code>. For example <code>content/[date:custom:Y]-[date:custom:m]</code>. Files already uploaded are not moved." "@default" .Default}}</span>
+    </div>
+    <div class="admin-setting-control"><input type="text" id="file_directory" name="file_directory" class="form-control" value="{{.Value}}" placeholder="{{.Default}}"></div>
+</div>
+{{end}}
+
+{{/* field_private_files - the "Private files" switch of an image/file
+     field (entity.FieldInstanceDef.PrivateFiles); its data is the field. */}}
+{{define "field_private_files"}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="private_files" class="admin-setting-label">{{t "Private files"}}</label>
+        <span class="admin-setting-help">{{t "New files go to the private files: the site gives one - an image in its styles too - only to those who may see the content it is attached to, never by a link alone. Files already uploaded stay where they are; the default file or image stays public."}}</span>
+    </div>
+    <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="private_files" name="private_files" value="1" class="form-check-input" {{if .PrivateFiles}}checked{{end}}></div>
+</div>
+{{end}}
+
+{{/* field_media_source - where an image/file field's files come from
+     (entity.FieldInstanceDef.MediaSource); its data is the field. */}}
+{{define "field_media_source"}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="media_source" class="admin-setting-label">{{t "Where files come from"}}</label>
+        <span class="admin-setting-help">{{t "The media library offers the site's files this field may take: of its kind and size, public or private as the field."}}</span>
+    </div>
+    <div class="admin-setting-control">
+        {{$s := print .MediaSource}}
+        <select id="media_source" name="media_source" class="form-select admin-min-sm">
+            <option value="" {{if eq $s ""}}selected{{end}}>{{t "Upload or the media library"}}</option>
+            <option value="upload" {{if eq $s "upload"}}selected{{end}}>{{t "Upload only"}}</option>
+            <option value="library" {{if eq $s "library"}}selected{{end}}>{{t "The media library only"}}</option>
+        </select>
+    </div>
+</div>
+{{end}}
+
+{{/* field_settings_<type> - the settings of a field of a type on its
+     page (the page's data: .field, .vocabularies, .roles, .fieldSets…;
+     content_type_field_form.go's adminFieldTypes reads them back);
+     field_settings_default - none. */}}
+{{define "field_settings_text"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="widget" class="admin-setting-label">{{t "Widget"}}</label>
+                <span class="admin-setting-help">{{t "Edit form only - <code>input</code> (a single-line field) or <code>textarea</code> (multi-line, without a line length limit). Which editor is shown when a value is entered is decided by the text formats below, not by this choice; the layout on the detail page (article body or fact box) is decided by the separate \"In article body\" checkbox on the \"Display: detail page\" tab."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{$currentWidget := .field.Widget}}
+                <select id="widget" name="widget" class="form-select">
+                    {{range .fieldWidgets}}
+                    <option value="{{.}}" {{if eq (print .) (print $currentWidget)}}selected{{end}}>{{.}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="max_len" class="admin-setting-label">{{t "Max length"}}</label>
+                <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="max_len" name="max_len" class="form-control admin-max-xs" value="{{if .field.HasExplicitMaxLen}}{{.field.MaxLen}}{{end}}" placeholder="{{t "no limit"}}">
+            </div>
+        </div>
+        <fieldset class="admin-setting">
+            <legend class="admin-setting-text">
+                <span class="admin-setting-label">{{t "Allowed text formats"}}</span>
+                <span class="admin-setting-help">{{t "If at least one format is checked, it decides which editor is shown when a value is entered (<a href=\":url\">manage formats</a>) and which HTML tags are allowed. Nothing checked - the field stays plain text without an HTML editor." ":url" "/admin/config/text-formats"}}</span>
+            </legend>
+            <div class="admin-setting-control admin-setting-control--choices">
+                {{$allowedFormatIDs := .field.AllowedTextFormatIDs}}
+                {{range .textFormats}}
+                <div class="form-check">
+                    <input type="checkbox" id="text_format_{{.ID}}" name="allowed_text_formats" value="{{.ID}}" class="form-check-input" {{if intContains $allowedFormatIDs .ID}}checked{{end}}>
+                    <label for="text_format_{{.ID}}" class="form-check-label">{{.Label}}</label>
+                </div>
+                {{end}}
+            </div>
+        </fieldset>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_list"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="list_widget" class="admin-setting-label">{{t "Widget"}}</label>
+                <span class="admin-setting-help">{{$multiplicity := (t "single value")}}{{if .field.Multiple}}{{$multiplicity = (t "multiple values")}}{{end}}{{t "\"Radio buttons\" is only for a single value, \"Checkboxes\" only for multiple. Current multiplicity: <strong>@multiplicity</strong>." "@multiplicity" $multiplicity}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{$currentListWidget := .field.Widget}}
+                <select id="list_widget" name="list_widget" class="form-select">
+                    {{range .listWidgets}}
+                    <option value="{{.}}" {{if eq (print .) (print $currentListWidget)}}selected{{end}}>{{.}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="allowed_values" class="admin-setting-label">{{t "Allowed values"}}</label>
+                <span class="admin-setting-help">{{t "One pair per line: <code>value|Label</code> (without \"|\" the label equals the value). The value must not contain a comma."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <textarea id="allowed_values" name="allowed_values" class="form-control" rows="5">{{.field.AllowedValuesText}}</textarea>
+            </div>
+        </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_taxonomy"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="vocabulary_id" class="admin-setting-label">{{tc "field settings" "Vocabulary"}}</label>
+                <span class="admin-setting-help">{{with .field.VocabularyID}}<a href="/admin/config/taxonomy/{{.}}/terms">{{t "Manage terms of this vocabulary →"}}</a>{{end}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{$currentVoc := .field.VocabularyID}}
+                <select id="vocabulary_id" name="vocabulary_id" class="form-select">
+                    {{range .vocabularies}}
+                    <option value="{{.ID}}" {{if eq .ID $currentVoc}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="taxonomy_widget" class="admin-setting-label">{{t "Widget"}}</label>
+                <span class="admin-setting-help">{{$multiplicity := (t "single value")}}{{if .field.Multiple}}{{$multiplicity = (t "multiple values")}}{{end}}{{t "\"Radio\" is only for a single value, \"Checkboxes\"/\"Autocomplete\" only for multiple. \"Autocomplete\" is the only one that can create new terms on the fly; the others only choose among existing ones. Current multiplicity: <strong>@multiplicity</strong>." "@multiplicity" $multiplicity}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{/* Widget() falls back to "input" when unset, which is meaningless for
+                     taxonomy - pre-select the effective default (see
+                     entity.WidgetAutocomplete) instead of the first option. */}}
+                {{$currentTaxonomyWidget := .field.Widget}}
+                {{if eq (print $currentTaxonomyWidget) "input"}}
+                {{if .field.Multiple}}{{$currentTaxonomyWidget = "autocomplete"}}{{else}}{{$currentTaxonomyWidget = "select"}}{{end}}
+                {{end}}
+                <select id="taxonomy_widget" name="taxonomy_widget" class="form-select">
+                    {{range .taxonomyWidgets}}
+                    <option value="{{.}}" {{if eq (print .) (print $currentTaxonomyWidget)}}selected{{end}}>{{.}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_reference"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="target_content_type" class="admin-setting-label">{{t "Target type"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="target_content_type" name="target_content_type" class="form-control" value="{{.field.TargetContentType}}" placeholder="{{t "comma-separated machine_name, optional"}}">
+            </div>
+        </div>
+        {{if .field.Multiple}}
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="field-symmetric" class="admin-setting-label">{{t "Mutual reference"}}</label>
+                <span class="admin-setting-help">{{t "(if A references B, B automatically gets a reference to A)"}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="field-symmetric" name="symmetric" value="1" class="form-check-input" {{if .field.Symmetric}}checked{{end}}></div>
+        </div>
+        {{end}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_link"}}
+    {{/* A link field: the links' titles, the sites they may lead to (the
+         modules' formatters offer theirs - linkHostSuggestions; the button
+         puts them into the input, admin.js data-fill-target), how many. */}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Link settings"}}</h2>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Link title"}}</span>
+                    <span class="admin-setting-help">{{t "The text a link shows with; without it - the address. Not needed for videos."}}</span>
+                </legend>
+                <div class="admin-setting-control">
+                    {{$title := print .field.LinkTitle}}
+                    <div class="form-check"><input type="radio" id="link_title_none" name="link_title" value="" class="form-check-input"{{if eq $title ""}} checked{{end}}><label for="link_title_none" class="form-check-label">{{t "Not needed"}}</label></div>
+                    <div class="form-check"><input type="radio" id="link_title_optional" name="link_title" value="optional" class="form-check-input"{{if eq $title "optional"}} checked{{end}}><label for="link_title_optional" class="form-check-label">{{t "Optional"}}</label></div>
+                    <div class="form-check"><input type="radio" id="link_title_required" name="link_title" value="required" class="form-check-input"{{if eq $title "required"}} checked{{end}}><label for="link_title_required" class="form-check-label">{{tc "link title" "Required"}}</label></div>
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="allowed_hosts" class="admin-setting-label">{{t "Allowed sites"}}</label>
+                    <span class="admin-setting-help">{{t "Separated by spaces, e.g. youtube.com - its subdomains too. Empty - any address."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="text" id="allowed_hosts" name="allowed_hosts" class="form-control" value="{{.field.AllowedHostsString}}">
+                    {{range .linkHostSuggestions}}
+                    <button type="button" class="btn btn-link btn-sm px-0 text-start" data-fill-target="allowed_hosts" data-fill-value="{{.}}">{{t "Fill in: @hosts" "@hosts" .}}</button>
+                    {{end}}
+                </div>
+            </div>
+            {{if .field.Multiple}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most links"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_user"}}
+    {{/* A user field: the roles whose users may be chosen (user_roles,
+         the field's storage), how many. */}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Only with roles"}}</span>
+                    <span class="admin-setting-help">{{t "Whom the field may name. None ticked - any active user. For every type the field is attached to."}}</span>
+                </legend>
+                <div class="admin-setting-control">
+                    {{$chosen := .field.UserRoles}}
+                    {{range .roles}}
+                    <div class="form-check"><input type="checkbox" id="user_role_{{.ID}}" name="user_roles" value="{{.ID}}" class="form-check-input"{{if intContains $chosen .ID}} checked{{end}}><label for="user_role_{{.ID}}" class="form-check-label">{{.Name}}</label></div>
+                    {{end}}
+                </div>
+            </fieldset>
+            {{if .field.Multiple}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most people"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_blocks"}}
+    {{/* A blocks field: the field sets of its blocks (block_types, the
+         field's storage; Structure → Field sets) - one, all blocks alike,
+         or several, a page made of blocks of each; how many. */}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Field sets"}}</span>
+                    <span class="admin-setting-help">{{t "One - all the blocks alike (the roles of a film); several - content made of blocks of each (a text, a quote, a gallery). For every type the field is attached to."}} <a href="/admin/config/field-sets">{{t "Field sets"}}</a></span>
+                </legend>
+                <div class="admin-setting-control">
+                    {{$chosen := .field.BlockTypes}}
+                    {{range .fieldSets}}
+                    <div class="form-check"><input type="checkbox" id="block_type_{{.MachineName}}" name="block_types" value="{{.MachineName}}" class="form-check-input"{{if stringContains $chosen .MachineName}} checked{{end}}><label for="block_type_{{.MachineName}}" class="form-check-label">{{.Label}}</label></div>
+                    {{else}}
+                    <div class="form-text">{{t "No field sets yet."}} <a href="/admin/config/field-sets">{{t "Add field set"}}</a></div>
+                    {{end}}
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most blocks"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_group"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Group scope"}}</h2>
+        <p class="admin-setting-help">{{t "Groups are not shared between sections - unless both are checked, the group stays available only where it is checked."}}</p>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="usable_in_form" class="admin-setting-label">{{t "Available in the form"}}</label>
+                <span class="admin-setting-help">{{t "(will appear in the \"Group (form)\" select on the \"Fields\" tab)"}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="usable_in_form" name="usable_in_form" value="1" class="form-check-input" {{if .field.UsableInForm}}checked{{end}}></div>
+        </div>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="usable_in_detail" class="admin-setting-label">{{t "Available on the detail page"}}</label>
+                <span class="admin-setting-help">{{t "(will appear in the \"Group\" select on the \"Display: detail page\" tab)"}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="usable_in_detail" name="usable_in_detail" value="1" class="form-check-input" {{if .field.UsableInDetail}}checked{{end}}></div>
+        </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_number"}}
+    {{/* A number: whole or with decimals, its limits, its units (the
+         field's storage - every type using it). */}}
+    {{$kind := print .field.NumberKind}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Number"}}</span>
+                    <span class="admin-setting-help">{{t "\"As typed\" - shown as stored, without the language's separators (a field made before this setting)."}}</span>
+                </legend>
+                <div class="admin-setting-control">
+                    <div class="form-check"><input type="radio" id="number_kind_any" name="number_kind" value="" class="form-check-input"{{if eq $kind ""}} checked{{end}}><label for="number_kind_any" class="form-check-label">{{t "As typed"}}</label></div>
+                    <div class="form-check"><input type="radio" id="number_kind_integer" name="number_kind" value="integer" class="form-check-input"{{if eq $kind "integer"}} checked{{end}}><label for="number_kind_integer" class="form-check-label">{{t "Whole"}}</label></div>
+                    <div class="form-check"><input type="radio" id="number_kind_decimal" name="number_kind" value="decimal" class="form-check-input"{{if eq $kind "decimal"}} checked{{end}}><label for="number_kind_decimal" class="form-check-label">{{t "Decimal"}}</label></div>
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="decimals" class="admin-setting-label">{{t "Decimals"}}</label>
+                    <span class="admin-setting-help">{{t "For a decimal number: kept and shown, 0-6."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="number" id="decimals" name="decimals" class="form-control admin-max-xs" value="{{if eq $kind "decimal"}}{{.field.NumberDecimals}}{{else}}2{{end}}" min="0" max="6"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Not less / not more than"}}</span>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--inline">
+                    <input type="number" step="any" name="min" class="form-control admin-max-xs" value="{{.field.NumberMinAttr}}" aria-label="{{t "Least value"}}"> -
+                    <input type="number" step="any" name="max" class="form-control admin-max-xs" value="{{.field.NumberMaxAttr}}" aria-label="{{t "Greatest value"}}">
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Before / after the value"}}</span>
+                    <span class="admin-setting-help">{{t "Units when shown, with their spaces: \"$\", \" ₽\", \" min\"."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--inline">
+                    <input type="text" name="prefix" maxlength="16" class="form-control admin-max-xs" value="{{.field.NumberPrefix}}" aria-label="{{t "Before the value"}}">
+                    <span class="admin-table-muted">{{t "value"}}</span>
+                    <input type="text" name="suffix" maxlength="16" class="form-control admin-max-xs" value="{{.field.NumberSuffix}}" aria-label="{{t "After the value"}}">
+                </div>
+            </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_email"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="email_hidden" class="admin-setting-label">{{t "Hide from harvesters"}}</label>
+                    <span class="admin-setting-help">{{t "The address is made by a script in the browser; without it - \"info [at] example.com\"."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="hidden" name="email_hidden_shown" value="1"><input type="checkbox" role="switch" id="email_hidden" name="email_hidden" value="1" class="form-check-input"{{if not .field.EmailPlain}} checked{{end}}></div>
+            </div>
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_date"}}
+    {{/* The time and the end (date_time, date_end: the field's storage -
+         every type using it); date_format and time_format - display formats
+         from the date formats list (/admin/config/date-formats);
+         date_range_full - a range never shortened. */}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            {{$dt := print .field.DateTime}}{{$de := print .field.DateEnd}}
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Time"}}</span>
+                    <span class="admin-setting-help">{{t "\"Optional\": a value without a time is the whole day. For every type the field is attached to."}}</span>
+                </legend>
+                <div class="admin-setting-control">
+                    <div class="form-check"><input type="radio" id="date_time_none" name="date_time" value="" class="form-check-input"{{if eq $dt ""}} checked{{end}}><label for="date_time_none" class="form-check-label">{{t "No time"}}</label></div>
+                    <div class="form-check"><input type="radio" id="date_time_optional" name="date_time" value="optional" class="form-check-input"{{if eq $dt "optional"}} checked{{end}}><label for="date_time_optional" class="form-check-label">{{t "Optional"}}</label></div>
+                    <div class="form-check"><input type="radio" id="date_time_required" name="date_time" value="required" class="form-check-input"{{if eq $dt "required"}} checked{{end}}><label for="date_time_required" class="form-check-label">{{tc "date part" "Required"}}</label></div>
+                </div>
+            </fieldset>
+            <fieldset class="admin-setting admin-setting--choices">
+                <legend class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "End"}}</span>
+                    <span class="admin-setting-help">{{t "A value is a period \"from … to …\": an exhibition, a festival, a show from 19:00 to 21:30."}}</span>
+                </legend>
+                <div class="admin-setting-control">
+                    <div class="form-check"><input type="radio" id="date_end_none" name="date_end" value="" class="form-check-input"{{if eq $de ""}} checked{{end}}><label for="date_end_none" class="form-check-label">{{t "No end"}}</label></div>
+                    <div class="form-check"><input type="radio" id="date_end_optional" name="date_end" value="optional" class="form-check-input"{{if eq $de "optional"}} checked{{end}}><label for="date_end_optional" class="form-check-label">{{t "Optional"}}</label></div>
+                    <div class="form-check"><input type="radio" id="date_end_required" name="date_end" value="required" class="form-check-input"{{if eq $de "required"}} checked{{end}}><label for="date_end_required" class="form-check-label">{{tc "date part" "Required"}}</label></div>
+                </div>
+            </fieldset>
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="field-date-format" class="admin-setting-label">{{t "Display format"}}</label>
+                <span class="admin-setting-help">{{t "How the date is shown on the content page and in cards. In Views lists the field can have its own format. Formats are managed in <a href=\":url\">\"Date formats\"</a>." ":url" "/admin/config/date-formats"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select id="field-date-format" name="date_format" class="form-select">
+                    <option value="" {{if eq .field.DateFormat ""}}selected{{end}}>{{t "Default"}}</option>
+                    {{range .dateFormats}}
+                    <option value="{{.MachineName}}" {{if eq .MachineName $.field.DateFormat}}selected{{end}}>{{.Label}} - {{.Pattern}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="field-time-format" class="admin-setting-label">{{t "Time format"}}</label>
+                    <span class="admin-setting-help">{{t "Shown after the date when the value has a time."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="field-time-format" name="time_format" class="form-select">
+                        <option value="" {{if eq .field.TimeFormat ""}}selected{{end}}>{{t "Hours and minutes - 19:00"}}</option>
+                        {{range .dateFormats}}
+                        <option value="{{.MachineName}}" {{if eq .MachineName $.field.TimeFormat}}selected{{end}}>{{.Label}} - {{.Pattern}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="date_range_short" class="admin-setting-label">{{t "Shorten a period"}}</label>
+                    <span class="admin-setting-help">{{t "The month and the year the dates share are shown once: 12-15 November 2026, 28 November - 3 December 2026. A format that can't be shortened shows both dates whole."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="hidden" name="date_range_shown" value="1"><input type="checkbox" role="switch" id="date_range_short" name="date_range_short" value="1" class="form-check-input"{{if not .field.DateRangeFull}} checked{{end}}></div>
+            </div>
+            {{if .field.Multiple}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most dates"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_image"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="default_image" class="admin-setting-label">{{t "Default image"}}</label>
+                <span class="admin-setting-help">{{t "Shown on the card/detail page if the node has no value of its own for this field."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{if .defaultImageURL}}
+                <div class="mb-2"><img src="{{.defaultImageURL}}" alt="" style="max-height:120px;" class="border rounded"></div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" id="remove_default_image" name="remove_default_image" value="1" class="form-check-input">
+                    <label for="remove_default_image" class="form-check-label">{{t "Remove"}}</label>
+                </div>
+                {{else}}
+                <p class="admin-setting-help">{{t "not set"}}</p>
+                {{end}}
+                <input type="file" id="default_image" name="default_image" class="form-control" accept="image/*">
+            </div>
+        </div>
+        </div>
+    </section>
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Upload (independent of the <a href=\":url\">site-wide policy</a>)" ":url" "/admin/config/upload-settings"}}</h2>
+        <div class="admin-settings-card">
+            {{template "admin_upload_extensions" (dict "Value" .field.AllowedFileExtensionsString "Placeholder" "jpg jpeg png gif webp")}}
+            {{template "field_file_directory" (dict "Value" .field.FileDirectory "Default" "content/images")}}
+            {{template "admin_upload_max_size" (dict "Set" .field.HasMaxUploadSize "Value" .field.MaxUploadSizeMB)}}
+            {{template "field_private_files" .field}}
+            {{template "field_media_source" .field}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_resolution" class="admin-setting-label">{{t "Max resolution"}}</label>
+                    <span class="admin-setting-help">{{t "Larger images are scaled down proportionally."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="text" id="max_resolution" name="max_resolution" class="form-control admin-max-xs" value="{{.field.MaxResolutionString}}" placeholder="1920x1080">
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="min_resolution" class="admin-setting-label">{{t "Min resolution"}}</label>
+                    <span class="admin-setting-help">{{t "Smaller images are rejected."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="text" id="min_resolution" name="min_resolution" class="form-control admin-max-xs" value="{{.field.MinResolutionString}}" placeholder="100x100">
+                </div>
+            </div>
+            {{if .field.Multiple}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most images"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_file"}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Settings"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="default_image" class="admin-setting-label">{{t "Default file"}}</label>
+                <span class="admin-setting-help">{{t "Shown on the card/detail page if the node has no value of its own for this field."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{if .defaultFileURL}}
+                <div class="mb-2"><a href="{{.defaultFileURL}}" download>{{.defaultFileName}}</a></div>
+                <div class="form-check mb-2">
+                    <input type="checkbox" id="remove_default_image" name="remove_default_image" value="1" class="form-check-input">
+                    <label for="remove_default_image" class="form-check-label">{{t "Remove"}}</label>
+                </div>
+                {{else}}
+                <p class="admin-setting-help">{{t "not set"}}</p>
+                {{end}}
+                <input type="file" id="default_image" name="default_image" class="form-control">
+            </div>
+        </div>
+        </div>
+    </section>
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Upload (independent of the <a href=\":url\">site-wide policy</a>)" ":url" "/admin/config/upload-settings"}}</h2>
+        <div class="admin-settings-card">
+            {{template "admin_upload_extensions" (dict "Value" .field.AllowedFileExtensionsString "Placeholder" "pdf doc docx xls xlsx zip txt" "Help" (t "Separated by spaces, without a dot. Empty - the base list is used (pdf doc docx xls xlsx zip txt)."))}}
+            {{template "field_file_directory" (dict "Value" .field.FileDirectory "Default" "content/files")}}
+            {{template "admin_upload_max_size" (dict "Set" .field.HasMaxUploadSize "Value" .field.MaxUploadSizeMB)}}
+            {{template "field_private_files" .field}}
+            {{template "field_media_source" .field}}
+        </div>
+    </section>
+{{end}}
+
+{{define "field_settings_default"}}{{end}}

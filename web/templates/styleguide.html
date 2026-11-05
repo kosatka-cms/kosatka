@@ -1,0 +1,199 @@
+{{/* styleguide.html - the active theme's style guide
+     (StyleguideController.Page, /admin/config/appearance/styleguide):
+     the engine's markup in the site's layout, one section a kind -
+     to see the theme style it all alike. The sample texts are Latin
+     placeholders in every language. A theme may replace the file
+     (e.g. to show its own components) like any template. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+<div class="styleguide">
+<p class="styleguide-intro">{{t "The site's markup as the active theme shows it. Change the theme on the <a href=\":url\">Appearance</a> page." ":url" "/admin/config/appearance"}}</p>
+
+<nav class="styleguide-toc" aria-label="{{t "Style guide"}}">
+    <ul>
+        <li><a href="#sg-typography">{{t "Typography"}}</a></li>
+        <li><a href="#sg-editor">{{t "Editor"}}</a></li>
+        <li><a href="#sg-buttons">{{t "Buttons"}}</a></li>
+        <li><a href="#sg-forms">{{t "Form elements"}}</a></li>
+        <li><a href="#sg-alerts">{{t "Messages"}}</a></li>
+        <li><a href="#sg-tables">{{t "Tables"}}</a></li>
+        <li><a href="#sg-navigation">{{t "Navigation"}}</a></li>
+        <li><a href="#sg-list">{{t "Content list"}}</a></li>
+    </ul>
+</nav>
+
+<section id="sg-typography" class="styleguide-section">
+    <h2>{{t "Typography"}}</h2>
+    {{/* A material's text: the markup of a rich text field on the node
+         page (dynamic/page.html), so the theme's .node-content rules
+         apply. */}}
+    <div class="dynamic-field dynamic-field-richtext"><div class="node-content">
+    {{template "styleguide_text"}}
+    </div></div>
+</section>
+
+<section id="sg-editor" class="styleguide-section">
+    <h2>{{t "Editor"}}</h2>
+    {{/* The text above in the visual editor of a content field (the
+         format picker and its script, as on node/edit_dynamic.html): the
+         theme's text styles (theme_editor_css) on its .node-content body. */}}
+    {{if .styleguideFormats}}
+    <p class="text-muted">{{t "The text above in the editor of a content field: it should look the same."}}</p>
+    <select id="sg-editor-format" class="form-select form-select-sm text-format-picker" data-target-field="sg-editor-text" aria-label="{{t "Text format"}}" style="max-width:280px;">
+        {{range .styleguideFormats}}<option value="{{.ID}}" data-rich-editor="1" {{with textFormatEditor .}}data-plugins="{{.Plugins}}" data-toolbar="{{.Toolbar}}"{{with .External}} data-external-plugins="{{.}}"{{end}}{{end}}>{{.Label}}</option>{{end}}
+    </select>
+    <textarea id="sg-editor-text" class="form-control mt-2" rows="12" aria-label="{{t "Editor"}}">{{renderBlock "styleguide_text" nil}}</textarea>
+    {{template "tinymce_user_files.html" .}}
+    {{else}}
+    <p class="text-muted">{{t "No enabled text format has the visual editor (Configuration → Text formats)."}}</p>
+    {{end}}
+</section>
+
+<section id="sg-buttons" class="styleguide-section">
+    <h2>{{t "Buttons"}}</h2>
+    <p class="styleguide-row">
+        <button type="button" class="btn btn-primary">primary</button>
+        <button type="button" class="btn btn-secondary">secondary</button>
+        <button type="button" class="btn btn-success">success</button>
+        <button type="button" class="btn btn-info">info</button>
+        <button type="button" class="btn btn-danger">danger</button>
+        <button type="button" class="btn btn-link">link</button>
+    </p>
+    <p class="styleguide-row">
+        <button type="button" class="btn btn-outline-primary">outline-primary</button>
+        <button type="button" class="btn btn-outline-secondary">outline-secondary</button>
+        <button type="button" class="btn btn-outline-success">outline-success</button>
+        <button type="button" class="btn btn-outline-danger">outline-danger</button>
+    </p>
+    <p class="styleguide-row">
+        <a href="#sg-buttons" class="btn btn-primary">{{t "Link"}}</a>
+        <a href="#sg-buttons" class="btn btn-secondary">{{t "Link"}}</a>
+        <button type="button" class="btn btn-sm btn-primary">btn-sm</button>
+        <button type="button" class="btn btn-sm btn-outline-danger">btn-sm</button>
+        <button type="button" class="btn btn-primary" disabled>{{t "Disabled"}}</button>
+    </p>
+</section>
+
+<section id="sg-forms" class="styleguide-section">
+    <h2>{{t "Form elements"}}</h2>
+    <form action="#sg-forms">
+        <div class="mb-3">
+            <label for="sg-text" class="form-label">{{t "Text"}}</label>
+            <input type="text" id="sg-text" class="form-control" placeholder="Lorem ipsum" aria-describedby="sg-text-help">
+            <div id="sg-text-help" class="form-text">Duis aute irure dolor in reprehenderit.</div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 mb-3">
+                <label for="sg-email" class="form-label">{{t "Email"}}</label>
+                <input type="email" id="sg-email" class="form-control" value="ishmael@example.com">
+            </div>
+            <div class="col-sm-6 mb-3">
+                <label for="sg-password" class="form-label">{{t "Password"}}</label>
+                <input type="password" id="sg-password" class="form-control" value="password">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="sg-select" class="form-label">{{t "Dropdown list"}}</label>
+            <select id="sg-select" class="form-select"><option>Lorem ipsum</option><option>Dolor sit amet</option></select>
+        </div>
+        <div class="mb-3">
+            <label for="sg-textarea" class="form-label">{{t "Text area"}}</label>
+            <textarea id="sg-textarea" class="form-control" rows="3">Ut enim ad minim veniam, quis nostrud exercitation.</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="sg-invalid" class="form-label">{{t "Invalid value"}}</label>
+            <input type="text" id="sg-invalid" class="form-control is-invalid" value="Lorem" aria-describedby="sg-invalid-feedback">
+            <div id="sg-invalid-feedback" class="invalid-feedback">Duis aute irure dolor in reprehenderit.</div>
+        </div>
+        <div class="mb-3">
+            <label for="sg-disabled" class="form-label">{{t "Disabled"}}</label>
+            <input type="text" id="sg-disabled" class="form-control" value="Lorem ipsum" disabled>
+        </div>
+        <div class="mb-3">
+            <label for="sg-file" class="form-label">{{t "File"}}</label>
+            <input type="file" id="sg-file" class="form-control">
+        </div>
+        <div class="mb-3 input-group">
+            <input type="search" class="form-control" placeholder="Lorem ipsum" aria-label="Lorem ipsum">
+            <button type="button" class="btn btn-outline-secondary">{{tc "verb" "Search"}}</button>
+        </div>
+        <div class="mb-3">
+            <div class="form-check"><input type="checkbox" id="sg-check" class="form-check-input" checked><label for="sg-check" class="form-check-label">{{t "Checkbox"}}</label></div>
+            <div class="form-check"><input type="radio" id="sg-radio-1" name="sg-radio" class="form-check-input" checked><label for="sg-radio-1" class="form-check-label">{{t "Option"}} 1</label></div>
+            <div class="form-check"><input type="radio" id="sg-radio-2" name="sg-radio" class="form-check-input"><label for="sg-radio-2" class="form-check-label">{{t "Option"}} 2</label></div>
+            <div class="form-check form-switch"><input type="checkbox" id="sg-switch" class="form-check-input" role="switch" checked><label for="sg-switch" class="form-check-label">{{t "Switch"}}</label></div>
+        </div>
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+        <button type="button" class="btn btn-secondary">{{t "Cancel"}}</button>
+    </form>
+</section>
+
+<section id="sg-alerts" class="styleguide-section">
+    <h2>{{t "Messages"}}</h2>
+    <div class="alert alert-info" role="alert"><strong>alert-info</strong> Lorem ipsum dolor sit amet, <a href="#sg-alerts" class="alert-link">consectetur</a> adipiscing elit.</div>
+    <div class="alert alert-success" role="alert"><strong>alert-success</strong> Lorem ipsum dolor sit amet, <a href="#sg-alerts" class="alert-link">consectetur</a> adipiscing elit.</div>
+    <div class="alert alert-warning" role="alert"><strong>alert-warning</strong> Lorem ipsum dolor sit amet, <a href="#sg-alerts" class="alert-link">consectetur</a> adipiscing elit.</div>
+    <div class="alert alert-danger" role="alert"><strong>alert-danger</strong> Lorem ipsum dolor sit amet, <a href="#sg-alerts" class="alert-link">consectetur</a> adipiscing elit.</div>
+    <p class="styleguide-row">
+        <span class="badge text-bg-primary">primary</span>
+        <span class="badge text-bg-secondary">secondary</span>
+        <span class="badge text-bg-success">success</span>
+        <span class="badge text-bg-danger">danger</span>
+    </p>
+</section>
+
+<section id="sg-tables" class="styleguide-section">
+    <h2>{{t "Tables"}}</h2>
+    <table class="table">
+        <thead><tr><th scope="col">#</th><th scope="col">Lorem</th><th scope="col">Ipsum</th><th scope="col">Dolor</th></tr></thead>
+        <tbody>
+            <tr><td>1</td><td>Sit amet</td><td>Consectetur</td><td>1024</td></tr>
+            <tr><td>2</td><td>Adipiscing</td><td>Elit sed do</td><td>256</td></tr>
+            <tr><td>3</td><td>Eiusmod</td><td>Tempor</td><td>64</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section id="sg-navigation" class="styleguide-section">
+    <h2>{{t "Navigation"}}</h2>
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="#sg-navigation">Lorem</a></li>
+        <li class="nav-item"><a class="nav-link" href="#sg-navigation">Ipsum</a></li>
+        <li class="nav-item"><a class="nav-link" href="#sg-navigation">Dolor</a></li>
+    </ul>
+    {{template "pagination.html" .}}
+</section>
+
+<section id="sg-list" class="styleguide-section">
+    <h2>{{t "Content list"}}</h2>
+    {{.styleguideList}}
+</section>
+</div>
+{{end}}
+
+{{/* styleguide_text - a material's sample text (the typography section
+     and, in the editor, its source). */}}
+{{define "styleguide_text"}}
+    <h1>Heading 1</h1>
+    <h2>Heading 2</h2>
+    <h3>Heading 3</h3>
+    <h4>Heading 4</h4>
+    <h5>Heading 5</h5>
+    <h6>Heading 6</h6>
+    <p>Lorem ipsum dolor sit amet, <a href="#sg-typography">consectetur adipiscing</a> elit, sed do <strong>eiusmod tempor</strong> incididunt ut <em>labore et dolore</em> magna aliqua. Ut enim ad <mark>minim veniam</mark>, quis <code>nostrud</code> exercitation <kbd>Ctrl</kbd>+<kbd>D</kbd> ullamco <del>laboris</del> nisi ut <small>aliquip ex ea</small> commodo consequat.</p>
+    <blockquote><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p></blockquote>
+    <pre><code>kosatka migrate -apply</code></pre>
+    <ul><li>Lorem ipsum</li><li>Dolor sit amet<ul><li>Consectetur</li></ul></li><li>Adipiscing elit</li></ul>
+    <ol><li>Lorem ipsum</li><li>Dolor sit amet</li><li>Adipiscing elit</li></ol>
+    <dl><dt>Lorem</dt><dd>Ipsum dolor sit amet.</dd><dt>Consectetur</dt><dd>Adipiscing elit.</dd></dl>
+    <hr>
+    <figure class="figure">
+        <img src="/static/images/styleguide.svg" class="figure-img img-fluid" alt="" width="640" height="360">
+        <figcaption class="figure-caption">Lorem ipsum dolor sit amet.</figcaption>
+    </figure>
+{{end}}

@@ -1,0 +1,26 @@
+# A site sharing the engine (several sites on one server, see
+# docs/guides/multisite.md): one instance per site, named after its
+# directory - kosatka-site@<site> runs, in /opt/kosatka/sites/<site>, the
+# engine release the site's engine link points to
+# (/opt/kosatka/releases/<release>), with its site.yaml and site.env.
+#   cp deploy/systemd/kosatka-site@.service /etc/systemd/system/
+#   systemctl enable --now kosatka-site@<site>
+# Another installation directory: change /opt/kosatka below.
+[Unit]
+Description=Kosatka CMS site %i
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/kosatka/sites/%i
+Environment=ENGINE_DIR=/opt/kosatka/sites/%i/engine
+Environment=CONFIG_PATH=/opt/kosatka/sites/%i/site.yaml
+EnvironmentFile=-/opt/kosatka/sites/%i/site.env
+ExecStart=/opt/kosatka/sites/%i/engine/kosatka
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

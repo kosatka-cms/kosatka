@@ -1,0 +1,2485 @@
+/* Admin shell (admin/header.html, admin/layout.html): its own look,
+   independent of the site theme - the menu on the left in the Kosatka
+   logo's colours, a white top bar, the page on a light ground. Every
+   rule is under body.admin-shell: admin.css is loaded on public pages for
+   the admin bar too. */
+body.admin-shell {
+    --admin-ink: #17171c;
+    --admin-muted: #5d6b74;
+    --admin-ground: #f2f6f8;
+    --admin-line: #e1e8ec;
+    --admin-line-soft: #edf1f3;
+    --admin-brand: #062033;
+    --admin-brand-raised: #0f3a55;
+    --admin-brand-line: #1d4560;
+    --admin-fin: #22d3ee;
+    --admin-accent: #0e7490;
+    --admin-accent-dark: #0b5f75;
+    --admin-accent-soft: #e6f4f6;
+    --admin-link: #0b6b7d;
+    --bs-body-font-family: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --bs-body-color: var(--admin-ink);
+    --bs-primary: #0e7490;
+    --bs-primary-rgb: 14, 116, 144;
+    --bs-link-color: var(--admin-link);
+    --bs-link-color-rgb: 11, 107, 125;
+    --bs-border-radius: 8px;
+    margin: 0;
+    background: var(--admin-ground);
+    color: var(--admin-ink);
+    font-family: var(--bs-body-font-family);
+}
+body.admin-shell code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: #2b3a44;
+}
+/* Links of the page content only: the menus keep their own styles. */
+body.admin-shell .container-content a {
+    color: var(--admin-link);
+    text-decoration: none;
+}
+body.admin-shell .container-content a:hover {
+    color: #075261;
+    text-decoration: underline;
+}
+/* A link styled as a button keeps its variant's colors (Bootstrap's
+   --bs-btn-* variables), not the links' colour: any variant, outline ones
+   too. */
+body.admin-shell .container-content a.btn {
+    color: var(--bs-btn-color);
+    text-decoration: none;
+}
+body.admin-shell .container-content a.btn:hover {
+    color: var(--bs-btn-hover-color);
+    text-decoration: none;
+}
+
+/* The two columns: the menu, the page. */
+body.admin-shell .admin-app {
+    display: flex;
+    min-height: 100vh;
+}
+body.admin-shell .admin-sidebar {
+    flex: 0 0 232px;
+    width: 232px;
+    box-sizing: border-box;
+    padding: 18px 12px 24px;
+    background: var(--admin-brand);
+    color: #a9c3d1;
+}
+body.admin-shell .admin-app-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The menu: the site, then the sections; a section with pages opens
+   (the page's one is open). */
+body.admin-shell .admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 18px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -.01em;
+    text-decoration: none;
+}
+body.admin-shell .admin-brand img {
+    display: block;
+    flex: none;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--admin-brand-line);
+}
+body.admin-shell .admin-brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.admin-shell .admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+body.admin-shell .admin-nav-link {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 7px;
+    color: #d3e3ec;
+    text-decoration: none;
+    cursor: pointer;
+    list-style: none;
+}
+body.admin-shell summary.admin-nav-link::-webkit-details-marker,
+body.admin-shell summary.admin-nav-item::-webkit-details-marker {
+    display: none;
+}
+body.admin-shell summary.admin-nav-link,
+body.admin-shell summary.admin-nav-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+/* A chevron drawn by two borders: right when closed, down when open. */
+body.admin-shell summary.admin-nav-link::after,
+body.admin-shell summary.admin-nav-item::after {
+    content: "";
+    flex: none;
+    width: 7px;
+    height: 7px;
+    margin: 0 4px 0 10px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    opacity: .6;
+    transform: rotate(-45deg);
+    transition: transform .15s ease;
+}
+body.admin-shell details[open] > summary.admin-nav-link::after,
+body.admin-shell details[open] > summary.admin-nav-item::after {
+    transform: translateY(-2px) rotate(45deg);
+}
+body.admin-shell .admin-nav-link:hover,
+body.admin-shell .admin-nav-item:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+body.admin-shell details[open] > summary.admin-nav-link {
+    color: #fff;
+    font-weight: 600;
+}
+body.admin-shell .admin-nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 2px 0 8px 14px;
+    padding-left: 12px;
+    border-left: 1px solid var(--admin-brand-line);
+}
+body.admin-shell .admin-nav-item {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: #a9c3d1;
+    text-decoration: none;
+    cursor: pointer;
+    list-style: none;
+}
+body.admin-shell .admin-nav-subitem {
+    margin-left: 12px;
+}
+/* An item's count (AdminMenuItem.Count): what waits there. */
+body.admin-shell .admin-nav-count,
+#admin-top-bar .admin-bar-count {
+    display: inline-block;
+    min-width: 20px;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #e8590c;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+/* A list's row that is done with (a fixed error report): dimmed. */
+body.admin-shell .admin-row-muted > td {
+    color: var(--bs-secondary-color);
+}
+body.admin-shell .admin-nav-group {
+    padding: 10px 10px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #7d9aab;
+}
+body.admin-shell .admin-nav-link.is-active,
+body.admin-shell .admin-nav-item.is-active {
+    background: var(--admin-brand-raised);
+    color: #fff;
+    box-shadow: inset 3px 0 0 var(--admin-fin);
+}
+body.admin-shell .admin-nav-link:focus-visible,
+body.admin-shell .admin-nav-item:focus-visible,
+body.admin-shell .admin-brand:focus-visible {
+    outline: 2px solid var(--admin-fin);
+    outline-offset: 1px;
+}
+
+/* The top bar: breadcrumbs, the site's state, the site, the user. */
+body.admin-shell .admin-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    min-height: 56px;
+    padding: 8px 40px;
+    box-sizing: border-box;
+    background: #fff;
+    border-bottom: 1px solid var(--admin-line);
+}
+body.admin-shell .admin-crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-crumbs a {
+    color: var(--admin-link);
+    text-decoration: none;
+}
+body.admin-shell .admin-crumbs a:hover {
+    text-decoration: underline;
+}
+body.admin-shell .admin-crumbs-current {
+    color: var(--admin-ink);
+}
+body.admin-shell .admin-topbar-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+body.admin-shell .admin-topbar-site {
+    color: var(--admin-link);
+    text-decoration: none;
+}
+body.admin-shell .admin-topbar-site:hover {
+    text-decoration: underline;
+}
+body.admin-shell .admin-topbar-pill {
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--admin-accent-soft);
+    color: #07505d;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+body.admin-shell .admin-topbar-pill--warn {
+    background: #fff3d6;
+    color: #6b4500;
+}
+body.admin-shell .admin-topbar-form {
+    margin: 0;
+}
+body.admin-shell .admin-topbar .user-menu-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border: 1px solid #dbe3e8;
+    border-radius: 20px;
+    background: #fff;
+    color: var(--admin-ink);
+}
+body.admin-shell .admin-topbar .user-name {
+    color: var(--admin-ink);
+    display: inline;
+}
+body.admin-shell .admin-topbar .user-avatar-small {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+}
+body.admin-shell .admin-topbar .user-menu-link {
+    color: var(--admin-link);
+}
+body.admin-shell .admin-sidebar-toggle {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #dbe3e8;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--admin-ink);
+    font: inherit;
+    font-weight: 600;
+}
+
+/* The page. */
+body.admin-shell .admin-main {
+    width: 100%;
+    max-width: 1440px;
+    box-sizing: border-box;
+    padding: 28px 40px 64px;
+}
+body.admin-shell .admin-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+/* The heading takes the room, the buttons keep theirs beside it: a long
+   line under the title wraps, not pushes them below. */
+body.admin-shell .admin-page-heading {
+    display: flex;
+    flex: 1 1 320px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+body.admin-shell .admin-page-heading .article-title {
+    margin: 0;
+}
+body.admin-shell .admin-page-meta {
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-page-meta code {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #e6edf1;
+    color: var(--admin-ink);
+    font-size: 13px;
+}
+body.admin-shell .admin-page-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+body.admin-shell .admin-page-actions:empty {
+    display: none;
+}
+/* A page not redesigned yet: its content on a white card. */
+body.admin-shell .admin-surface {
+    padding: 20px 24px 25px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+
+/* Bootstrap in the admin's colours. */
+body.admin-shell .btn {
+    --bs-btn-border-radius: 9px;
+    --bs-btn-font-weight: 600;
+    border-radius: var(--bs-btn-border-radius);
+}
+body.admin-shell .btn-sm {
+    --bs-btn-border-radius: 7px;
+}
+body.admin-shell .form-check-input[type="checkbox"] {
+    border-radius: 4px;
+}
+body.admin-shell .btn-primary {
+    --bs-btn-bg: var(--admin-accent);
+    --bs-btn-border-color: var(--admin-accent);
+    --bs-btn-hover-bg: var(--admin-accent-dark);
+    --bs-btn-hover-border-color: var(--admin-accent-dark);
+    --bs-btn-active-bg: var(--admin-accent-dark);
+    --bs-btn-active-border-color: var(--admin-accent-dark);
+    --bs-btn-disabled-bg: var(--admin-accent);
+    --bs-btn-disabled-border-color: var(--admin-accent);
+    font-weight: 700;
+}
+body.admin-shell .btn-outline-primary {
+    --bs-btn-color: var(--admin-link);
+    --bs-btn-border-color: #a9d3da;
+    --bs-btn-hover-bg: var(--admin-accent-soft);
+    --bs-btn-hover-color: #07505d;
+    --bs-btn-hover-border-color: #a9d3da;
+    --bs-btn-active-bg: var(--admin-accent-soft);
+    --bs-btn-active-color: #07505d;
+}
+body.admin-shell .form-control,
+body.admin-shell .form-select {
+    border-color: #d3dde3;
+    border-radius: 8px;
+}
+body.admin-shell .form-control:focus,
+body.admin-shell .form-select:focus,
+body.admin-shell .form-check-input:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 .2rem rgba(14, 116, 144, .2);
+}
+body.admin-shell .form-check-input:checked {
+    background-color: var(--admin-accent);
+    border-color: var(--admin-accent);
+}
+body.admin-shell .alert {
+    border-radius: 10px;
+}
+body.admin-shell .admin-status-bar,
+body.admin-shell .admin-main > .alert {
+    margin-bottom: 18px;
+}
+
+/* A list page: its filters in one row, its table on a card. */
+body.admin-shell .admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-filter {
+    flex: 1 1 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+body.admin-shell .admin-filter--wide {
+    flex: 3 1 260px;
+}
+/* A filter alone in its row keeps a select's width. */
+body.admin-shell .admin-filter--fixed {
+    flex: 0 1 260px;
+}
+body.admin-shell .admin-add-form .admin-filter--narrow {
+    flex: 0 1 140px;
+}
+/* A number edited in a table's row (a weight, a length). */
+body.admin-shell .admin-table .admin-table-num-input {
+    width: 100px;
+}
+/* A small form in a table's cell: its field and button in a row. */
+body.admin-shell .admin-table-inline-form {
+    display: flex;
+    gap: 8px;
+    max-width: 420px;
+}
+body.admin-shell .admin-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-filter-reset {
+    padding: 9px 4px;
+}
+body.admin-shell .admin-table-card {
+    overflow: hidden;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-table {
+    margin: 0;
+    --bs-table-bg: transparent;
+}
+body.admin-shell .admin-table > thead th {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--admin-line-soft);
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+body.admin-shell .admin-table > thead th a {
+    color: inherit;
+}
+body.admin-shell .admin-table > tbody td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--admin-line-soft);
+    vertical-align: middle;
+}
+body.admin-shell .admin-table > tbody tr:last-child td {
+    border-bottom: 0;
+}
+body.admin-shell .admin-table > tbody tr:has(.bulk-checkbox:checked) td {
+    background: #f4fafb;
+}
+body.admin-shell .admin-table th:first-child,
+body.admin-shell .admin-table td:first-child {
+    padding-left: 16px;
+}
+body.admin-shell .admin-table th:last-child,
+body.admin-shell .admin-table td:last-child {
+    padding-right: 16px;
+}
+body.admin-shell .admin-table-check {
+    width: 24px;
+}
+/* A tree's row (terms, menu links): indented by its depth (--tree-indent,
+   set by the page and by admin.js as it moves). */
+body.admin-shell .admin-table > tbody td[data-tree-indent] {
+    padding-left: calc(8px + var(--tree-indent, 0px));
+}
+/* The handle a sortable table's row is dragged by. */
+body.admin-shell .admin-table .admin-table-drag {
+    width: 32px;
+    color: var(--admin-muted);
+    cursor: grab;
+    user-select: none;
+}
+/* A sortable table's foot: how to reorder, the button saving it. */
+body.admin-shell .admin-table-foot-hint {
+    flex: 1 1 320px;
+    font-size: 13px;
+}
+body.admin-shell .admin-table .form-check-input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+body.admin-shell .container-content a.admin-table-title {
+    color: var(--admin-ink);
+    font-weight: 600;
+}
+/* A mark beside a row's title (two-factor, a View group). */
+body.admin-shell .admin-table-title + .admin-pill {
+    margin-left: 6px;
+}
+body.admin-shell .admin-table-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-table-muted {
+    color: #45525a;
+}
+body.admin-shell .admin-table-num {
+    font-variant-numeric: tabular-nums;
+}
+/* A group's heading row in a table (the recent changes' days). */
+body.admin-shell .admin-table-group > th {
+    padding: 10px 16px 6px;
+    background: var(--admin-ground);
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+body.admin-shell .admin-table-empty {
+    padding: 28px 16px !important;
+    color: var(--admin-muted);
+    text-align: center;
+}
+/* A paged list's foot (admin_list_foot): the count on the left, the
+   pager on the right; under a table of its own, or the last row of an
+   .admin-table-card. */
+body.admin-shell .admin-table-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 0;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-table-card > .admin-table-foot {
+    padding: 12px 16px;
+    border-top: 1px solid var(--admin-line-soft);
+}
+body.admin-shell .admin-table-foot .pagination {
+    margin: 0;
+}
+body.admin-shell .admin-bulk-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #c9e6eb;
+    background: var(--admin-accent-soft);
+}
+body.admin-shell .admin-bulk-bar[hidden] {
+    display: none;
+}
+body.admin-shell .admin-bulk-count {
+    margin-right: 4px;
+    font-weight: 700;
+    color: #07505d;
+}
+body.admin-shell .admin-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #eef1f3;
+    color: #45525a;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+body.admin-shell .admin-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .7;
+}
+/* A pill with an icon of its own (a schedule's clock): no dot. */
+body.admin-shell .admin-pill:has(> svg)::before {
+    display: none;
+}
+body.admin-shell .admin-pill--ok {
+    background: #e3f5ec;
+    color: #14653f;
+}
+body.admin-shell .admin-pill--warn {
+    background: #fff1d6;
+    color: #7a4b00;
+}
+body.admin-shell .admin-pill--danger {
+    background: #fde4e4;
+    color: #9b1c1c;
+}
+body.admin-shell .admin-pill--scheduled {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+/* A row's actions as icons (admin/icons.html): links and buttons alike,
+   side by side. */
+body.admin-shell .admin-icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #dbe3e8;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    vertical-align: middle;
+    cursor: pointer;
+}
+body.admin-shell .admin-icon-btn + .admin-icon-btn,
+body.admin-shell .admin-icon-btn + form,
+body.admin-shell form + .admin-icon-btn {
+    margin-left: 4px;
+}
+body.admin-shell .container-content .admin-icon-btn {
+    color: var(--admin-link);
+}
+body.admin-shell .container-content .admin-icon-btn--danger {
+    color: #a32020;
+}
+body.admin-shell .admin-icon-btn:hover {
+    background: var(--admin-ground);
+}
+body.admin-shell .admin-icon-btn:focus-visible {
+    outline: 2px solid var(--admin-link);
+    outline-offset: 1px;
+}
+
+/* A node's history (admin/revisions): the list's hint, then two versions
+   compared - their headings side by side, a card per changed part with
+   the old value on the left and the new on the right, the words removed
+   and added marked. */
+body.admin-shell .admin-revisions-hint {
+    flex: 1 1 auto;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-revision-sides,
+body.admin-shell .admin-revision-change-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+body.admin-shell .admin-revision-sides {
+    gap: 14px;
+    margin-bottom: 18px;
+}
+body.admin-shell .admin-revision-side {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 16px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-revision-side-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+body.admin-shell .admin-revision-side-label--old {
+    color: #8a2d2d;
+}
+body.admin-shell .admin-revision-side-label--new {
+    color: #14653f;
+}
+body.admin-shell .admin-revision-side-name {
+    font-weight: 700;
+}
+body.admin-shell .admin-revision-change {
+    overflow: hidden;
+    margin-bottom: 14px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-revision-change-title {
+    margin: 0;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--admin-line);
+    font-size: 15px;
+    font-weight: 800;
+}
+body.admin-shell .admin-revision-col {
+    min-width: 0;
+    padding: 14px 18px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+body.admin-shell .admin-revision-col + .admin-revision-col {
+    border-left: 1px solid var(--admin-line);
+}
+body.admin-shell .admin-revision-col p {
+    margin: 0 0 8px;
+}
+body.admin-shell .admin-revision-col p:last-child {
+    margin-bottom: 0;
+}
+body.admin-shell .admin-revision-col del {
+    background: #fde2e2;
+    color: #7f1d1d;
+}
+body.admin-shell .admin-revision-col ins {
+    background: #d9f2e4;
+    color: #14532d;
+    text-decoration: none;
+}
+body.admin-shell .admin-revision-items {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 6px;
+}
+body.admin-shell .admin-revision-item {
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: var(--admin-ground);
+}
+body.admin-shell .admin-revision-item--del {
+    background: #fde2e2;
+    color: #7f1d1d;
+    text-decoration: line-through;
+}
+body.admin-shell .admin-revision-item--ins {
+    background: #d9f2e4;
+    color: #14532d;
+    font-weight: 600;
+}
+body.admin-shell .admin-revision-empty {
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-revision-unchanged {
+    padding: 14px 18px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-revision-unchanged summary {
+    font-weight: 700;
+    cursor: pointer;
+}
+body.admin-shell .admin-revision-unchanged p {
+    margin: 10px 0 0;
+    color: var(--admin-muted);
+}
+@media (max-width: 768px) {
+    body.admin-shell .admin-revision-sides,
+    body.admin-shell .admin-revision-change-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.admin-shell .admin-revision-col + .admin-revision-col {
+        border-left: 0;
+        border-top: 1px solid var(--admin-line);
+    }
+}
+
+/* Cards (Bootstrap's .card): a white panel, its header a bold title
+   with its buttons, tables in it without stripes. */
+body.admin-shell .card {
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    overflow: hidden;
+}
+body.admin-shell .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--admin-line-soft);
+    background: #fff;
+    font-size: 15px;
+    font-weight: 800;
+}
+body.admin-shell .card-body {
+    padding: 16px 20px;
+}
+body.admin-shell .card-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--admin-line-soft);
+    background: #fafcfd;
+    line-height: 1.5;
+}
+body.admin-shell .admin-card-note {
+    color: var(--admin-muted);
+    font-weight: 500;
+}
+body.admin-shell .card .table {
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: #f6f9fa;
+    margin-bottom: 0;
+}
+body.admin-shell .card .table > thead th {
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border-bottom-color: var(--admin-line-soft);
+}
+body.admin-shell .card .table > tbody td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom-color: var(--admin-line-soft);
+}
+/* A summary as tiles: a label over each value. */
+body.admin-shell .admin-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px 20px;
+    margin: 0;
+}
+body.admin-shell .admin-summary-item dt {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-summary-item dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+/* A View's publish state beside its title. */
+body.admin-shell .admin-publish-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+body.admin-shell .admin-publish-state {
+    color: var(--admin-muted);
+    font-size: 14px;
+}
+body.admin-shell .admin-publish-state--pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #8a4b00;
+}
+body.admin-shell .admin-publish-state--pending::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e08a1e;
+}
+body.admin-shell .view-preview-body {
+    background: #f7fafb;
+}
+
+/* Tabs of a page (Bootstrap's .nav-tabs): one segmented control. */
+body.admin-shell .nav-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 22px !important;
+    padding: 3px;
+    border: 0;
+    border-radius: 9px;
+    background: #e3e9ed;
+}
+body.admin-shell .nav-tabs .nav-link {
+    margin: 0;
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 7px;
+    color: #45525a;
+}
+body.admin-shell .nav-tabs .nav-link:hover {
+    color: var(--admin-ink);
+    text-decoration: none;
+}
+body.admin-shell .nav-tabs .nav-link.active {
+    background: #fff;
+    color: var(--admin-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+}
+
+/* Settings as rows (a form redesigned): a group's heading, its card of
+   rows - what it is on the left, the control on the right. */
+body.admin-shell .admin-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+body.admin-shell .admin-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+body.admin-shell .admin-settings-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-settings-card {
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-setting {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 32px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--admin-line-soft);
+}
+body.admin-shell .admin-setting:last-child {
+    border-bottom: 0;
+}
+body.admin-shell .admin-setting-text {
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+body.admin-shell .admin-setting-label {
+    margin: 0;
+    font-weight: 600;
+}
+body.admin-shell .admin-setting-help {
+    color: var(--admin-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+body.admin-shell .admin-setting-control {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+/* A setting of two inputs and a word between (from - to, before - after). */
+body.admin-shell .admin-setting-control--inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+body.admin-shell .admin-setting-control--switch {
+    flex: 0 0 auto;
+}
+/* An add card's form as settings rows (a menu link): the rows without
+   their own padding at the card's edges. */
+body.admin-shell .admin-add-rows .admin-setting {
+    padding-left: 0;
+    padding-right: 0;
+}
+/* The themes on the Appearance page: as many cards in a row as fit. */
+body.admin-shell .theme-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+/* A row whose field needs the width (a rich text editor): its label over
+   it. */
+body.admin-shell .admin-setting--stacked {
+    flex-direction: column;
+    align-items: stretch;
+}
+body.admin-shell .admin-setting--stacked > .admin-setting-text,
+body.admin-shell .admin-setting--stacked > .admin-setting-control {
+    flex: none;
+    width: 100%;
+}
+/* A row of choices (radios): a fieldset, its legend the row's label. */
+body.admin-shell fieldset.admin-setting {
+    margin: 0;
+    min-width: 0;
+    border: 0;
+    border-bottom: 1px solid var(--admin-line-soft);
+}
+body.admin-shell fieldset.admin-setting > legend {
+    float: left;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+}
+body.admin-shell .admin-setting-control--choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+}
+body.admin-shell .admin-setting .form-switch,
+body.admin-shell .admin-table .form-switch {
+    margin: 0;
+    padding-left: 2.75em;
+    min-height: 0;
+}
+body.admin-shell .admin-setting .form-switch .form-check-input,
+body.admin-shell .admin-table .form-switch .form-check-input {
+    width: 2.6em;
+    height: 1.4em;
+    margin-left: -2.75em;
+    margin-top: 0;
+    border-radius: 2em;
+    cursor: pointer;
+}
+body.admin-shell .admin-setting-help code {
+    color: var(--admin-ink);
+    font-size: 12px;
+}
+body.admin-shell .admin-settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 18px;
+    border-top: 1px solid var(--admin-line);
+}
+/* The SEO page's sample of a type's schema.org markup. */
+body.admin-shell .admin-schema-sample {
+    padding: 16px;
+}
+body.admin-shell .admin-schema-json {
+    margin: 0 0 10px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #0b1f2e;
+    color: #d6e7f0;
+    font: 12.5px/1.55 "JetBrains Mono", ui-monospace, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+/* The Mail page's emails: the groups' columns aligned. */
+body.admin-shell .admin-mail-table th:nth-child(2) {
+    width: 22%;
+}
+body.admin-shell .admin-mail-table th:nth-child(3) {
+    width: 16%;
+}
+body.admin-shell .admin-mail-table th:nth-child(4) {
+    width: 11%;
+}
+body.admin-shell .admin-mail-table th:nth-child(5) {
+    width: 64px;
+}
+/* An email of the Mail page: its text, beside it the placeholders, how it
+   looks and a test email (a column under it on a narrow screen). */
+body.admin-shell .admin-mail-edit {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+body.admin-shell .admin-mail-side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+body.admin-shell .admin-mail-card {
+    padding: 16px;
+}
+body.admin-shell .admin-mail-card-title {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 700;
+}
+body.admin-shell .admin-mail-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+body.admin-shell .admin-mail-token {
+    padding: 3px 7px;
+    border: 1px solid #cde8ed;
+    border-radius: 6px;
+    background: var(--admin-accent-soft);
+    color: var(--admin-accent-dark);
+    font: 12px "JetBrains Mono", ui-monospace, monospace;
+}
+body.admin-shell .admin-mail-token:hover {
+    border-color: var(--admin-accent);
+}
+body.admin-shell .admin-mail-preview {
+    margin: 10px 0 14px;
+    padding: 12px;
+    border: 1px solid var(--admin-line);
+    border-radius: 8px;
+    background: var(--admin-ground);
+    font-size: 13px;
+    line-height: 1.5;
+}
+body.admin-shell .admin-mail-preview-subject {
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+body.admin-shell .admin-mail-preview-body {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+body.admin-shell .admin-mail-test-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+@media (max-width: 900px) {
+    body.admin-shell .admin-mail-edit {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+/* Interface translations (admin/config/translations*.html): a language's
+   share translated (a bar over its figures); the strings tab's counts over
+   the table, a string's edit folded under its translation (the "Back to
+   the default" beside it while folded, in the form when open). */
+body.admin-shell .admin-meter {
+    width: 180px;
+    max-width: 100%;
+    height: 6px;
+    margin-bottom: 6px;
+    border-radius: 999px;
+    background: var(--admin-line-soft);
+    overflow: hidden;
+}
+body.admin-shell .admin-meter > span {
+    display: block;
+    height: 100%;
+    background: var(--admin-accent);
+}
+body.admin-shell .admin-strings-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+body.admin-shell .admin-strings-summary:empty {
+    display: none;
+}
+body.admin-shell .admin-strings .admin-strings-source {
+    width: 36%;
+}
+body.admin-shell .admin-strings .admin-strings-from {
+    width: 150px;
+}
+body.admin-shell .admin-strings td {
+    overflow-wrap: anywhere;
+}
+body.admin-shell .admin-strings-text {
+    font-weight: 600;
+}
+body.admin-shell .admin-strings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 8px;
+    margin-top: 8px;
+}
+body.admin-shell .admin-strings-edit > summary {
+    list-style: none;
+}
+body.admin-shell .admin-strings-edit > summary::-webkit-details-marker {
+    display: none;
+}
+body.admin-shell .admin-strings-edit[open] {
+    flex: 1 1 100%;
+}
+body.admin-shell .admin-strings-edit[open] > summary {
+    display: none;
+}
+body.admin-shell .admin-strings-edit[open] + .admin-strings-reset {
+    display: none;
+}
+body.admin-shell .admin-strings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 640px;
+}
+body.admin-shell .admin-strings-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+body.admin-shell .admin-strings-outdated-head {
+    padding: 18px 22px 0;
+}
+/* A sub-row of a table (a View group's display): muted. */
+body.admin-shell .admin-table-subrow > td {
+    background: var(--admin-ground);
+    color: var(--admin-muted);
+    font-size: 13px;
+}
+/* Adding to a list in a card over it (redirects, Views, types, menus…):
+   its title, the fields in a row, the rarer ones or another way to add
+   folded under it (admin-add-more). */
+body.admin-shell .admin-add-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 18px 22px;
+}
+body.admin-shell .admin-add-title {
+    margin: 0;
+    color: var(--admin-muted);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+body.admin-shell .admin-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 12px;
+}
+body.admin-shell .admin-add-form .admin-filter {
+    flex: 1 1 240px;
+}
+body.admin-shell .admin-add-form > .form-check {
+    padding-bottom: 8px;
+}
+body.admin-shell .admin-add-arrow {
+    padding-bottom: 8px;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-add-card > .admin-setting-help {
+    margin: 0;
+}
+/* Rarer fields of an add form, folded in it: on a line of their own. */
+body.admin-shell .admin-add-form > .admin-add-more {
+    flex: 1 1 100%;
+}
+body.admin-shell .admin-add-more > summary {
+    color: var(--admin-link);
+    font-weight: 600;
+    cursor: pointer;
+}
+body.admin-shell .admin-add-more > form,
+body.admin-shell .admin-add-more > .admin-add-form,
+body.admin-shell .admin-add-more > .admin-setting-help {
+    margin-top: 10px;
+}
+/* The Overview (admin/dashboard.html): the figures' tiles, then two
+   columns of cards - what waits, the changes, the modules' wide blocks;
+   the popular content, the comments, the modules' narrow blocks. A
+   module's block styles its rows with .admin-dash-row and its parts. */
+body.admin-shell .admin-dash-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+body.admin-shell .admin-dash-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--admin-ink);
+    text-decoration: none;
+}
+body.admin-shell .admin-dash-tile:hover,
+body.admin-shell .admin-dash-tile:focus-visible {
+    border-color: var(--admin-accent);
+}
+body.admin-shell .admin-dash-tile-label,
+body.admin-shell .admin-dash-tile-note {
+    color: var(--admin-muted);
+    font-size: 13px;
+}
+body.admin-shell .admin-dash-tile-label {
+    font-weight: 600;
+}
+body.admin-shell .admin-dash-tile-value {
+    font-size: 28px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+body.admin-shell .admin-dash-columns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+}
+body.admin-shell .admin-dash-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+body.admin-shell .admin-dash-column--main {
+    flex: 3 1 520px;
+}
+body.admin-shell .admin-dash-column--side {
+    flex: 2 1 340px;
+}
+body.admin-shell .admin-dash-card {
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-dash-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--admin-line-soft);
+}
+body.admin-shell .admin-dash-head h2 {
+    margin: 0;
+    color: var(--admin-muted);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+body.admin-shell .admin-dash-head a {
+    font-weight: 600;
+}
+body.admin-shell .admin-dash-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 11px 18px;
+    border-top: 1px solid var(--admin-line-soft);
+}
+body.admin-shell .admin-dash-head + .admin-dash-row {
+    border-top: 0;
+}
+body.admin-shell .admin-dash-grow {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+body.admin-shell .admin-dash-title {
+    font-weight: 700;
+}
+body.admin-shell .admin-dash-sub {
+    display: block;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+body.admin-shell .admin-dash-when {
+    flex: 0 0 auto;
+    color: var(--admin-muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+body.admin-shell .admin-dash-rank {
+    flex: 0 0 18px;
+    color: var(--admin-muted);
+    font-weight: 700;
+}
+body.admin-shell .admin-dash-num {
+    color: var(--admin-muted);
+    font-variant-numeric: tabular-nums;
+}
+body.admin-shell .admin-dash-waiting {
+    align-items: center;
+    color: var(--admin-ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+body.admin-shell .admin-dash-waiting:hover {
+    background: var(--admin-line-soft);
+}
+body.admin-shell .admin-dash-comment {
+    flex-direction: column;
+    gap: 3px;
+}
+body.admin-shell .admin-dash-empty {
+    margin: 0;
+    padding: 14px 18px;
+    color: var(--admin-muted);
+}
+/* The Modules page (admin/modules/index.html): links to the categories
+   with how many modules are on, a category's count by its title, a
+   module's name with its pills, its "what it includes" and uninstall. */
+body.admin-shell .admin-module-intro {
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-module-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+body.admin-shell .admin-module-cat {
+    padding: 6px 12px;
+    border: 1px solid var(--admin-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--admin-ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+body.admin-shell .admin-module-cat:hover,
+body.admin-shell .admin-module-cat:focus-visible {
+    border-color: var(--admin-accent);
+}
+body.admin-shell .admin-module-cat span,
+body.admin-shell .admin-module-count {
+    color: var(--admin-muted);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+body.admin-shell .admin-module-count {
+    margin-left: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+body.admin-shell .admin-settings-fold-title.admin-module-group-title {
+    flex-basis: 320px;
+}
+body.admin-shell .admin-module-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+body.admin-shell .admin-module-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px 16px;
+    font-size: 13px;
+}
+body.admin-shell .admin-module-details > summary {
+    color: var(--admin-link);
+    cursor: pointer;
+}
+body.admin-shell .admin-module-details dl {
+    margin: 6px 0 0;
+}
+body.admin-shell .admin-module-details dt {
+    font-weight: 400;
+    color: var(--admin-muted);
+}
+body.admin-shell .admin-module-details dd {
+    margin-bottom: 4px;
+}
+body.admin-shell .admin-pill--external {
+    background: #f3eafa;
+    color: #5b2a86;
+}
+/* Settings in groups that fold (admin-settings-fold, a <details>): the
+   group's line - its title and, folded, its values in one line
+   (settingsFolds in app.js) - then its card of rows. */
+body.admin-shell .admin-settings:has(> .admin-settings-fold) {
+    gap: 12px;
+}
+body.admin-shell .admin-settings-fold-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -4px;
+}
+body.admin-shell .admin-settings-fold-all {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--admin-accent);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+body.admin-shell .admin-settings-fold-all:hover {
+    text-decoration: underline;
+}
+body.admin-shell .admin-settings-fold {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    background: #fff;
+}
+body.admin-shell .admin-settings-fold > .admin-settings-card {
+    border: 0;
+    border-top: 1px solid var(--admin-line-soft);
+    border-radius: 0;
+}
+body.admin-shell .admin-settings-fold-head {
+    display: flex;
+    align-items: center;
+    gap: 8px 20px;
+    padding: 16px 22px;
+    list-style: none;
+    cursor: pointer;
+}
+body.admin-shell .admin-settings-fold-head::-webkit-details-marker {
+    display: none;
+}
+body.admin-shell .admin-settings-fold-head::after {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-right: 2px solid var(--admin-muted);
+    border-bottom: 2px solid var(--admin-muted);
+    transform: rotate(45deg) translateY(-3px);
+    transition: transform .15s ease;
+}
+body.admin-shell .admin-settings-fold[open] > .admin-settings-fold-head::after {
+    transform: rotate(225deg) translateY(-3px);
+}
+body.admin-shell .admin-settings-fold-head:hover {
+    background: var(--admin-line-soft);
+}
+body.admin-shell .admin-settings-fold-title {
+    flex: 0 0 220px;
+    margin: 0;
+    color: var(--admin-ink);
+    font-size: 16px;
+    font-weight: 700;
+}
+body.admin-shell .admin-settings-fold-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--admin-muted);
+    font-size: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+body.admin-shell .admin-settings-fold[open] .admin-settings-fold-summary {
+    visibility: hidden;
+}
+@media (max-width: 575.98px) {
+    body.admin-shell .admin-settings-fold-head {
+        flex-wrap: wrap;
+    }
+    body.admin-shell .admin-settings-fold-title {
+        flex: 1 1 auto;
+    }
+    body.admin-shell .admin-settings-fold-summary {
+        order: 3;
+        flex-basis: 100%;
+    }
+}
+
+/* A choice of a few, as one segmented control. */
+body.admin-shell .admin-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 9px;
+    background: #ececf0;
+}
+body.admin-shell .admin-segmented input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+body.admin-shell .admin-segmented label {
+    padding: 7px 14px;
+    border-radius: 7px;
+    color: #45454f;
+    cursor: pointer;
+}
+body.admin-shell .admin-segmented input:checked + label {
+    background: #fff;
+    color: var(--admin-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+}
+body.admin-shell .admin-segmented input:focus-visible + label {
+    outline: 2px solid var(--admin-accent);
+}
+
+/* A phone, a narrow window: the menu off the screen, "Menu" opens it
+   over the page (admin.js). */
+@media (max-width: 991.98px) {
+    body.admin-shell .admin-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 1040;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+    }
+    body.admin-shell.admin-sidebar-open .admin-sidebar {
+        transform: none;
+        box-shadow: 0 0 0 100vmax rgba(6, 32, 51, .45);
+    }
+    body.admin-shell .admin-sidebar-toggle {
+        display: inline-block;
+    }
+    /* The site's menu.css hides the user menu on a phone (its theme has
+       a mobile one); the admin has no other. */
+    body.admin-shell .admin-topbar .desktop-user-menu {
+        display: flex !important;
+    }
+    body.admin-shell .admin-topbar,
+    body.admin-shell .admin-main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* Pagination (pagination.html) in the admin shell: the site theme's pager
+   styles don't reach the admin. */
+body.admin-shell .pagination {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+body.admin-shell .pagination .pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+body.admin-shell .pagination .pager li {
+    display: inline-block;
+}
+body.admin-shell .pagination .pager li a,
+body.admin-shell .pagination .pager-current {
+    display: inline-block;
+    min-width: 34px;
+    padding: 4px 10px;
+    border: 1px solid #dfe3e8;
+    border-radius: 4px;
+    background: #fff;
+    text-align: center;
+    line-height: 1.5;
+}
+body.admin-shell .container-content .pagination .pager li a:hover {
+    background: #eef3f9;
+    text-decoration: none;
+}
+body.admin-shell .pagination .pager-current {
+    background: var(--admin-brand);
+    border-color: var(--admin-brand);
+    color: #fff;
+    font-weight: 600;
+}
+body.admin-shell .pagination .pager-ellipsis {
+    padding: 4px 6px;
+    color: #6b7280;
+}
+
+/* Views preview frame (admin/views/page.html): the list with the site's styles. */
+.view-preview-frame {
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    background: #fff;
+}
+
+body.admin-shell .article-title {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    margin-bottom: 1rem;
+}
+
+/* The admin bar on public pages (partials/html.html, admin_top_bar): a
+   slim bar in the Kosatka logo's colours over the site's page, fixed at
+   the top; its sections drop down on hover (a tap on a phone, app.js).
+   Its own colours: it lies over any theme. */
+#admin-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2147483647;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    min-height: 44px;
+    padding: 0 12px 0 16px;
+    box-sizing: border-box;
+    background: #062033;
+    color: #d3e3ec;
+    font: 500 14px/1.3 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+    box-shadow: 0 2px 10px rgba(6, 32, 51, 0.35);
+}
+#admin-top-bar a {
+    color: inherit;
+    text-decoration: none;
+}
+#admin-top-bar a.admin-bar-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 6px;
+    padding: 6px 12px 6px 0;
+    border-right: 1px solid #1d4560;
+    color: #fff;
+    font-weight: 800;
+}
+#admin-top-bar .admin-bar-home img {
+    display: block;
+    border-radius: 6px;
+}
+#admin-top-bar .admin-bar-sections {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+#admin-top-bar .admin-bar-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin-left: auto;
+}
+#admin-top-bar a.admin-bar-top-link,
+#admin-top-bar button.admin-bar-item.admin-bar-toggle {
+    display: inline-block;
+    margin: 0;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #d3e3ec;
+    font: inherit;
+    line-height: 1.2;
+    cursor: pointer;
+}
+#admin-top-bar a.admin-bar-top-link:hover,
+#admin-top-bar .admin-bar-dropdown:hover > button.admin-bar-item.admin-bar-toggle,
+#admin-top-bar .admin-bar-dropdown.is-open > button.admin-bar-item.admin-bar-toggle {
+    background: #0f3a55;
+    color: #fff;
+}
+/* A section's pages: a white panel under it. The dropdown's bottom
+   padding bridges the gap to it for the hover. The bar is fixed, so a
+   long panel (Configuration) scrolls within the screen below it. */
+#admin-top-bar .admin-bar-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 0;
+}
+#admin-top-bar .admin-bar-submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    min-width: 230px;
+    max-height: calc(100vh - var(--admin-bar-offset, 44px) - 12px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 6px;
+    border-radius: 10px;
+    background: #fff;
+    color: #10202b;
+    box-shadow: 0 12px 30px rgba(6, 32, 51, 0.28);
+}
+#admin-top-bar .admin-bar-dropdown--end > .admin-bar-submenu {
+    left: auto;
+    right: 0;
+}
+#admin-top-bar .admin-bar-dropdown:hover > .admin-bar-submenu {
+    display: block;
+}
+#admin-top-bar a.admin-bar-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: #10202b;
+}
+#admin-top-bar a.admin-bar-link:hover,
+#admin-top-bar a.admin-bar-link:focus-visible {
+    background: #eef5f7;
+    outline: none;
+}
+#admin-top-bar .admin-bar-group {
+    padding: 10px 10px 4px;
+    color: #4f6470;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+#admin-top-bar .admin-bar-section + .admin-bar-section {
+    margin-top: 4px;
+    border-top: 1px solid #edf1f3;
+}
+/* A section of three groups or more (Configuration): two columns, a
+   group whole in one, no scrolling while the window is tall enough. */
+#admin-top-bar .admin-bar-submenu:has(> .admin-bar-section:nth-of-type(3)) {
+    width: 500px;
+    max-height: none;
+    columns: 2;
+    column-gap: 6px;
+}
+#admin-top-bar .admin-bar-submenu:has(> .admin-bar-section:nth-of-type(3)) > .admin-bar-section {
+    break-inside: avoid;
+    margin-top: 0;
+    border-top: 0;
+}
+@media (max-height: 560px) {
+    #admin-top-bar .admin-bar-submenu:has(> .admin-bar-section:nth-of-type(3)) {
+        width: auto;
+        max-height: calc(100vh - var(--admin-bar-offset, 44px) - 12px);
+        columns: auto;
+    }
+}
+/* The bar's buttons: creating (the accent), a preview's. */
+#admin-top-bar .admin-bar-button {
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid #1d4560;
+    border-radius: 7px;
+    background: transparent;
+    color: #d3e3ec;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+}
+#admin-top-bar .admin-bar-button--accent {
+    border-color: #0e7490;
+    background: #0e7490;
+    color: #fff;
+}
+#admin-top-bar .admin-bar-button:hover {
+    filter: brightness(1.1);
+}
+#admin-top-bar .admin-bar-pill {
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #0f3a55;
+    color: #d3e3ec;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+#admin-top-bar a.admin-bar-pill--warn {
+    background: #f4c542;
+    color: #2b2000;
+}
+#admin-top-bar .admin-top-bar-preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+#admin-top-bar .admin-top-bar-preview form {
+    margin: 0;
+}
+/* The user: the avatar and the name; their menu. */
+#admin-top-bar button.admin-bar-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 3px 10px 3px 3px;
+    border: 1px solid #1d4560;
+    border-radius: 16px;
+    background: transparent;
+    color: #d3e3ec;
+    font: inherit;
+    cursor: pointer;
+}
+#admin-top-bar .admin-bar-user img {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #22d3ee;
+}
+#admin-top-bar .admin-bar-menu-toggle {
+    display: none;
+}
+#admin-top-bar :focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+    /* A phone: one row - the admin's link, "Menu", the rest; the sections
+       open by "Menu" over the page right below the bar (the bar's height,
+       and so the room left for it, stays). */
+    #admin-top-bar .admin-bar-menu-toggle {
+        display: inline-block;
+        margin: 0;
+        padding: 6px 10px;
+        border: 1px solid #1d4560;
+        border-radius: 7px;
+        background: transparent;
+        color: #d3e3ec;
+        font: inherit;
+        line-height: 1.2;
+        cursor: pointer;
+    }
+    #admin-top-bar .admin-bar-sections {
+        display: none;
+    }
+    #admin-top-bar {
+        padding: 0 8px 0 12px;
+    }
+    #admin-top-bar .admin-bar-user-name {
+        display: none;
+    }
+    /* "+ ▾" is enough here; the word stays for screen readers. */
+    #admin-top-bar .admin-bar-create-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+    /* One column that scrolls: wrapping, an open tall section
+       (Configuration) would go to a column past the screen's edge. */
+    #admin-top-bar.admin-bar-menu-open .admin-bar-sections {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: calc(100vh - var(--admin-bar-offset, 44px));
+        overflow-y: auto;
+        padding: 8px 16px 12px;
+        background: #062033;
+        box-shadow: 0 8px 16px rgba(6, 32, 51, 0.35);
+    }
+    /* Its sections: rows a finger hits. */
+    #admin-top-bar.admin-bar-menu-open .admin-bar-sections > a.admin-bar-top-link,
+    #admin-top-bar.admin-bar-menu-open .admin-bar-sections > .admin-bar-dropdown > .admin-bar-toggle {
+        display: block;
+        width: 100%;
+        padding: 10px 6px;
+        text-align: left;
+    }
+    /* On touch screens hover is accidental: open only by the class */
+    #admin-top-bar .admin-bar-dropdown:hover > .admin-bar-submenu {
+        display: none;
+    }
+    #admin-top-bar .admin-bar-dropdown.is-open > .admin-bar-submenu {
+        display: block;
+    }
+    #admin-top-bar .admin-bar-sections .admin-bar-dropdown {
+        display: block;
+        width: 100%;
+        padding: 0;
+    }
+    #admin-top-bar .admin-bar-sections .admin-bar-submenu {
+        position: static;
+        width: 100%;
+        min-width: 0;
+        max-height: none;
+        overflow: visible;
+        box-sizing: border-box;
+    }
+    #admin-top-bar .admin-bar-sections .admin-bar-submenu:has(> .admin-bar-section:nth-of-type(3)) {
+        width: 100%;
+        columns: auto;
+    }
+}
+
+/* Collapsing the bar, and the button that brings it back. */
+.admin-top-bar-btn-collapse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #a9c3d1;
+    cursor: pointer;
+    line-height: 0;
+}
+.admin-top-bar-btn-collapse:hover {
+    background: #0f3a55;
+    color: #fff;
+}
+.admin-top-bar-fab {
+    position: fixed;
+    top: env(safe-area-inset-top, 0);
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    z-index: 2147483640;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 8px 0 6px;
+    border: 0;
+    border-radius: 0 0 9px 9px;
+    background: #062033;
+    color: #a9c3d1;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(6, 32, 51, 0.35);
+    line-height: 0;
+}
+.admin-top-bar-fab img {
+    display: block;
+    border-radius: 5px;
+}
+.admin-top-bar-fab:hover,
+.admin-top-bar-fab:focus-visible {
+    color: #fff;
+    outline: 2px solid #22d3ee;
+    outline-offset: 1px;
+}
+body.admin-top-bar-hidden #admin-top-bar {
+    display: none !important;
+}
+/* The room the fixed bar takes (admin_top_bar_spacer), on every page
+   with it: the page starts below the bar. Its height is the bar's
+   (--admin-bar-offset, set by app.js; the bar's least height until then);
+   none while the bar is collapsed. */
+.admin-top-bar-spacer {
+    height: var(--admin-bar-offset, 44px);
+}
+body.admin-top-bar-hidden .admin-top-bar-spacer {
+    display: none;
+}
+body.admin-top-bar-hidden .admin-top-bar-fab {
+    display: flex;
+}
+
+/* admin/content-types/detail_display.html - "Detail page" tab: a
+   FieldTypeGroup's member rows are visually nested under their
+   group's header row (see nestGroupMembersForAdminDisplay) and can't
+   be dragged independently - only the header row drags, moving the
+   whole group as one block. */
+.display-field-row-member td:nth-child(2) {
+    padding-left: 28px;
+    color: #6c757d;
+}
+tr[data-group-header] td:nth-child(2) {
+    font-weight: 600;
+}
+
+/* admin/content-types/fields.html - "Fields" tab: same nesting idea as above
+   (see nestGroupMembersForAdminForm), but the field's own label lives
+   in this table's 3rd column instead of the 2nd, and scoped to this
+   table's own tbody so it doesn't clash with the rule above. */
+#fields-order-tbody .fields-group-member-row td:nth-child(3) {
+    padding-left: 28px;
+}
+#fields-order-tbody tr[data-group-header] td:nth-child(3) {
+    font-weight: 600;
+}
+
+/* Group header rows on both tables above - a light tint + accent-
+   colored left edge, so a group reads as its own section divider
+   instead of just another striped row identical to its members
+   (background goes on the <td>s, not the <tr>, to actually paint over
+   Bootstrap's own .table-striped cell backgrounds). */
+tr[data-group-header] > td {
+    background-color: #eaf2ff !important;
+}
+tr[data-group-header] > td:first-child {
+    border-left: 4px solid #0d6efd;
+}
+
+/* Drag-and-drop tables (content type fields and detail page, taxonomy):
+   while a row is dragged (the table has .drag-in-progress) the hover
+   highlight would follow the rows moving under the cursor, so it is off;
+   the dragged rows are dimmed instead. */
+table.drag-in-progress {
+    --bs-table-hover-bg: transparent;
+}
+.dragging {
+    opacity: 0.4;
+}
+
+/* Region demo mode (block_demo.html): outlines the regions
+   (region_blocks.html) on a real public page; applies only where this
+   file is loaded there too (isAdmin=true). */
+.block-region-demo {
+    position: relative;
+    margin: 8px 0;
+    padding: 10px 8px 4px;
+    border: 2px dashed #c0392b;
+}
+.block-region-demo-label {
+    position: absolute;
+    top: -11px;
+    left: 8px;
+    padding: 0 4px;
+    background: #fff;
+    font-size: 11px;
+    font-family: monospace;
+    color: #c0392b;
+}
+
+/* Block-layout admin (/admin/config/blocks) - a table card per region of
+   the theme and one of the disabled blocks, its name over the table; rows
+   dragged within a zone reorder, across zones change the region (see
+   blocks/index.html's own script). Not .block-region-demo's dashed look -
+   that one is an overlay on the public site. */
+body.admin-shell .block-zone {
+    margin-bottom: 16px;
+}
+body.admin-shell .block-zone-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--admin-line-soft);
+    background: var(--admin-ground);
+    font-weight: 700;
+}
+body.admin-shell .block-zone-machine {
+    font-size: 12px;
+    font-family: var(--bs-font-monospace);
+    color: var(--admin-muted);
+    font-weight: 400;
+}
+/* The regions' tables line up: the same columns in each. */
+body.admin-shell .block-zone .admin-table {
+    table-layout: fixed;
+}
+body.admin-shell .block-zone .admin-table th:nth-child(1) { width: 40px; }
+body.admin-shell .block-zone .admin-table th:nth-child(3) { width: 30%; }
+body.admin-shell .block-zone .admin-table th:nth-child(4) { width: 18%; }
+body.admin-shell .block-zone .admin-table th:nth-child(5) { width: 130px; }
+body.admin-shell .block-zone .admin-table th:nth-child(6) { width: 100px; }
+body.admin-shell .block-zone[data-region="disabled"] .block-zone-header {
+    color: var(--admin-muted);
+}
+/* The zone the dragged row hovers - toggled by the page's script. */
+body.admin-shell .block-zone.drag-over {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 1px var(--admin-accent) inset;
+}
+
+/* A block moved (another region or place) until the order is saved -
+   the page's script marks it. */
+body.admin-shell .block-zone tr.block-row-changed > td {
+    background: var(--admin-accent-soft);
+}
+body.admin-shell .block-zone tr.block-row-changed > td:first-child::after {
+    content: " *";
+    color: #b45309;
+    font-weight: 700;
+}
+
+/* Bootstrap's modals (every page with the admin bar): the dialog starts
+   below the fixed bar (--admin-bar-offset, set by app.js; 0 when the bar
+   is collapsed), its header not under it. */
+.modal {
+    padding-top: var(--admin-bar-offset, 0px);
+}
+
+.modal-dialog-scrollable {
+    height: calc(100% - var(--bs-modal-margin) * 2 - var(--admin-bar-offset, 0px));
+}
+
+/* Permissions matrix (/admin/people/permissions): the role names stick to
+   the top of the window as the page scrolls, below the fixed admin bar
+   (--admin-bar-offset, set by app.js). */
+.permissions-table thead th {
+    position: sticky;
+    top: var(--admin-bar-offset, 0px);
+    z-index: 2;
+    background: #fff;
+    box-shadow: inset 0 -1px 0 var(--admin-line-soft, #dee2e6);
+}
+/* A table card whose header sticks: no overflow box (it would hold it). */
+body.admin-shell .admin-table-card--sticky {
+    overflow: visible;
+}
+body.admin-shell .permissions-table .permissions-group > th {
+    padding-top: 18px;
+    background: var(--admin-ground);
+    color: var(--admin-ink);
+    font-weight: 700;
+}
+
+/* Sizes of admin form controls and columns, instead of inline styles:
+   max-width - xs 150px, sm 300px, md 420px, lg 500px, xl 720px, xxl 960px;
+   min-width - sm 160px, md 220px, lg 280px. */
+.admin-max-xs { max-width: 150px; }
+.admin-max-sm { max-width: 300px; }
+.admin-max-md { max-width: 420px; }
+.admin-max-lg { max-width: 500px; }
+
+.admin-max-xxl { max-width: 960px; }
+.admin-min-sm { min-width: 160px; }
+.admin-min-md { min-width: 220px; }
+
+/* The drag handle of a sortable row; small secondary text (a machine
+   name under a label). */
+.admin-drag-cursor {
+    cursor: grab;
+    user-select: none;
+}
+
+/* The Appearance page's theme cards (admin/config/appearance.html): the
+   screenshot at 3:2, its description as a short definition list. */
+.theme-card-screenshot {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.theme-card-noshot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    font-size: .875rem;
+}
+
+.theme-card-meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: .125rem .75rem;
+}
+
+.theme-card-meta dt {
+    font-weight: 500;
+    color: var(--bs-secondary-color);
+}
+
+.theme-card-meta dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Kosatka.confirm / alert / prompt (app.js): the site's own dialog. */
+.kosatka-dialog {
+    max-width: min(32rem, calc(100vw - 2rem));
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: var(--bs-border-radius-lg, .5rem);
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .2);
+}
+.kosatka-dialog::backdrop {
+    background: rgba(0, 0, 0, .4);
+}
+.kosatka-dialog-message {
+    margin: 0 0 1rem;
+    white-space: pre-line;
+}
+.kosatka-dialog-input {
+    margin-bottom: 1rem;
+}
+.kosatka-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+
+/* The media library (admin/content/media.html): the files as tiles,
+   a file's card beside them (under them on a narrow screen). */
+body.admin-shell .admin-filter--check {
+    flex: 0 0 auto;
+    padding: 9px 0;
+}
+body.admin-shell .media-library {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 18px;
+}
+body.admin-shell .media-library-main {
+    flex: 999 1 480px;
+    min-width: 0;
+}
+body.admin-shell .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+body.admin-shell .media-tile-link {
+    display: flex;
+    color: var(--admin-ink);
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--admin-line);
+    border-radius: 10px;
+    background: #fff;
+    text-decoration: none;
+}
+body.admin-shell .media-tile-link:hover,
+body.admin-shell .media-tile-link:focus-visible {
+    border-color: var(--admin-accent);
+}
+body.admin-shell .media-tile.is-selected .media-tile-link {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px var(--admin-accent);
+}
+body.admin-shell .media-tile-preview,
+body.admin-shell .media-card-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 3;
+    background: var(--admin-line-soft);
+}
+body.admin-shell .media-tile-preview img,
+body.admin-shell .media-card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+body.admin-shell .media-tile-ext {
+    font-weight: 700;
+    color: var(--admin-muted);
+}
+body.admin-shell .media-tile-name {
+    padding: 8px 10px 0;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+body.admin-shell .media-tile-meta {
+    padding: 2px 10px 8px;
+    font-size: 12px;
+    color: var(--admin-muted);
+}
+body.admin-shell .media-tile-meta.is-unused {
+    color: #8a5a00;
+}
+body.admin-shell .media-card {
+    position: sticky;
+    top: 16px;
+    flex: 1 1 320px;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+body.admin-shell .media-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+body.admin-shell .media-card-name {
+    overflow-wrap: anywhere;
+}
+body.admin-shell .media-card-preview {
+    overflow: hidden;
+    border-radius: 8px;
+}
+body.admin-shell .media-card-info {
+    margin: 0;
+    font-size: 13px;
+    color: var(--admin-muted);
+}
+body.admin-shell .media-card-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+body.admin-shell .media-card-form .form-control {
+    width: 100%;
+}
+body.admin-shell .media-card-uses ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+}
+body.admin-shell .media-focal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+body.admin-shell .media-focal-image {
+    position: relative;
+    cursor: crosshair;
+    line-height: 0;
+}
+body.admin-shell .media-focal-image img {
+    width: 100%;
+    height: auto;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: var(--admin-line-soft);
+}
+body.admin-shell .media-focal-dot {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(6, 32, 51, .55);
+    pointer-events: none;
+}
+body.admin-shell .media-focal-crops {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+}
+body.admin-shell .media-focal-crop-figure {
+    margin: 0;
+    width: 96px;
+    font-size: 11px;
+    color: var(--admin-muted);
+}
+body.admin-shell .media-focal-crop {
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--admin-line-soft);
+}
+body.admin-shell .media-focal-crop img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+@media (max-width: 767.98px) {
+    body.admin-shell .media-card {
+        position: static;
+        max-width: none;
+    }
+}

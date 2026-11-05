@@ -1,0 +1,15 @@
+{{/* video_embed_field - a link field the module shows (its field
+     formatters, Formatter.Render): .Items - each link, a video (.Video, as
+     video_embed shows it: video_embed/embed.html) or not one (.Link, shown
+     as a link); .Layout - "featured": the first large, the others small
+     previews after it (a click puts the player there). A theme may have
+     its own (templates/video_embed/field.html), keeping {{attach}}. */}}
+{{define "video_embed_field"}}{{attach "video_embed"}}
+<div class="video-embed-field{{if eq (print .Layout) "featured"}} video-embed-field--featured{{end}}">
+{{range $i, $item := .Items}}
+{{if and (eq (print $.Layout) "featured") (eq $i 1)}}<div class="video-embed-more">{{end}}
+{{if $item.Video}}{{template "video_embed" (dict "Video" $item.Video)}}{{else}}<p class="video-embed-link"><a href="{{$item.Link.URL}}" rel="nofollow noopener">{{$item.Link.Text}}</a></p>{{end}}
+{{end}}
+{{if and (eq (print .Layout) "featured") (gt (len .Items) 1)}}</div>{{end}}
+</div>
+{{end}}

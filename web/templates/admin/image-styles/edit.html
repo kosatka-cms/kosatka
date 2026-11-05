@@ -1,0 +1,121 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">name: <code>{{.style.Name}}</code> {{t "- used in image URLs (<code>…/styles/{name}/…</code>), cannot be changed after creation."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="image-style-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved."))
+    "Errors" (dict
+        "invalid" (t "Check the width/height/mode/anchor/quality.")
+        "update" (t "Error saving the style."))
+    "Warnings" (dict
+        "empty" (t "Name field is required.")))}}
+
+<form method="post" action="/admin/config/image-styles/{{.style.ID}}" id="image-style-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="label" class="admin-setting-label">{{t "Name"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="label" name="label" class="form-control" value="{{.style.Label}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="description" class="admin-setting-label">{{t "Description"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="description" name="description" class="form-control" value="{{.style.Description}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="width" class="admin-setting-label">{{t "Width"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="width" name="width" class="form-control admin-max-xs" value="{{.style.Width}}" required>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="height" class="admin-setting-label">{{t "Height"}}</label>
+                <span class="admin-setting-help">{{t "0 - keep proportions (fit/resize mode only)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="height" name="height" class="form-control admin-max-xs" value="{{.style.Height}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="mode" class="admin-setting-label">{{t "Mode"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                {{$currentMode := .style.Mode}}
+                <select id="mode" name="mode" class="form-select admin-min-sm">
+                    {{range .modes}}
+                    <option value="{{.}}" {{if eq . $currentMode}}selected{{end}}>{{.}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="anchor" class="admin-setting-label">{{t "Anchor"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                {{$currentAnchor := .style.Anchor}}
+                <select id="anchor" name="anchor" class="form-select admin-min-sm">
+                    {{range .anchors}}
+                    <option value="{{.}}" {{if eq . $currentAnchor}}selected{{end}}>{{if eq . "focal"}}{{t "the image's focal point (or the center)"}}{{else}}{{.}}{{end}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="quality" class="admin-setting-label">{{t "Quality"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="quality" name="quality" class="form-control admin-max-xs" value="{{.style.Quality}}" min="1" max="100">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="format" class="admin-setting-label">{{t "Format"}}</label>
+                <span class="admin-setting-help">{{t "JPEG - for feeds and services that do not accept WebP (e.g. Dzen)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select id="format" name="format" class="form-select admin-min-sm">
+                    <option value="webp" {{if ne .style.Format "jpeg"}}selected{{end}}>WebP</option>
+                    <option value="jpeg" {{if eq .style.Format "jpeg"}}selected{{end}}>JPEG</option>
+                </select>
+            </div>
+        </div>
+        {{/* The 2x derivatives for high-density screens (srcset 2x,
+             imagestyle.DoublePath). */}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="hidpi" class="admin-setting-label">{{t "Sharp on high-density screens (2×)"}}</label>
+                <span class="admin-setting-help">{{t "A copy at double size too: high-density screens (phones, many laptops) take it, others the usual one. The copies take more disk space; for an original no larger than the usual copy there is none."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="hidpi" name="hidpi" value="1" class="form-check-input" {{if .style.HiDPI}}checked{{end}}>
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

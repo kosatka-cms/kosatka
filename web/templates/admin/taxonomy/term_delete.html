@@ -1,0 +1,33 @@
+{{template "layout.html" .}}
+
+{{define "content"}}
+<p><a href="/admin/config/taxonomy/{{.vocabulary.ID}}/terms">&larr; {{t "Terms of \"@vocabulary\"" "@vocabulary" .vocabulary.Name}}</a></p>
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "in-use" (t "Cannot delete the term: it is used in content. Remove the tag from it first.")
+        "has-children" (t "Cannot delete the term: it has child terms. Delete or re-parent them first.")
+        "delete" (t "Error deleting the term.")))}}
+
+<div class="alert alert-danger">
+    <h5 class="alert-heading">{{t "Delete term \"@name\"?" "@name" .term.Name}}</h5>
+    {{if .childLabels}}
+    <p class="mb-1">
+        <strong>{{plural (len .childLabels) "Cannot delete it now - it still has @count child term:" "Cannot delete it now - it still has @count child terms:"}}
+        {{range $i, $label := .childLabels}}{{if $i}}, {{end}}"{{$label}}"{{end}}.</strong>
+        {{t "Delete them or re-parent them to another parent first."}}
+    </p>
+    {{else if gt .nodeCount 0}}
+    <p class="mb-0"><strong>{{plural .nodeCount "The term is used in @count content item - remove the tag from it first, otherwise deletion will fail." "The term is used in @count content items - remove the tag from them first, otherwise deletion will fail."}}</strong></p>
+    {{else}}
+    <p class="mb-0">{{t "The term is not used in content and has no child terms - it can be deleted."}}</p>
+    {{end}}
+</div>
+
+<form method="post" action="/admin/config/taxonomy/{{.vocabulary.ID}}/terms/{{.term.ID}}/delete">
+    {{if not .childLabels}}
+    <button type="submit" class="btn btn-danger">{{t "Yes, delete term"}}</button>
+    {{end}}
+    <a href="/admin/config/taxonomy/{{.vocabulary.ID}}/terms" class="btn btn-secondary">{{t "Cancel"}}</a>
+</form>
+{{end}}

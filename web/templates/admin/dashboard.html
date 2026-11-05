@@ -1,0 +1,111 @@
+{{/* admin/dashboard.html - the admin's Overview (Controller.Dashboard):
+     the figures (.tiles), what waits (.waiting: the admin menu's counted
+     items), the recent changes (.changes, shown with .showChanges), the
+     modules' wide blocks (.mainBlocks); today's popular content
+     (.popular), the latest comments (.comments), the modules' narrow
+     blocks (.sideBlocks). A module's block - its dashboard_<Name> define
+     in a card. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{.siteName}}{{if .siteName}} · {{end}}{{date .today ""}}</span>
+{{end}}
+
+{{define "page_actions"}}
+{{with .creatableMaterials}}
+<div class="dropdown">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">+ {{t "Create"}}</button>
+    <div class="dropdown-menu dropdown-menu-end">
+        {{range .}}<a href="{{.URL}}" class="dropdown-item">{{.Label}}</a>{{end}}
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{with .tiles}}
+<div class="admin-dash-tiles">
+    {{range .}}
+    <a href="{{.URL}}" class="admin-dash-tile">
+        <span class="admin-dash-tile-label">{{.Label}}</span>
+        <span class="admin-dash-tile-value">{{.Value}}</span>
+        <span class="admin-dash-tile-note">{{.Note}}</span>
+    </a>
+    {{end}}
+</div>
+{{end}}
+
+<div class="admin-dash-columns">
+    <div class="admin-dash-column admin-dash-column--main">
+        <section class="admin-dash-card" aria-labelledby="dash-waiting">
+            <div class="admin-dash-head"><h2 id="dash-waiting">{{t "Needs attention"}}</h2></div>
+            {{range .waiting}}
+            <a href="{{.Path}}" class="admin-dash-row admin-dash-waiting">
+                <span class="admin-dash-grow">{{if .CountLabel}}{{t .CountLabel}}<span class="admin-dash-sub">{{t .Label}}</span>{{else}}{{t .Label}}{{end}}</span>
+                <span class="admin-nav-count">{{.Count}}</span>
+            </a>
+            {{else}}
+            <p class="admin-dash-empty">{{t "Nothing is waiting."}}</p>
+            {{end}}
+        </section>
+
+        {{if .showChanges}}
+        <section class="admin-dash-card" aria-labelledby="dash-changes">
+            <div class="admin-dash-head"><h2 id="dash-changes">{{t "Recent changes"}}</h2><a href="/admin/content/changes">{{t "All changes"}}</a></div>
+            {{range .changes}}
+            <div class="admin-dash-row">
+                <span class="admin-dash-when">{{date .CreatedAt "datetime"}}</span>
+                <span class="admin-dash-grow"><a href="{{.NodeURL}}" class="admin-dash-title">{{.NodeTitle}}</a><span class="admin-dash-sub">{{template "revision_summary" .Summary}}</span></span>
+                {{with .User}}{{if .Username}}<a href="{{userURL .Slug}}">{{.Username}}</a>{{end}}{{end}}
+            </div>
+            {{else}}
+            <p class="admin-dash-empty">{{t "No changes."}}</p>
+            {{end}}
+        </section>
+        {{end}}
+
+        {{range .mainBlocks}}
+        <section class="admin-dash-card" aria-labelledby="dash-{{.Name}}">
+            <div class="admin-dash-head"><h2 id="dash-{{.Name}}">{{.Title}}</h2>{{if .Link}}<a href="{{.Link}}">{{.LinkLabel}}</a>{{end}}</div>
+            {{renderOptional "dashboard" .Name .}}
+        </section>
+        {{end}}
+    </div>
+
+    <div class="admin-dash-column admin-dash-column--side">
+        {{with .popular}}
+        <section class="admin-dash-card" aria-labelledby="dash-popular">
+            <div class="admin-dash-head"><h2 id="dash-popular">{{t "Popular today"}}</h2><a href="/admin/reports/popular">{{t "All"}}</a></div>
+            {{range $i, $p := .}}
+            <div class="admin-dash-row">
+                <span class="admin-dash-rank">{{add $i 1}}</span>
+                <a href="{{$p.Node.URL}}" class="admin-dash-grow admin-dash-title">{{$p.Node.Title}}</a>
+                <span class="admin-dash-num">{{$p.Views}}</span>
+            </div>
+            {{end}}
+        </section>
+        {{end}}
+
+        <section class="admin-dash-card" aria-labelledby="dash-comments">
+            <div class="admin-dash-head"><h2 id="dash-comments">{{t "Latest comments"}}</h2><a href="/admin/content/comment">{{t "All"}}</a></div>
+            {{range .comments}}
+            <div class="admin-dash-row admin-dash-comment">
+                <span class="admin-dash-sub">{{with .Author}}{{if .Username}}<a href="{{userURL .Slug}}">{{.Username}}</a>{{end}}{{end}} · {{date .CreatedAt "datetime"}}{{with .Node}} · <a href="{{.URL}}">{{.Title}}</a>{{end}}</span>
+                {{if .Node}}<a href="{{.Node.URL}}#comment-{{.ID}}">{{.Summary}}</a>{{else}}{{.Summary}}{{end}}
+            </div>
+            {{else}}
+            <p class="admin-dash-empty">{{t "No comments yet."}}</p>
+            {{end}}
+        </section>
+
+        {{range .sideBlocks}}
+        <section class="admin-dash-card" aria-labelledby="dash-{{.Name}}">
+            <div class="admin-dash-head"><h2 id="dash-{{.Name}}">{{.Title}}</h2>{{if .Link}}<a href="{{.Link}}">{{.LinkLabel}}</a>{{end}}</div>
+            {{renderOptional "dashboard" .Name .}}
+        </section>
+        {{end}}
+    </div>
+</div>
+{{end}}

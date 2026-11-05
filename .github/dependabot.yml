@@ -1,0 +1,35 @@
+# Weekly update pull requests for the dependencies: the engine's Go
+# modules and the examples' (Go modules of their own), the workflows'
+# actions, the documentation site's npm packages (website/) and the
+# Dockerfile's base images. Minor and patch updates of an ecosystem come
+# as one pull request.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directories: [/, /examples/hello, /examples/hello-site]
+    schedule:
+      interval: weekly
+    groups:
+      go:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+    groups:
+      docs-site:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

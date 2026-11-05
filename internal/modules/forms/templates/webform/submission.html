@@ -1,0 +1,43 @@
+{{/* webform/submission.html - one submission of a form (WebformController.
+     Submission): every question with its answer (files as download
+     links), the sender, the newer and older submissions, deleting it. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}{{attach "forms"}}
+{{$wf := .webform}}
+{{$s := .submission}}
+<section class="webform-submission">
+    <nav class="d-flex flex-wrap gap-3 mb-3">
+        <a href="/node/{{$wf.Node.ID}}/form/submissions">← {{t "All submissions"}}</a>
+        {{with .newer}}<a href="/node/{{$wf.Node.ID}}/form/submissions/{{.}}" rel="prev">{{t "Newer"}}</a>{{end}}
+        {{with .older}}<a href="/node/{{$wf.Node.ID}}/form/submissions/{{.}}" rel="next">{{t "Older"}}</a>{{end}}
+    </nav>
+    <p class="text-muted">
+        {{date $s.CreatedAt "datetime"}} ·
+        {{if $s.UserSlug}}<a href="/{{$s.UserSlug}}">{{$s.Username}}</a>{{else}}{{t "Guest"}}{{end}}
+        {{with $s.RemoteIP}} · {{.}}{{end}}
+        {{with $s.SourceURL}}<br>{{t "Sent from the page:"}} <a href="{{.}}">{{.}}</a>{{end}}
+    </p>
+    <dl class="webform-submission-values">
+        {{range $el := $wf.Elements}}
+        {{$v := index $s.Values $el.ID}}
+        <dt>{{$el.Label}}</dt>
+        <dd class="webform-text mb-3">
+            {{if not $v}}<span class="text-muted">-</span>
+            {{else if eq (print $el.Type) "consent"}}{{t "Yes"}}
+            {{else if eq (print $el.Type) "file"}}{{range $i, $x := $v}}{{if $i}}<br>{{end}}<a href="/node/{{$wf.Node.ID}}/form/file?sid={{$s.ID}}&amp;eid={{$el.ID}}&amp;d={{$i}}">{{$el.FileName $x}}</a>{{end}}
+            {{else}}{{range $i, $x := $v}}{{if $i}}<br>{{end}}{{$x}}{{end}}{{end}}
+        </dd>
+        {{end}}
+    </dl>
+    {{if .canDeleteSubmissions}}
+    <form method="post" action="/node/{{$wf.Node.ID}}/form/submissions/delete">
+        <button type="submit" name="only" value="{{$s.ID}}" class="btn btn-outline-danger btn-sm" data-confirm="{{t "Delete this submission?"}}">{{t "Delete"}}</button>
+    </form>
+    {{end}}
+</section>
+{{end}}

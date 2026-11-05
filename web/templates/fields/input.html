@@ -1,0 +1,493 @@
+{{/* The content form's field inputs: dynamicFieldInput (a field's
+     form-group: its label and its type's input, field_input_<type>),
+     dynamicFieldInputIn (it with what the inputs show from the page's or
+     a block's data), a block's card, the rows of links and dates, the
+     text format picker; field_input_<type> - each type's input. In
+     fields/, loaded with every page: a theme or a module replaces a
+     type's input by defining its field_input_<type>. */}}
+{{/* dynamicFieldInput renders one field's form-group, shared by top-level
+     fields, fields inside a form group's accordion and a block's. Takes a
+     dict: Field (entity.FieldInstanceDef), Prefix (a block's inputs':
+     before every name, blockInputPrefix), Value, Options / HierarchyLabels
+     (taxonomy options and "-- "-indented labels by term ID), SelectedTerms
+     (multi-value taxonomy), SelectedNodes (multi-value reference),
+     Tags (a picker's chosen, JSON), ImageURL/ImageAlt (image), Images (an
+     image field with several), FileLink (file), SentFile / DeleteTicked (a
+     form sent back with errors: its file kept for the next submit, the
+     saved one ticked for deleting), Blocks (a blocks field's,
+     blocksFieldForm). A {{template}} call resets "." and "$" to this dict,
+     so page-level data must be passed in: dynamicFieldInputIn does. */}}
+{{/* dynamicFieldInputIn - dynamicFieldInput of Field with what the
+     inputs show from In (the page's data, or a block's Inputs: the keys of
+     fieldInputData), Prefix, TextFormats, TimeZone. */}}
+{{define "dynamicFieldInputIn"}}{{$in := .In}}{{$p := .Prefix}}{{$tf := .TextFormats}}{{$tz := .TimeZone}}{{with .Field}}
+{{template "dynamicFieldInput" (dict "Field" . "Prefix" $p "Value" (index $in.values .ID) "Options" (index $in.taxonomyOptions .ID) "HierarchyLabels" (index $in.taxonomyHierarchyLabels .ID) "SelectedTerms" (index $in.multiTaxonomyFieldTerms .ID) "SelectedNodes" (index $in.referenceFieldNodes .ID) "SelectedUsers" (index $in.userFieldUsers .ID) "Tags" (index $in.tagPickers .ID) "ImageURL" (index $in.imageFieldURLs .ID) "ImageAlt" (index $in.imageFieldAlts .ID) "Images" (index $in.imageFieldItems .ID) "FileLink" (index $in.fileFieldLinks .ID) "SentFile" (and $in.fileFieldSent (index $in.fileFieldSent .ID)) "DeleteTicked" (and $in.fileFieldDeletes (index $in.fileFieldDeletes .ID)) "Blocks" (index $in.blockFields .ID) "TextFormats" $tf "SelectedTextFormatID" (index $in.textFormatIDs .ID) "TimeZone" $tz)}}
+{{end}}{{end}}
+{{/* textFormatPicker - per-value text format dropdown (see
+     entity.TextFormatDef), shown only when AllowedTextFormatIDs() is
+     non-empty. Takes the dynamicFieldInput dict: TextFormats - options
+     already filtered to what the current user may use;
+     SelectedTextFormatID - this value's format (empty if unset).
+     The textFormatPicker behavior (app.js) reads each option's
+     data-plugins/data-toolbar to re-init TinyMCE when the format changes. */}}
+{{define "textFormatPicker"}}
+{{if .Field.AllowedTextFormatIDs}}
+{{$p := or .Prefix ""}}
+{{$fieldName := printf "%stext_format_%d" $p .Field.ID}}
+{{$selected := .SelectedTextFormatID}}
+<div class="mb-2 mt-1">
+    <select id="{{$fieldName}}" name="{{$fieldName}}" class="form-select form-select-sm text-format-picker" data-target-field="{{$p}}field_{{.Field.ID}}" style="max-width:280px;">
+        {{range .TextFormats}}
+        {{if intContains $.Field.AllowedTextFormatIDs .ID}}
+        <option value="{{.ID}}" data-rich-editor="{{if .HasRichEditor}}1{{else}}0{{end}}" {{with textFormatEditor .}}data-plugins="{{.Plugins}}" data-toolbar="{{.Toolbar}}"{{with .External}} data-external-plugins="{{.}}"{{end}}{{end}} {{if eq .ID $selected}}selected{{end}}>{{.Label}}</option>
+        {{end}}
+        {{end}}
+    </select>
+</div>
+{{end}}
+{{end}}
+
+{{/* dynamicFieldLinkRow - one row of a link field (dict "Field" "Link"
+     <entity.Link, none for an empty row> "First" <the label's input>
+     "Titled" <the field has titles>). */}}
+{{define "dynamicFieldLinkRow"}}{{$fieldName := printf "%sfield_%d" (or .Prefix "") .Field.ID}}
+<div class="field-link-row" data-field-link data-field-row>
+    <div class="field-link-inputs">
+        <input type="text" inputmode="url"{{if .First}} id="{{$fieldName}}"{{end}} name="{{$fieldName}}_url" value="{{with .Link}}{{.URL}}{{end}}" class="form-control" placeholder="https://" autocomplete="off" aria-label="{{t "Address"}}" data-field-link-url>
+        {{if .Titled}}<input type="text" name="{{$fieldName}}_title" value="{{with .Link}}{{.Title}}{{end}}" class="form-control form-control-sm" maxlength="255" placeholder="{{if eq (print .Field.LinkTitle) "required"}}{{t "Link title"}}{{else}}{{t "Link title (optional)"}}{{end}}" aria-label="{{t "Link title"}}">{{end}}
+        <div class="field-link-preview" data-field-link-preview hidden></div>
+    </div>
+    {{if .Field.Multiple}}
+    <div class="field-image-actions">
+        <button type="button" class="field-image-btn" data-field-row-move="-1" aria-label="{{t "Move up"}}" title="{{t "Move up"}}">↑</button>
+        <button type="button" class="field-image-btn" data-field-row-move="1" aria-label="{{t "Move down"}}" title="{{t "Move down"}}">↓</button>
+        <button type="button" class="field-image-btn field-image-delete" data-field-row-remove aria-label="{{t "Remove the link"}}" title="{{t "Remove the link"}}">✕</button>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{/* dynamicFieldDateInputs - a date field's inputs (dict "Field" "In"
+     <form.DateInput, none for empty> "First" <the label's input>): the
+     start's date ({{$fieldName}}) and time (_time), the end's (_end,
+     _end_time) - the parts the field has. */}}
+{{define "dynamicFieldDateInputs"}}{{$fieldName := printf "%sfield_%d" (or .Prefix "") .Field.ID}}{{$time := ne (print .Field.DateTime) ""}}
+<div class="field-date-range">
+    <input type="date"{{if .First}} id="{{$fieldName}}"{{end}} name="{{$fieldName}}" value="{{with .In}}{{.Date}}{{end}}" class="form-control" aria-label="{{t "Start date"}}">
+    {{if $time}}<input type="time" name="{{$fieldName}}_time" value="{{with .In}}{{.Time}}{{end}}" class="form-control" aria-label="{{t "Start time"}}">{{end}}
+    {{if ne (print .Field.DateEnd) ""}}
+    <span class="field-date-sep" aria-hidden="true">-</span>
+    <input type="date" name="{{$fieldName}}_end" value="{{with .In}}{{.EndDate}}{{end}}" class="form-control" aria-label="{{t "End date"}}">
+    {{if $time}}<input type="time" name="{{$fieldName}}_end_time" value="{{with .In}}{{.EndTime}}{{end}}" class="form-control" aria-label="{{t "End time"}}">{{end}}
+    {{end}}
+</div>
+{{end}}
+
+{{/* dynamicFieldDateRow - a row of a field with several dates (dict
+     "Field" "In" "First"): its inputs and ↑/↓/✕. */}}
+{{define "dynamicFieldDateRow"}}
+<div class="field-date-row" data-field-row>
+    {{template "dynamicFieldDateInputs" .}}
+    <div class="field-image-actions">
+        <button type="button" class="field-image-btn" data-field-row-move="-1" aria-label="{{t "Move up"}}" title="{{t "Move up"}}">↑</button>
+        <button type="button" class="field-image-btn" data-field-row-move="1" aria-label="{{t "Move down"}}" title="{{t "Move down"}}">↓</button>
+        <button type="button" class="field-image-btn field-image-delete" data-field-row-remove aria-label="{{t "Remove the date"}}" title="{{t "Remove the date"}}">✕</button>
+    </div>
+</div>
+{{end}}
+
+{{/* dynamicFieldDateHelp - under a date field with a time: the zone the
+     times are in (dict of dynamicFieldInput); with several - the limit. */}}
+{{define "dynamicFieldDateHelp"}}{{$time := ne (print .Field.DateTime) ""}}
+{{if or $time (and .Field.Multiple .Field.MaxValues)}}<div class="form-text">{{if $time}}{{if eq (print .Field.DateTime) "optional"}}{{t "Time zone: @zone. No time - the whole day." "@zone" .TimeZone}}{{else}}{{t "Time zone: @zone." "@zone" .TimeZone}}{{end}}{{if ne (print .Field.DateEnd) ""}} {{t "An end time without an end date - the same day."}}{{end}}{{end}}{{if and .Field.Multiple .Field.MaxValues}} {{plural .Field.MaxValues "At most @count date." "At most @count dates."}}{{end}}</div>{{end}}
+{{end}}
+
+{{define "dynamicFieldInput"}}
+{{$p := or .Prefix ""}}
+{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+<div class="form-group">
+    <label for="{{$fieldName}}">{{.Field.Label}}{{if .Field.Required}} <span class="required">*</span>{{end}}</label>
+    {{renderSuggestion "field_input" (print .Field.FieldType) .}}
+</div>
+{{end}}
+
+{{/* dynamicFieldBlock - a block of a blocks field (dict "Field" "Block"
+     <blockItemForm> "New" <a new block's template: open, its key the
+     browser's> "TextFormats" "TimeZone"): a card - its set and summary in
+     the heading, ↑/↓/✕; its key in field_<id>_blocks (the order saved),
+     its set and saved ID, its fields' inputs after its prefix. A saved
+     block is folded; a submitted form shows them open. */}}
+{{define "dynamicFieldBlock"}}{{$b := .Block}}{{$p := $b.Prefix .Field.ID}}
+<details class="field-block" data-field-block{{if or .New (not $b.ID)}} open{{end}}>
+    <summary class="field-block-head">
+        <span class="field-block-set">{{$b.Set.Label}}</span>
+        <span class="field-block-summary" data-field-block-summary>{{$b.Summary}}</span>
+        <span class="field-image-actions">
+            <button type="button" class="field-image-btn" data-field-block-move="-1" aria-label="{{t "Move up"}}" title="{{t "Move up"}}">↑</button>
+            <button type="button" class="field-image-btn" data-field-block-move="1" aria-label="{{t "Move down"}}" title="{{t "Move down"}}">↓</button>
+            <button type="button" class="field-image-btn field-image-delete" data-field-block-remove aria-label="{{t "Remove the block"}}" title="{{t "Remove the block"}}">✕</button>
+        </span>
+    </summary>
+    <input type="hidden" name="field_{{.Field.ID}}_blocks" value="{{$b.Key}}">
+    <input type="hidden" name="{{$p}}type" value="{{$b.Set.MachineName}}">
+    {{if $b.ID}}<input type="hidden" name="{{$p}}id" value="{{$b.ID}}">{{end}}
+    <div class="field-block-body">
+        {{range $b.Fields}}{{if and (not .HiddenInForm) (ne (print .FieldType) "group")}}{{template "dynamicFieldInputIn" (dict "Field" . "In" $b.Inputs "Prefix" $p "TextFormats" $.TextFormats "TimeZone" $.TimeZone)}}{{end}}{{end}}
+    </div>
+</details>
+{{end}}
+
+{{/* field_input_<type> - the input of a field of a type in the content
+     form (dynamicFieldInput's dict: Field, Prefix, Value, the type's data -
+     Options, SelectedTerms, Images, Blocks…). A theme's or a module's
+     fields/*.html replaces one by defining it; a type without one has
+     none (field_input_default). Its inputs' names - Prefix (a block's)
+     and field_<id>. */}}
+{{define "field_input_text"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Fields with text formats ignore Widget() (branch below). For other
+         text fields Widget() picks the input shape; where the value renders
+         on the detail page is RendersInBody, a separate setting. No maxlength
+         unless the admin set one explicitly - matches
+         DynamicForm.Validate's HasExplicitMaxLen() (unset = unlimited, not
+         MaxLen()'s 255 default). */}}
+    {{if .Field.AllowedTextFormatIDs}}
+    {{/* Text-formats field: always a bare textarea; the picker's
+         behavior (textFormatPicker, app.js) attaches/detaches TinyMCE
+         based on the selected format (see
+         entity.TextFormatDef.HasRichEditor), on load and on change. */}}
+    <textarea id="{{$fieldName}}" name="{{$fieldName}}" class="form-control text-format-target" data-field-id="{{.Field.ID}}" rows="6">{{.Value}}</textarea>
+    {{template "textFormatPicker" .}}
+    {{else if eq (print .Field.Widget) "wysiwyg"}}
+    <textarea id="{{$fieldName}}" name="{{$fieldName}}" class="form-control tinymce-editor" data-field-id="{{.Field.ID}}" data-editor-autoload data-editor-config="{{json (dict "preset" "text" "plugins" "link image code lists table" "height" 300 "body_class" "node-content")}}">{{.Value}}</textarea>
+    {{else if eq (print .Field.Widget) "safe_html"}}
+    <textarea id="{{$fieldName}}" name="{{$fieldName}}" class="form-control" rows="6">{{.Value}}</textarea>
+    {{else if eq (print .Field.Widget) "textarea"}}
+    <textarea id="{{$fieldName}}" name="{{$fieldName}}" class="form-control" rows="6" {{if .Field.HasExplicitMaxLen}}maxlength="{{.Field.MaxLen}}"{{end}}>{{.Value}}</textarea>
+    {{else}}
+    <input type="text" id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}" {{if .Field.HasExplicitMaxLen}}maxlength="{{.Field.MaxLen}}"{{end}} class="form-control">
+    {{end}}
+
+{{end}}
+
+{{define "field_input_number"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* The field's step, limits and units (its prefix, suffix) beside. */}}
+    <div class="field-number">
+        {{with .Field.NumberPrefix}}<span class="field-number-unit">{{.}}</span>{{end}}
+        <input type="number" step="{{.Field.NumberStep}}"{{with .Field.NumberMinAttr}} min="{{.}}"{{end}}{{with .Field.NumberMaxAttr}} max="{{.}}"{{end}} id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}" class="form-control">
+        {{with .Field.NumberSuffix}}<span class="field-number-unit">{{.}}</span>{{end}}
+    </div>
+
+{{end}}
+
+{{define "field_input_email"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    <input type="email" id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}" maxlength="254" autocomplete="off" class="form-control">
+
+{{end}}
+
+{{define "field_input_phone"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    <input type="tel" id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}" maxlength="40" class="form-control">
+
+{{end}}
+
+{{define "field_input_date"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{if .Field.Multiple}}
+    {{/* Several dates: a row each (the inputs of dynamicFieldDateInputs,
+         same names in every row - their order is the order saved), ↑/↓/✕,
+         "Add a date" up to the limit (field-rows in app.js). */}}
+    <div class="field-dates-edit" data-field-rows data-max="{{.Field.MaxValues}}">
+        <div class="field-dates-rows" data-field-row-list>
+            {{range $i, $in := .Value}}{{template "dynamicFieldDateRow" (dict "Field" $.Field "Prefix" $p "In" $in "First" (eq $i 0))}}{{end}}
+            {{if not .Value}}{{template "dynamicFieldDateRow" (dict "Field" .Field "Prefix" $p "First" true)}}{{end}}
+        </div>
+        <template data-field-row-template>{{template "dynamicFieldDateRow" (dict "Field" .Field "Prefix" $p)}}</template>
+        <button type="button" class="field-links-add" data-field-row-add>{{t "+ Add a date"}}</button>
+    </div>
+    {{template "dynamicFieldDateHelp" .}}
+
+    {{else if .Field.DateRich}}
+    {{template "dynamicFieldDateInputs" (dict "Field" .Field "Prefix" $p "In" .Value "First" true)}}
+    {{template "dynamicFieldDateHelp" .}}
+
+    {{else}}
+    <input type="date" id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}" class="form-control">
+
+    {{end}}
+{{end}}
+
+{{define "field_input_bool"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    <input type="checkbox" id="{{$fieldName}}" name="{{$fieldName}}" value="1" {{if .Value}}checked{{end}}>
+
+{{end}}
+
+{{define "field_input_taxonomy"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Taxonomy widgets: WidgetSelect/WidgetRadio/WidgetCheckboxes (shared
+         with FieldTypeList) plus WidgetAutocomplete. All but autocomplete use
+         $.HierarchyLabels for "-- "-indented labels, falling back to .Name. */}}
+    {{if .Field.Multiple}}
+    {{if eq (print .Field.Widget) "checkboxes"}}
+    {{/* WidgetCheckboxes - one checkbox per term; submits one "field_<id>"
+         value per checked box, resolved by
+         resolveTags. */}}
+    {{range .Options}}
+    {{$optID := .ID}}
+    {{$label := .Name}}{{with index $.HierarchyLabels .ID}}{{$label = .}}{{end}}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="{{$fieldName}}" id="{{$fieldName}}_{{.ID}}" value="{{.ID}}" {{range $.SelectedTerms}}{{if eq .ID $optID}}checked{{end}}{{end}}>
+        <label class="form-check-label" for="{{$fieldName}}_{{.ID}}">{{$label}}</label>
+    </div>
+    {{end}}
+    {{else if eq (print .Field.Widget) "select"}}
+    {{/* WidgetSelect - <select multiple> over existing terms. Submits one
+         "field_<id>" value per option; resolveTags joins them,
+         since ParseDynamicForm's FormValue only sees the first. */}}
+    <select id="{{$fieldName}}" name="{{$fieldName}}" class="form-select" multiple size="6">
+        {{range .Options}}
+        {{$optID := .ID}}
+        {{$label := .Name}}{{with index $.HierarchyLabels .ID}}{{$label = .}}{{end}}
+        <option value="{{.ID}}" {{range $.SelectedTerms}}{{if eq .ID $optID}}selected{{end}}{{end}}>{{$label}}</option>
+        {{end}}
+    </select>
+    {{else}}
+    {{/* WidgetAutocomplete (default) - free-tagging Tagify widget: value is a
+         comma-separated list of term IDs and/or "new:<name>" tokens,
+         initialized by edit_scripts.html from $.multiTaxonomyFieldTerms and
+         autocompleting within .VocabularyID. The only widget that can
+         create new terms. */}}
+    {{/* Left empty: edit_scripts.html's Tagify init fills it from
+         $.multiTaxonomyFieldTerms. */}}
+    <input type="text" id="{{$fieldName}}-display" class="form-control" data-vocabulary-id="{{.Field.VocabularyID}}" data-tag-picker="terms" data-tag-target="{{$fieldName}}" data-tags="{{.Tags}}">
+    <input type="hidden" id="{{$fieldName}}" name="{{$fieldName}}" value="">
+    {{end}}
+    {{else}}
+    {{if eq (print .Field.Widget) "radio"}}
+    {{/* WidgetRadio - one radio per term, single choice. */}}
+    {{range .Options}}
+    {{$label := .Name}}{{with index $.HierarchyLabels .ID}}{{$label = .}}{{end}}
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="{{$fieldName}}" id="{{$fieldName}}_{{.ID}}" value="{{.ID}}" {{if eq .ID $.Value}}checked{{end}}>
+        <label class="form-check-label" for="{{$fieldName}}_{{.ID}}">{{$label}}</label>
+    </div>
+    {{end}}
+    {{else}}
+    {{/* WidgetSelect (default) - plain single <select>. */}}
+    <select id="{{$fieldName}}" name="{{$fieldName}}" class="form-select">
+        <option value="0">{{t "- Not selected -"}}</option>
+        {{range .Options}}
+        {{$label := .Name}}{{with index $.HierarchyLabels .ID}}{{$label = .}}{{end}}
+        <option value="{{.ID}}" {{if eq .ID $.Value}}selected{{end}}>{{$label}}</option>
+        {{end}}
+    </select>
+    {{end}}
+    {{end}}
+
+{{end}}
+
+{{define "field_input_list"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* List field: select/radio/checkboxes over the admin-configured
+         allowed values (entity.FieldInstanceDef.AllowedValues()). Multiple
+         values submit as same-named "field_<id>" inputs (see
+         resolveListValues). */}}
+    {{if .Field.Multiple}}
+    {{if eq (print .Field.Widget) "checkboxes"}}
+    {{range .Field.AllowedValues}}
+    {{$optVal := .Value}}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="{{$fieldName}}" id="{{$fieldName}}_{{.Value}}" value="{{.Value}}" {{range $.Value}}{{if eq . $optVal}}checked{{end}}{{end}}>
+        <label class="form-check-label" for="{{$fieldName}}_{{.Value}}">{{.Label}}</label>
+    </div>
+    {{end}}
+    {{else}}
+    <select id="{{$fieldName}}" name="{{$fieldName}}" class="form-select" multiple size="6">
+        {{range .Field.AllowedValues}}
+        {{$optVal := .Value}}
+        <option value="{{.Value}}" {{range $.Value}}{{if eq . $optVal}}selected{{end}}{{end}}>{{.Label}}</option>
+        {{end}}
+    </select>
+    {{end}}
+    {{else}}
+    {{if eq (print .Field.Widget) "radio"}}
+    {{range .Field.AllowedValues}}
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="{{$fieldName}}" id="{{$fieldName}}_{{.Value}}" value="{{.Value}}" {{if eq $.Value .Value}}checked{{end}}>
+        <label class="form-check-label" for="{{$fieldName}}_{{.Value}}">{{.Label}}</label>
+    </div>
+    {{end}}
+    {{else}}
+    <select id="{{$fieldName}}" name="{{$fieldName}}" class="form-select">
+        <option value="">{{t "- Not selected -"}}</option>
+        {{range .Field.AllowedValues}}
+        <option value="{{.Value}}" {{if eq $.Value .Value}}selected{{end}}>{{.Label}}</option>
+        {{end}}
+    </select>
+    {{end}}
+    {{end}}
+
+{{end}}
+
+{{define "field_input_reference"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Reference - search widget by title (edit_scripts.html); the hidden
+         input holds the target ID (comma-separated IDs for a multi-value
+         field), prefilled server-side so a failed script never clears the
+         value. A single-value field keeps its stored ID even if the target
+         no longer resolves. */}}
+    <input type="text" id="{{$fieldName}}-display" class="form-control" placeholder="{{t "Start typing a title…"}}" data-tag-picker="nodes" data-tag-target="{{$fieldName}}" data-tags="{{.Tags}}" data-types="{{.Field.TargetContentType}}"{{if not .Field.Multiple}} data-single{{end}}>
+    {{if .Field.Multiple}}
+    <input type="hidden" id="{{$fieldName}}" name="{{$fieldName}}" value="{{range $i, $n := .SelectedNodes}}{{if $i}},{{end}}{{$n.ID}}{{end}}">
+    {{else}}
+    <input type="hidden" id="{{$fieldName}}" name="{{$fieldName}}" value="{{.Value}}">
+    {{end}}
+
+{{end}}
+
+{{define "field_input_user"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Users - a search by name (edit_scripts.html, /api/users/search with
+         the field's roles); the hidden input holds the user IDs,
+         comma-separated in order, prefilled server-side so a failed script
+         never clears the value. */}}
+    <input type="text" id="{{$fieldName}}-display" class="form-control" placeholder="{{t "Start typing a name…"}}" data-tag-picker="users" data-tag-target="{{$fieldName}}" data-tags="{{.Tags}}" data-roles="{{range $i, $r := .Field.UserRoles}}{{if $i}},{{end}}{{$r}}{{end}}"{{if not .Field.Multiple}} data-single{{end}}>
+    <input type="hidden" id="{{$fieldName}}" name="{{$fieldName}}" value="{{range $i, $u := .SelectedUsers}}{{if $i}},{{end}}{{$u.ID}}{{end}}">
+    {{if and .Field.Multiple .Field.MaxValues}}<div class="form-text">{{plural .Field.MaxValues "At most @count person." "At most @count people."}}</div>{{end}}
+
+{{end}}
+
+{{define "field_input_image"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{if .Field.Multiple}}
+    {{/* Several images: each kept one in order ({{$fieldName}}_keep - the
+         order of these inputs is the order saved; ↑/↓ move a row,
+         field-images in app.js), its alt text, a tick to delete it (shown
+         as a ✕ button; a row to be deleted fades); new files are added
+         after them. */}}
+    <div class="field-images" data-field-images>
+        {{range .Images}}
+        <div class="field-image-row" data-field-image>
+            <input type="hidden" name="{{$fieldName}}_keep" value="{{.FileID}}">
+            <img src="{{.URL}}" alt="{{.Alt}}" class="field-image-thumb">
+            <div class="field-image-alt">
+                <label for="{{$fieldName}}_alt_{{.FileID}}" class="visually-hidden">{{t "Alt text"}}</label>
+                <input type="text" id="{{$fieldName}}_alt_{{.FileID}}" name="{{$fieldName}}_alt_{{.FileID}}" value="{{.Alt}}" class="form-control form-control-sm" maxlength="255" placeholder="{{t "Image description - for screen readers and SEO"}}">
+            </div>
+            <div class="field-image-actions">
+                <button type="button" class="field-image-btn" data-field-image-move="-1" aria-label="{{t "Move up"}}" title="{{t "Move up"}}">↑</button>
+                <button type="button" class="field-image-btn" data-field-image-move="1" aria-label="{{t "Move down"}}" title="{{t "Move down"}}">↓</button>
+                <input type="checkbox" id="{{$fieldName}}_delete_{{.FileID}}" name="{{$fieldName}}_delete" value="{{.FileID}}" class="field-image-delete-input visually-hidden">
+                <label for="{{$fieldName}}_delete_{{.FileID}}" class="field-image-btn field-image-delete" title="{{t "Delete"}}"><span aria-hidden="true">✕</span><span class="visually-hidden">{{t "Delete"}}</span></label>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{if .Field.AllowsUpload}}
+    <label for="{{$fieldName}}" class="form-label field-images-add">{{t "Add images"}}</label>
+    <input type="file" id="{{$fieldName}}" name="{{$fieldName}}" accept="image/*" class="form-control" multiple>
+    {{end}}
+    {{template "field_media_picker" (dict "Field" .Field "Prefix" $p "Name" $fieldName)}}
+    {{with .Field.MaxValues}}<div class="form-text">{{plural . "At most @count image." "At most @count images."}}</div>{{end}}
+
+    {{else}}
+    {{/* One image: a row - its preview, its alt text, "Replace" (the file
+         input as a button) and the ✕ of the "delete" tick (the row fades).
+         Without an image the row is a drop area: the file input lies over
+         it (a click or a dropped file picks it); its alt text shows once a
+         file is picked (field-image-single in app.js, which previews it). */}}
+    <div class="field-image-single{{if and (not .ImageURL) .Field.AllowsUpload}} is-empty{{end}}" data-field-image-single>
+        <div class="field-image-row">
+            {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.ImageAlt}}" class="field-image-thumb" data-field-image-preview>
+            {{else}}<span class="field-image-thumb field-image-placeholder" aria-hidden="true" data-field-image-preview>+</span>
+            {{if .Field.AllowsUpload}}<span class="field-image-drop-text" data-field-image-drop-text>{{t "Drag a file here or"}}</span>{{end}}{{end}}
+            <div class="field-image-alt"{{if not .ImageURL}} hidden{{end}} data-field-image-alt>
+                <label for="{{$fieldName}}_alt" class="visually-hidden">{{t "Alt text"}}</label>
+                <input type="text" id="{{$fieldName}}_alt" name="{{$fieldName}}_alt" value="{{.ImageAlt}}" class="form-control form-control-sm" maxlength="255" placeholder="{{t "Image description - for screen readers and SEO"}}">
+            </div>
+            <div class="field-image-actions">
+                {{if .Field.AllowsUpload}}<label class="field-image-choose{{if not .ImageURL}} is-primary{{end}}">{{if .ImageURL}}{{t "Replace"}}{{else}}{{t "Choose a file"}}{{end}}<input type="file" id="{{$fieldName}}" name="{{$fieldName}}" accept="image/*" class="field-image-file"></label>{{end}}
+                {{template "field_media_picker" (dict "Field" .Field "Prefix" $p "Name" $fieldName)}}
+                {{with .SentFile}}<input type="hidden" name="{{$fieldName}}_sent" value="{{.}}">{{end}}
+                {{if .ImageURL}}
+                <input type="checkbox" id="{{$p}}delete_field_{{.Field.ID}}" name="{{$p}}delete_field_{{.Field.ID}}" value="1" class="field-image-delete-input visually-hidden"{{if .DeleteTicked}} checked{{end}}>
+                <label for="{{$p}}delete_field_{{.Field.ID}}" class="field-image-btn field-image-delete" title="{{t "Delete current image"}}"><span aria-hidden="true">✕</span><span class="visually-hidden">{{t "Delete current image"}}</span></label>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    {{end}}
+{{end}}
+
+{{define "field_input_link"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Links: a row each - its address ({{$fieldName}}_url) and, when the
+         field has titles, its title ({{$fieldName}}_title; the pairs in the
+         rows' order are the order saved). Several: ↑/↓ and ✕ per row, "Add
+         a link" (field-rows in app.js, a row from the <template>; at most
+         data-max). The script of the formatter showing the field (its
+         EditorScript, fieldEditorScripts; data-field-formatter - its name)
+         may show a preview under an address ([data-field-link-preview]:
+         .field-link-preview-thumb, .field-link-preview-text, a note -
+         .field-link-preview--warn; components.css). */}}
+    {{$links := fieldLinks .Value ""}}
+    {{$titled := ne (print .Field.LinkTitle) ""}}
+    <div class="field-links-edit" data-field-links data-field-rows data-max="{{if .Field.Multiple}}{{.Field.MaxValues}}{{else}}1{{end}}"{{with .Field.DetailFormatter}} data-field-formatter="{{.}}"{{end}}>
+        <div class="field-links-rows" data-field-row-list>
+            {{range $i, $l := $links}}{{template "dynamicFieldLinkRow" (dict "Field" $.Field "Prefix" $p "Link" $l "First" (eq $i 0) "Titled" $titled)}}{{end}}
+            {{if not $links}}{{template "dynamicFieldLinkRow" (dict "Field" .Field "Prefix" $p "First" true "Titled" $titled)}}{{end}}
+        </div>
+        {{if .Field.Multiple}}
+        <template data-field-row-template>{{template "dynamicFieldLinkRow" (dict "Field" .Field "Prefix" $p "Titled" $titled)}}</template>
+        <button type="button" class="field-links-add" data-field-row-add>{{t "+ Add a link"}}</button>
+        {{end}}
+    </div>
+    {{if .Field.AllowedHosts}}<div class="form-text">{{t "Links to: @hosts" "@hosts" .Field.AllowedHostsString}}{{if and .Field.Multiple .Field.MaxValues}} · {{plural .Field.MaxValues "at most @count link" "at most @count links"}}{{end}}</div>
+    {{else if and .Field.Multiple .Field.MaxValues}}<div class="form-text">{{plural .Field.MaxValues "At most @count link." "At most @count links."}}</div>{{end}}
+
+{{end}}
+
+{{define "field_input_blocks"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{/* Blocks: a card each (dynamicFieldBlock) in order, "Add: <set>" a
+         new one from its set's <template> up to data-max (fieldBlocks in
+         app.js: ↑/↓/✕, the new block's key); several sets - "Add:" and a
+         button per set. */}}
+    <div class="field-blocks" data-field-blocks data-max="{{.Field.MaxValues}}" id="{{$fieldName}}">
+        <div class="field-blocks-list" data-field-block-list>
+            {{range .Blocks.Items}}{{template "dynamicFieldBlock" (dict "Field" $.Field "Block" . "TextFormats" $.TextFormats "TimeZone" $.TimeZone)}}{{end}}
+        </div>
+        {{range .Blocks.New}}<template data-field-block-template="{{.Set.MachineName}}">{{template "dynamicFieldBlock" (dict "Field" $.Field "Block" . "New" true "TextFormats" $.TextFormats "TimeZone" $.TimeZone)}}</template>{{end}}
+        <div class="field-blocks-add">
+            {{if gt (len .Blocks.New) 1}}
+            <span class="field-blocks-add-label">{{t "+ Add:"}}</span>
+            {{range .Blocks.New}}<button type="button" class="field-links-add" data-field-block-add="{{.Set.MachineName}}">{{.Set.Label}}</button>{{end}}
+            {{else}}
+            {{range .Blocks.New}}<button type="button" class="field-links-add" data-field-block-add="{{.Set.MachineName}}">{{t "+ Add: @set" "@set" .Set.Label}}</button>{{end}}
+            {{end}}
+        </div>
+    </div>
+    {{if .Field.MaxValues}}<div class="form-text">{{plural .Field.MaxValues "At most @count block." "At most @count blocks."}}</div>{{end}}
+
+{{end}}
+
+{{define "field_input_file"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{if .FileLink.URI}}
+    <div class="current-image mb-3">
+        <p><strong>{{t "Current file:"}}</strong> <a href="{{.FileLink.URI}}" download>{{.FileLink.Name}}</a></p>
+        <div class="form-check mt-2">
+            <input type="checkbox" id="{{$p}}delete_field_{{.Field.ID}}" name="{{$p}}delete_field_{{.Field.ID}}" value="1" class="form-check-input"{{if .DeleteTicked}} checked{{end}}>
+            <label for="{{$p}}delete_field_{{.Field.ID}}" class="form-check-label">{{t "Delete current file"}}</label>
+        </div>
+    </div>
+    {{end}}
+    {{if .Field.AllowsUpload}}<input type="file" id="{{$fieldName}}" name="{{$fieldName}}" class="form-control-file">{{end}}
+    {{template "field_media_picker" (dict "Field" .Field "Prefix" $p "Name" $fieldName)}}
+    {{with .SentFile}}<input type="hidden" name="{{$fieldName}}_sent" value="{{.}}">{{end}}
+    {{if .Field.AllowedFileExtensionsString}}
+    <small class="form-text text-muted">{{t "Allowed extensions:"}} {{.Field.AllowedFileExtensionsString}}</small>
+    {{end}}
+{{end}}
+
+{{/* field_media_picker - an image or file field's "From the media
+     library" (FieldInstanceDef.AllowsLibrary; not in a blocks field's
+     items, Prefix): the picker window (media-picker in app.js,
+     /api/media/pick) puts a file the field may take into the form - one:
+     <Name>_library; several: a row with its <Name>_keep. */}}
+{{define "field_media_picker"}}{{if and .Field.AllowsLibrary (not .Prefix)}}
+    {{if not .Field.Multiple}}<input type="hidden" name="{{.Name}}_library" value="" data-media-picked>{{end}}
+    <button type="button" class="btn btn-outline-secondary btn-sm field-media-pick" data-media-picker="{{.Field.ID}}" data-media-name="{{.Name}}" data-media-kind="{{print .Field.FieldType}}"{{if .Field.Multiple}} data-media-multiple{{end}}>{{t "From the media library"}}</button>
+{{end}}{{end}}
+
+{{define "field_input_default"}}{{end}}

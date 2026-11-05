@@ -1,0 +1,10 @@
+{{/* block_hello_latest - the hello module's plugin block: its latest
+     greetings, as many as its "count" setting (Wire). Takes (dict
+     "PluginID" "Ctx" "Placement" "Data"): .Data - the greetings, loaded
+     with the blocks' cache. */}}
+{{define "block_hello_latest"}}{{if .Data}}
+<div class="block hello-latest">
+    <h3 class="block-title">{{t "Latest greetings"}}</h3>
+    <ul class="hello-list">{{range .Data}}<li>{{.Text}}</li>{{end}}</ul>
+</div>
+{{end}}{{end}}

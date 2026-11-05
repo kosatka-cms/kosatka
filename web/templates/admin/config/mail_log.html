@@ -1,0 +1,78 @@
+{{/* admin/config/mail_log - the emails the site sent or tried
+     (MailLogPage), the Mail page's "Log" tab: filtered by a part of the
+     address, the email and the result (.filter), newest first - when, to
+     whom, which email (.labels by key; none - a message of no template)
+     and its subject, what came of it (a failure's error under it); 50 a
+     page; how long they are kept (.keepDays, 0 - no log). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Who got which email and whether the sending service took it. The texts aren't kept."}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "admin_mail_tabs" "log"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{if not .keepDays}}<div class="alert alert-info" role="note">{{t "The log is off: emails aren't recorded."}} <a href="/admin/config/mail">{{t "Sending"}}</a></div>{{end}}
+
+<form method="get" action="/admin/config/mail/log" class="admin-filters" role="search" data-autosubmit>
+    <div class="admin-filter admin-filter--wide">
+        <label for="mail-log-to" class="admin-filter-label">{{t "Address"}}</label>
+        <input type="search" id="mail-log-to" name="to" value="{{.filter.To}}" class="form-control" placeholder="{{t "To: an address or a part of it"}}">
+    </div>
+    <div class="admin-filter">
+        <label for="mail-log-key" class="admin-filter-label">{{tc "mail" "Email"}}</label>
+        <select id="mail-log-key" name="key" class="form-select">
+            <option value="">{{t "All emails"}}</option>
+            {{range .defs}}<option value="{{.Key}}"{{if eq .Key $.filter.Key}} selected{{end}}>{{t .Label}}</option>{{end}}
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="mail-log-status" class="admin-filter-label">{{t "Result"}}</label>
+        <select id="mail-log-status" name="status" class="form-select">
+            <option value="">{{t "All"}}</option>
+            <option value="sent"{{if eq .filter.Status "sent"}} selected{{end}}>{{tc "mail status" "Sent"}}</option>
+            <option value="failed"{{if eq .filter.Status "failed"}} selected{{end}}>{{tc "mail status" "Failed"}}</option>
+            <option value="unsent"{{if eq .filter.Status "unsent"}} selected{{end}}>{{tc "mail status" "Not sent"}}</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">{{t "Find"}}</button>
+    {{if .filtered}}<a href="/admin/config/mail/log" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "When"}}</th>
+                    <th>{{tc "mail" "To"}}</th>
+                    <th>{{tc "mail" "Email"}}</th>
+                    <th>{{t "Result"}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .entries}}
+                <tr>
+                    <td class="text-nowrap">{{date .SentAt "datetime"}}</td>
+                    <td class="font-monospace small">{{.To}}</td>
+                    <td>
+                        {{with index $.labels .Key}}{{.}}{{else}}<span class="admin-table-muted">{{t "A message of no template"}}</span>{{end}}
+                        <span class="admin-table-sub">{{.Subject}}</span>
+                    </td>
+                    <td>
+                        {{if eq .Status "sent"}}<span class="admin-pill admin-pill--ok">{{tc "mail status" "Sent"}}</span>
+                        {{else if eq .Status "failed"}}<span class="admin-pill admin-pill--danger">{{tc "mail status" "Failed"}}</span><span class="admin-table-sub font-monospace">{{.Error}}</span>
+                        {{else}}<span class="admin-pill">{{tc "mail status" "Not sent"}}</span><span class="admin-table-sub">{{t "email was off"}}</span>{{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{if .filtered}}{{t "Nothing found."}}{{else}}{{t "No emails yet."}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{with .keepDays}}<p class="admin-table-muted mt-2">{{plural . "Kept for @count day." "Kept for @count days."}} <a href="/admin/config/mail">{{t "Change on the Sending tab"}}</a></p>{{end}}
+{{end}}

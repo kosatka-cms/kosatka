@@ -1,0 +1,97 @@
+{{/* The galleries module's parts of the core's pages (moduleHook; see
+     galleries.RegisterHooks). */}}
+
+{{/* content_type_settings_galleries - the content type form's rows of
+     the module in its "Modules" group (.moduleSettings.galleries:
+     typeSettingsForm). */}}
+{{define "content_type_settings_galleries"}}
+{{with .moduleSettings}}{{with .galleries}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="default_galleries_enabled" class="admin-setting-label">{{t "New content of this type can have galleries (default)"}}</label>
+        <span class="admin-setting-help">{{t "Galleries"}} · {{t "Applies only to new content of this type. Each existing content item has its own setting (the \"Galleries\" panel in its own edit form)."}}</span>
+    </div>
+    <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+        <input type="checkbox" role="switch" id="default_galleries_enabled" name="default_galleries_enabled" value="1" class="form-check-input" {{if .DefaultEnabled}}checked{{end}}>
+    </div>
+</div>
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="galleries_picture_field" class="admin-setting-label">{{t "Field for the gallery's \"Main content image\""}}</label>
+        <span class="admin-setting-help">{{t "Galleries"}} · {{t "The image field of the type into which the \"Main content image\" button in gallery management writes the selected image."}}</span>
+    </div>
+    <div class="admin-setting-control">
+        <select id="galleries_picture_field" name="galleries_picture_field" class="form-select">
+            <option value="">{{t "- none (no button) -"}}</option>
+            {{$picture := .PictureField}}
+            {{range .ImageFields}}<option value="{{.MachineName}}" {{if eq .MachineName $picture}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+        </select>
+    </div>
+</div>
+{{end}}{{end}}
+{{end}}
+
+{{/* node_settings_galleries - the node form's "Galleries" section
+     (.moduleSettings.galleries: whether the node can have galleries), a
+     node-settings-section of the form's side column. */}}
+{{define "node_settings_galleries"}}
+{{with .moduleSettings}}
+{{$enabled := .galleries}}
+<details class="node-settings-section">
+  <summary><span class="node-settings-title">{{t "Galleries"}}</span><span class="node-settings-value">{{if $enabled}}{{tc "galleries" "Allowed"}}{{else}}{{tc "galleries" "Off"}}{{end}}</span></summary>
+  <div class="node-settings-body">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="galleries_enabled" id="galleries_enabled" value="1" {{if $enabled}}checked{{end}}>
+      <label class="form-check-label" for="galleries_enabled">{{t "This content can have galleries"}}</label>
+    </div>
+    <div class="form-text">{{t "The \"Galleries\" button and the option to add galleries appear on the content page only when this box is checked."}}</div>
+  </div>
+</details>
+{{end}}
+{{end}}
+
+{{/* node_actions_galleries - the "Galleries" button of a node that can
+     have them, for those who may edit it. */}}
+{{define "node_actions_galleries"}}
+{{$nodeID := .item.Node.ID}}
+{{if .canEdit}}{{with .moduleNode}}{{if .galleries}}
+<a href="/node/{{$nodeID}}/galleries" class="action-link galleries">{{t "Galleries"}}</a>
+{{end}}{{end}}{{end}}
+{{end}}
+
+{{/* node_links_galleries - links to the node's galleries of more than one
+     image, under the node. */}}
+{{define "node_links_galleries"}}
+{{with .moduleNode}}{{with .galleries}}
+{{$shown := false}}
+{{range .Galleries}}{{if gt .ItemsCount 1}}{{$shown = true}}{{end}}{{end}}
+{{if $shown}}
+<ul class="node-galleries-list">
+    {{range .Galleries}}
+    {{if gt .ItemsCount 1}}
+    <li><a href="/galleries/{{.ID}}">{{if .Title}}{{.Title}}{{else}}{{t "Gallery"}}{{end}} ({{.ItemsCount}})</a></li>
+    {{end}}
+    {{end}}
+</ul>
+{{end}}
+{{end}}{{end}}
+{{end}}
+
+{{/* galleries_preview_styles - a gallery form's two preview style
+     selects (galleries_list.html, edit_gallery.html): (dict "Styles" the
+     image styles "Small" "Medium" the chosen names "Prefix" the ids'). */}}
+{{define "galleries_preview_styles"}}
+<div class="mb-3">
+    <label for="{{.Prefix}}PreviewSmall" class="form-label">{{t "Preview (grid)"}}</label>
+    <select class="form-select" id="{{.Prefix}}PreviewSmall" name="preview_small_style">
+        {{$small := .Small}}{{range .Styles}}<option value="{{.Name}}" {{if eq .Name $small}}selected{{end}}>{{.Label}}</option>{{end}}
+    </select>
+</div>
+<div class="mb-3">
+    <label for="{{.Prefix}}PreviewMedium" class="form-label">{{t "Preview (larger)"}}</label>
+    <select class="form-select" id="{{.Prefix}}PreviewMedium" name="preview_medium_style">
+        {{$medium := .Medium}}{{range .Styles}}<option value="{{.Name}}" {{if eq .Name $medium}}selected{{end}}>{{.Label}}</option>{{end}}
+    </select>
+    <div class="form-text">{{t "Styles come from <a href=\"/admin/config/image-styles\">image styles</a>."}} {{t "The grid follows the grid preview style: a style taller than wide gives the portrait grid, with cells of the style's proportions."}}</div>
+</div>
+{{end}}

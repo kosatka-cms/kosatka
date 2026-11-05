@@ -1,0 +1,13 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+
+{{/* Feed - the View chosen as the front page feed
+     (SiteInformation.FrontFeedView), with its own theme template and paging. */}}
+{{.feedHTML}}
+
+{{end}}

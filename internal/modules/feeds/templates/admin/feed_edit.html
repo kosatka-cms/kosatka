@@ -1,0 +1,171 @@
+{{/* admin/feed_edit.html - a feed (FeedEdit, FeedNew): its name, path,
+     format, on or off; the content (how many, how old, which terms; per
+     type where the text, cover and category come from - a table card);
+     the images' style; the channel - as rows; Save over the page and under
+     the form. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+{{if .feed.ID}}<a href="/{{.feed.Path}}" target="_blank" rel="noopener" class="btn btn-outline-secondary">{{t "Open feed"}}</a>{{end}}
+<button type="submit" form="feed-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{$feed := .feed}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "label" (t "Enter the feed name.")
+        "path" (t "The path may contain Latin letters, digits, \"-\", \"_\", \".\", \"/\", for example <code>feeds/dzen.xml</code>.")
+        "path-taken" (t "This address is already used on the site: by the engine, content, a View page, a term page or another feed.")
+        "types" (t "Select at least one content type.")
+        "fields" (t "The selected field does not fit this content type."))
+    "Fallback" (t "Could not save."))}}
+
+<form method="post" action="/admin/config/feeds{{if $feed.ID}}/{{$feed.ID}}{{end}}" id="feed-form" class="admin-settings">
+    <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-label" class="admin-setting-label">{{t "Name"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="feed-label" name="label" class="form-control" value="{{$feed.Label}}" required></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-path" class="admin-setting-label">{{t "Path"}}</label>
+                </div>
+                <div class="admin-setting-control"><div class="input-group"><span class="input-group-text">/</span><input type="text" id="feed-path" name="path" class="form-control" value="{{$feed.Path}}" placeholder="feeds/dzen.xml" required></div></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-format" class="admin-setting-label">{{t "Format"}}</label>
+                    <span class="admin-setting-help">{{t "Dzen: full text in <code>content:encoded</code>, cover, category; images must be JPEG/GIF/PNG."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="feed-format" name="format" class="form-select">
+                        {{range .formats}}<option value="{{.}}" {{if eq . $feed.Format}}selected{{end}}>{{t .Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="feed-status" class="admin-setting-label">{{t "Feed enabled"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="feed-status" name="status" value="1" {{if eq $feed.Status 1}}checked{{end}}></div>
+            </div>
+    </div>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Content items"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-limit" class="admin-setting-label">{{t "Number of items"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="number" id="feed-limit" name="item_limit" class="form-control admin-max-xs" value="{{$feed.ItemLimit}}" min="1" max="500"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-days" class="admin-setting-label">{{t "Not older than, days"}}</label>
+                    <span class="admin-setting-help">{{t "0: format default (Dzen: 7, RSS: no limit)."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="number" id="feed-days" name="days" class="form-control admin-max-xs" value="{{$feed.Days}}" min="0"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-terms" class="admin-setting-label">{{t "Only terms (IDs)"}}</label>
+                    <span class="admin-setting-help">{{t "Comma-separated term IDs: content with any of them."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="feed-terms" name="term_ids" class="form-control" value="{{$feed.TermIDsText}}" placeholder="{{t "empty - all"}}"></div>
+            </div>
+        </div>
+        <p class="admin-setting-help">{{t "Published content of the selected types, not in moderation, newest first. For each type choose where to take the text, cover and category from."}}</p>
+        <div class="admin-table-card">
+            <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>{{tc "feed" "Content type"}}</th><th>{{t "Text"}}</th><th>{{t "Cover"}}</th><th>{{t "Category"}}</th></tr></thead>
+                <tbody>
+                    {{range .types}}
+                    {{$t := .Type.MachineName}}
+                    {{$m := $feed.FieldMaps.For $t}}
+                    <tr>
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="content_types" id="feed-type-{{$t}}" value="{{$t}}" {{if $feed.HasContentType $t}}checked{{end}}>
+                                <label class="form-check-label" for="feed-type-{{$t}}">{{.Type.Label}} <code class="admin-table-muted">{{$t}}</code></label>
+                            </div>
+                        </td>
+                        <td>
+                            <select name="body_{{$t}}" class="form-select">
+                                <option value="">{{t "- main text -"}}</option>
+                                {{range .TextFields}}<option value="{{.MachineName}}" {{if eq .MachineName $m.BodyField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                            </select>
+                        </td>
+                        <td>
+                            <select name="image_{{$t}}" class="form-select">
+                                <option value="">{{t "- None -"}}</option>
+                                {{range .Images}}<option value="{{.MachineName}}" {{if eq .MachineName $m.ImageField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                            </select>
+                        </td>
+                        <td>
+                            <select name="category_{{$t}}" class="form-select">
+                                <option value="">{{t "- None -"}}</option>
+                                {{range .Taxonomies}}<option value="{{.MachineName}}" {{if eq .MachineName $m.CategoryField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
+                            </select>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Images"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-image-style" class="admin-setting-label">{{tc "feed" "Image style"}}</label>
+                    <span class="admin-setting-help">{{t "For the cover and images in the text. Dzen needs a JPEG style."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="feed-image-style" name="image_style" class="form-select">
+                        <option value="">{{t "- originals -"}}</option>
+                        {{range .imageStyles}}<option value="{{.Name}}" {{if eq .Name $feed.ImageStyle}}selected{{end}}>{{.Label}} ({{.Name}}, {{if eq .Format "jpeg"}}JPEG{{else}}WebP{{end}})</option>{{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Channel"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-title" class="admin-setting-label">{{t "Channel title"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="feed-title" name="title" class="form-control" value="{{$feed.Title}}" placeholder="{{t "empty - site name"}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-description" class="admin-setting-label">{{t "Description"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="feed-description" name="description" class="form-control" value="{{$feed.Description}}" placeholder="{{t "empty - site slogan"}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="feed-language" class="admin-setting-label">{{t "Language"}}</label>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="feed-language" name="language" class="form-control admin-max-xs" value="{{$feed.Language}}" placeholder="{{.siteLanguage}}"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

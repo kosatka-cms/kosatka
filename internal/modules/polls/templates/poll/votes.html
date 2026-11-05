@@ -1,0 +1,51 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<div id="content">
+    <div id="block-system-main" class="block block-system">
+        <div class="poll-votes-audit">
+            <h3>{{t "Vote log"}}</h3>
+            <p class="poll-byline text-muted">{{.poll.Node.Title}}</p>
+
+            {{template "node_actions" .}}
+
+            <div class="table-responsive mt-3">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{t "Visitor"}}</th>
+                            <th scope="col">{{t "Date"}} <span class="text-muted fw-normal">{{t "(newest first)"}}</span></th>
+                            <th scope="col">{{t "Option"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .voteRows}}
+                        <tr>
+                            <td>
+                                {{if .UserSlug}}
+                                <a href="/{{.UserSlug}}">{{if .Username}}{{.Username}}{{else}}{{t "User #@id" "@id" .UserID}}{{end}}</a>
+                                {{else}}
+                                {{if .Username}}{{.Username}}{{else}}{{t "User #@id" "@id" .UserID}}{{end}}
+                                {{end}}
+                            </td>
+                            <td>{{formatDate .VotedAt}}</td>
+                            <td>{{.OptionLabel}}</td>
+                        </tr>
+                        {{else}}
+                        <tr>
+                            <td colspan="3" class="text-muted">{{t "No votes yet."}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

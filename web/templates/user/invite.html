@@ -1,0 +1,49 @@
+{{/* user/invite.html - an invitation's page (/user/invite?token=…): the
+     login offered (.username, editable) and the new password twice, as
+     whom the person is invited (.invited's role); a link no good (no
+     .token) - said so; a card like the login page's. */}}
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "profile" }}">
+<div class="auth-page">
+<div class="auth-card">
+    <div class="auth-card-head">
+        <h1 class="auth-card-title">{{t "Invitation"}}</h1>
+        {{with .siteName}}<p class="auth-card-sub">{{t "to the site @site" "@site" .}}</p>{{end}}
+    </div>
+    {{if .token}}
+    {{with .invited}}{{with .Role}}<p class="auth-card-muted">{{t "You are invited as \"@role\"." "@role" .Label}}</p>{{end}}{{end}}
+    {{with index .errors "form"}}<div class="alert alert-danger" role="alert">{{.}}</div>{{end}}
+    <form method="post" action="/user/invite" class="auth-form">
+        <input type="hidden" name="token" value="{{.token}}">
+        <div class="auth-field">
+            <label for="username" class="form-label">{{t "Login"}}</label>
+            <input type="text" class="form-control{{if index .errors "username"}} is-invalid{{end}}" id="username" name="username" value="{{.username}}" autocomplete="username" required>
+            {{with index .errors "username"}}<div class="invalid-feedback">{{.}}</div>{{end}}
+        </div>
+        <div class="auth-field">
+            <label for="password" class="form-label">{{t "Password"}}</label>
+            <div class="auth-password">
+                <input type="password" class="form-control{{if index .errors "password"}} is-invalid{{end}}" id="password" name="password" autocomplete="new-password" required minlength="{{minPasswordLength}}" autofocus>
+                {{template "auth_password_toggle" "password"}}
+            </div>
+            {{with index .errors "password"}}<div class="invalid-feedback d-block">{{.}}</div>{{end}}
+        </div>
+        <div class="auth-field">
+            <label for="password_confirm" class="form-label">{{t "Confirm password"}}</label>
+            <input type="password" class="form-control{{if index .errors "password_confirm"}} is-invalid{{end}}" id="password_confirm" name="password_confirm" autocomplete="new-password" required minlength="{{minPasswordLength}}">
+            {{with index .errors "password_confirm"}}<div class="invalid-feedback">{{.}}</div>{{end}}
+        </div>
+        <button type="submit" class="btn btn-primary auth-submit">{{t "Accept and sign in"}}</button>
+    </form>
+    {{else}}
+    <div class="alert alert-warning" role="alert">{{t "This invitation link is invalid, used or has expired. Ask the site's administrator to send it again."}}</div>
+    {{end}}
+</div>
+</div>
+{{end}}

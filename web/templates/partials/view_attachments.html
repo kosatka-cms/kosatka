@@ -1,0 +1,14 @@
+{{/* view_attachments - renders attached Views
+     (entity.ViewDisplayTypeAttachment) on a node page, between the article
+     and its comments. Which Views and in what order comes from their own
+     settings (content types, weight). The ordered list is prepared by
+     DynamicContentController.attachViewAttachments (.viewAttachments).
+     Same markup as a View block in region_blocks.html, to share CSS. */}}
+{{define "view_attachments"}}
+{{range .viewAttachments}}
+<div class="block view-attachment view-attachment-{{.MachineName}}">
+    {{if .ShowTitle}}<h2>{{.Title}}</h2>{{end}}
+    <div class="block-content">{{.HTML}}</div>
+</div>
+{{end}}
+{{end}}

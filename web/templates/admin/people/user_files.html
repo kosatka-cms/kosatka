@@ -1,0 +1,16 @@
+{{/* admin/content/files/{uid} - one user's folder (UserFilesBrowse): the
+     file browser on a card, their profile over the page. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<a href="/{{.filesUser.Slug}}" class="btn btn-outline-secondary">{{t "Profile"}}</a>
+{{end}}
+
+{{define "content"}}
+<link rel="stylesheet" href="{{ staticCSS "file-browser" }}">
+<div id="admin-user-files" class="kfb-host"></div>
+<script src="{{ staticJS "file-browser" }}"></script>
+<script>
+KosatkaFileBrowser.mount(document.getElementById('admin-user-files'), {mode: 'page', userID: {{.filesUser.ID}}, rootLabel: {{t "Files of @name" "@name" .filesUser.Username}}, csrfToken: {{.CSRFToken}}});
+</script>
+{{end}}

@@ -1,0 +1,51 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1 class="article-title">{{t "Confirm action"}}</h1>{{end}}
+
+{{define "breadcrumb"}}
+{{end}}
+
+{{define "content"}}
+{{/* The confirmation of a bulk action (admin.bulkConfirmPage): admin_bulk.js
+     sends it to data-api item by item, with the progress below. */}}
+<div id="bulkConfirmPanel" data-action="{{.bulk.Action}}" data-api="{{.bulk.API}}" data-redirect="{{.bulk.Redirect}}" data-ids="{{.ids | json}}">
+    <p class="lead">{{.bulkTitle}}</p>
+    {{with .bulk.Notice}}<div class="alert {{if $.bulk.Danger}}alert-danger{{else}}alert-warning{{end}}">{{.}}</div>{{end}}
+    {{with .bulk.Alt}}
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="bulkAltAction" data-action="{{.Action}}" checked>
+        <label class="form-check-label" for="bulkAltAction">{{.Label}}</label>
+        <div class="form-text">{{.Help}}</div>
+    </div>
+    {{end}}
+    <ul class="list-group mb-4" id="bulkItemsList">
+        {{$items := .items}}
+        {{$total := len $items}}
+        {{$show := 20}}
+        {{if len $items}}
+        {{range $i, $item := $items}}
+        {{if lt $i $show}}
+        <li class="list-group-item">{{$item.Label}} <span class="text-muted">{{t "(ID @id)" "@id" $item.ID}}</span></li>
+        {{end}}
+        {{end}}
+        {{if gt $total $show}}
+        <li class="list-group-item text-muted">{{t "... and @count more" "@count" (sub $total $show)}}</li>
+        {{end}}
+        {{end}}
+    </ul>
+
+    <div id="bulkProgressPanel" style="display: none;">
+        <div class="progress mb-2" style="height: 24px;">
+            <div id="bulkProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <p id="bulkStatusText" class="text-muted">0 / {{len .ids}}</p>
+        <ul id="bulkErrorsList" class="text-danger" style="display: none;"></ul>
+    </div>
+
+    <div id="bulkButtons" class="d-flex gap-2">
+        <a href="{{.bulk.Redirect}}" class="btn btn-outline-secondary">{{t "Cancel"}}</a>
+        <button type="button" class="btn btn-danger" id="bulkConfirmBtn">{{t "Confirm"}}</button>
+    </div>
+</div>
+
+{{end}}

@@ -1,0 +1,98 @@
+{{/* admin/config/menus/{id}/links - a menu's links (MenuLinksList): adding
+     one (a card over the list: its name and target), on a table card the
+     tree - each link's name, type, address (a broken one marked), whether
+     it is on, its parent, edit, delete; dragged by ☰ or moved by its
+     "Parent", saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .rows) "@count link" "@count links"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<a href="/admin/config/menus/{{.menu.ID}}/edit" class="btn btn-outline-secondary">{{t "Menu settings"}}</a>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Link deleted."))
+    "Errors" (dict
+        "create" (t "Error creating the link.")
+        "reorder" (t "Error saving the order.")
+        "delete" (t "Error deleting the link."))
+    "Warnings" (dict
+        "empty" (t "Enter a link title.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="link-add">
+    <h2 class="admin-add-title" id="link-add">{{t "Add link"}}</h2>
+    <form method="post" action="/admin/config/menus/{{.menu.ID}}/links" class="menu-link-form admin-add-rows">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label for="field-title" class="admin-setting-label">{{t "Name"}}</label></div>
+            <div class="admin-setting-control"><input id="field-title" type="text" name="title" class="form-control" required></div>
+        </div>
+        {{template "menuLinkTargetFields" (dict "CurrentLinkType" "url" "CurrentLinkURL" "" "CurrentNodeID" 0 "CurrentTermID" 0 "CurrentViewID" 0 "Views" .views "Vocabularies" .vocabularies)}}
+        <div class="admin-settings-actions">
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </div>
+    </form>
+    <p class="admin-setting-help">{{t "A new link is added to the end of the top level - nesting is set below, via drag-and-drop or the \"Parent\" column."}}</p>
+</section>
+
+<form id="menu-links-reorder-form" method="post" action="/admin/config/menus/{{.menu.ID}}/links/reorder" class="admin-table-card">
+    <input type="hidden" name="order" id="menu-links-order-input" value="">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to change the order or the parent"}}</span></th>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Current URL"}}</th>
+                    <th>{{t "Status"}}</th>
+                    <th>{{t "Parent"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody id="menu-links-tbody" data-tree-sortable data-order-input="menu-links-order-input">
+                {{$rows := .rows}}
+                {{range .rows}}
+                {{$row := .}}
+                <tr draggable="true" data-sort-id="{{.ID}}" data-parent-id="{{if .ParentID}}{{.ParentID}}{{end}}" data-depth="{{.Depth}}">
+                    <td class="drag-handle admin-table-drag" title="{{t "Drag to change the order or the parent"}}">&#9776;</td>
+                    <td data-tree-indent style="--tree-indent: {{mul .Depth 20}}px;"><span class="admin-table-title">{{.Title}}</span><span class="admin-table-sub">{{.LinkType}}</span></td>
+                    <td>{{if .URLOK}}<code>{{.ResolvedURL}}</code>{{else}}<span class="admin-pill admin-pill--warn">{{t "- broken link -"}}</span>{{end}}</td>
+                    <td>{{if .Enabled}}<span class="admin-pill admin-pill--ok">{{tc "masculine" "Enabled"}}</span>{{else}}<span class="admin-pill">{{tc "masculine" "Disabled"}}</span>{{end}}</td>
+                    <td>
+                        <select name="parent_{{.ID}}" class="form-select form-select-sm admin-min-md" data-tree-parent aria-label="{{t "Parent"}}">
+                            <option value="">{{t "- no parent -"}}</option>
+                            {{range $rows}}
+                            {{if and (ne .ID $row.ID) (not (index $row.DescendantIDs .ID))}}
+                            <option value="{{.ID}}" {{if eq .ID $row.ParentIDValue}}selected{{end}}>{{.IndentedLabel}}</option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/menus/{{$.menu.ID}}/links/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/admin/config/menus/{{$.menu.ID}}/links/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="6" class="admin-table-empty">{{t "No links yet"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{if .rows}}
+    <div class="admin-table-foot">
+        <span class="admin-table-foot-hint">{{t "Dragging changes the order among links at the current level and moves a link together with all its child links; changing the \"Parent\" is the most precise way to nest/unnest a link at the right level."}}</span>
+        <button type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+    </div>
+    {{end}}
+</form>
+
+
+{{end}}

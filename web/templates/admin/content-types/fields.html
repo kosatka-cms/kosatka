@@ -1,0 +1,219 @@
+{{/* admin/config/content-types/{id}/fields - a content type's fields
+     (ContentTypeFieldList): the type's tabs, adding a field (a card over the
+     list; an existing one folded in it), on a table card each field - its
+     label and machine name, type, widget, form group, edit, delete;
+     dragged by ☰ (a group with its fields), saved by the card's foot. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural (len .fields) "@count field" "@count fields"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "content_type_tabs" .}}
+
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" (t "Field deleted."))
+    "Errors" (dict
+        "invalid-type" (t "Unknown field type.")
+        "duplicate" (t "This type already has a field with this machine_name.")
+        "machine-name-taken" (t "A field with this machine_name already exists - use \"Add existing field\" below.")
+        "already-attached" (t "This field is already attached to this type.")
+        "create" (t "Error creating the field.")
+        "update" (t "Error saving the field.")
+        "delete" (t "Error deleting the field.")
+        "delete_group_has_members" (t "A group cannot be deleted while it contains fields. First change the \"Group\" of all member fields (to \"- no group -\" or another group), then delete the empty group.")
+        "invalid" (t "The form names a field or a group that is not this content type's.")
+        "empty-order" (t "Could not save the display order - the list is empty.")
+        "display-update" (t "Error saving the display settings."))
+    "Warnings" (dict
+        "empty" (t "Fill in machine_name and field label.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="field-add">
+    <h2 class="admin-add-title" id="field-add">{{t "Add field to \"@label\"" "@label" .contentType.Label}}</h2>
+    <form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields" class="admin-add-form">
+        {{/* A group added here is the form's (usable in it at once); the
+             detail page's tab adds its own groups. */}}
+        <input type="hidden" name="usable_in_form" value="1">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Field label"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Type"}}</span>
+            <select id="new-field-type" name="field_type" class="form-select">
+                {{range .fieldTypes}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+            </select>
+        </label>
+        <div class="form-check" data-show-when="new-field-type=taxonomy|list|reference|image|link|date|user" style="display:none;">
+            <input type="checkbox" name="multiple" value="1" class="form-check-input" id="new-field-multiple">
+            <label class="form-check-label" for="new-field-multiple">{{t "Multiple values"}} <small class="text-muted">{{t "(changed later on the field's own page)"}}</small></label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" name="required" value="1" class="form-check-input" id="new-field-required">
+            <label class="form-check-label" for="new-field-required">{{t "Required"}}</label>
+        </div>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        <details class="admin-add-more">
+            <summary>{{t "More"}}</summary>
+            <div class="admin-add-form">
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "machine_name (auto, always with field_)"}}</span>
+                    <input type="text" name="machine_name" class="form-control">
+                </label>
+                <label class="admin-filter" data-show-when="new-field-type=text|number|date|bool|taxonomy|reference|image|file|list|link|user">
+                    <span class="admin-filter-label">{{t "Group (form)"}}</span>
+                    <select name="form_group_id" class="form-select">
+                        <option value="0">{{t "- no group (form) -"}}</option>
+                        {{range .fields}}
+                        {{if and (eq (print .FieldType) "group") .UsableInForm}}
+                        <option value="{{.ID}}">{{.Label}}</option>
+                        {{end}}
+                        {{end}}
+                    </select>
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Form order"}}</span>
+                    <input type="number" name="sort_order" class="form-control" value="0">
+                </label>
+                <div class="form-check">
+                    <input type="checkbox" name="hidden_in_form" value="1" class="form-check-input" id="new-field-hidden-in-form">
+                    <label class="form-check-label" for="new-field-hidden-in-form">{{t "Hidden in form"}}</label>
+                </div>
+            </div>
+            <p class="admin-setting-help">{{t "machine_name is optional - if left empty, it is generated from the label. Type-specific settings (widget, list values, vocabulary, target type, group scope) are set on the new field's page, which opens after \"Add\". The order here only sets the row in the create form; the rows can be dragged later. \"Hidden in form\" removes the field from the create/edit form, but the saved value is kept."}}</p>
+        </details>
+    </form>
+    <details class="admin-add-more" id="fields-attach" data-settings-fold>
+        <summary>{{t "Add existing field"}}</summary>
+        {{if not .fieldStorages}}
+        <p class="admin-setting-help">{{t "No fields available for reuse - all are already attached to this type, or none have been created yet."}}</p>
+        {{else}}
+        <form method="post" action="/admin/config/content-types/{{.contentType.ID}}/fields/attach" class="admin-add-form">
+            <label class="admin-filter admin-filter--wide">
+                <span class="admin-filter-label">{{t "Field"}}</span>
+                <select name="field_storage_id" class="form-select" required>
+                    {{range .fieldStorages}}
+                    {{$usedBy := index $.fieldStorageUsedBy .ID}}
+                    <option value="{{.ID}}">{{.MachineName}} ({{.FieldType}}){{if $usedBy}} - {{$usedBy}}{{end}}</option>
+                    {{end}}
+                </select>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Label on this type"}}</span>
+                <input type="text" name="label" class="form-control" required>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Form order"}}</span>
+                <input type="number" name="sort_order" class="form-control" value="0">
+            </label>
+            <div class="form-check">
+                <input type="checkbox" name="required" value="1" class="form-check-input" id="attach-field-required">
+                <label class="form-check-label" for="attach-field-required">{{t "Required"}}</label>
+            </div>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <p class="admin-setting-help">{{t "Machine_name, type and specific settings (vocabulary/target type/max length) are shared by all types this field is attached to; here you set only the label, whether it is required and the order for \"@label\"." "@label" .contentType.Label}}</p>
+        {{end}}
+    </details>
+</section>
+
+{{$vid := .contentType.ID}}
+<form id="fields-reorder-form" method="post" action="/admin/config/content-types/{{$vid}}/fields/reorder">
+    <input type="hidden" name="order" id="fields-order-input" value="">
+</form>
+
+<div class="admin-table-card">
+<div class="table-responsive">
+    <table class="table admin-table">
+        <thead>
+            <tr>
+                <th class="admin-table-drag"><span class="visually-hidden">{{t "Drag to reorder"}}</span></th>
+                <th>{{t "Name"}}</th>
+                <th>{{t "Type"}}</th>
+                <th>{{t "Widget"}}</th>
+                <th>{{t "Group (form)"}}</th>
+                <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+            </tr>
+        </thead>
+        <tbody id="fields-order-tbody" data-group-sortable data-member-class="fields-group-member-row" data-order-input="fields-order-input">
+            {{range .orderedFields}}
+            {{$deleteID := printf "field-delete-%d" .ID}}
+            {{$currentFormGroup := .FormGroupIDValue}}
+            {{$isGroupType := eq (print .FieldType) "group"}}
+            {{/* $isGroupHeader (drag block / drop target) is narrower than
+                 $isGroupType: groups not usable in the form have no
+                 <option> in this page's form group selects, so the
+                 membership couldn't be saved; they render as ordinary rows. */}}
+            {{$isGroupHeader := and $isGroupType .UsableInForm}}
+            {{$isMember := ne $currentFormGroup 0}}
+            <tr data-sort-id="{{.ID}}" {{if $isGroupHeader}}data-group-header="1"{{end}} {{if $isMember}}data-member-of="{{$currentFormGroup}}"{{end}} class="{{if $isMember}}fields-group-member-row{{end}}">
+                <td class="drag-handle admin-table-drag" draggable="true" title="{{if $isGroupHeader}}{{t "Drag to reorder - moves the whole group"}}{{else if $isMember}}{{t "Drag to reorder or move the field out of the group"}}{{else}}{{t "Drag to reorder or add the field to a group"}}{{end}}">{{if $isMember}}&#8631;{{else}}&#9776;{{end}}</td>
+                <td><a href="/admin/config/content-types/{{$vid}}/fields/{{.ID}}/edit" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><code>{{.MachineName}}</code></span></td>
+                <td>
+                    <span class="admin-pill">{{.FieldType}}</span>
+                    {{if eq (print .FieldType) "taxonomy"}}
+                    {{$vocName := index $.vocabularyNames .VocabularyID}}
+                    {{if $vocName}}<br><a href="/admin/config/taxonomy/{{.VocabularyID}}/terms" class="small">{{$vocName}}</a>{{end}}
+                    {{end}}
+                </td>
+                <td>
+                    {{if eq (print .FieldType) "text"}}
+                    <code>{{.Widget}}</code>
+                    {{else if eq (print .FieldType) "list"}}
+                    <code>{{.Widget}}</code>
+                    {{if .Multiple}}<br><small class="text-muted" title="{{t "Set once when the field is created; not changed here"}}">{{t "multiple values"}}</small>{{end}}
+                    {{else if eq (print .FieldType) "taxonomy"}}
+                    {{/* Widget() falls back to "input" when unset, which is
+                         meaningless for taxonomy - show the effective default
+                         instead (see entity.WidgetAutocomplete). */}}
+                    <code>{{if ne (print .Widget) "input"}}{{.Widget}}{{else if .Multiple}}autocomplete{{else}}select{{end}}</code>
+                    {{if .Multiple}}<br><small class="text-muted" title="{{t "Set once when the field is created; not changed here"}}">{{t "multiple values"}}</small>{{end}}
+                    {{else}}
+                    <span class="text-muted">-</span>
+                    {{end}}
+                </td>
+                <td>
+                    {{if not $isGroupType}}
+                    <select form="fields-reorder-form" name="form_group_id_{{.ID}}" class="form-select form-select-sm admin-min-sm" data-group-select aria-label="{{t "Group (form)"}}">
+                        <option value="0">{{t "- no group -"}}</option>
+                        {{range $.fields}}
+                        {{if and (eq (print .FieldType) "group") .UsableInForm}}
+                        <option value="{{.ID}}" {{if eq .ID $currentFormGroup}}selected{{end}}>{{.Label}}</option>
+                        {{end}}
+                        {{end}}
+                    </select>
+                    {{else}}
+                    <span class="text-muted">&mdash;</span>
+                    {{end}}
+                </td>
+                <td class="text-nowrap text-end">
+                    <a href="/admin/config/content-types/{{$vid}}/fields/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">
+                        {{template "admin_icon_edit"}}
+                    </a>
+                    <a href="/admin/config/content-types/{{$vid}}/fields/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                        {{template "admin_icon_delete"}}
+                    </a>
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="6" class="admin-table-empty">{{t "This type has no fields yet"}}</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{if .fields}}
+<div class="admin-table-foot">
+    <span class="admin-table-foot-hint">{{t "Order of fields in the create/edit form (<code>/node/{id}/edit</code>) - drag a row by &#9776;, then click \"Save order\". A group field (type <code>group</code>) can be dragged as a whole together with its fields (see the \"Group (form)\" column); an ordinary field can be dragged straight into a group or out of it - the \"Group (form)\" column updates by itself, in sync (choosing in it also moves the row to the right place immediately). Other field settings (label, widget/config, required, visibility in the form) are on its own \"Edit\" page; deletion is on its own confirmation page, with the number of already saved values."}}</span>
+    <button form="fields-reorder-form" type="submit" class="btn btn-primary">{{t "Save order"}}</button>
+</div>
+{{end}}
+</div>
+
+{{end}}

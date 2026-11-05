@@ -1,0 +1,74 @@
+{{/* block_user_menu - plugin block "user_menu" (see
+     entity.PluginBlockID), placed in a region of the header. #user-menu-toggle and
+     #user-dropdown-menu are used by web/static/js/app.js - don't rename.
+     .userMenuCount - the number on the toggle the modules add
+     (interfaces.AddUserMenuCount), e.g. unread messages. */}}
+{{define "block_user_menu"}}
+<div id="desktop-user-menu" class="desktop-user-menu">
+    {{/* The visitor's own menu, rendered here (a page with a user is never
+         cached for others): no guest links shown first and hidden later. */}}
+    {{if not .user}}
+    <div class="user-menu-guest">
+        <a href="/login" class="user-menu-link">{{t "Log in"}}</a>
+        {{if registrationOpen}}<span class="user-menu-separator">|</span>
+        <a href="/user/register" class="user-menu-link">{{t "Register"}}</a>{{end}}
+    </div>
+    {{else}}
+    <div class="user-menu-logged">
+        <div class="user-menu-dropdown">
+            <button class="user-menu-toggle" id="user-menu-toggle">
+                <img src="{{with .user.Avatar.URI}}{{.}}{{else}}{{avatarPlaceholder}}{{end}}" alt="{{t "User"}}" class="user-avatar-small">
+                <span class="user-name">{{.user.Username}}</span>
+                {{if gt (or .userMenuCount 0) 0}}
+                <span class="badge bg-danger ms-1">{{.userMenuCount}}</span>
+                {{end}}
+                <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                    <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+
+            <div class="user-dropdown-menu" id="user-dropdown-menu">
+                {{$creatable := index . "creatableMaterials"}}
+                <a href="/me" class="dropdown-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                    </svg>
+                    {{t "My profile"}}
+                </a>
+                {{/* The modules' items (their "user_menu_<module>"); one with
+                     data-mobile-user-menu is copied to the mobile menu. */}}
+                {{moduleHook "user_menu" .}}
+                {{if $creatable}}
+                <div class="dropdown-create-submenu">
+                    <button type="button" class="dropdown-item dropdown-create-toggle" id="user-create-submenu-toggle" aria-expanded="false" aria-haspopup="true">
+                        <span class="dropdown-create-toggle-main">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                            </svg>
+                            {{t "Create content"}}
+                        </span>
+                        <svg class="dropdown-create-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="dropdown-create-items" id="user-create-submenu">
+                        {{range $creatable}}
+                        <a href="{{.URL}}" class="dropdown-item dropdown-subitem">{{.Label}}</a>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+                <div class="dropdown-divider"></div>
+                <a href="/logout" class="dropdown-item logout-item" id="logout-link">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                        <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                    </svg>
+                    {{t "Log out"}}
+                </a>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}

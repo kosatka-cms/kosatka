@@ -1,0 +1,63 @@
+[
+  {
+    "name": "youtube",
+    "label": "YouTube",
+    "hosts": "youtube.com, youtu.be, Shorts",
+    "sites": ["youtube.com", "youtu.be"],
+    "on": true,
+    "urls": [
+      {"pattern": "^https?://(?:www\\.|m\\.)?youtube\\.com/watch\\?(?:[^#]*&)?v=(?P<id>[A-Za-z0-9_-]{11})"},
+      {"pattern": "^https?://youtu\\.be/(?P<id>[A-Za-z0-9_-]{11})"},
+      {"pattern": "^https?://(?:www\\.|m\\.)?youtube\\.com/shorts/(?P<id>[A-Za-z0-9_-]{11})", "width": 9, "height": 16},
+      {"pattern": "^https?://(?:www\\.)?youtube\\.com/live/(?P<id>[A-Za-z0-9_-]{11})"}
+    ],
+    "player": "https://www.youtube-nocookie.com/embed/{id}",
+    "autoplay": "autoplay=1",
+    "oembed": "https://www.youtube.com/oembed?format=json&url={url}",
+    "thumbnail_hosts": ["i.ytimg.com", "img.youtube.com"]
+  },
+  {
+    "name": "vk",
+    "label": "VK Video",
+    "hosts": "vkvideo.ru, vk.com/video",
+    "sites": ["vkvideo.ru", "vk.com", "vk.ru"],
+    "on": true,
+    "urls": [
+      {"pattern": "^https?://(?:www\\.|m\\.)?(?:vkvideo\\.ru|vk\\.com|vk\\.ru)/video(?P<oid>-?[0-9]+)_(?P<id>[0-9]+)"},
+      {"pattern": "^https?://(?:www\\.|m\\.)?(?:vkvideo\\.ru|vk\\.com|vk\\.ru)/clip(?P<oid>-?[0-9]+)_(?P<id>[0-9]+)", "width": 9, "height": 16}
+    ],
+    "player": "https://vkvideo.ru/video_ext.php?oid={oid}&id={id}&hd=2",
+    "autoplay": "autoplay=1",
+    "opengraph": true,
+    "thumbnail_hosts": ["userapi.com", "vkuserphoto.ru", "vkuservideo.net", "mycdn.me", "okcdn.ru"]
+  },
+  {
+    "name": "rutube",
+    "label": "Rutube",
+    "hosts": "rutube.ru/video, rutube.ru/shorts",
+    "sites": ["rutube.ru"],
+    "on": true,
+    "urls": [
+      {"pattern": "^https?://(?:www\\.)?rutube\\.ru/video/(?P<id>[0-9a-f]{32})"},
+      {"pattern": "^https?://(?:www\\.)?rutube\\.ru/shorts/(?P<id>[0-9a-f]{32})", "width": 9, "height": 16}
+    ],
+    "player": "https://rutube.ru/play/embed/{id}",
+    "autoplay": "autoplay=true",
+    "oembed": "https://rutube.ru/api/oembed/?format=json&url={url}",
+    "thumbnail_hosts": ["rtbcdn.ru", "rutubelist.ru"]
+  },
+  {
+    "name": "vimeo",
+    "label": "Vimeo",
+    "hosts": "vimeo.com",
+    "sites": ["vimeo.com"],
+    "on": false,
+    "urls": [
+      {"pattern": "^https?://(?:www\\.)?vimeo\\.com/(?P<id>[0-9]+)"}
+    ],
+    "player": "https://player.vimeo.com/video/{id}?dnt=1",
+    "autoplay": "autoplay=1",
+    "oembed": "https://vimeo.com/api/oembed.json?url={url}",
+    "thumbnail_hosts": ["vimeocdn.com"]
+  }
+]

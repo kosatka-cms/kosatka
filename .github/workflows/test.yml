@@ -1,0 +1,161 @@
+# Tests on every pull request and push to main: the formatting and the
+# linters (golangci-lint, .golangci.yml: gofmt, goimports, go vet and the
+# rest), known vulnerabilities in the Go version
+# and the dependencies the code reaches (govulncheck), secrets in the
+# history (gitleaks, .gitleaks.toml), the unit tests
+# with the race detector, the integration tests
+# (-tags dbintegration) on MySQL 8.4 and PostgreSQL 16 - the engine
+# supports both (docs/contributing/database.md) - with the S3 and Azure
+# storages, and the Docker image's build.
+# Locally: scripts/check.sh (golangci-lint - the same version, installed
+# when missing; unit tests, govulncheck and gitleaks when installed;
+# -race: the race detector; -db: and the database tests and the
+# migrations check).
+# -coverpkg=./...: a test counts toward every package it runs (the admin
+# forms test in internal/app serves the app's handlers in its process).
+# The test jobs write their coverage to the run's summary
+# (scripts/coverage_summary.sh, generated ent code left out), its total
+# as a notice (shown on the run's page and in the PR's checks). The profile
+# is not kept as an artifact (tens of MB a run against the repository's artifact
+# storage quota): for the line by line view, run the tests locally with
+# -coverprofile and go tool cover -html=<file>.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+# The jobs read the repository, nothing more.
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # Built with the module's Go (a prebuilt binary may be older than
+      # go.mod's version). v2.15.0 or newer: v2.13's type checker can't read
+      # the export data of Go 1.27.2. The same version as scripts/check.sh's.
+      - run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
+      - run: golangci-lint run --timeout 5m ./...
+
+  vulns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # Built with the module's Go, like golangci-lint above. Fails on a
+      # vulnerability the code reaches (Go itself or a module); fixing is
+      # raising the toolchain line or the module's version in go.mod.
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Every commit: a secret committed and removed later is still in
+          # the history.
+          fetch-depth: 0
+      # The release's binary, pinned and checked against its checksum (the
+      # gitleaks action needs a license for an organization's
+      # repositories). .gitleaks.toml lists what isn't a secret here.
+      - run: |
+          curl -sSfLo gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks git --redact --no-banner .
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # go vet: in golangci-lint (the lint job).
+      # -race: the cache, the scheduler and the limiters run beside the
+      # requests.
+      - run: go test -race -coverpkg=./... -coverprofile=cover-unit.out ./...
+      # The example module and site (examples/: Go modules of their own,
+      # built on the module SDK).
+      - run: go vet ./... && go test ./...
+        working-directory: examples/hello
+      - run: go build ./...
+        working-directory: examples/hello-site
+      - name: Coverage
+        run: |
+          summary=$(./scripts/coverage_summary.sh cover-unit.out "Unit tests")
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Coverage::$(echo "$summary" | sed -n '1s/^### //p')"
+
+  databases:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: test
+        ports: ["33306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ptest"
+          --health-interval 2s --health-retries 60
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ["35432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s --health-retries 60
+    env:
+      KOSATKA_TEST_MYSQL_DSN: root:test@tcp(127.0.0.1:33306)/?parseTime=true
+      KOSATKA_TEST_POSTGRES_DSN: postgres://postgres:test@127.0.0.1:35432/postgres?sslmode=disable
+      KOSATKA_TEST_S3: http://test:test-secret@127.0.0.1:39000/kosatka-test
+      KOSATKA_TEST_AZURE: http://127.0.0.1:31000/devstoreaccount1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # The S3 storage and the Azure emulator, as scripts/test_db.sh starts
+      # them (their commands aren't a service container's): the file
+      # storage tests run on them.
+      - run: docker compose -f docker-compose.test.yml up -d --wait s3 azure
+      # Includes internal/app TestInstallAndServe: "app install" on an empty
+      # database of each, then the server's pages and the admin sign-in.
+      # The tag adds the integration tests to the unit ones: the coverage
+      # is of both.
+      - run: go test -tags dbintegration -count=1 -coverpkg=./... -coverprofile=cover-all.out ./...
+      - name: Coverage
+        run: |
+          summary=$(./scripts/coverage_summary.sh cover-all.out "Unit and integration tests")
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Coverage::$(echo "$summary" | sed -n '1s/^### //p')"
+      # The migration files are not behind the ent schemas
+      # (scripts/migrations_gen.sh <name> writes the missing one).
+      - run: go run ./cmd/migrations-gen -check
+      # The example module's: its tests on both databases, its migrations.
+      - run: go test -tags dbintegration -count=1 ./... && go run ./cmd/migrations -check
+        working-directory: examples/hello
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # The image builds (Dockerfile: the minified assets, the binary);
+      # nothing is pushed.
+      - run: docker build -t kosatka:ci .

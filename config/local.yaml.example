@@ -1,0 +1,37 @@
+# Local development config: copy to config/local.yaml (not in git - keep
+# real passwords and keys there only) and run with CONFIG_PATH=config/local.yaml
+# or -config config/local.yaml. Environment variables override these values
+# (see internal/config/config.go).
+
+env: local
+port: 3333
+# HTML comments in the pages naming the template files that rendered them
+# (docs/themes/templates.md, "Template debugging").
+templates_debug: false
+
+# The site address for absolute links; empty - taken from the request
+# (or set it in Site information in the admin).
+public_base_url: ""
+
+db:
+  driver: mysql          # or postgres
+  host: 127.0.0.1
+  port: 3306
+  scheme: kosatka        # database name
+  username: kosatka
+  password: ""
+  max_open_conns: 25
+  max_idle_conns: 5
+
+session:
+  secret_key: change-me-long-random-string
+  secure: false
+  max_age: 604800
+
+email:
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  from_address: noreply@example.com
+  resend_api_key: ""

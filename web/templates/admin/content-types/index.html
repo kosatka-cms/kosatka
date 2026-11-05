@@ -1,0 +1,90 @@
+{{/* admin/config/content-types - the content types (ContentTypeList), or
+     the field sets (FieldSetList, .fieldSets; .listPath - the list's
+     address): adding one (a card over the list), on a table card each -
+     its name and machine name, description, whether it is on (a type),
+     its fields, edit, delete. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{if .fieldSets}}{{plural (len .contentTypes) "@count field set" "@count field sets"}}{{else}}{{plural (len .contentTypes) "@count content type" "@count content types"}}{{end}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{$deleted := (t "Content type deleted.")}}{{$hasNodes := (t "The type cannot be deleted: it has content (items in the trash count too). Delete that content for good first.")}}
+{{if .fieldSets}}{{$deleted = (t "Field set deleted.")}}{{$hasNodes = (t "The field set cannot be deleted: some content has its blocks. Remove them first.")}}{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Saved.")
+        "deleted" $deleted)
+    "Errors" (dict
+        "machine-name" (t "The machine name may contain only lowercase Latin letters, digits and \"_\", and must start with a letter.")
+        "reserved" (t "This name is taken by a content type of a built-in module.")
+        "duplicate" (t "This machine_name is already in use.")
+        "create" (t "Error creating the content type.")
+        "update" (t "Error saving the content type.")
+        "has-nodes" $hasNodes
+        "delete" (t "Error deleting the content type."))
+    "Warnings" (dict
+        "empty" (t "Fill in machine_name and label.")))}}
+
+{{if .fieldSets}}<p class="admin-setting-help">{{t "A field set is a few fields put in content together, as many times as needed: a role in a film (an actor, a character, a photo), a block of a page. Its fields are made like a content type's; a \"Blocks\" field of a content type takes its blocks."}}</p>{{end}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="ct-add">
+    <h2 class="admin-add-title" id="ct-add">{{if .fieldSets}}{{t "Add field set"}}{{else}}{{t "Add content type"}}{{end}}</h2>
+    <form method="post" action="{{.listPath}}" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "Name"}}</span>
+            <input type="text" name="label" class="form-control" required>
+        </label>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "machine_name (Latin letters)"}}</span>
+            <input type="text" name="machine_name" class="form-control" required>
+        </label>
+        <label class="admin-filter admin-filter--wide">
+            <span class="admin-filter-label">{{t "Description"}}</span>
+            <input type="text" name="description" class="form-control">
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    {{if not .fieldSets}}<p class="admin-setting-help">{{t "machine_name sets the node.Type value and cannot be changed after creation. The address pattern of the type's content and the other settings are on the type's edit page."}}</p>{{end}}
+</section>
+
+{{range .contentTypes}}
+{{$deleteID := printf "ct-delete-%d" .ID}}
+<form id="{{$deleteID}}" method="post" action="/admin/config/content-types/{{.ID}}/delete" data-confirm="{{if .Embedded}}{{t "Delete field set \"@label\" and its fields?" "@label" .Label}}{{else}}{{t "Delete type \"@label\" and its fields? Make sure there is no content of this type." "@label" .Label}}{{end}}"></form>
+{{end}}
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "Name"}}</th>
+                    <th>{{t "Description"}}</th>
+                    {{if not .fieldSets}}<th>{{t "Status"}}</th>{{end}}
+                    <th class="text-end"><span class="visually-hidden">{{t "Operations"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .contentTypes}}
+                {{$deleteID := printf "ct-delete-%d" .ID}}
+                <tr>
+                    <td><a href="/admin/config/content-types/{{.ID}}" class="admin-table-title">{{.Label}}</a><span class="admin-table-sub"><code>{{.MachineName}}</code></span></td>
+                    <td class="admin-table-muted">{{.Description}}</td>
+                    {{if not .Embedded}}<td>{{if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Enabled"}}</span>{{else}}<span class="admin-pill">{{t "Disabled"}}</span>{{end}}</td>{{end}}
+                    <td class="text-nowrap text-end">
+                        <a href="/admin/config/content-types/{{.ID}}/fields" class="btn btn-sm btn-outline-primary">{{t "Fields"}}</a>
+                        <a href="/admin/config/content-types/{{.ID}}" class="admin-icon-btn" title="{{t "Edit"}}" aria-label="{{t "Edit"}}">{{template "admin_icon_edit"}}</a>
+                        <button form="{{$deleteID}}" type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4" class="admin-table-empty">{{if .fieldSets}}{{t "No field sets yet"}}{{else}}{{t "No admin-created content types"}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

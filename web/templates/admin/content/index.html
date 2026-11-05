@@ -1,0 +1,116 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .totalCount "@count content item" "@count content items"}}{{if .filtered}} · {{t "filtered"}}{{end}}</span>
+{{end}}
+
+{{define "page_actions"}}
+{{with .creatableMaterials}}
+<div class="dropdown">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">+ {{t "Create"}}</button>
+    <div class="dropdown-menu dropdown-menu-end">
+        {{range .}}<a href="{{.URL}}" class="dropdown-item">{{.Label}}</a>{{end}}
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{/* Filters: applied as soon as one changes (admin.js, data-autosubmit);
+     the search on Enter. */}}
+<form method="get" action="/admin/content" class="admin-filters" data-autosubmit>
+    <input type="hidden" name="sort" value="{{.sort}}">
+    <input type="hidden" name="order" value="{{.order}}">
+    <div class="admin-filter admin-filter--wide">
+        <label for="field-q" class="admin-filter-label">{{t "Search"}}</label>
+        <input type="search" id="field-q" name="q" value="{{.search}}" class="form-control" placeholder="{{t "Title or address"}}">
+    </div>
+    <div class="admin-filter">
+        <label for="field-type" class="admin-filter-label">{{t "Type"}}</label>
+        <select id="field-type" name="type" class="form-select">
+            <option value="">{{t "All types"}}</option>
+            {{range .contentTypes}}
+            <option value="{{.}}" {{if and $.filterType (eq $.filterType (toString .))}}selected{{end}}>{{or (index $.typeLabels (toString .)) (toString .)}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="field-status" class="admin-filter-label">{{t "Status"}}</label>
+        <select id="field-status" name="status" class="form-select">
+            <option value="">{{t "All"}}</option>
+            <option value="1" {{if eq .filterStatus 1}}selected{{end}}>{{t "Published"}}</option>
+            <option value="0" {{if eq .filterStatus 0}}selected{{end}}>{{t "Not published"}}</option>
+            <option value="scheduled" {{if .filterScheduled}}selected{{end}}>{{t "On schedule"}}</option>
+        </select>
+    </div>
+    <div class="admin-filter">
+        <label for="field-moderation" class="admin-filter-label">{{t "Moderation"}}</label>
+        <select id="field-moderation" name="moderation" class="form-select">
+            <option value="">{{t "All"}}</option>
+            <option value="0" {{if eq .filterModeration 0}}selected{{end}}>{{t "Not in moderation"}}</option>
+            <option value="1" {{if eq .filterModeration 1}}selected{{end}}>{{t "In moderation"}}</option>
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
+    {{if .filtered}}<a href="/admin/content" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<form method="post" action="/admin/content/bulk-confirm" id="bulkForm" class="admin-table-card">
+    {{/* What to do with the checked rows: shown once a row is checked
+         (admin_bulk.js); each button sends its action. */}}
+    <div class="admin-bulk-bar" data-bulk-bar hidden>
+        <span class="admin-bulk-count">{{t "Selected:"}} <span data-bulk-count>0</span></span>
+        <button type="submit" name="action" value="status_publish" class="btn btn-sm btn-outline-primary">{{t "Publish"}}</button>
+        <button type="submit" name="action" value="status_unpublish" class="btn btn-sm btn-outline-primary">{{t "Unpublish"}}</button>
+        <button type="submit" name="action" value="moderation_on" class="btn btn-sm btn-outline-primary">{{t "Send to moderation"}}</button>
+        <button type="submit" name="action" value="moderation_off" class="btn btn-sm btn-outline-primary">{{t "Remove from moderation"}}</button>
+        <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger">{{t "Delete"}}</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-check"><input type="checkbox" id="selectAll" class="form-check-input" title="{{t "Select all on this page"}}" aria-label="{{t "Select all on this page"}}"></th>
+                    <th>{{t "Title"}}</th>
+                    <th>{{t "Author"}}</th>
+                    <th><a href="{{.sortURLStatus}}">{{t "Status"}}</a>{{if eq .sort "status"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th><a href="{{.sortURLUpdated}}">{{t "Updated"}}</a>{{if eq .sort "updated"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><a href="{{.sortURLViews}}">{{t "Page views"}}</a>{{if eq .sort "views"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .nodes}}
+                <tr>
+                    <td class="admin-table-check"><input type="checkbox" name="ids" value="{{.ID}}" class="form-check-input bulk-checkbox" aria-label="{{t "Select"}}"></td>
+                    <td>
+                        <a href="{{.URL}}" class="admin-table-title">{{.Title}}</a>
+                        <span class="admin-table-sub">{{or (index $.typeLabels (toString .Type)) (toString .Type)}}</span>
+                    </td>
+                    <td>{{if .CreatedBy.Username}}<a href="{{userURL .CreatedBy.Slug}}">{{.CreatedBy.Username}}</a>{{else}}-{{end}}</td>
+                    <td>
+                        {{if not .PublishOn.IsZero}}<span class="admin-pill admin-pill--scheduled">{{template "admin_icon_clock"}}{{t "Publishes @date" "@date" (formatDate .PublishOn)}}</span>
+                        {{else if eq .OnModeration 1}}<span class="admin-pill admin-pill--warn">{{t "In moderation"}}</span>
+                        {{else if eq .Status 1}}<span class="admin-pill admin-pill--ok">{{t "Published"}}</span>
+                        {{else}}<span class="admin-pill">{{t "Not published"}}</span>{{end}}
+                        {{if not .UnpublishOn.IsZero}}<span class="admin-pill admin-pill--warn">{{template "admin_icon_clock"}}{{t "Unpublishes @date" "@date" (formatDate .UnpublishOn)}}</span>{{end}}
+                    </td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .UpdatedAt}}</td>
+                    <td class="text-end admin-table-num">{{.Counter.TotalCount}}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{nodeEditPath .Type .ID}}" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                        {{if index $.historyTypes (toString .Type)}}<a href="/node/{{.ID}}/revisions" class="admin-icon-btn" title="{{t "History"}}" aria-label="{{t "History"}}">{{template "admin_icon_history"}}</a>{{end}}
+                        <a href="{{nodeDeletePath .Type .ID}}" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="7" class="admin-table-empty">{{t "No content"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</form>
+{{end}}

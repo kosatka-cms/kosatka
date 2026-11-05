@@ -1,0 +1,20 @@
+{{/* field_blocks - a blocks field's blocks on its node's page (dict
+     "Field" <its FieldInstanceDef> "Blocks" <its blocks, blockView>): one
+     after another, or cards in a grid (DetailLayout "grid"); each a
+     theme's component_<set> (component/<set>.html), else component_default.
+     The class of a block: "component component--<set>". */}}
+{{define "field_blocks"}}
+<div class="field-blocks-view{{if eq (print .Field.DetailLayout) "grid"}} field-blocks-view--grid{{end}}">
+    {{range .Blocks}}{{renderSuggestion "component" .Type .}}{{end}}
+</div>
+{{end}}
+
+{{/* component_default - a block by its field set's display: its fields'
+     sections (node_sections, its own Ctx). A theme's component_<set> gets
+     the same blockView: .Type, .ID, .Sections, .Ctx (its values and terms
+     by machine name - .Ctx.fieldValues, .Ctx.fieldTerms). */}}
+{{define "component_default"}}
+<div class="component component--{{.Type}}">
+    {{template "node_sections" (dict "Ctx" .Ctx "Sections" .Sections "Block" true)}}
+</div>
+{{end}}

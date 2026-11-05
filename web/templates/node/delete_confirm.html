@@ -1,0 +1,43 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+
+
+<article class="node node-delete-confirm">
+    <h1 class="node-title">{{t "Confirm deletion"}}</h1>
+
+    <div class="delete-warning">
+        <h2>{{t "Are you sure you want to delete this content?"}}</h2>
+        
+        <div class="item-info">
+            <h3>{{.node.Title}}</h3>
+        </div>
+
+        {{/* A content type's node goes to the trash (service.
+             NodeDeleteService.Trashes); a module's type's for good. */}}
+        {{if .toTrash}}
+        <div class="warning-message">
+            <p>{{t "The content goes to the trash: it is gone from the site, and can be restored from the trash."}}</p>
+            {{if gt .trashDays 0}}<p>{{plural .trashDays "After @count day in the trash it is deleted for good." "After @count days in the trash it is deleted for good."}}</p>{{end}}
+        </div>
+        {{else}}
+        <div class="warning-message">
+            <p><strong>⚠️ {{t "Warning!"}}</strong> {{t "This action cannot be undone."}}</p>
+            <p>{{t "All data of this content will be permanently deleted from the database."}}</p>
+        </div>
+        {{end}}
+
+        <form method="POST" action="/node/{{.node.ID}}/delete" class="delete-form">
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">{{if .toTrash}}{{t "Move to the trash"}}{{else}}{{t "Delete"}}{{end}}</button>
+                <a href="{{.node.URL}}" class="btn btn-secondary">{{t "Cancel"}}</a>
+            </div>
+        </form>
+    </div>
+</article>
+
+{{end}}

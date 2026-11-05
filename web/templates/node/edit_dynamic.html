@@ -1,0 +1,68 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+{{/* The form: node-edit-main - the fields in the content type's order,
+     those of a form group (FormGroupID) in a card of their own
+     (node-edit-group, folded: its heading opens it); node-edit-aside (edit_node_settings.html) -
+     the state, the save button and the settings. */}}
+<article class="node node-edit">
+    <h1 class="node-edit-title">{{.title}}</h1>
+    {{/* The modules' notes over the form (node_form_top_<module>). */}}
+    {{moduleHook "node_form_top" .}}
+
+    {{if .errors}}
+    <div class="messages error">
+        <h3>{{t "Validation errors:"}}</h3>
+        <ul>
+            {{range $field, $error := .errors}}
+            <li><strong>{{$field}}:</strong> {{$error}}</li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+
+    <form method="POST" action="{{if .isCreateMode}}/create/{{.contentType.MachineName}}{{else}}/node/{{.form.NodeID}}/edit{{end}}" class="node-form node-edit-layout" enctype="multipart/form-data"{{with .autosaveKey}} data-autosave="{{.}}"{{if not $.isCreateMode}} data-autosave-since="{{$.node.UpdatedAt.Unix}}"{{end}}{{end}}>
+        <div class="node-edit-main">
+            <div class="node-edit-card">
+                <div class="form-group">
+                    <label for="title">{{t "Title"}} <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" value="{{.form.Title}}" required maxlength="255" class="form-control node-edit-title-input">
+                </div>
+            {{/* The fields without a group join the open card; a group
+                 closes it and stands in its own. */}}
+            {{$open := true}}
+            {{range $i, $section := .formSections}}
+            {{if $section.Group}}
+            {{if $open}}</div>{{$open = false}}{{end}}
+            <details class="node-edit-card node-edit-group">
+                <summary class="node-edit-card-title">{{$section.Group.Label}}</summary>
+                <div class="node-edit-group-body">
+                    {{range $section.Fields}}
+                    {{template "dynamicFieldInputIn" (dict "Field" . "In" $ "TextFormats" $.textFormats "TimeZone" $.timeZone)}}
+                    {{end}}
+                </div>
+            </details>
+            {{else}}
+            {{if not $open}}<div class="node-edit-card">{{$open = true}}{{end}}
+            {{range $section.Fields}}
+            {{template "dynamicFieldInputIn" (dict "Field" . "In" $ "TextFormats" $.textFormats "TimeZone" $.timeZone)}}
+            {{end}}
+            {{end}}
+            {{end}}
+            {{if $open}}</div>{{end}}
+        </div>
+
+        {{template "edit_node_settings.html" .}}
+    </form>
+</article>
+
+{{template "edit_scripts.html" .}}
+{{/* The scripts of the formatters showing the link fields (their
+     EditorScript): a preview of a pasted link, say. */}}
+{{range .fieldEditorScripts}}<script src="{{.}}" defer></script>
+{{end}}
+{{end}}

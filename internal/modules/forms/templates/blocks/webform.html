@@ -1,0 +1,16 @@
+{{/* block_webform - plugin block "webform" (the forms module): the form
+     chosen on the placement page (PluginConfig "target": its node ID),
+     loaded by web/static/modules/forms/forms.js from
+     /node/<id>/form/embed. Nothing while no form is chosen. Takes (dict
+     "PluginID" "Ctx" "Placement"). */}}
+{{define "block_webform"}}
+{{with .Placement.PluginSetting "target"}}{{template "webform_embed" (dict "NodeID" .)}}{{end}}
+{{end}}
+
+{{/* webform_embed - a form's place, loaded by forms.js (each visitor
+     their own form; the address checks they may see it): the "Form"
+     block's, and [[form:<node ID>]] in a text (embedKind). Takes (dict
+     "NodeID"). */}}
+{{define "webform_embed"}}
+{{attach "forms"}}<div class="block webform-block" data-webform-embed="/node/{{.NodeID}}/form/embed"></div>
+{{end}}

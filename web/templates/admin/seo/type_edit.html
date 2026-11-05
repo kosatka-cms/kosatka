@@ -1,0 +1,48 @@
+{{/* admin/config/seo/types/{id}/edit - a content type's title, description
+     and image templates (SEOTypeEdit), as rows; its schema.org markup
+     (seo_schema_fields) and how its newest item's looks (.schemaSample:
+     the JSON as saved, a test by Google); the tokens under them. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="seo-type-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<div class="admin-settings">
+<form method="post" action="/admin/config/seo/types/{{.contentType.ID}}" id="seo-type-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="seo-type-title">{{t "Title"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-type-title" name="title_template" class="form-control" value="{{.template.TitleTemplate}}" placeholder="{{t "empty - default"}}{{with .defaultTemplate.TitleTemplate}}: {{.}}{{end}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="seo-type-desc">{{t "Description"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-type-desc" name="description_template" class="form-control" value="{{.template.DescriptionTemplate}}" placeholder="{{t "empty - default"}}{{with .defaultTemplate.DescriptionTemplate}}: {{.}}{{end}}"></div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"><label class="admin-setting-label" for="seo-type-image">{{t "Image (og:image)"}}</label></div>
+            <div class="admin-setting-control"><input type="text" id="seo-type-image" name="image_template" class="form-control" value="{{.template.ImageTemplate}}" placeholder="{{t "empty - default"}}{{with .defaultTemplate.ImageTemplate}}: {{.}}{{end}}"></div>
+        </div>
+        {{template "seo_schema_fields" (dict "Template" .template "Types" .schemaTypes "Inherit" true "InheritType" .defaultTemplate.SchemaType)}}
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+
+{{with .schemaSample}}
+<section class="admin-settings-group mt-4" aria-labelledby="seo-schema-sample">
+    <h2 class="admin-settings-title" id="seo-schema-sample">{{t "The markup of \"@title\"" "@title" .Title}}</h2>
+    <div class="admin-settings-card admin-schema-sample">
+        <pre class="admin-schema-json">{{.JSON}}</pre>
+        <p class="admin-setting-help">{{t "The newest item of the type, as saved."}} <a href="{{.URL}}">{{t "Open"}}</a> · <a href="{{.TestURL}}" rel="noopener" target="_blank">{{t "Test with Google"}} ↗</a></p>
+    </div>
+</section>
+{{end}}
+
+{{template "seo_tokens_help" .}}
+</div>
+{{end}}

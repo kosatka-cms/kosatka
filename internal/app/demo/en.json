@@ -1,0 +1,302 @@
+{
+  "vocabularies": {
+    "sections": {
+      "name": "Sections",
+      "slug": "sections",
+      "field": "Section",
+      "terms": [
+        "News",
+        "Guides",
+        "Modules"
+      ]
+    },
+    "tags": {
+      "name": "Tags",
+      "slug": "tags",
+      "field": "Tags"
+    }
+  },
+  "footer_menu": "More",
+  "users": [
+    "ishmael",
+    "queequeg",
+    "starbuck",
+    "captain_nemo",
+    "jim_hawkins",
+    "long_john_silver"
+  ],
+  "blocks": {
+    "popular": "Popular",
+    "comments": "Latest comments",
+    "search": "Search",
+    "tags": "Tags"
+  },
+  "frontpage": {
+    "author": "Posted by"
+  },
+  "articles": [
+    {
+      "title": "Kosatka 0.2: what is new", "sticky": true,
+      "body": "<p>A new version of the engine is out. The highlights: template safety, shared script mechanisms and a new theme.</p><h2>In short</h2><ul><li>Text is output as HTML only for fields with a text format.</li><li>Logging out is a POST request.</li><li>Confirmations, drag and drop and autocomplete share one piece of code driven by data attributes.</li></ul><p>To update, run <strong>app migrate -apply</strong> after deploying.</p>",
+      "section": "News",
+      "tags": [
+        "release"
+      ],
+      "views": 3150,
+      "comments": [
+        {
+          "author": "ishmael",
+          "body": "Finally! Updated in five minutes, everything works.",
+          "replies": [
+            {
+              "author": "starbuck",
+              "body": "Glad to hear it. If anything comes up, write here."
+            }
+          ]
+        },
+        {
+          "author": "queequeg",
+          "body": "Will there be a dark theme?",
+          "replies": [
+            {
+              "author": "starbuck",
+              "body": "Already there: the switch in the header."
+            },
+            {
+              "author": "queequeg",
+              "body": "Found it, thanks!"
+            }
+          ]
+        },
+        {
+          "author": "captain_nemo",
+          "body": "Great release.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "title": "Meet Kosatka CMS",
+      "body": "<p>Kosatka is a content management system written in Go. Content types, fields, lists and menus are set up in the admin, without touching the code.</p><h2>What the engine does</h2><ul><li>Content types with their own fields: text, dates, images, files, links, terms.</li><li>Lists (Views) with filters, sorting and paging.</li><li>Blocks and regions, menus, breadcrumbs, SEO patterns.</li><li>Modules: galleries, polls, forms, feeds, ratings.</li></ul><p>A site runs on MySQL or PostgreSQL and ships as a single binary.</p>",
+      "section": "News",
+      "tags": [
+        "release",
+        "overview"
+      ],
+      "views": 2412,
+      "comments": [
+        {
+          "author": "jim_hawkins",
+          "body": "A good overview for a first look.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "title": "How themes work",
+      "body": "<p>A theme changes the look without touching the data. It can override any template of the engine or only a part of one - say, how the fields are shown on a content page.</p><blockquote><p>A good theme overrides the layout, not the engine's logic.</p></blockquote><p>Without a theme a site is shown in the engine's neutral look - the one you see now. It is light or dark, following your system's setting.</p>",
+      "section": "Guides",
+      "tags": [
+        "themes",
+        "design"
+      ],
+      "views": 1380,
+      "comments": [
+        {
+          "author": "ishmael",
+          "body": "I overrode just the card and took the rest from the engine. Handy.",
+          "replies": [
+            {
+              "author": "captain_nemo",
+              "body": "That is the idea: a theme doesn't copy the engine."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Lists and feeds without programming",
+      "body": "<p>The feed on the front page is an ordinary View: it has its fields, filters and sorting. Change it in the admin, or add other lists - by section, by tag, by author.</p><h2>Display styles</h2><p>A list, a grid, a table or a carousel. Every field has its own format: an image style, a date format, a text length.</p>",
+      "section": "Guides",
+      "tags": [
+        "views",
+        "design"
+      ],
+      "views": 1105,
+      "comments": [
+        {
+          "author": "queequeg",
+          "body": "Views take a couple of minutes to build, with no code at all.",
+          "replies": []
+        },
+        {
+          "author": "jim_hawkins",
+          "body": "Is there grouping by date?",
+          "replies": [
+            {
+              "author": "starbuck",
+              "body": "Yes: by year, month or day."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Modules are switched on in the admin",
+      "body": "<p>Galleries, polls and forms are modules. They are switched on and off on the Modules page; a module switched off keeps its data, and an uninstalled one removes it along with its tables.</p><p>Every module brings its own routes, pages and status checks. A module can also live in a repository of its own, like the forum: the site adds it to its binary.</p>",
+      "section": "Modules",
+      "tags": [
+        "modules"
+      ],
+      "views": 860
+    },
+    {
+      "title": "The status report",
+      "body": "<p>The Reports section has the status report: the engine's version, the database, the modules and the checks - pending database updates, file directories, mail, the site's address.</p><p>When something is wrong, the admin shows a warning at the top of every page. Database updates are applied with one command:</p><pre><code>./kosatka migrate -apply</code></pre>",
+      "section": "Guides",
+      "tags": [
+        "administration"
+      ],
+      "views": 410
+    },
+    {
+      "title": "Running in Docker",
+      "body": "<p>All it takes to try the engine is Docker:</p><pre><code>docker compose up --build</code></pre><p>The site opens at <a href=\"http://localhost:8080\">localhost:8080</a>, and the administrator's password is in the container's log: <code>docker compose logs app</code>.</p>",
+      "section": "Guides",
+      "tags": [
+        "docker",
+        "installation"
+      ],
+      "views": 1890,
+      "comments": [
+        {
+          "author": "captain_nemo",
+          "body": "The Docker image started on the first try.",
+          "replies": []
+        },
+        {
+          "author": "long_john_silver",
+          "body": "A fine thing, this Docker: up went the site and not a soul the wiser. Pieces of eight!",
+          "replies": [
+            {
+              "author": "jim_hawkins",
+              "body": "At it again, Silver."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Tags and sections",
+      "body": "<p>Taxonomy vocabularies describe content: one section per article, as many tags as you like. Every term has its own page listing its content.</p><h2>How it works</h2><p>A vocabulary is created in the admin, a term field is added to a content type. The field widget is a select list, radio buttons, checkboxes or autocomplete.</p><blockquote><p>Terms are data: rename them without touching templates.</p></blockquote>",
+      "section": "Guides",
+      "tags": [
+        "taxonomy",
+        "views"
+      ],
+      "views": 720,
+      "comments": [
+        {
+          "author": "ishmael",
+          "body": "Tags with autocomplete are just what I needed.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "title": "Comments and moderation",
+      "body": "<p>Comments are threaded: any of them can be replied to. The comment mode is set for a content type and for each item - open, closed or hidden.</p><h2>Moderation</h2><p>New content from users with the \"on moderation\" permission waits for review. The waiting list is in the admin bar, and every item shows its status.</p>",
+      "section": "Guides",
+      "tags": [
+        "comments",
+        "moderation"
+      ],
+      "views": 640
+    },
+    {
+      "title": "A forum from its own repository",
+      "body": "<p>The Forum module lives in a repository of its own: a site adds it to its binary with <code>app module add</code> and enables it on the Modules page. It is built on a vocabulary: root terms are categories, child terms are sections with topics. Topics are ordinary content, replies are comments.</p><ul><li>Sticky and hot topics.</li><li>Active topics and topics without replies.</li><li>Members' signatures and avatars.</li></ul>",
+      "section": "Modules",
+      "tags": [
+        "forum",
+        "modules"
+      ],
+      "views": 980,
+      "comments": [
+        {
+          "author": "jim_hawkins",
+          "body": "We moved our old forum: topics and replies are all there.",
+          "replies": [
+            {
+              "author": "queequeg",
+              "body": "Did the signatures come over too?"
+            },
+            {
+              "author": "jim_hawkins",
+              "body": "Yes, together with the avatars."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Polls and forms",
+      "body": "<p>A poll is a content type with answer options: voting without reloading the page, results as bars. Forms collect submissions: fields, required ones, visibility conditions, email notifications.</p><p>Both modules are switched on on the Modules page and off the same way.</p>",
+      "section": "Modules",
+      "tags": [
+        "polls",
+        "forms",
+        "modules"
+      ],
+      "views": 530
+    },
+    {
+      "title": "SEO without plugins",
+      "body": "<p>The page title and meta description are built from templates with tokens: for a content type, for a rule with a condition, for a vocabulary. Every item can set its own.</p><h2>What else</h2><ul><li>A sitemap and robots.txt.</li><li>Canonical URLs and redirects from old addresses.</li><li>Breadcrumbs by rules.</li></ul>",
+      "section": "Guides",
+      "tags": [
+        "seo"
+      ],
+      "views": 1270,
+      "comments": [
+        {
+          "author": "queequeg",
+          "body": "Templates with tokens save a lot of time.",
+          "replies": []
+        }
+      ]
+    },
+    {
+      "title": "Site search",
+      "body": "<p>Live search suggests content as you type, and the results page shows everything found, page by page. Which types are searched and in what order is set in the admin.</p>",
+      "section": "Guides",
+      "tags": [
+        "search"
+      ],
+      "views": 455
+    },
+    {
+      "title": "Permissions and roles",
+      "body": "<p>Permissions are given to roles, roles to users. Modules declare their own permissions, and they show up in the shared matrix.</p><blockquote><p>The \"User\" role holds the permissions of anyone logged in.</p></blockquote><p>Required profile fields are asked for at registration and after logging in with a social network.</p>",
+      "section": "Guides",
+      "tags": [
+        "security",
+        "users"
+      ],
+      "views": 690
+    },
+    {
+      "title": "Faster with caching",
+      "body": "<p>Pages for guests are cached, View blocks are rebuilt in the background, images are served in styles of the right size. The cache lifetime is set on the Performance page.</p><p>For a CDN the engine sends caching headers, and a guest's form or login doesn't break the cache: the page's script fetches the CSRF token separately.</p>",
+      "section": "Guides",
+      "tags": [
+        "performance"
+      ],
+      "views": 815
+    }
+  ],
+  "page": {
+    "title": "About",
+    "body": "<p>This site runs on Kosatka, a content management system written in Go.</p><p>The articles on the front page and this page are demo content, added at installation. Edit or delete them in the admin, on the Content page, and add your own.</p>"
+  }
+}

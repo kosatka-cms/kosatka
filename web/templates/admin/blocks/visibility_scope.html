@@ -1,0 +1,46 @@
+{{/* visibility_scope - where a placement shows, as settings rows
+     (admin-setting): everywhere, the front page, some content types
+     (visibility_content_types) or listed pages (shown or hidden on them);
+     the rows of the parts follow the select (data-show-when). Takes
+     (dict): Placement, ContentTypes, IDPrefix. */}}
+{{define "visibility_scope"}}
+{{$p := .IDPrefix}}
+{{$scope := print .Placement.VisibilityScope}}
+<div class="admin-setting">
+    <div class="admin-setting-text"><label for="{{$p}}-visibility" class="admin-setting-label">{{t "Visibility"}}</label></div>
+    <div class="admin-setting-control">
+        <select id="{{$p}}-visibility" name="visibility_scope" class="form-select">
+            <option value="all" {{if eq $scope "all"}}selected{{end}}>{{t "Everywhere"}}</option>
+            <option value="homepage" {{if eq $scope "homepage"}}selected{{end}}>{{t "Front page only"}}</option>
+            <option value="content_type" {{if eq $scope "content_type"}}selected{{end}}>{{t "Only on specific content types"}}</option>
+            <option value="pages" {{if eq $scope "pages"}}selected{{end}}>{{t "Specific pages"}}</option>
+        </select>
+    </div>
+</div>
+
+<fieldset class="admin-setting" id="{{$p}}-content-type-wrap" {{if ne $scope "content_type"}}style="display:none;"{{end}} data-show-when="{{$p}}-visibility=content_type">
+    <legend class="admin-setting-text"><span class="admin-setting-label">{{t "Content types"}}</span></legend>
+    <div class="admin-setting-control admin-setting-control--choices">
+        {{template "visibility_content_types" (dict "Placement" .Placement "ContentTypes" .ContentTypes "IDPrefix" $p "Bare" true)}}
+    </div>
+</fieldset>
+
+<div class="admin-setting" id="{{$p}}-pages-wrap" {{if ne $scope "pages"}}style="display:none;"{{end}} data-show-when="{{$p}}-visibility=pages">
+    <div class="admin-setting-text">
+        <label for="{{$p}}-pages" class="admin-setting-label">{{t "Pages"}}</label>
+        <span class="admin-setting-help">{{t "One path per line, without a leading \"/\". \"*\" matches any characters (e.g. \"articles/*\" - all pages of the articles section). \"&lt;front&gt;\" is the front page."}}</span>
+    </div>
+    <div class="admin-setting-control">
+        <textarea id="{{$p}}-pages" name="visibility_pages" class="form-control" rows="4" placeholder="about&#10;&lt;front&gt;&#10;articles/*">{{.Placement.VisibilityPages}}</textarea>
+        {{$mode := print .Placement.VisibilityPagesMode}}
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="radio" name="visibility_pages_mode" id="{{$p}}-pages-mode-show" value="show" {{if ne $mode "hide"}}checked{{end}}>
+            <label class="form-check-label" for="{{$p}}-pages-mode-show">{{t "Show only on the listed pages"}}</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="visibility_pages_mode" id="{{$p}}-pages-mode-hide" value="hide" {{if eq $mode "hide"}}checked{{end}}>
+            <label class="form-check-label" for="{{$p}}-pages-mode-hide">{{t "Show everywhere except the listed pages"}}</label>
+        </div>
+    </div>
+</div>
+{{end}}

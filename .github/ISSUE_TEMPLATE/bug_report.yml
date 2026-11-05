@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in the engine, the admin, a bundled module or theme doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A security problem goes through
+        private vulnerability reporting instead (the
+        [Security tab](https://github.com/kosatka-cms/kosatka/security) → *Report a vulnerability*),
+        never a public issue. Please leave out passwords, keys and
+        your site's private data.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem, on a fresh site if you can (`docker compose up --build`).
+      placeholder: |
+        1. Enable the forum module.
+        2. Open /admin/…
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release or commit (the admin's status report shows it).
+      placeholder: v0.1.0 or a commit hash
+    validations:
+      required: true
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options:
+        - MySQL
+        - PostgreSQL
+        - Not relevant
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: The database version, the OS, the theme and the enabled modules, when they matter.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant lines from the server's log.
+      render: text

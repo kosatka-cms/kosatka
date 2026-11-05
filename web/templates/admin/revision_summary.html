@@ -1,0 +1,16 @@
+{{/* revision_summary - what a revision changed (service.RevisionSummary):
+     how it came about, or the publishing it changed, or its parts. */}}
+{{define "revision_summary"}}
+{{$kind := print .Kind}}
+{{if eq $kind "create"}}{{t "Content created"}}
+{{else if eq $kind "baseline"}}{{t "As it was before the history was on"}}
+{{else if eq $kind "revert"}}
+{{t "The version of @date brought back" "@date" (formatDate .RevertedFromAt)}}
+<span class="admin-pill admin-pill--warn">{{t "revert"}}</span>
+{{if .Labels}}<span class="admin-table-sub">{{range $i, $l := .Labels}}{{if $i}}, {{end}}{{$l}}{{end}}</span>{{end}}
+{{else if .Status}}
+{{if eq .Status "published"}}{{t "Published"}}{{else if eq .Status "unpublished"}}{{t "Unpublished"}}{{else if eq .Status "moderation_on"}}{{t "Sent to moderation"}}{{else}}{{t "Removed from moderation"}}{{end}}
+<span class="admin-pill">{{t "publishing"}}</span>
+{{else}}{{range $i, $l := .Labels}}{{if $i}}, {{end}}{{$l}}{{end}}
+{{end}}
+{{end}}

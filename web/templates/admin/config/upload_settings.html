@@ -1,0 +1,80 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Applies to all image uploads on the site: images in content and in modules, the site logo. The sizes images are shown at are set by the image styles and the theme, not by this policy."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="upload-settings-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "invalid" (t "Check the maximum file size and image size - both must be positive numbers.")
+        "extensions" (t "The extension \"@ext\" can't be allowed: use letters and digits only, and no web pages, scripts or programs." "@ext" .badExtension)
+        "1" (t "Error saving."))
+    "Warnings" (dict
+        "empty" (t "Select at least one allowed image format.")))}}
+
+<form method="post" action="/admin/config/upload-settings" id="upload-settings-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="max_file_size_mb" class="admin-setting-label">{{t "Maximum file size (MB)"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="max_file_size_mb" name="max_file_size_mb" class="form-control admin-max-xs" value="{{.maxFileSizeMB}}" step="0.1" min="0.1">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="max_image_dimension" class="admin-setting-label">{{t "Maximum image size (px)"}}</label>
+                <span class="admin-setting-help">{{t "Images wider or taller than this value are proportionally scaled down on upload (and re-saved as JPEG)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="number" id="max_image_dimension" name="max_image_dimension" class="form-control admin-max-xs" value="{{.settings.MaxImageDimension}}" min="1">
+            </div>
+        </div>
+        <fieldset class="admin-setting">
+            <legend class="admin-setting-text">
+                <span class="admin-setting-label">{{t "Allowed formats"}}</span>
+            </legend>
+            <div class="admin-setting-control admin-setting-control--choices">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="mime_image/jpeg" id="mime_jpeg" value="1" {{if index .allowedMimeSet "image/jpeg"}}checked{{end}}>
+                    <label class="form-check-label" for="mime_jpeg">JPEG</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="mime_image/png" id="mime_png" value="1" {{if index .allowedMimeSet "image/png"}}checked{{end}}>
+                    <label class="form-check-label" for="mime_png">PNG</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="mime_image/gif" id="mime_gif" value="1" {{if index .allowedMimeSet "image/gif"}}checked{{end}}>
+                    <label class="form-check-label" for="mime_gif">GIF</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="mime_image/webp" id="mime_webp" value="1" {{if index .allowedMimeSet "image/webp"}}checked{{end}}>
+                    <label class="form-check-label" for="mime_webp">WebP</label>
+                </div>
+            </div>
+        </fieldset>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="user_file_extensions" class="admin-setting-label">{{t "Documents in users' files"}}</label>
+                <span class="admin-setting-help">{{t "Extensions separated by spaces, for example: pdf docx xlsx zip. Users can upload these files besides images to their files (the profile \"Files\" tab and the editor) and link to them in texts. Web pages, scripts and programs are never accepted. Empty - images only."}} {{t "Documents can be uploaded only by roles with the \"Upload documents\" permission (<a href=\":url\">Permissions</a>); everyone else uploads images only." ":url" "/admin/people/permissions"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="user_file_extensions" name="user_file_extensions" class="form-control" value="{{.userFileExtensions}}">
+            </div>
+        </div>
+    </div>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

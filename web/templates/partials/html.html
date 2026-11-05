@@ -1,0 +1,365 @@
+{{/* The engine's HTML document, shared by all themes: a theme's "header"
+     starts the page with html_start, its "footer" ends it with html_scripts
+     and html_end.
+     html_start - <!DOCTYPE>, <head> (SEO, verification, the modules'
+     head_<module>, engine styles, the theme_head hook, scripts, tracking
+     codes), <body> and the admin /
+     maintenance bar; html_scripts - shared JS libraries (Bootstrap,
+     PhotoSwipe, Swiper), after which the theme initializes its widgets;
+     html_end - node view counting, tracking codes before </body>,
+     </body></html>. */}}
+{{/* csrf_head - the session's CSRF token for forms and scripts: the
+     meta tag and csrf.js, which puts it in every POST form and request
+     (and asks /api/csrf-token for one when a guest's page has none). */}}
+{{define "csrf_head"}}
+    <meta name="csrf-token" content="{{.CSRFToken}}">
+    <script src="{{ staticJS "csrf" }}"></script>
+{{end}}
+
+{{define "html_start"}}
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+    <title>{{ .pageSEO.Title }}</title>
+    <meta charset="utf-8" />
+    {{template "csrf_head" .}}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    {{if .pageSEO.Description }}
+    <meta name="Description" content="{{ .pageSEO.Description }}">
+    {{end}}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{$integrations := integrations}}
+    {{range $integrations.VerificationMetas}}<meta name="{{.Name}}" content="{{.Content}}">
+    {{end}}    {{if .pageSEO.NoIndex }}
+    <meta name="robots" content="noindex, follow">
+    {{end}}
+
+    {{if .pageSEO.Title }}
+    <meta property="og:title" content="{{ .pageSEO.Title }}">
+    {{end}}
+    {{if .pageSEO.Description }}
+    <meta property="og:description" content="{{ .pageSEO.Description }}">
+    {{end}}
+    {{if .pageSEO.OGImage }}
+    <meta property="og:image" content="{{ .pageSEO.OGImage }}">
+    {{end}}
+    {{if .pageSEO.OGURL }}
+    <meta property="og:url" content="{{ localSelfURL .pageSEO.OGURL (print (or .currentPath "")) }}">
+    {{end}}
+    {{if .pageSEO.Canonical }}
+    <link rel="canonical" href="{{ localSelfURL .pageSEO.Canonical (print (or .currentPath "")) }}" />
+    {{end}}
+    {{/* The enabled modules' tags in <head> (head_<module>, e.g. the
+         page's addresses in the site's other languages). */}}
+    {{moduleHook "head" .}}
+    {{with .breadcrumbsJSONLD}}<script type="application/ld+json">{{.}}</script>{{end}}
+    {{/* The schema.org markup: a content item's of its type, the site's on
+         the front page (Configuration → SEO, Site information). */}}
+    {{with .schemaJSONLD}}<script type="application/ld+json">{{.}}</script>{{end}}
+    {{with .siteJSONLD}}<script type="application/ld+json">{{.}}</script>{{end}}
+    {{if .rssFeedURL}}
+    <link rel="alternate" type="application/rss+xml" title="{{.rssFeedTitle}}" href="{{.rssFeedURL}}">
+    {{end}}
+    {{if .pageSEO.PreloadImage }}
+    <link rel="preload" as="image" href="{{ .pageSEO.PreloadImage }}"{{with .pageSEO.PreloadImageSrcset}} imagesrcset="{{.}}"{{end}} fetchpriority="high">
+    {{end}}
+
+    {{template "site_icon"}}
+    {{template "site_styles" .}}
+    {{if or .needsSwiperCSS (hasVisibleCarouselBlock .)}}
+    <link rel="stylesheet" href="{{ staticCSS "swiper-bundle" }}" />
+    {{end}}
+    {{if .isAdmin}}<link rel="stylesheet" href="{{ staticCSS "admin" }}" />{{end}}
+    {{if .isCommentsRecentPage}}<link rel="stylesheet" href="{{ staticCSS "profile" }}" />{{end}}
+    {{if .user }}
+    <script>
+        window.USER_DATA = {
+            isLoggedIn: true,
+            username: '{{ .user.Username }}',
+            avatar: '{{if .user.Avatar.URI}}{{ .user.Avatar.URI }}{{else}}{{avatarPlaceholder}}{{end}}',
+            creatableMaterials: {{with index . "creatableMaterials"}}{{.}}{{else}}[]{{end}}
+        };
+    </script>
+    {{end}}
+    {{/* A module's form with a CAPTCHA on every page (its page data sets
+         recaptchaScript); login, register and password forms load the
+         script themselves. */}}
+    {{if .recaptchaScript}}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    {{end}}
+    <script src="{{jsTranslationsURL}}"></script>
+    <script src="{{ staticJS "app" }}" defer></script>
+    {{/* The enabled modules' JS (entity.Module.JS), after app.js. */}}
+    {{ moduleScripts }}
+    {{/* Tracking codes (/admin/config/integrations): raw head code,
+         then Google Analytics. A code whose consent group waits
+         (entity.Consent.Waits) is an inert <template data-consent>: the
+         banner's script runs it once the visitor allows its group. None
+         on a page whose address carries a secret (tokenInURL): the
+         counters send the address on. */}}
+    {{$c := $integrations.Consent}}
+    {{if not .tokenInURL}}
+    {{if $c.Waits $c.HeadGroup}}<template data-consent="{{$c.HeadGroup}}">{{end}}{{$integrations.HeadCode | rawHTML}}{{if $c.Waits $c.HeadGroup}}</template>{{end}}
+    {{with $integrations.GAID}}{{if $c.Waits $c.GAGroup}}<template data-consent="{{$c.GAGroup}}">{{end}}
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{.}}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', {{.}});
+    </script>
+    {{if $c.Waits $c.GAGroup}}</template>{{end}}{{end}}
+    {{end}}
+</head>
+<body class="{{if .maintenanceShowCompactStrip}}has-maintenance-compact-strip{{end}}">
+
+{{if .isAdmin}}{{template "admin_top_bar" .}}{{template "admin_top_bar_after"}}{{else if .maintenanceBanner}}
+<div class="maintenance-mode-compact-strip" role="status" aria-live="polite">
+    <div class="container maintenance-mode-compact-inner">
+        <span class="maintenance-mode-compact-label">{{t "Maintenance mode"}}</span>
+        <div class="maintenance-mode-compact-text">{{.maintenanceMessageHTML}}</div>
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{/* site_icon - the pages' icon (siteIcon: the site's, uploaded on Site
+     information, else the theme's theme.yaml "favicon"); a PNG is also
+     the home screen's (apple-touch-icon). Nothing without one. Public
+     and admin pages. */}}
+{{define "site_icon"}}{{with siteIcon}}<link rel="icon" href="{{.URL}}"{{with .Type}} type="{{.}}"{{end}}>
+    {{if .Touch}}<link rel="apple-touch-icon" href="{{.URL}}">
+    {{end}}{{end}}{{end}}
+
+{{define "html_scripts"}}
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+
+<script src="/static/js/photoswipe.umd.min.js"></script>
+<script src="/static/js/photoswipe-lightbox.umd.min.js"></script>
+
+<script src="/static/js/swiper-bundle.min.js"></script>
+{{end}}
+
+{{/* site_styles - the stylesheets of a public page: the Bootstrap build
+     and fonts the active theme chooses (theme_framework), the theme
+     (theme_head) with its colours set on the Appearance page
+     (themeSettingsStyle) and the engine's shared CSS. Also used by the
+     Views preview frame (admin/views/preview.html), so the preview looks
+     as the site does. */}}
+{{define "site_styles"}}
+    {{template "theme_framework" .}}
+    {{template "theme_head" .}}
+    {{/* A subtheme's own stylesheets (theme.yaml "stylesheets"), after
+         its base theme's. */}}
+    {{range themeStylesheets}}<link rel="stylesheet" href="{{.}}">
+    {{end}}{{themeSettingsStyle}}
+    <link rel="stylesheet" href="{{ staticCSS "menu" }}">
+    <link rel="stylesheet" href="{{ staticCSS "components" }}">
+    {{/* The enabled modules' CSS (entity.Module.CSS). */}}
+    {{ moduleStyles }}
+    {{ staticCSSAsync "photoswipe" }}
+    {{/* Windows and toasts the scripts open (Kosatka.window, Kosatka.toast). */}}
+    {{ staticCSSAsync "overlays" }}
+{{end}}
+
+{{define "html_end"}}
+{{if featureEnabled "back_to_top"}}
+{{/* Back to top (Appearance page). Default look at zero specificity
+     (:where), so any theme rule for .back-to-top wins; app.js shows it
+     after scrolling. */}}
+<style>
+:where(.back-to-top){position:fixed;right:24px;bottom:24px;z-index:1000;display:flex;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:none;border-radius:50%;background:#333;color:#fff;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
+:where(.back-to-top.visible){opacity:1;visibility:visible}
+</style>
+<button type="button" id="back-to-top" class="back-to-top" aria-label="{{t "Back to top"}}" title="{{t "Back to top"}}">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 15l-6-6-6 6"/>
+    </svg>
+</button>
+{{end}}
+{{if .viewTrackNID}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // No CSRF token (the count takes none: a cached guest page sends it
+    // too); sendBeacon outlives a quick navigation.
+    var p = new URLSearchParams();
+    p.set('nid', String({{.viewTrackNID}}));
+    if (!(navigator.sendBeacon && navigator.sendBeacon('/api/node/view', p))) {
+        fetch('/api/node/view', {method: 'POST', body: p, keepalive: true, credentials: 'same-origin'}).catch(function() {});
+    }
+});
+</script>
+{{end}}
+
+{{/* Tracking codes (/admin/config/integrations): Yandex Metrica,
+     then the raw code before </body> (skipped on service pages - admin,
+     404 - when configured so); none where the address carries a secret
+     (tokenInURL). */}}
+{{template "consent_banner" .}}
+{{$integrations := integrations}}{{$c := $integrations.Consent}}
+{{if not .tokenInURL}}
+{{with $integrations.MetrikaCounter}}{{if $c.Waits $c.MetrikaGroup}}<template data-consent="{{$c.MetrikaGroup}}">{{end}}
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id={{.}}', 'ym');
+
+    ym({{.}}, 'init', {ssr:true, clickmap:{{$integrations.MetrikaClickmap}}, referrer: document.referrer, url: location.href, accurateTrackBounce:{{$integrations.MetrikaAccurateBounce}}, trackLinks:{{$integrations.MetrikaTrackLinks}}{{if $integrations.MetrikaWebvisor}}, webvisor:true{{end}}});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/{{.}}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+{{if $c.Waits $c.MetrikaGroup}}</template>{{end}}{{end}}
+{{if not (and $integrations.BodyEndSkipServicePages .servicePage)}}{{if $c.Waits $c.BodyEndGroup}}<template data-consent="{{$c.BodyEndGroup}}">{{end}}{{$integrations.BodyEndCode | rawHTML}}{{if $c.Waits $c.BodyEndGroup}}</template>{{end}}{{end}}
+{{end}}
+</body>
+</html>
+{{end}}
+
+{{/* admin_top_bar - the admin bar on public pages (html_start): a slim
+     bar in the Kosatka logo's colours - the admin's link, its sections
+     (entity.AdminMenu as the user may see them, service.VisibleAdminMenu,
+     data "adminMenu") as dropdowns, the site's state (accounts awaiting
+     approval, maintenance mode, a theme's preview), creating content, the
+     user's menu (with logging out) and collapsing the bar. */}}
+{{define "admin_top_bar"}}
+<div id="admin-top-bar" role="banner">
+    <a href="/admin/content" class="admin-bar-home"><img src="/static/images/kosatka-logo.svg" alt="" width="22" height="22">{{t "Admin"}}</a>
+    {{/* On a phone the sections hide behind "Menu" and open over the
+         page below the bar (admin.css, app.js); elsewhere the button
+         isn't shown and the sections stand in the row. */}}
+    <button type="button" class="admin-bar-menu-toggle" aria-expanded="false" aria-controls="admin-bar-sections">{{t "Menu"}} ▾</button>
+    <nav class="admin-bar-sections" id="admin-bar-sections" aria-label="{{t "Admin menu"}}">
+        {{range .adminMenu}}
+        {{if .Path}}
+        <a href="{{.Path}}" class="admin-bar-item admin-bar-top-link">{{t .Label}}</a>
+        {{else}}
+        <div class="admin-bar-dropdown">
+            <button type="button" class="admin-bar-item admin-bar-toggle" aria-expanded="false" aria-haspopup="true">{{t .Label}} ▾</button>
+            {{/* A group (its title and links) is one block: a section of
+                 several groups stands in two columns, a group whole in one
+                 (admin.css). */}}
+            <div class="admin-bar-submenu">
+                {{$group := ""}}{{$open := false}}
+                {{range .Items}}
+                {{if and .Group (ne .Group $group)}}{{if $open}}</div>{{end}}{{$group = .Group}}{{$open = true}}<div class="admin-bar-section"><div class="admin-bar-group">{{t .Group}}</div>{{end}}
+                <a href="{{.Path}}" class="admin-bar-link">{{t .Label}}{{if .Count}} <span class="admin-bar-count">{{.Count}}</span>{{end}}</a>
+                {{end}}
+                {{if $open}}</div>{{end}}
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+    </nav>
+    <div class="admin-bar-end">
+        {{if gt .pendingPeopleCount 0}}
+        <a href="/admin/people?status=pending" class="admin-bar-pill admin-bar-pill--warn">{{t "Accounts awaiting approval: @count" "@count" .pendingPeopleCount}}</a>
+        {{end}}
+        {{if .maintenanceBanner}}
+        <a href="/admin/config/maintenance" class="admin-bar-pill admin-bar-pill--warn admin-top-bar-maintenance">{{t "Maintenance mode"}}</a>
+        {{end}}
+        {{/* A theme's preview (middleware.ThemePreviewMiddleware): only this
+             administrator sees the site in it; activate it or leave. */}}
+        {{with .themePreview}}
+        <div class="admin-top-bar-preview" role="status">
+            <span class="admin-bar-pill">{{t "Preview: @name" "@name" (t .Name)}}</span>
+            <form method="post" action="/admin/config/appearance">
+                <input type="hidden" name="theme" value="{{.Dir}}">
+                <button type="submit" class="admin-bar-button admin-bar-button--accent">{{t "Activate"}}</button>
+            </form>
+            <form method="post" action="/admin/config/appearance/preview/stop">
+                <button type="submit" class="admin-bar-button">{{t "Exit preview"}}</button>
+            </form>
+        </div>
+        {{end}}
+        {{with index . "creatableMaterials"}}
+        <div class="admin-bar-dropdown admin-bar-dropdown--end">
+            <button type="button" class="admin-bar-toggle admin-bar-button admin-bar-button--accent" aria-expanded="false" aria-haspopup="true">+ <span class="admin-bar-create-label">{{t "Create"}}</span> ▾</button>
+            <div class="admin-bar-submenu">
+                {{range .}}<a href="{{.URL}}" class="admin-bar-link">{{.Label}}</a>{{end}}
+            </div>
+        </div>
+        {{end}}
+        {{with .user}}
+        <div class="admin-bar-dropdown admin-bar-dropdown--end">
+            <button type="button" class="admin-bar-toggle admin-bar-user" aria-expanded="false" aria-haspopup="true">
+                <img src="{{if .Avatar.URI}}{{.Avatar.URI}}{{else}}{{avatarPlaceholder}}{{end}}" alt="" width="24" height="24">
+                <span class="admin-bar-user-name">{{.Username}}</span> ▾
+            </button>
+            <div class="admin-bar-submenu">
+                <a href="/me" class="admin-bar-link">{{t "My profile"}}</a>
+                <a href="/logout" class="admin-bar-link admin-bar-logout">{{t "Log out"}}</a>
+            </div>
+        </div>
+        {{end}}
+        <button type="button" id="admin-top-bar-collapse" class="admin-top-bar-btn-collapse" aria-label="{{t "Collapse admin toolbar"}}" title="{{t "Collapse toolbar"}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 15 12 9 6 15"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{{template "admin_top_bar_spacer"}}
+{{end}}
+{{/* admin_top_bar_spacer - the room the fixed bar takes at the top of
+     the page, admin and public pages alike: the page starts below the bar,
+     not under it (admin.css). */}}
+{{define "admin_top_bar_spacer"}}<div class="admin-top-bar-spacer" aria-hidden="true"></div>{{end}}
+{{define "admin_top_bar_after"}}
+<button type="button" id="admin-top-bar-restore" class="admin-top-bar-fab" aria-label="{{t "Show admin toolbar"}}" title="{{t "Show admin toolbar"}}">
+    <img src="/static/images/kosatka-logo.svg" alt="" width="20" height="20">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 9 12 15 18 9"/>
+    </svg>
+</button>
+<script>
+(function () {
+  try {
+    if (localStorage.getItem("cmsAdminTopBarHidden") === "1" && document.body) {
+      document.body.classList.add("admin-top-bar-hidden");
+    }
+  } catch (e) {}
+})();
+</script>
+{{end}}
+
+{{/* consent_banner - the cookie banner (entity.Consent, integrations):
+     a bar at the bottom, hidden until the script (consent in app.js)
+     finds no choice of this version in the visitor's cookie. Asking: the
+     groups the site's codes wait in (IntegrationSettings.AskedGroups) -
+     "Accept all", "Necessary only", "Customize" (a tick per group, "Save
+     the choice"); a page's link to #cookie-settings opens it again.
+     Notice only: the text and "Got it". Nothing to ask - no banner. */}}
+{{define "consent_banner"}}{{$s := integrations}}{{$c := $s.Consent}}
+{{if $c.Enabled}}{{$groups := $s.AskedGroups}}{{$notice := eq (print $c.Mode) "notice"}}
+{{if or $notice $groups}}
+<section class="kosatka-consent" data-consent-banner data-consent-version="{{$c.Version}}" data-consent-mode="{{if $notice}}notice{{else}}consent{{end}}" role="region" aria-label="{{t "Cookies"}}" hidden>
+    <div class="kosatka-consent-inner">
+        <p class="kosatka-consent-text">{{with $c.Text}}{{.}}{{else}}{{t "We use cookies: the necessary ones so that the site works, analytics to see what is read. Analytics is on only with your consent."}}{{end}}{{with $c.PolicyURL}} <a href="{{.}}">{{t "Learn more"}}</a>{{end}}</p>
+        {{if $notice}}
+        <div class="kosatka-consent-actions">
+            <button type="button" class="btn btn-primary" data-consent-ok>{{t "Got it"}}</button>
+        </div>
+        {{else}}
+        <fieldset class="kosatka-consent-groups" data-consent-groups hidden>
+            <legend class="visually-hidden">{{t "Cookies"}}</legend>
+            <label class="kosatka-consent-group"><input type="checkbox" checked disabled> <span><strong>{{t "Necessary"}}</strong> {{t "Signing in, protecting forms: the site doesn't work without them."}}</span></label>
+            {{range $groups}}
+            <label class="kosatka-consent-group"><input type="checkbox" value="{{.}}" data-consent-group> <span>{{if eq (print .) "analytics"}}<strong>{{t "Analytics"}}</strong> {{t "How the site is used: visits, what is read."}}{{else}}<strong>{{t "Advertising"}}</strong> {{t "Ads and their measurement."}}{{end}}</span></label>
+            {{end}}
+        </fieldset>
+        <div class="kosatka-consent-actions">
+            <button type="button" class="kosatka-consent-customize" data-consent-customize>{{t "Customize"}}</button>
+            <button type="button" class="btn btn-outline-secondary" data-consent-necessary>{{t "Necessary only"}}</button>
+            <button type="button" class="btn btn-primary" data-consent-save hidden>{{t "Save the choice"}}</button>
+            <button type="button" class="btn btn-primary" data-consent-all>{{t "Accept all"}}</button>
+        </div>
+        {{end}}
+    </div>
+</section>
+{{end}}{{end}}{{end}}

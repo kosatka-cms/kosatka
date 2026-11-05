@@ -1,0 +1,177 @@
+{{/* admin/config/integrations - the external services on every page
+     (IntegrationsPage): ownership verification, Yandex.Metrica, Google
+     Analytics, custom code (only for the full-access role) - as rows; Save
+     over the page and under the form. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "External services included on every page of the site: site ownership verification, analytics counters, ad loaders."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="integrations-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{$s := .settings}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved.")
+        "consentReset" (t "Saved. Every visitor will be asked again."))
+    "Errors" (dict
+        "metrika" (t "The Yandex.Metrica counter number may contain digits only.")
+        "ga" (t "The Google Analytics ID may contain Latin letters, digits and \"-\", for example <code>G-XXXXXXX</code>.")
+        "consent_page" (t "The banner's page: a path on the site starting with / or an address starting with http:// or https://."))
+    "Fallback" (t "Could not save."))}}
+
+<form method="post" action="/admin/config/integrations" id="integrations-form" class="admin-settings">
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Site ownership verification"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="verification-tags" class="admin-setting-label">{{t "Verification meta tags"}}</label>
+                    <span class="admin-setting-help">{{t "One per line: <code>name=value</code> is output as <code>&lt;meta name=\"name\" content=\"value\"&gt;</code>. Yandex.Webmaster, Google Search Console, Bing, etc."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="verification-tags" name="verification_tags" class="form-control font-monospace" rows="3" placeholder="yandex-verification=0123abcd&#10;google-site-verification=AbC…">{{$s.VerificationTags}}</textarea></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Yandex.Metrica"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="metrika-id" class="admin-setting-label">{{t "Counter number"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="metrika-id" name="metrika_id" class="form-control" value="{{$s.MetrikaID}}" inputmode="numeric" placeholder="{{t "empty - do not include"}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="metrika-clickmap" class="admin-setting-label">{{t "Click map"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="metrika-clickmap" name="metrika_clickmap" value="1" {{if $s.MetrikaClickmap}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="metrika-track-links" class="admin-setting-label">{{t "External links and downloads"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="metrika-track-links" name="metrika_track_links" value="1" {{if $s.MetrikaTrackLinks}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="metrika-bounce" class="admin-setting-label">{{t "Accurate bounce rate"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="metrika-bounce" name="metrika_accurate_bounce" value="1" {{if $s.MetrikaAccurateBounce}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="metrika-webvisor" class="admin-setting-label">{{t "Session Replay"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="metrika-webvisor" name="metrika_webvisor" value="1" {{if $s.MetrikaWebvisor}}checked{{end}}></div>
+            </div>
+            {{template "consent_group_setting" (dict "Name" "metrika_group" "Value" $s.Consent.MetrikaGroup "Groups" .consentGroups)}}
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">Google Analytics</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="ga-id" class="admin-setting-label">{{t "Stream ID"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="ga-id" name="ga_id" class="form-control" value="{{$s.GAID}}" placeholder="G-XXXXXXX"></div>
+            </div>
+            {{template "consent_group_setting" (dict "Name" "ga_group" "Value" $s.Consent.GAGroup "Groups" .consentGroups)}}
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Custom code"}}</h2>
+        {{if .canEditCode}}
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="head-code" class="admin-setting-label">{{t "At the end of <code>&lt;head&gt;</code>"}}</label>
+                    <span class="admin-setting-help">{{t "HTML/JS is inserted as is into every page, for example an ad loader. A mistake here can break the site."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="head-code" name="head_code" class="form-control font-monospace" rows="5">{{$s.HeadCode}}</textarea></div>
+            </div>
+            {{template "consent_group_setting" (dict "Name" "head_code_group" "Value" $s.Consent.HeadGroup "Groups" .consentGroups)}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="body-end-code" class="admin-setting-label">{{t "Before <code>&lt;/body&gt;</code>"}}</label></div>
+                <div class="admin-setting-control"><textarea id="body-end-code" name="body_end_code" class="form-control font-monospace" rows="8">{{$s.BodyEndCode}}</textarea></div>
+            </div>
+            {{template "consent_group_setting" (dict "Name" "body_end_group" "Value" $s.Consent.BodyEndGroup "Groups" .consentGroups)}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="body-end-skip" class="admin-setting-label">{{t "Do not output the code before <code>&lt;/body&gt;</code> on service pages (admin, 404)"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="body-end-skip" name="body_end_skip_service_pages" value="1" {{if $s.BodyEndSkipServicePages}}checked{{end}}></div>
+            </div>
+        </div>
+        {{else}}
+        <p class="admin-setting-help">{{t "Custom code fields (HTML/JS on every page) are available only to the role with full access."}}</p>
+        {{end}}
+    </section>
+
+    {{/* The cookie banner (entity.Consent): the codes of a group wait for
+         the visitor's consent; their groups are set by each code above. */}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Visitors' consent (cookie)"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="consent-enabled" class="admin-setting-label">{{t "Cookie banner"}}</label>
+                    <span class="admin-setting-help">{{t "Shown to a visitor until they choose; a menu link to <code>#cookie-settings</code> opens it again."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="consent-enabled" name="consent_enabled" value="1" {{if $s.Consent.Enabled}}checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Mode"}}</span>
+                    <span class="admin-setting-help">{{t "Visitors from the EU must consent before analytics and ads load."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <div class="form-check"><input class="form-check-input" type="radio" id="consent-mode-ask" name="consent_mode" value="consent" {{if ne (print $s.Consent.Mode) "notice"}}checked{{end}}><label class="form-check-label" for="consent-mode-ask">{{t "Consent first: the codes of a group wait for \"Accept\""}}</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" id="consent-mode-notice" name="consent_mode" value="notice" {{if eq (print $s.Consent.Mode) "notice"}}checked{{end}}><label class="form-check-label" for="consent-mode-notice">{{t "Notice only: the codes load at once, the banner tells about them"}}</label></div>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="consent-text" class="admin-setting-label">{{t "Banner text"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - the default text in the site's language."}}</span>
+                </div>
+                <div class="admin-setting-control"><textarea id="consent-text" name="consent_text" class="form-control" rows="3" maxlength="2000" placeholder="{{t "We use cookies: the necessary ones so that the site works, analytics to see what is read. Analytics is on only with your consent."}}">{{$s.Consent.Text}}</textarea></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="consent-page" class="admin-setting-label">{{t "\"More\" page"}}</label>
+                    <span class="admin-setting-help">{{t "The privacy policy: a path on the site or an address. Empty - no link."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="text" id="consent-page" name="consent_policy_url" class="form-control" value="{{$s.Consent.PolicyURL}}" placeholder="/privacy"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Ask everyone again"}}</span>
+                    <span class="admin-setting-help">{{t "After the policy changed: every visitor's choice is forgotten (saves the form too)."}}</span>
+                </div>
+                <div class="admin-setting-control"><button type="submit" name="consent_reset" value="1" class="btn btn-outline-secondary" data-confirm="{{t "Ask every visitor again?"}}">{{t "Reset the consents"}}</button></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}
+
+{{/* consent_group_setting - a code's consent group (dict Name, Value,
+     Groups - entity.ConsentGroups). */}}
+{{define "consent_group_setting"}}
+<div class="admin-setting">
+    <div class="admin-setting-text">
+        <label for="{{.Name}}" class="admin-setting-label">{{t "Consent"}}</label>
+        <span class="admin-setting-help">{{t "With the cookie banner asking: the group this code waits in."}}</span>
+    </div>
+    <div class="admin-setting-control">
+        {{$v := print .Value}}
+        <select id="{{.Name}}" name="{{.Name}}" class="form-select admin-min-sm">
+            {{range .Groups}}<option value="{{.}}" {{if eq (print .) $v}}selected{{end}}>{{template "consent_group_label" .}}</option>{{end}}
+        </select>
+    </div>
+</div>
+{{end}}
+
+{{define "consent_group_label"}}{{if eq (print .) "analytics"}}{{t "Analytics"}}{{else if eq (print .) "marketing"}}{{t "Advertising"}}{{else}}{{t "No consent needed"}}{{end}}{{end}}

@@ -1,0 +1,42 @@
+{{template "layout.html" .}}
+
+{{define "title"}}{{t "New message"}}{{end}}
+
+{{define "breadcrumb"}}
+
+{{end}}
+
+{{define "content"}}{{attach "private_messages"}}
+<div class="pm-new-page">
+
+    <h2>{{t "New message"}}</h2>
+
+    <form action="/me/messages/new" method="POST" class="pm-new-form">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+        <div class="form-group">
+            <label for="recipient-search">{{t "Recipients"}}</label>
+            <div class="recipients-input">
+                <input type="text" id="recipient-search" class="form-control" placeholder="{{t "Start typing a username..."}}" autocomplete="off" data-user-autocomplete data-user-list="recipients-list" data-user-field="recipients[]">
+            </div>
+            <div id="recipients-list" class="recipients-list">{{with .recipient}}<span class="user-autocomplete-tag">{{.Username}} <button type="button" aria-label="{{t "Remove"}}">×</button><input type="hidden" name="recipients[]" value="{{.ID}}"></span>{{end}}</div>
+            <small class="form-text text-muted">{{t "Start typing a name to search for a user (at least 3 characters). Add recipients one at a time."}}</small>
+        </div>
+
+        <div class="form-group">
+            <label for="pm-subject">{{t "Subject"}}</label>
+            <input type="text" id="pm-subject" name="subject" required maxlength="255" placeholder="{{t "Message subject"}}">
+        </div>
+
+        <div class="form-group">
+            <label for="pm-body">{{t "Message"}}</label>
+            <textarea id="pm-body" name="body" required rows="6" placeholder="{{t "Message text..."}}"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{{t "Send"}}</button>
+        <a href="/me/messages" class="btn btn-secondary">{{t "Cancel"}}</a>
+
+    </form>
+</div>
+
+{{end}}

@@ -1,0 +1,52 @@
+{{/* admin/people/user_files_list.html - the users' folders
+     (Controller.UserFilesList): under the title how many folders, files
+     and how much; the search by a user's name (applied as it changes),
+     on a table card each user - files, size, last change, their folder. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Files users uploaded to their own folders (the profile \"Files\" tab and the editor): @folders users, @files files, @size." "@folders" .folders "@files" .totalFiles "@size" .totalSize}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<form method="get" action="/admin/content/files" class="admin-filters" data-autosubmit>
+    <div class="admin-filter admin-filter--wide">
+        <label for="files-q" class="admin-filter-label">{{t "User name"}}</label>
+        <input type="search" id="files-q" name="q" value="{{.query}}" class="form-control">
+    </div>
+    <noscript><button type="submit" class="btn btn-primary">{{t "Find"}}</button></noscript>
+    {{if .query}}<a href="/admin/content/files" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "User"}}</th>
+                    <th class="text-end">{{t "Files"}}</th>
+                    <th class="text-end">{{t "Size"}}</th>
+                    <th>{{t "Last change"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .rows}}
+                <tr>
+                    <td>{{if .User}}<a href="/{{.User.Slug}}" class="admin-table-title">{{.User.Username}}</a>{{else}}<span class="admin-table-muted">{{t "Deleted user"}} #{{.UserID}}</span>{{end}}</td>
+                    <td class="text-end admin-table-num">{{.Files}}</td>
+                    <td class="text-end admin-table-num text-nowrap">{{.SizeText}}</td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .Modified}}</td>
+                    <td class="text-end"><a href="/admin/content/files/{{.UserID}}" class="btn btn-sm btn-outline-primary">{{t "Open"}}</a></td>
+                </tr>
+                {{else}}
+                <tr><td colspan="5" class="admin-table-empty">{{if .query}}{{t "Nothing found."}}{{else}}{{t "No users' files yet."}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

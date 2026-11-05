@@ -1,0 +1,2 @@
+{{/* The articles' own node page (page_<type>). */}}
+{{define "page_articles"}}<article class="fixture-page"><h1>{{.item.Node.Title}}</h1>{{template "fixture_byline" .}}{{template "node_sections_default" .}}</article>{{end}}

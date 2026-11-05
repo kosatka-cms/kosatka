@@ -1,0 +1,95 @@
+{{/* admin/config/redirects.html - the redirects (Controller.RedirectList):
+     the modules' tabs (moduleHook "redirects_tabs": an <li class=
+     "nav-item"> each; the page's own first; none - no tabs), adding one
+     (a card of its own), the bulk import (folded), the list on a table
+     card with its search and pages. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count redirect" "@count redirects"}}</span>
+{{end}}
+
+{{define "page_body"}}
+{{$tabs := moduleHook "redirects_tabs" .}}
+{{if $tabs}}<ul class="nav nav-tabs mb-3"><li class="nav-item"><a class="nav-link active" aria-current="page" href="/admin/config/redirects">{{t "Redirects"}}</a></li>{{$tabs}}</ul>{{end}}
+{{template "content" .}}
+{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "Redirect added.")
+        "deleted" (t "Redirect deleted.")))}}
+{{if .imported}}
+<div class="alert alert-success" role="status">{{t "Redirects imported: @count" "@count" .imported}}</div>
+{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "create" (t "Error adding (this redirect may already exist).")
+        "delete" (t "Error while deleting."))
+    "Warnings" (dict
+        "empty" (t "Fill in the \"From\" and \"To\" fields.")))}}
+
+<section class="admin-settings-card admin-add-card" aria-labelledby="redirect-add">
+    <h2 class="admin-add-title" id="redirect-add">{{t "Add redirect"}}</h2>
+    <form method="post" action="/admin/config/redirects" class="admin-add-form">
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "From"}}</span>
+            <input type="text" name="from" class="form-control" placeholder="{{t "From (e.g. articles/old-slug)"}}" required>
+        </label>
+        <span class="admin-add-arrow" aria-hidden="true">→</span>
+        <label class="admin-filter">
+            <span class="admin-filter-label">{{t "To"}}</span>
+            <input type="text" name="to" class="form-control" placeholder="{{t "To (e.g. /articles/new-slug)"}}" required>
+        </label>
+        <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+    </form>
+    <details class="admin-add-more">
+        <summary>{{t "Bulk import"}}</summary>
+        <form method="post" action="/admin/config/redirects/import">
+            <p class="admin-setting-help">{{t "Format: <code>from -> to</code> or <code>RewriteRule from$ to [R=301,L]</code> (one per line)"}}</p>
+            <textarea name="bulk" class="form-control font-monospace small" rows="8" placeholder="articles/old-slug -> /articles/new-slug&#10;about-us -> /about"></textarea>
+            <button type="submit" class="btn btn-outline-primary mt-2">{{t "Import"}}</button>
+        </form>
+    </details>
+</section>
+
+<form method="get" action="/admin/config/redirects" class="admin-filters" role="search">
+    <div class="admin-filter admin-filter--wide">
+        <label for="redirects-q" class="admin-filter-label">{{t "Search"}}</label>
+        <input type="search" id="redirects-q" name="q" value="{{.search}}" class="form-control" placeholder="{{t "From or to address"}}">
+    </div>
+    <button type="submit" class="btn btn-primary">{{t "Find"}}</button>
+    {{if .search}}<a href="/admin/config/redirects" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+</form>
+
+<div class="admin-table-card">
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th>{{t "From"}}</th>
+                    <th>{{t "To"}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Operation"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .redirects}}
+                <tr>
+                    <td><code>{{.FromPath}}</code></td>
+                    <td><code>{{.ToPath}}</code></td>
+                    <td class="text-end">
+                        <form method="post" action="/admin/config/redirects/delete/{{.ID}}" class="d-inline" data-confirm="{{t "Delete the redirect?"}}">
+                            <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button>
+                        </form>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="3" class="admin-table-empty">{{if .search}}{{t "Nothing found."}}{{else}}{{t "No redirects"}}{{end}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</div>
+{{end}}

@@ -1,0 +1,14 @@
+{{/* Default value template for date fields. Node pages, View lists and
+     teasers call renderSuggestion "field_date" <machine name>
+     (fieldDate <value> <format>), which uses the theme's
+     "field_date_<machine name>" if defined, else this one. The value is a
+     service.FieldDate: .Formatted (in the field's display format) plus
+     time.Time methods (.IsZero, .Day, .Month, .Year, .Format). */}}
+{{define "field_date_default"}}{{.Formatted}}{{end}}
+
+{{/* Default list of a date field with several dates: renderSuggestion
+     "field_dates" <machine name> (dict "Field" <field> "List"
+     <service.FieldDates>) - the theme's "field_dates_<machine name>" if
+     defined, else this one. Each date through field_date_*, an ended one
+     marked "past", a current one "now on"; the nearest's "and N more". */}}
+{{define "field_dates_default"}}{{$name := .Field.MachineName}}<ul class="field-dates">{{range .List.Dates}}<li class="field-dates-item{{if .Past}} is-past{{else if .Ongoing}} is-ongoing{{end}}">{{renderSuggestion "field_date" $name .}}{{if .Ongoing}} <span class="field-dates-badge">{{t "now on"}}</span>{{else if .Past}} <span class="field-dates-badge">{{tc "date" "past"}}</span>{{end}}</li>{{end}}</ul>{{with .List.More}}<span class="field-dates-more">{{plural . "and @count more date" "and @count more dates"}}</span>{{end}}{{end}}

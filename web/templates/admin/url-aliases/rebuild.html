@@ -1,0 +1,91 @@
+{{/* admin/url-aliases/rebuild.html - the existing addresses of a type
+     rebuilt by its pattern (URLRebuildPage/URLRebuild): the choice, the
+     preview (.preview: a dry run - what would change; .previewFailed -
+     it failed), the rebuild's
+     totals (.checked, .changed; .more - continue after .after). */}}
+{{template "layout.html" .}}
+
+{{/* The tabs over the page's card (as on the addresses' tab). */}}
+{{define "page_body"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/config/url-aliases">{{t "Addresses"}}</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/config/url-aliases/patterns">{{t "Patterns"}}</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/admin/config/url-aliases/rebuild">{{t "Rebuild"}}</a></li>
+</ul>
+<div class="admin-surface">{{template "content" .}}</div>
+{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" . "Errors" (dict "rebuild" (t "The rebuild stopped on an error; the addresses changed so far keep their redirects. Continue, or see the log.")))}}
+
+<p class="text-muted">{{t "Rebuilds the addresses of a type's existing content by its pattern; every changed address redirects (301) from the old one. First see what changes."}}</p>
+
+<form method="get" action="/admin/config/url-aliases/rebuild" class="row g-3 align-items-end mb-4">
+    <input type="hidden" name="preview" value="1">
+    <div class="col-auto">
+        <label class="form-label" for="rebuild-type">{{t "Content type"}}</label>
+        <select id="rebuild-type" name="type" class="form-select" required>
+            <option value="">-</option>
+            {{range .types}}
+            <option value="{{.MachineName}}" {{if and $.req (eq $.req.Type.MachineName .MachineName)}}selected{{end}}>{{.Label}} - {{or .PathPattern $.defaultPathPattern}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="col-auto">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="rebuild-manual" name="manual" value="1" {{if and .req .req.IncludeManual}}checked{{end}}>
+            <label class="form-check-label" for="rebuild-manual">{{t "Also the addresses set by hand (they will follow the pattern)"}}</label>
+        </div>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">{{t "Show what changes"}}</button>
+    </div>
+</form>
+
+{{if .done}}
+<div class="alert alert-success">{{t "Done: @checked addresses checked, @changed changed (the old ones redirect to the new)." "@checked" .checked "@changed" .changed}}</div>
+{{else if .more}}
+<div class="alert alert-info">
+    {{t "So far: @checked addresses checked, @changed changed. Not everything fit in the request's time - continue." "@checked" .checked "@changed" .changed}}
+    <form method="post" action="/admin/config/url-aliases/rebuild" class="mt-2">
+        <input type="hidden" name="type" value="{{.req.Type.MachineName}}">
+        {{if .req.IncludeManual}}<input type="hidden" name="manual" value="1">{{end}}
+        <input type="hidden" name="after" value="{{.after}}">
+        <input type="hidden" name="checked" value="{{.checked}}">
+        <input type="hidden" name="changed" value="{{.changed}}">
+        <button type="submit" class="btn btn-primary">{{t "Continue"}}</button>
+    </form>
+</div>
+{{end}}
+
+{{if .previewFailed}}<div class="alert alert-danger">{{t "The operation failed. Try again."}}</div>{{end}}
+{{with .preview}}
+<h2 class="h5">{{t "What changes"}}</h2>
+<p>
+    {{t "Checked @checked of @total, the address changes for @changed." "@checked" .Checked "@total" $.total "@changed" .Changed}}
+    {{if .More}}{{t "Not every address fit in the request's time: the count is of the first ones."}}{{end}}
+</p>
+{{if .Samples}}
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead><tr><th>{{t "Title"}}</th><th>{{t "Now"}}</th><th>{{t "Will be"}}</th></tr></thead>
+        <tbody>
+            {{range .Samples}}
+            <tr><td>{{.Title}}</td><td><code>/{{.From}}</code></td><td><code>/{{.To}}</code></td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{if gt .Changed (len .Samples)}}<p class="text-muted small">{{t "The first @count changes are shown." "@count" (len .Samples)}}</p>{{end}}
+{{end}}
+{{if or .Changed (and $.req $.req.IncludeManual)}}
+<form method="post" action="/admin/config/url-aliases/rebuild">
+    <input type="hidden" name="type" value="{{$.req.Type.MachineName}}">
+    {{if $.req.IncludeManual}}<input type="hidden" name="manual" value="1">{{end}}
+    <button type="submit" class="btn btn-primary">{{t "Rebuild the addresses"}}</button>
+</form>
+{{else}}
+<p>{{t "Every address already follows the pattern."}}</p>
+{{end}}
+{{end}}
+{{end}}

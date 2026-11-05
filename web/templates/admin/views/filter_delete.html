@@ -1,0 +1,13 @@
+{{template "layout.html" .}}
+
+{{define "content"}}{{template "admin_confirm_delete" (dict "Ctx" .
+    "Index" "/admin/config/views" "IndexLabel" (t "All views")
+    "Back" (printf "/admin/config/views/%v/filters" .view.ID) "BackLabel" (t "Filters of \"@label\"" "@label" .view.Label)
+    "Heading" (t "Delete filter \"<code>@target</code>\"?" "@target" .target)
+    "Body" (renderBlock "confirm_body" .)
+    "Action" (printf "/admin/config/views/%v/filters/%v/delete" .view.ID .row.ID)
+    "Submit" (t "Yes, delete filter"))}}{{end}}
+
+{{define "confirm_body"}}
+<p class="mb-0">{{t "Operator:"}} <code>{{.row.Operator}}</code>. {{if .row.Exposed}}{{t "Exposed to visitors via the query parameter <code>@param</code>." "@param" .row.ExposedParam}}{{else}}{{t "Fixed value:"}} {{.row.Value}}{{end}}</p>
+{{end}}

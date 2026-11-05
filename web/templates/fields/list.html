@@ -1,0 +1,9 @@
+{{/* Default value template for list fields. Node pages and View lists
+     call renderSuggestion "field_list" <machine name> <entity.ListItems>
+     (the chosen options: .Value, .Label and .Index - the option's place
+     among the field's options, 1 - the first), which uses the theme's
+     "field_list_<machine name>" if defined, else this one. Each option is
+     a span with its place (list-value-<n>) and value, so a theme can style
+     the options in their order (badges of a verdict, a difficulty); the
+     separator is a span of its own for a theme to hide. */}}
+{{define "field_list_default"}}<span class="list-values">{{range $i, $o := .}}{{if $i}}<span class="list-value-sep">, </span>{{end}}<span class="list-value list-value-{{$o.Index}}" data-list-value="{{$o.Value}}">{{$o.Label}}</span>{{end}}</span>{{end}}

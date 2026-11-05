@@ -1,0 +1,10 @@
+{{/* admin_mail_tabs - the Mail page's tabs (real links): how email is
+     sent, the site's emails, the log. Expects the tab shown: "settings",
+     "templates", "log". */}}
+{{define "admin_mail_tabs"}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{{if eq . "settings"}} active" aria-current="page{{end}}" href="/admin/config/mail">{{t "Sending"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if eq . "templates"}} active" aria-current="page{{end}}" href="/admin/config/mail/templates">{{t "Emails"}}</a></li>
+    <li class="nav-item"><a class="nav-link{{if eq . "log"}} active" aria-current="page{{end}}" href="/admin/config/mail/log">{{t "Log"}}</a></li>
+</ul>
+{{end}}

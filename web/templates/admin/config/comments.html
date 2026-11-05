@@ -1,0 +1,156 @@
+{{/* admin/config/comments.html - how a content page loads its comments
+     and what is done with suspicious ones (Controller.CommentSettingsPage):
+     loaded with the page or by ajax; refused at once (the bot trap, the
+     same text again), the CAPTCHA (whether it is on: its own page sets
+     it), waiting for approval (new authors, links, stop words - or
+     refused), how long spam is kept. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "How a content page loads its comments, and what is done with suspicious ones. The checks go in order; the first that objects decides. A comment waiting for approval is seen by its author only, until it is approved in Content → Comments."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="comment-settings" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict "saved" (t "Settings saved."))
+    "Fallback" (t "Error while saving."))}}
+
+<form method="post" action="/admin/config/comments" id="comment-settings" class="admin-settings">
+    <section class="admin-settings-group" aria-labelledby="cs-page">
+        <h2 class="admin-settings-title" id="cs-page">{{t "On the content page"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="comments_load" class="admin-setting-label">{{t "Load comments"}}</label>
+                    <span class="admin-setting-help">{{t "With the page, the comments are in its HTML: search engines read them, and they show without JavaScript."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="comments_load" name="comments_load" class="form-select">
+                        <option value="page"{{if .settings.LoadWithPage}} selected{{end}}>{{t "With the page"}}</option>
+                        <option value="ajax"{{if not .settings.LoadWithPage}} selected{{end}}>{{t "When scrolled to (AJAX)"}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group mt-4" aria-labelledby="cs-reject">
+        <h2 class="admin-settings-title" id="cs-reject">{{t "Bots - refused at once"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "Bot trap"}}</span>
+                    <span class="admin-setting-help">{{t "A field hidden from people, which bots fill, and the time the form took: a form sent sooner than a person could is refused. People don't see it. The same trap guards registration and the web forms."}}</span>
+                </div>
+                <div class="admin-setting-control d-flex flex-wrap align-items-center gap-2">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="bot_trap" name="bot_trap" value="1"{{if .settings.BotTrap}} checked{{end}}>
+                        <label class="form-check-label" for="bot_trap">{{t "On, not sooner than"}}</label>
+                    </div>
+                    <select name="bot_min_seconds" class="form-select w-auto" aria-label="{{t "On, not sooner than"}}">
+                        {{range .botSecondsOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "The same comment again"}}</span>
+                    <span class="admin-setting-help">{{t "The same text by the same author once more."}}</span>
+                </div>
+                <div class="admin-setting-control d-flex flex-wrap align-items-center gap-2">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="duplicate" name="duplicate" value="1"{{if gt .settings.DuplicateHours 0}} checked{{end}}>
+                        <label class="form-check-label" for="duplicate">{{t "Refuse within"}}</label>
+                    </div>
+                    <select name="duplicate_hours" class="form-select w-auto" aria-label="{{t "Refuse within"}}">
+                        {{range .duplicateOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group mt-4" aria-labelledby="cs-captcha">
+        <h2 class="admin-settings-title" id="cs-captcha">{{t "CAPTCHA"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <span class="admin-setting-label">{{t "On the comment form"}}</span>
+                    <span class="admin-setting-help">{{t "For authors without a published comment yet. It is turned on, with the keys, on the CAPTCHA page."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    {{if .commentCaptcha}}<span class="admin-pill admin-pill--ok">{{tc "feminine" "Enabled"}}</span>{{else}}<span class="admin-pill">{{tc "feminine" "Disabled"}}</span>{{end}}
+                    <a href="/admin/config/captcha" class="ms-2">{{t "Spam protection (reCAPTCHA)"}}</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group mt-4" aria-labelledby="cs-hold">
+        <h2 class="admin-settings-title" id="cs-hold">{{t "Suspicious - wait for approval"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="new_author_checks" class="admin-setting-label">{{t "New authors"}}</label>
+                    <span class="admin-setting-help">{{t "An author's first comments wait for approval; then theirs are published at once. Roles with the permission \"Comment without approval\" aren't checked."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="new_author_checks" name="new_author_checks" class="form-select">
+                        {{range .newAuthorOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="links_limit" class="admin-setting-label">{{t "Links in a comment"}}</label>
+                    <span class="admin-setting-help">{{t "Spam nearly always leads somewhere: a comment with more web addresses waits."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="links_limit" name="links_limit" class="form-select">
+                        {{range .linksOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="stop_words" class="admin-setting-label">{{t "Stop words"}}</label>
+                    <span class="admin-setting-help">{{t "One per line; in the text and in the links' addresses, case aside. A part of a word counts too."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <textarea id="stop_words" name="stop_words" class="form-control" rows="4">{{.settings.StopWords}}</textarea>
+                    <div class="d-flex gap-3 mt-2">
+                        <div class="form-check mb-0"><input class="form-check-input" type="radio" id="stop-hold" name="stop_words_action" value="hold"{{if ne .settings.StopWordsAction "reject"}} checked{{end}}><label class="form-check-label" for="stop-hold">{{t "wait for approval"}}</label></div>
+                        <div class="form-check mb-0"><input class="form-check-input" type="radio" id="stop-reject" name="stop_words_action" value="reject"{{if eq .settings.StopWordsAction "reject"}} checked{{end}}><label class="form-check-label" for="stop-reject">{{t "refuse"}}</label></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group mt-4" aria-labelledby="cs-spam">
+        <h2 class="admin-settings-title" id="cs-spam">{{t "Spam"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="spam_keep_days" class="admin-setting-label">{{t "Delete spam"}}</label>
+                    <span class="admin-setting-help">{{t "Marked as spam, a comment is in the Spam tab, shown to nobody; then it is deleted with its replies."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <select id="spam_keep_days" name="spam_keep_days" class="form-select">
+                        {{range .spamKeepOptions}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

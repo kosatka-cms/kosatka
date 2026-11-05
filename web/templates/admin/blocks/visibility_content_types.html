@@ -1,0 +1,34 @@
+{{/* visibility_content_types - "content types" checkbox widget for a
+     placement's visibility (BlockVisibilityContentType). Checked types are
+     joined into one comma-separated visibility_content_type
+     (parseVisibilityContentTypes, admin/blocks_visibility.go), so one placement can
+     target several types. Used by all placement edit pages.
+     Takes (dict "Placement" <anything with MatchesContentType, e.g.
+     entity.BlockPlacementDef or an attachment entity.ViewDisplayDef>
+     "ContentTypes" entity.ContentTypeDefs "IDPrefix" string
+     ["Name" string - form field name, default visibility_content_type]). */}}
+{{/* Bare (optional) - only the checkboxes, for a settings row whose
+     legend names them (visibility_scope). */}}
+{{define "visibility_content_types"}}
+{{$p := .Placement}}
+{{$prefix := .IDPrefix}}
+{{$name := or .Name "visibility_content_type"}}
+{{if .Bare}}
+{{range .ContentTypes}}
+<div class="form-check">
+    <input class="form-check-input" type="checkbox" name="{{$name}}" value="{{.MachineName}}" id="{{$prefix}}-ct-{{.MachineName}}" {{if $p.MatchesContentType .MachineName}}checked{{end}}>
+    <label class="form-check-label" for="{{$prefix}}-ct-{{.MachineName}}">{{.Label}}</label>
+</div>
+{{end}}
+{{else}}
+<label class="form-label">{{t "Content types"}}</label>
+<div>
+    {{range .ContentTypes}}
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" name="{{$name}}" value="{{.MachineName}}" id="{{$prefix}}-ct-{{.MachineName}}" {{if $p.MatchesContentType .MachineName}}checked{{end}}>
+        <label class="form-check-label" for="{{$prefix}}-ct-{{.MachineName}}">{{.Label}}</label>
+    </div>
+    {{end}}
+</div>
+{{end}}
+{{end}}

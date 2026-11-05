@@ -1,0 +1,86 @@
+{{/* admin/config/captcha - reCAPTCHA (CaptchaPage): on or off, the
+     keys (the secret never shown), the forms it protects - as rows; Save
+     over the page and under the form. */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{t "Google reCAPTCHA v2 (the \"I'm not a robot\" checkbox) protects the selected forms from bots. Get the keys in the <a href=\":url\" target=\"_blank\" rel=\"noopener\">reCAPTCHA admin console</a>: type v2, \"I'm not a robot\", with this site's domain." ":url" "https://www.google.com/recaptcha/admin"}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="captcha-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "pair" (t "Enter both keys: the site key and the secret key."))
+    "Fallback" (t "Could not save."))}}
+{{if .keysFromConfig}}
+<div class="alert alert-info">{{t "The keys come from the server configuration (RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET_KEY) and can't be changed here; the switch and the forms below still apply."}}</div>
+{{end}}
+
+<form method="post" action="/admin/config/captcha" id="captcha-form" class="admin-settings" autocomplete="off">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="captcha-enabled" class="admin-setting-label">{{t "Enable reCAPTCHA"}}</label>
+                <span class="admin-setting-help">{{t "Off - no CAPTCHA on any form; the keys and the forms below are kept."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="captcha-enabled" name="enabled" value="1" {{if .enabled}}checked{{end}}>
+            </div>
+        </div>
+    </div>
+
+    {{if not .keysFromConfig}}
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Keys"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="captcha-site-key" class="admin-setting-label">{{t "Site key"}}</label></div>
+                <div class="admin-setting-control"><input type="text" id="captcha-site-key" name="site_key" class="form-control font-monospace" value="{{.siteKey}}"></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="captcha-secret-key" class="admin-setting-label">{{t "Secret key"}}</label>
+                    <span class="admin-setting-help">{{t "The saved secret key is never shown. Leave the field empty to keep it."}}</span>
+                </div>
+                <div class="admin-setting-control"><input type="password" id="captcha-secret-key" name="secret_key" class="form-control font-monospace" autocomplete="new-password" placeholder="{{if .secretSaved}}{{t "saved - leave empty to keep it"}}{{end}}"></div>
+            </div>
+            {{if or .siteKey .secretSaved}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="captcha-clear" class="admin-setting-label">{{t "Delete the saved keys"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="captcha-clear" name="clear_keys" value="1">
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Forms"}}</h2>
+        <div class="admin-settings-card">
+            {{range .forms}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="captcha-form-{{.Name}}" class="admin-setting-label">{{.Label}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="captcha-form-{{.Name}}" name="form_{{.Name}}" value="1" {{if .On}}checked{{end}}>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        <p class="admin-setting-help">{{t "Without keys the CAPTCHA isn't shown on any form."}}</p>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

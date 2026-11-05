@@ -1,0 +1,86 @@
+{{/* view_sort_modal - the Views page's sort criterion add/edit modal (page.html). */}}
+{{define "view_sort_modal"}}
+{{/* Sort criterion add/edit modal - same searchable target combobox as
+       Filters/Fields; target, direction and the offer to visitors
+       (entity.ViewSortDef.ExposedKey/ExposedLabel; admin_views.js shows
+       its inputs when it is ticked). Target is read-only in edit mode. */}}
+<div class="modal fade" id="sortModal" tabindex="-1" aria-labelledby="sortModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="sortForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sortModalTitle">{{t "Add sort criterion"}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{t "Close"}}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3" id="sort-target-select-wrap">
+                        <label class="form-label">{{t "Field"}}</label>
+                        <div class="position-relative">
+                            <input type="text" id="sort-target-search" class="form-control" placeholder="{{t "Search field…"}}">
+                        </div>
+                        <select name="target" id="sort-target" class="d-none">
+                            <option value="">{{t "- field -"}}</option>
+                            <optgroup label="{{t "Built-in"}}">
+                                {{range .sortBuiltinFields}}
+                                <option value="{{printf "builtin:%s" .}}">{{index $.sortBuiltinLabels .}}</option>
+                                {{end}}
+                            </optgroup>
+                            {{if .moduleSorts}}
+                            <optgroup label="{{t "Modules"}}">
+                                {{range .moduleSorts}}
+                                <option value="{{.Target}}">{{.Label}}</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                            {{if .sortFieldOptions}}
+                            <optgroup label="{{t "Fields (shared catalog)"}}">
+                                {{range .sortFieldOptions}}
+                                <option value="{{printf "field:%d" .ID}}">{{index $.fieldLabels .ID}} ({{.MachineName}})</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="sort-target-readonly-wrap">
+                        <label class="form-label">{{t "Field"}}</label>
+                        <input type="text" class="form-control" id="sort-target-readonly" readonly>
+                        <div class="form-text">{{t "Cannot be changed for an existing criterion - delete it and add another one."}}</div>
+                    </div>
+                    {{template "view_module_params" (dict "options" .moduleSorts "prefix" "sort-param")}}
+                    <div class="mb-3">
+                        <label class="form-label d-block">{{t "Direction"}}</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="direction" id="sort-direction-desc" value="desc" checked>
+                            <label class="form-check-label" for="sort-direction-desc">{{t "Descending"}}</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="direction" id="sort-direction-asc" value="asc">
+                            <label class="form-check-label" for="sort-direction-asc">{{t "Ascending"}}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="exposed" id="sort-exposed" value="1" class="form-check-input">
+                        <label for="sort-exposed" class="form-check-label">{{t "Offer to visitors"}}</label>
+                        <div class="form-text">{{t "The criteria offered to visitors are alternatives: the page shows a \"Sort by\" choice of them, and only the chosen one applies (by default the first of them), in the place of the first."}}</div>
+                    </div>
+                    <div id="sort-exposed-wrap" class="d-none">
+                        <div class="mb-3">
+                            <label for="sort-exposed-label" class="form-label">{{t "Option label"}}</label>
+                            <input type="text" name="exposed_label" id="sort-exposed-label" class="form-control" maxlength="255" placeholder="{{t "for example Cheapest first"}}">
+                        </div>
+                        <div class="mb-0">
+                            <label for="sort-exposed-key" class="form-label">{{t "Value in the address"}}</label>
+                            <input type="text" name="exposed_key" id="sort-exposed-key" class="form-control" maxlength="64" pattern="[A-Za-z0-9_\-]+" placeholder="{{t "for example price-asc"}}">
+                            <div class="form-text">{{t "Latin letters, digits, \"_\" and \"-\". The page's address with ?sort=value opens the list sorted this way."}}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{t "Cancel"}}</button>
+                    <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

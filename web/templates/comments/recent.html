@@ -1,0 +1,30 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
+
+{{define "content"}}
+<article class="profile-comments recent-comments-page">
+    <p>{{t "Recent replies on the site's content. Click a title to go to the discussion."}}</p>
+
+    {{if .comments}}
+    <div class="profile-comments-list">
+        {{range .comments}}
+        {{template "profile_comment_card" (dict "Comment" . "ShowAuthor" $.showCommentAuthor "Truncate" $.truncateComments)}}
+        {{end}}
+    </div>
+
+    {{if gt .pagination.TotalPages 1}}
+    <div class="profile-comments-pagination">
+        {{template "pagination.html" .}}
+    </div>
+    {{end}}
+    {{else}}
+    <div class="empty-state">
+        <p>{{t "No comments yet"}}</p>
+    </div>
+    {{end}}
+</article>
+
+{{end}}

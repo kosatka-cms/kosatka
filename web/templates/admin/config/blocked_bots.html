@@ -1,0 +1,178 @@
+{{/* admin/config/robots - the robots (BlockedBotList): the robots.txt
+     rules added to the engine's (rows), then blocking by User-Agent and by
+     IP - each adding on a card (a bulk import folded in it) over its table
+     card. */}}
+{{template "layout.html" .}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "success" (t "User-Agent pattern added.")
+        "deleted" (t "User-Agent pattern deleted.")))}}
+{{if .imported}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "User-Agent patterns imported: @number" "@number" .imported}}</div>
+{{end}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Errors" (dict
+        "create" (t "Error while adding (the pattern may already exist).")
+        "delete" (t "Error while deleting."))
+    "Warnings" (dict
+        "empty" (t "Fill in the \"Pattern\" field.")))}}
+{{if .success_ip}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "IP added."}}</div>
+{{end}}
+{{if .deleted_ip}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "IP deleted."}}</div>
+{{end}}
+{{if .imported_ip}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "IPs imported: @number" "@number" .imported_ip}}</div>
+{{end}}
+{{if eq .error_ip "empty"}}
+<div class="alert alert-warning">{{t "Fill in the \"IP\" field."}}</div>
+{{end}}
+{{if eq .error_ip "create"}}
+<div class="alert alert-danger">{{t "Error while adding the IP (the IP may already exist)."}}</div>
+{{end}}
+{{if eq .error_ip "delete"}}
+<div class="alert alert-danger">{{t "Error while deleting the IP."}}</div>
+{{end}}
+{{if .robots_saved}}
+<div class="alert alert-success alert-dismissible fade show" role="alert">{{t "robots.txt rules saved."}}</div>
+{{end}}
+{{template "admin_alerts" (dict "Ctx" . "Errors" (dict "robots" (t "Error while saving the robots.txt rules.")))}}
+
+<div class="admin-settings">
+<form method="post" action="/admin/config/robots/rules" class="admin-settings-group">
+    <h2 class="admin-settings-title">robots.txt</h2>
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="robots-extra" class="admin-setting-label">{{t "Extra rules"}}</label>
+                <span class="admin-setting-help">{{t "The engine builds <a href=\":url\" target=\"_blank\">robots.txt</a> itself: rules for the admin, sign-in and action pages (and those of the enabled modules) and the sitemap address. The rules below are added after them as written - for example, to keep particular crawlers off the site." ":url" "/robots.txt"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <textarea id="robots-extra" name="robots_extra" class="form-control font-monospace" rows="8" placeholder="User-agent: ExampleBot&#10;Disallow: /">{{.robotsExtra}}</textarea>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text"></div>
+            <div class="admin-setting-control text-end"><button type="submit" class="btn btn-primary">{{t "Save"}}</button></div>
+        </div>
+    </div>
+</form>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Blocking by User-Agent"}}</h2>
+    <div class="admin-settings-card admin-add-card">
+        <form method="post" action="/admin/config/robots" class="admin-add-form">
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Substring to look for in the User-Agent (case-insensitive)"}}</span>
+                <input type="text" name="pattern" class="form-control" placeholder="{{t "E.g. AhrefsBot"}}" required>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Comment (optional)"}}</span>
+                <input type="text" name="comment" class="form-control">
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <details class="admin-add-more">
+            <summary>{{t "Bulk import"}}</summary>
+            <form method="post" action="/admin/config/robots/import" class="admin-add-form">
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "One pattern per line"}}</span>
+                    <textarea name="bulk" class="form-control font-monospace" rows="6" placeholder="AhrefsBot&#10;Bingbot&#10;CCBot"></textarea>
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Comment for the whole batch (optional)"}}</span>
+                    <input type="text" name="comment" class="form-control">
+                </label>
+                <button type="submit" class="btn btn-outline-primary">{{t "Import"}}</button>
+            </form>
+        </details>
+    </div>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>{{t "Pattern"}}</th><th>{{t "Comment"}}</th><th>{{t "Added"}}</th><th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th></tr></thead>
+                <tbody>
+                    {{range .bots}}
+            <tr>
+                <td><code>{{.Pattern}}</code></td>
+                <td class="admin-table-muted">{{.Comment}}</td>
+                <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                <td class="text-end">
+                    <form method="post" action="/admin/config/robots/delete/{{.ID}}" class="d-inline" data-confirm="{{t "Delete the pattern?"}}">
+                        <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                            {{template "admin_icon_delete"}}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="4" class="admin-table-empty">{{t "No blocked robots"}}</td></tr>
+            {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Blocking by IP"}}</h2>
+    <div class="admin-settings-card admin-add-card">
+        <form method="post" action="/admin/config/robots/ip" class="admin-add-form">
+            <label class="admin-filter">
+                <span class="admin-filter-label">IP / CIDR</span>
+                <input type="text" name="ip" class="form-control" placeholder="{{t "E.g. 192.168.1.1 or 10.0.0.0/8"}}" required>
+            </label>
+            <label class="admin-filter">
+                <span class="admin-filter-label">{{t "Comment (optional)"}}</span>
+                <input type="text" name="comment" class="form-control">
+            </label>
+            <button type="submit" class="btn btn-primary">{{t "Add"}}</button>
+        </form>
+        <details class="admin-add-more">
+            <summary>{{t "Bulk IP import"}}</summary>
+            <form method="post" action="/admin/config/robots/ip/import" class="admin-add-form">
+                <label class="admin-filter admin-filter--wide">
+                    <span class="admin-filter-label">{{t "One IP or CIDR (e.g. 192.168.1.1 or 10.0.0.0/8) per line"}}</span>
+                    <textarea name="bulk_ip" class="form-control font-monospace" rows="4" placeholder="192.168.1.1&#10;10.0.0.0/8"></textarea>
+                </label>
+                <label class="admin-filter">
+                    <span class="admin-filter-label">{{t "Comment for the whole batch (optional)"}}</span>
+                    <input type="text" name="comment" class="form-control">
+                </label>
+                <button type="submit" class="btn btn-outline-primary">{{t "Import"}}</button>
+            </form>
+        </details>
+    </div>
+    <div class="admin-table-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead><tr><th>IP / CIDR</th><th>{{t "Comment"}}</th><th>{{t "Added"}}</th><th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th></tr></thead>
+                <tbody>
+                    {{range .blockedIPs}}
+            <tr>
+                <td><code>{{.IP}}</code></td>
+                <td class="admin-table-muted">{{.Comment}}</td>
+                <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                <td class="text-end">
+                    <form method="post" action="/admin/config/robots/ip/delete/{{.ID}}" class="d-inline" data-confirm="{{t "Delete the IP?"}}">
+                        <button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">
+                            {{template "admin_icon_delete"}}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {{else}}
+            <tr><td colspan="4" class="admin-table-empty">{{t "No blocked IPs"}}</td></tr>
+            {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</div>
+{{end}}

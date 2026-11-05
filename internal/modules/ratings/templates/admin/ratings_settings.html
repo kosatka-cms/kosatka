@@ -1,0 +1,81 @@
+{{/* admin/ratings_settings.html - the ratings' settings (SettingsPage):
+     the scale, who can rate, one's own vote, the rated types - as rows. */}}
+{{template "layout.html" .}}
+
+{{define "page_actions"}}
+<button type="submit" form="ratings-settings-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+{{template "admin_alerts" (dict "Ctx" .
+    "Done" (dict
+        "saved" (t "Saved."))
+    "Errors" (dict
+        "scale" (t "The scale is from 3 to 10 stars.")
+        "save" (t "Error while saving.")))}}
+
+<form method="post" action="/admin/config/ratings" id="ratings-settings-form" class="admin-settings">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="ratings-scale" class="admin-setting-label">{{t "Scale"}}</label>
+                <span class="admin-setting-help">{{t "It can be changed later: each vote keeps its share of the scale (4 of 5 stars become 8 of 10)."}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <select id="ratings-scale" name="scale" class="form-select">
+                    {{$scale := .settings.Scale}}
+                    {{range .scales}}<option value="{{.}}"{{if eq . $scale}} selected{{end}}>{{plural . "@count star" "@count stars"}}</option>{{end}}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Who can rate"}}</h2>
+        <p class="admin-setting-help">{{t "Users with the permission \"Rate content\" - <a href=\":url\">role permissions</a>." ":url" "/admin/people/permissions"}}</p>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="ratings-allow-guests" class="admin-setting-label">{{t "Guests can rate too"}}</label>
+                    <span class="admin-setting-help">{{t "A guest is told apart by their browser's session: one vote per content item from one session."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="ratings-allow-guests" name="allow_guests" value="1" class="form-check-input"{{if .settings.AllowGuests}} checked{{end}}></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Own vote"}}</h2>
+        <div class="admin-settings-card">
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="ratings-allow-change" class="admin-setting-label">{{t "Can be changed"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="ratings-allow-change" name="allow_change" value="1" class="form-check-input"{{if .settings.AllowChange}} checked{{end}}></div>
+            </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="ratings-allow-withdraw" class="admin-setting-label">{{t "Can be taken back"}}</label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="ratings-allow-withdraw" name="allow_withdraw" value="1" class="form-check-input"{{if .settings.AllowWithdraw}} checked{{end}}></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-settings-group">
+        <h2 class="admin-settings-title">{{t "Rated content types"}}</h2>
+        <p class="admin-setting-help">{{t "The same switch is in the form of each <a href=\":url\">content type</a>, section \"Ratings\". Switching a type off keeps its votes." ":url" "/admin/config/content-types"}}</p>
+        <div class="admin-settings-card">
+            {{range .types}}
+            <div class="admin-setting">
+                <div class="admin-setting-text"><label for="ratings-type-{{.MachineName}}" class="admin-setting-label">{{.Label}} <code class="admin-table-muted">{{.MachineName}}</code></label></div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch"><input type="checkbox" role="switch" id="ratings-type-{{.MachineName}}" name="types" value="{{.MachineName}}" class="form-check-input"{{if .Rated}} checked{{end}}></div>
+            </div>
+            {{end}}
+        </div>
+        <p class="admin-setting-help">{{t "The rating's sorts (the weighted rating for a top list), filters and field are in the View editor. On a content page the rating is the block \"The content's rating\"."}}</p>
+    </section>
+
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

@@ -1,0 +1,12 @@
+{{/* block_language_switcher - the site's languages (.languageLinks, the
+     module's page data): the page in each; the page's own marked. A page with
+     no version in a language (a node) sends to its front page. A theme
+     restyles it by .language-switcher or replaces the define. */}}
+{{define "block_language_switcher"}}{{with .Ctx.languageLinks}}
+<nav class="language-switcher" aria-label="{{t "Language"}}">
+    <ul class="nav nav-pills">
+        {{range .}}<li class="nav-item">{{if .Current}}<a class="nav-link active" href="{{.Href}}" lang="{{.Code}}" title="{{.Name}}" aria-current="true">{{.Label}}</a>{{else}}<a class="nav-link" href="{{.Href}}" lang="{{.Code}}" hreflang="{{.Code}}" title="{{if .Home}}{{t "@language: the home page" "@language" .Name}}{{else}}{{.Name}}{{end}}">{{.Label}}</a>{{end}}</li>
+        {{end}}
+    </ul>
+</nav>
+{{end}}{{end}}

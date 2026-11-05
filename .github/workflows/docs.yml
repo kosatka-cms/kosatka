@@ -1,0 +1,54 @@
+# The documentation site: built (website/, the pages are docs/) on every
+# pull request and push to main that touches it - a link to a missing page
+# fails the build - and published to GitHub Pages from main of
+# kosatka-cms/kosatka (Settings → Pages → Source: GitHub Actions).
+# Locally: scripts/docs.sh.
+name: docs
+
+on:
+  pull_request:
+    paths: [docs/**, website/**, .github/workflows/docs.yml]
+  push:
+    branches: [main]
+    paths: [docs/**, website/**, .github/workflows/docs.yml]
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci --no-fund --no-audit
+      - run: npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'kosatka-cms/kosatka'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,68 @@
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{tc "views" "View"}}: <strong>{{if .viewDisplay}}<a href="/admin/config/views/{{.viewDisplay.ID}}">{{.viewDisplay.Label}}</a>{{else}}{{t "(View deleted)"}}{{end}}</strong> {{t "- the placed View cannot be changed after creation (delete the placement and create a new one if you need a different View)."}}</span>
+{{end}}
+
+{{define "page_actions"}}
+<button type="submit" form="placement-form" class="btn btn-primary">{{t "Save"}}</button>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+
+{{template "admin_alerts" (dict "Ctx" . "Errors" (dict "view" (t "Error while saving.")))}}
+
+<form method="post" action="/admin/config/blocks/view/{{.placement.ID}}/edit" id="placement-form" class="admin-settings">
+    <input type="hidden" name="theme" value="{{.blocksTheme}}">
+    <div class="admin-settings-card">
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="view-placement-region" class="admin-setting-label">{{t "Region"}}</label>
+            </div>
+            <div class="admin-setting-control">
+                <select id="view-placement-region" name="region" class="form-select">
+                    {{$currentRegion := .placement.Region}}
+                    {{range .allRegions}}
+                    <option value="{{.}}" {{if eq . $currentRegion}}selected{{end}}>{{index $.regionLabels .}} ({{.}})</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="view-placement-title" class="admin-setting-label">{{t "Title"}}</label>
+                <span class="admin-setting-help">{{if .viewDisplay}}{{t "Optional - the View name is used by default (\"@label\")." "@label" .viewDisplay.Label}}{{else}}{{t "Optional - the View name is used by default."}}{{end}}</span>
+            </div>
+            <div class="admin-setting-control">
+                <input type="text" id="view-placement-title" name="title" class="form-control" value="{{.placement.Title}}" placeholder="{{if .viewDisplay}}{{.viewDisplay.Label}}{{end}}">
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="view-placement-show-title" class="admin-setting-label">{{t "Display title"}}</label>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="view-placement-show-title" name="show_title" value="1" class="form-check-input" {{if .placement.ShowTitle}}checked{{end}}>
+            </div>
+        </div>
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="view-placement-lazy" class="admin-setting-label">{{t "Load on scroll"}}</label>
+                <span class="admin-setting-help">{{t "The block is loaded when scrolling reaches it - for heavy blocks at the bottom of the page. While it loads, the theme's placeholder for the region is shown in its place, if there is one."}}</span>
+            </div>
+            <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                <input role="switch" type="checkbox" id="view-placement-lazy" name="lazy" value="1" class="form-check-input" {{if .placement.Lazy}}checked{{end}}>
+            </div>
+        </div>
+        {{template "visibility_roles" (dict "Placement" .placement "Roles" .visibilityRoles "IDPrefix" "view-placement")}}
+        {{template "visibility_scope" (dict "Placement" .placement "ContentTypes" .contentTypes "IDPrefix" "view-placement")}}
+    </div>
+    {{/* The modules' sections (interfaces.AddFormSection): form_block_placement_<module>. */}}
+    {{moduleHook "form_block_placement" .}}
+    <div class="admin-settings-actions">
+        <button type="submit" class="btn btn-primary">{{t "Save"}}</button>
+    </div>
+</form>
+{{end}}

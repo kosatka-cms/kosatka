@@ -1,0 +1,112 @@
+{{/* head_languages - the page's addresses in the site's languages for
+     search engines (pageData's languageAlternates; on a View's page -
+     .viewURLPath - or a term's - .term - languagePageAlternates),
+     x-default - the default language's. */}}
+{{define "head_languages"}}{{$alts := .languageAlternates}}{{if and (not $alts) (or .viewURLPath .term)}}{{$alts = .languagePageAlternates}}{{end}}{{range $alts}}
+    <link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">{{end}}{{end}}
+
+{{/* node_actions_languages - the Translations tab among a translated
+     type's item's actions (AddNodePage's .moduleNode.languages), for who
+     may edit it; marked on the tab itself. */}}
+{{define "node_actions_languages"}}{{if and .canEdit .moduleNode.languages.translatable}}<a href="/node/{{.item.Node.ID}}/translations" class="action-link translations"{{if .translationsPage}} aria-current="page"{{end}}>{{t "Translations"}}</a>{{end}}{{end}}
+
+{{/* node_form_top_languages - over a content item's form: a translation
+     names its language and its original (outdated marked); an original
+     names its translations, which saving it marks outdated
+     (pageData's translationInfo). */}}
+{{define "node_form_top_languages"}}{{with .translationInfo}}
+<div class="alert alert-info node-translation-info" role="note">
+    {{if .Original}}<strong>{{t "Translation into @language" "@language" .Language}}</strong> · {{t "the original:"}} <a href="{{.Original.Node.URL}}" lang="{{.Original.Node.Langcode}}" target="_blank" rel="noopener">{{.Original.Node.Title}}</a>{{if .Outdated}} · <span class="text-warning-emphasis">{{t "Outdated: the original changed"}}</span>{{end}}
+    {{else}}<strong>{{t "The original (@language)" "@language" .Language}}</strong> · {{t "Translations:"}} {{range $i, $l := .Translations}}{{if $i}}, {{end}}{{$l}}{{end}}. {{t "Saving it marks them outdated."}}{{end}}
+</div>
+{{end}}{{end}}
+
+{{/* node_settings_languages - the item's language in its form's side
+     column (nodeLanguage): the site's languages but those its other
+     versions have; on a site of one, nothing. */}}
+{{define "node_settings_languages"}}{{with .moduleSettings}}{{with index . "languages"}}
+<details class="node-settings-section">
+  <summary><span class="node-settings-title">{{t "Language"}}</span><span class="node-settings-value">{{.CurrentName}}</span></summary>
+  <div class="node-settings-body">
+    <select class="form-select" name="langcode" id="node-langcode" aria-label="{{t "Language"}}">
+      {{$cur := .Current}}{{range .Choices}}<option value="{{.Code}}" lang="{{.Code}}"{{if eq .Code $cur}} selected{{end}}>{{.Name}}</option>{{end}}
+    </select>
+    <div class="form-text">{{t "Its address starts with the language's prefix; a language its translations have isn't offered."}}</div>
+  </div>
+</details>
+{{end}}{{end}}{{end}}
+
+{{/* form_menu_link_languages - a menu link's languages and its title in
+     the site's other languages (textSection): rows of the link's form. */}}
+{{define "form_menu_link_languages"}}{{with .moduleForms}}{{with index . "menu_link"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "Name in other languages") "Visibility" (t "On the pages of which languages the link shows."))}}{{end}}{{end}}{{end}}{{end}}
+
+{{/* form_block_languages - a custom block's title in the site's other
+     languages; form_term_languages - a term's name and description in
+     them; form_site_information_languages - the site's name and slogan;
+     form_field_languages - a content type's field's label; form_block_placement_languages - a placement's languages
+     and, but on a custom block's page (its title is the block's), its
+     title in them (textSection). */}}
+{{define "form_block_languages"}}{{with .moduleForms}}{{with index . "block"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "Title in other languages"))}}{{end}}{{end}}{{end}}{{end}}
+{{define "form_term_languages"}}{{with .moduleForms}}{{with index . "term"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "In other languages"))}}{{end}}{{end}}{{end}}{{end}}
+{{define "form_site_information_languages"}}{{with .moduleForms}}{{with index . "site_information"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "In other languages"))}}{{end}}{{end}}{{end}}{{end}}
+{{define "form_field_languages"}}{{with .moduleForms}}{{with index . "field"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "Label in other languages"))}}{{end}}{{end}}{{end}}{{end}}
+
+{{/* form_view_languages - a View display's title and meta description
+     in the site's other languages, in its settings modal's own layout. */}}
+{{define "form_view_languages"}}{{with .moduleForms}}{{with index . "view"}}{{with index . "languages"}}
+<h6 class="fw-semibold mt-4">{{t "In other languages"}}</h6>
+<div class="form-text mb-2">{{t "empty - as in the default language"}}</div>
+{{range .Texts}}{{$code := .Code}}
+<fieldset class="mb-3">
+    <legend class="fs-6 mb-1" lang="{{.Code}}">{{.Name}} <span class="text-body-secondary small">/{{.Prefix}}/</span></legend>
+    {{range .Values}}{{$id := print .Field.Name "-" $code}}
+    <label for="{{$id}}" class="form-label small mb-0">{{t .Field.Label}}</label>
+    <input type="text" id="{{$id}}" name="{{.Field.Name}}_{{$code}}" class="form-control form-control-sm mb-2" value="{{.Value}}" lang="{{$code}}">
+    {{end}}
+</fieldset>
+{{end}}
+{{end}}{{end}}{{end}}{{end}}
+{{define "form_block_placement_languages"}}{{$custom := .block}}{{with .moduleForms}}{{with index . "block_placement"}}{{with index . "languages"}}{{template "languages_text_section" (dict "S" . "Label" (t "Title in other languages") "Visibility" (t "On the pages of which languages the block shows.") "NoTexts" $custom)}}{{end}}{{end}}{{end}}{{end}}
+
+{{/* languages_text_section - a textSection's rows (.S): the languages
+     the thing shows in (when it has them), a text input per other
+     language (empty - as in the default one) unless .NoTexts. */}}
+{{define "languages_text_section"}}
+{{with .S.Languages}}
+<div class="admin-settings-card mt-3">
+    <div class="admin-setting">
+        <div class="admin-setting-text">
+            <span class="admin-setting-label">{{t "Languages"}}</span>
+            <span class="admin-setting-help">{{$.Visibility}}</span>
+        </div>
+        <div class="admin-setting-control">
+            <div class="form-check"><input type="radio" class="form-check-input" id="lang-all" name="languages_only" value=""{{if not $.S.Only}} checked{{end}}><label class="form-check-label" for="lang-all">{{t "All languages"}}</label></div>
+            <div class="form-check"><input type="radio" class="form-check-input" id="lang-only" name="languages_only" value="1"{{if $.S.Only}} checked{{end}}><label class="form-check-label" for="lang-only">{{t "Only the chosen ones:"}}</label></div>
+            <div class="ms-4">{{range .}}<div class="form-check form-check-inline"><input type="checkbox" class="form-check-input" id="lang-{{.Code}}" name="languages" value="{{.Code}}"{{if .On}} checked{{end}}><label class="form-check-label" for="lang-{{.Code}}" lang="{{.Code}}">{{.Name}}</label></div>{{end}}</div>
+        </div>
+    </div>
+</div>
+{{end}}
+{{if not .NoTexts}}{{$field := .S.Field}}
+<section class="admin-settings-group mt-3" aria-labelledby="{{$field}}-texts">
+    <h2 class="admin-settings-title" id="{{$field}}-texts">{{.Label}}</h2>
+    <div class="admin-settings-card">
+        {{$multi := .S.Multi}}
+        {{range .S.Texts}}{{$code := .Code}}
+        <div class="admin-setting">
+            <div class="admin-setting-text">
+                <label for="{{$field}}-{{.Code}}" class="admin-setting-label" lang="{{.Code}}">{{.Name}}</label>
+                <span class="admin-setting-help">/{{.Prefix}}/ · {{t "empty - as in the default language"}}</span>
+            </div>
+            <div class="admin-setting-control">
+                {{range $i, $v := .Values}}{{$id := print $v.Field.Name "-" $code}}
+                {{if $multi}}<label for="{{$id}}" class="form-label small{{if $i}} mt-2{{end}}">{{t $v.Field.Label}}</label>{{end}}
+                {{if $v.Field.Multiline}}<textarea id="{{$id}}" name="{{$v.Field.Name}}_{{$code}}" class="form-control" rows="3" lang="{{$code}}">{{$v.Value}}</textarea>{{else}}<input type="text" id="{{$id}}" name="{{$v.Field.Name}}_{{$code}}" class="form-control" value="{{$v.Value}}" lang="{{$code}}">{{end}}
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+</section>
+{{end}}
+{{end}}

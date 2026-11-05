@@ -1,0 +1,72 @@
+{{/* admin/content/comments.html - the comments (Controller.CommentList):
+     a tab per status (published, waiting for approval, spam) with its
+     count; on a table card, the newest first (or by the updated time); a
+     row - the comment (its subject, else the start of its text) and its
+     content, the author (out of the published tab: since when they have
+     an account, how many published comments), why it waits or is spam,
+     the times, approve or mark as spam, edit and delete; the checked
+     ones approved, marked or deleted at once (the bar over the table,
+     admin_bulk.js). */}}
+{{template "layout.html" .}}
+
+{{define "page_meta"}}
+<span class="admin-page-meta">{{plural .pagination.TotalItems "@count comment" "@count comments"}}</span>
+{{end}}
+
+{{define "page_body"}}{{template "content" .}}{{end}}
+
+{{define "content"}}
+<ul class="nav nav-pills mb-3">
+    {{range .tabs}}<li class="nav-item"><a class="nav-link{{if .Current}} active{{end}}" href="/admin/content/comment?status={{.Key}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}} · {{.Count}}</a></li>{{end}}
+</ul>
+{{$status := .tab.Status}}{{$held := ne .tab.Key "published"}}
+<form method="post" action="/admin/content/comment/bulk-confirm" id="bulkForm" class="admin-table-card">
+    <input type="hidden" name="back" value="{{.back}}">
+    <div class="admin-bulk-bar" data-bulk-bar hidden>
+        <span class="admin-bulk-count">{{t "Selected:"}} <span data-bulk-count>0</span></span>
+        {{if ne $status 1}}<button type="submit" name="action" value="approve" class="btn btn-sm btn-primary">{{t "Approve"}}</button>{{end}}
+        {{if ne $status 2}}<button type="submit" name="action" value="spam" class="btn btn-sm btn-outline-secondary">{{t "Spam"}}</button>{{end}}
+        <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger">{{t "Delete"}}</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table">
+            <thead>
+                <tr>
+                    <th class="admin-table-check"><input type="checkbox" id="selectAll" class="form-check-input" title="{{t "Select all on this page"}}" aria-label="{{t "Select all on this page"}}"></th>
+                    <th>{{t "Comment"}}</th>
+                    <th>{{t "Author"}}</th>
+                    {{if $held}}<th>{{t "Why"}}</th>{{end}}
+                    <th><a href="{{.sortURLCreated}}">{{t "Posted"}}</a>{{if eq .sort "created"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th><a href="{{.sortURLUpdated}}">{{t "Updated"}}</a>{{if eq .sort "updated"}} {{if eq .order "desc"}}↓{{else}}↑{{end}}{{end}}</th>
+                    <th class="text-end"><span class="visually-hidden">{{t "Action"}}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .comments}}
+                <tr>
+                    <td class="admin-table-check"><input type="checkbox" name="ids" value="{{.ID}}" class="form-check-input bulk-checkbox" aria-label="{{t "Select"}}"></td>
+                    <td>
+                        {{if .Node}}<a href="/comment/{{.ID}}" class="admin-table-title">{{.Summary}}</a>
+                        <span class="admin-table-sub">{{.Node.Title}}</span>
+                        {{else}}<span class="admin-table-title">{{.Summary}}</span>{{end}}
+                    </td>
+                    <td>{{if .Author}}<a href="{{userURL .Author.Slug}}">{{.Author.Username}}</a>{{if $held}}<span class="admin-table-sub">{{plural .AuthorPublished "@count published comment" "@count published comments"}}</span>{{end}}{{else}}-{{end}}</td>
+                    {{if $held}}<td>{{with .Reason}}<span class="admin-pill admin-pill--warn">{{.}}</span>{{end}}</td>{{end}}
+                    <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
+                    <td class="text-nowrap admin-table-muted">{{formatDate .UpdatedAt}}</td>
+                    <td class="text-end text-nowrap">
+                        {{if ne $status 2}}<button type="submit" formaction="/admin/content/comment/{{.ID}}/spam" data-bulk-skip class="btn btn-sm btn-outline-secondary">{{t "Spam"}}</button>{{end}}
+                        {{if ne $status 1}}<button type="submit" formaction="/admin/content/comment/{{.ID}}/approve" data-bulk-skip class="btn btn-sm btn-primary">{{if eq $status 2}}{{t "Not spam"}}{{else}}{{t "Approve"}}{{end}}</button>{{end}}
+                        <a href="/comment/{{.ID}}/edit" class="admin-icon-btn" title="{{t "Change"}}" aria-label="{{t "Change"}}">{{template "admin_icon_edit"}}</a>
+                        <a href="/comment/{{.ID}}/delete" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="7" class="admin-table-empty">{{t "No comments"}}</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    {{template "admin_list_foot" (dict "Ctx" .)}}
+</form>
+{{end}}

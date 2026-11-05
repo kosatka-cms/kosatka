@@ -1,0 +1,5 @@
+{{/* Default users of a user field: renderSuggestion "field_users"
+     <machine name> <[]entity.User> - the theme's "field_users_<machine
+     name>" if defined, else this one: each user's avatar and name, a link
+     to their profile. */}}
+{{define "field_users_default"}}<ul class="field-users">{{range .}}<li class="field-users-item"><a href="{{userURL .Slug}}" class="field-users-link"><img src="{{if .Avatar.URI}}{{.Avatar.URI}}{{else}}{{avatarPlaceholder}}{{end}}" alt="" class="field-users-avatar" loading="lazy"><span>{{.Username}}</span></a></li>{{end}}</ul>{{end}}

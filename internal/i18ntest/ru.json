@@ -1,0 +1,93 @@
+{
+  "contexts": {
+    "Abbreviated month name": {
+      "Apr": "апр",
+      "Aug": "авг",
+      "Dec": "дек",
+      "Feb": "фев",
+      "Jan": "янв",
+      "Jul": "июл",
+      "Jun": "июн",
+      "Mar": "мар",
+      "May": "мая",
+      "Nov": "ноя",
+      "Oct": "окт",
+      "Sep": "сен"
+    },
+    "Abbreviated weekday name": {
+      "Fri": "пт",
+      "Mon": "пн",
+      "Sat": "сб",
+      "Sun": "вс",
+      "Thu": "чт",
+      "Tue": "вт",
+      "Wed": "ср"
+    },
+    "Decimal separator": {
+      ".": ","
+    },
+    "Month name in a date": {
+      "April": "апреля",
+      "August": "августа",
+      "December": "декабря",
+      "February": "февраля",
+      "January": "января",
+      "July": "июля",
+      "June": "июня",
+      "March": "марта",
+      "May": "мая",
+      "November": "ноября",
+      "October": "октября",
+      "September": "сентября"
+    },
+    "Standalone month name": {
+      "April": "апрель",
+      "August": "август",
+      "December": "декабрь",
+      "February": "февраль",
+      "January": "январь",
+      "July": "июль",
+      "June": "июнь",
+      "March": "март",
+      "May": "май",
+      "November": "ноябрь",
+      "October": "октябрь",
+      "September": "сентябрь"
+    },
+    "Thousands separator": {
+      ",": " "
+    },
+    "Weekday name": {
+      "Friday": "пятница",
+      "Monday": "понедельник",
+      "Saturday": "суббота",
+      "Sunday": "воскресенье",
+      "Thursday": "четверг",
+      "Tuesday": "вторник",
+      "Wednesday": "среда"
+    }
+  },
+  "strings": {
+    "A new user has registered at [site:name] and is awaiting approval.\n\nName: [user:name]\nEmail: [user:email]\n\nGo to the list of users:\n[site:people-pending-url]": "На сайте [site:name] зарегистрирован новый пользователь, ожидающий одобрения.\n\nИмя: [user:name]\nE-mail: [user:email]\n\nПерейдите к списку пользователей:\n[site:people-pending-url]",
+    "Account details for [user:name] at [site:name] (approved)": "Детали учётной записи [user:name] на сайте [site:name] (одобрена)",
+    "Account details for [user:name] at [site:name] (pending admin approval)": "Заявка на регистрацию: [user:name] - [site:name]",
+    "An administrator created an account for you at [site:name]": "Администратор создал для вас учётную запись на сайте [site:name]",
+    "Confirm your registration at [site:name]": "Подтверждение регистрации на [site:name]",
+    "Delete": "Удалить",
+    "Hello, [user:name]!\n\nTo complete your registration, follow the link:\n[user:confirm-email-url]\n\nThe link is valid for 24 hours. If you did not register at [site:name], ignore this email.": "Здравствуйте, [user:name]!\n\nДля завершения регистрации перейдите по ссылке:\n[user:confirm-email-url]\n\nСсылка действительна 24 часа. Если вы не регистрировались на сайте [site:name], проигнорируйте это письмо.",
+    "Its @count reply will also be deleted.": [
+      "Вместе с ним удалится @count ответ.",
+      "Вместе с ним удалятся @count ответа.",
+      "Вместе с ним удалятся @count ответов."
+    ],
+    "New registration awaiting approval: [user:name] - [site:name]": "Новая заявка на регистрацию: [user:name] - [site:name]",
+    "Password reset for [user:name] at [site:name]": "Восстановление пароля [user:name] на сайте [site:name]",
+    "Welcome to [site:name]": "Добро пожаловать на [site:name]",
+    "[user:name],\n\nA request to reset the password for your account at [site:name] has been made.\n\nFollow the link to set a new password (valid for one day):\n\n[user:reset-password-url]\n\nOnce you have set your password, you can sign in at [site:login-url].": "[user:name],\n\nВы запросили восстановление пароля к вашей учётной записи на сайте [site:name].\n\nПерейдите по ссылке, чтобы задать новый пароль (действительна сутки):\n\n[user:reset-password-url]\n\nПосле установки пароля вы сможете войти на [site:login-url].",
+    "[user:name],\n\nA site administrator at [site:name] has created an account for you.\n\nYou may now sign in by clicking this link or copying and pasting it into your browser:\n\n[user:one-time-login-url]\n\nThis link can only be used once. After signing in you will be redirected to [user:edit-url], where you can set or change your password.\n\nYou can also sign in at [site:login-url] with the username [user:name] and the password the administrator set for your account.\n\n-- [site:name] team": "[user:name],\n\nАдминистратор сайта [site:name] создал для вас учётную запись.\n\nВойти можно по одноразовой ссылке (нажмите или скопируйте в адресную строку браузера):\n\n[user:one-time-login-url]\n\nЭто одноразовый вход. После входа вы будете перенаправлены на [user:edit-url], где можете задать или сменить пароль.\n\nТакже вы можете войти на [site:login-url], указав имя пользователя [user:name] и пароль, который был задан при создании учётной записи администратором.\n\n-- Команда [site:name]",
+    "[user:name],\n\nThank you for registering at [site:name].\n\nYou may now sign in by clicking this link or copying and pasting it into your browser:\n\n[user:one-time-login-url]\n\nThis link can only be used once. After signing in you will be redirected to [user:edit-url], where you can change your password.\n\nYou can also sign in at [site:login-url] with the username [user:name] and the password you chose at registration.\n\n-- [site:name] team": "[user:name],\n\nБлагодарим вас за регистрацию на сайте [site:name].\n\nВойти можно по одноразовой ссылке (нажмите или скопируйте в адресную строку браузера):\n\n[user:one-time-login-url]\n\nЭто одноразовый вход. После входа вы будете перенаправлены на [user:edit-url], где можете сменить пароль.\n\nТакже вы можете войти на [site:login-url], указав имя пользователя [user:name] и пароль, который вы указали при регистрации.\n\n-- Команда [site:name]",
+    "[user:name],\n\nThank you for registering at [site:name]. Your application for an account is currently pending approval.\n\nOnce it has been approved, you will receive another email with information about how to sign in.\n\n-- [site:name] team": "[user:name],\n\nСпасибо за регистрацию на сайте [site:name]. Ваша заявка сейчас ожидает одобрения администратора.\n\nПосле одобрения на ваш адрес электронной почты будет отправлено письмо с инструкцией по входу.\n\n-- Команда [site:name]",
+    "[user:name],\n\nYour account at [site:name] has been activated.\n\nYou may now sign in by clicking this link or copying and pasting it into your browser:\n\n[user:one-time-login-url]\n\nThis link can only be used once.\n\nAfter signing in you will be redirected to [user:edit-url], where you can change your password.\n\nOnce you have set your password, you can sign in at [site:login-url] with:\n\nUsername: [user:name]": "[user:name],\n\nВаша учётная запись на сайте [site:name] активирована.\n\nВойти можно по одноразовой ссылке (нажмите или скопируйте в адресную строку браузера):\n\n[user:one-time-login-url]\n\nЭто одноразовый вход, ссылкой можно воспользоваться только один раз.\n\nПосле входа вы будете перенаправлены на [user:edit-url], где можете сменить пароль.\n\nПосле установки пароля вы сможете входить на [site:login-url], используя:\n\nИмя пользователя: [user:name]",
+    "month name inside a date": "месяц словом, родительный падеж"
+  }
+}
