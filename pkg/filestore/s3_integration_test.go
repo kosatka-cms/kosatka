@@ -53,9 +53,9 @@ func s3Config(t *testing.T) filestore.S3Config {
 		}
 	}
 	// The storage answers before it stores: SeaweedFS takes writes once
-	// its volumes are up, a moment after it starts serving. Wait for a
-	// write to go through.
-	for deadline := time.Now().Add(30 * time.Second); ; time.Sleep(500 * time.Millisecond) {
+	// its master has a volume server, which on a CI runner may take a
+	// while after it starts serving. Wait for a write to go through.
+	for deadline := time.Now().Add(2 * time.Minute); ; time.Sleep(time.Second) {
 		_, err := client.PutObject(ctx, cfg.Bucket, "ready-probe", strings.NewReader("ok"), 2, minio.PutObjectOptions{})
 		if err == nil {
 			_ = client.RemoveObject(ctx, cfg.Bucket, "ready-probe", minio.RemoveObjectOptions{})
