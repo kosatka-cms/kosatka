@@ -153,6 +153,12 @@ its plan (`Runner.Plan`):
   old data to fix). A set whose install step failed gets the rest of
   that plan again: neither the step nor its data steps were recorded.
 - Otherwise: the pending schema files and data steps, in version order.
+- A set whose recorded versions include ones the binary has neither as
+  files nor as steps, while its first file isn't recorded, is of another
+  history (set up before the files were squashed into a new baseline):
+  `migrations.HistoryError`, nothing runs. Unknown versions after a
+  recorded first file are a newer binary's, from a site rolled back: no
+  error.
 
 `-additive` runs each plan only up to its first schema file that drops,
 truncates, deletes, renames or changes something
