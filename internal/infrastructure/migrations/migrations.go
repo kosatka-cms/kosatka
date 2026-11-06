@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"ariga.io/atlas/sql/migrate"
 	entschema "entgo.io/ent/dialect/sql/schema"
@@ -296,6 +297,33 @@ func (r Runner) SetNames(ctx context.Context) ([]string, error) {
 		out = append(out, s)
 	}
 	return out, rows.Err()
+}
+
+// Recorded - a step recorded in schema_migrations: its version, its name
+// and when it was applied.
+type Recorded struct {
+	Version     string
+	Description string
+	AppliedAt   time.Time
+}
+
+// LastApplied - the set's step applied last (false - none recorded):
+// of the steps of the same second (a fresh install), the latest version
+// before the install step's record.
+func (r Runner) LastApplied(ctx context.Context, set string) (Recorded, bool, error) {
+	var rec Recorded
+	var unix int64
+	err := r.DB.QueryRowContext(ctx, r.Dialect.Rebind(`SELECT version, description, `+r.Dialect.UnixSeconds("applied_at")+` FROM schema_migrations WHERE set_name = ?
+		ORDER BY applied_at DESC, CASE WHEN version = ? THEN 0 ELSE 1 END DESC, version DESC LIMIT 1`), set, InstallVersion).
+		Scan(&rec.Version, &rec.Description, &unix)
+	if errors.Is(err, sql.ErrNoRows) {
+		return rec, false, nil
+	}
+	if err != nil {
+		return rec, false, fmt.Errorf("the last migration of %s: %w", set, err)
+	}
+	rec.AppliedAt = time.Unix(unix, 0).UTC()
+	return rec, true, nil
 }
 
 // Pending - the set's files not applied yet, in order.

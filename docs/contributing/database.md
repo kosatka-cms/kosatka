@@ -266,6 +266,7 @@ Code that writes SQL by hand stays portable through
 | `Dialect.InsertID` | `LastInsertId` (PostgreSQL uses `RETURNING`) |
 | `Dialect.Random` | `RAND()` |
 | `Dialect.CurrentDate` | `CURDATE()` |
+| `Dialect.UnixSeconds` | `UNIX_TIMESTAMP(col)`: a column the database fills itself (`DEFAULT CURRENT_TIMESTAMP`) as Unix seconds, whatever the session's time zone |
 
 `TestNoNewMySQLOnlySQL` (`internal/infrastructure/sqldialect/portability_test.go`)
 scans `internal`, `pkg` and `cmd` and fails on MySQL-only constructs

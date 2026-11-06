@@ -15,6 +15,7 @@ var mysqlOnly = map[string]string{
 	"LastInsertId":     "Dialect.InsertID",
 	"RAND()":           "Dialect.Random",
 	"CURDATE":          "Dialect.CurrentDate",
+	"UNIX_TIMESTAMP":   "Dialect.UnixSeconds",
 	"INSERT IGNORE":    "Dialect.Upsert with no columns to update",
 	"REPLACE INTO":     "Dialect.Upsert",
 	"GROUP_CONCAT":     "aggregate in Go, or a dialect helper",

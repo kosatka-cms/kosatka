@@ -97,27 +97,23 @@ func pendingMigrations(ctx context.Context, r migrations.Runner) (map[string]int
 	return out, nil
 }
 
-// statusModules - every module: label, enabled, installed, the last
-// migration applied of its set.
+// statusModules - every module: label, enabled, installed, the step of
+// its set applied last (version, name, when).
 func statusModules(ctx context.Context, r migrations.Runner) ([]entity.StatusModule, error) {
 	out := make([]entity.StatusModule, 0, len(entity.Modules))
 	for _, m := range entity.Modules {
-		applied, err := r.Applied(ctx, m.Name)
+		last, installed, err := r.LastApplied(ctx, m.Name)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s migrations: %w", m.Name, err)
-		}
-		last := ""
-		for v := range applied {
-			if v != migrations.InstallVersion && v > last {
-				last = v
-			}
 		}
 		out = append(out, entity.StatusModule{
 			Name:          m.Name,
 			Label:         i18n.T(ctx, m.Label),
-			Installed:     len(applied) > 0,
-			Enabled:       len(applied) > 0 && service.ModuleEnabled(m.Name),
-			SchemaVersion: last,
+			Installed:     installed,
+			Enabled:       installed && service.ModuleEnabled(m.Name),
+			SchemaVersion: last.Version,
+			SchemaStep:    last.Description,
+			SchemaUpdated: last.AppliedAt,
 		})
 	}
 	return out, nil

@@ -60,7 +60,7 @@
                     <tr>
                         <td><span class="admin-table-title">{{.Label}}</span><span class="admin-table-sub"><code>{{.Name}}</code></span></td>
                         <td>{{if .Enabled}}<span class="admin-pill admin-pill--ok">{{t "Enabled"}}</span>{{else if .Installed}}<span class="admin-pill">{{t "Disabled"}}</span>{{else}}<span class="admin-table-muted">{{t "Not installed"}}</span>{{end}}</td>
-                        <td>{{if .SchemaVersion}}<code>{{.SchemaVersion}}</code>{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
+                        <td>{{if .SchemaVersion}}<span title="{{.SchemaVersion}}">{{date .SchemaUpdated "datetime"}}</span>{{with .SchemaStep}} <span class="admin-table-muted">· {{.}}</span>{{end}}{{else}}<span class="admin-table-muted">-</span>{{end}}</td>
                     </tr>
                     {{end}}
                 </tbody>
