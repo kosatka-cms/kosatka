@@ -75,6 +75,7 @@ golangci-lint, govulncheck and gitleaks only when they are installed.
 
 gitleaks scans the whole history for secrets: an API key or a password
 committed by mistake fails it, even when a later commit removes it. What
-only looks like a secret - a test's made-up key, a demo set's item
-keys - is listed in `.gitleaks.toml`,
+only looks like a secret - a test's made-up key, the Azurite emulator's
+documented one (in the history), a demo set's item keys - is listed in
+`.gitleaks.toml`,
 each with the narrowest pattern that matches it.

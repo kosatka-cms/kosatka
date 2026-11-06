@@ -4,10 +4,14 @@
 useDefault = true
 
 [[allowlists]]
-description = "Tests' made-up keys"
+# The Azurite key is in the history: the Azure storage's tests were in the
+# engine until 0.1.1 (now kosatka-storage-azure), and gitleaks scans every
+# commit.
+description = "Tests' made-up keys and the Azurite emulator's documented development key"
 regexTarget = "line"
 regexes = [
   '''"test-secret-key-[0-9a-f]+"''',
+  '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
 ]
 
 [[allowlists]]
