@@ -55,7 +55,7 @@ func (s *Local) info(key string, fi fs.FileInfo) Info {
 // a reader never sees a partial file; with Exclusive it creates the
 // target itself (O_EXCL).
 func (s *Local) Put(_ context.Context, key string, r io.Reader, opts PutOptions) (int64, error) {
-	key, err := checkKey(key)
+	key, err := CheckKey(key)
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +93,7 @@ func (s *Local) Put(_ context.Context, key string, r io.Reader, opts PutOptions)
 
 // Open opens a regular file; anything else is ErrNotExist.
 func (s *Local) Open(_ context.Context, key string) (File, Info, error) {
-	key, err := checkKey(key)
+	key, err := CheckKey(key)
 	if err != nil {
 		return nil, Info{}, err
 	}
@@ -114,7 +114,7 @@ func (s *Local) Open(_ context.Context, key string) (File, Info, error) {
 
 // Stat describes the file or directory key.
 func (s *Local) Stat(_ context.Context, key string) (Info, error) {
-	key, err := checkDir(key)
+	key, err := CheckDir(key)
 	if err != nil {
 		return Info{}, err
 	}
@@ -128,7 +128,7 @@ func (s *Local) Stat(_ context.Context, key string) (Info, error) {
 // List lists the directory dir a level deep: its regular files and
 // directories, Put's temporary files left out.
 func (s *Local) List(_ context.Context, dir string) ([]Info, error) {
-	dir, err := checkDir(dir)
+	dir, err := CheckDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (s *Local) List(_ context.Context, dir string) ([]Info, error) {
 // Walk calls fn for every regular file under the directory dir, in
 // lexical order, Put's temporary files left out.
 func (s *Local) Walk(_ context.Context, dir string, fn func(Info) error) error {
-	dir, err := checkDir(dir)
+	dir, err := CheckDir(dir)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (s *Local) Walk(_ context.Context, dir string, fn func(Info) error) error {
 // Delete removes the file key; a missing one is no error, a directory
 // is ErrIsDir.
 func (s *Local) Delete(_ context.Context, key string) error {
-	key, err := checkKey(key)
+	key, err := CheckKey(key)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func (s *Local) Delete(_ context.Context, key string) error {
 
 // DeleteDir removes the directory dir with everything in it.
 func (s *Local) DeleteDir(_ context.Context, dir string) error {
-	dir, err := checkKey(dir)
+	dir, err := CheckKey(dir)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (s *Local) DeleteDir(_ context.Context, dir string) error {
 
 // Mkdir makes the directory dir and its parents.
 func (s *Local) Mkdir(_ context.Context, dir string) error {
-	dir, err := checkDir(dir)
+	dir, err := CheckDir(dir)
 	if err != nil {
 		return err
 	}
@@ -230,11 +230,11 @@ func (s *Local) Mkdir(_ context.Context, dir string) error {
 // Rename renames the file or directory from to the free name to
 // (ErrExist when taken), making its parents.
 func (s *Local) Rename(_ context.Context, from, to string) error {
-	from, err := checkKey(from)
+	from, err := CheckKey(from)
 	if err != nil {
 		return err
 	}
-	if to, err = checkKey(to); err != nil {
+	if to, err = CheckKey(to); err != nil {
 		return err
 	}
 	if _, err := os.Lstat(s.path(from)); err != nil {

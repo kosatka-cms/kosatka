@@ -1,4 +1,4 @@
-// Package mailsender sends transactional email via SMTP or the Resend HTTP API.
+// Package mailsender sends transactional email via SMTP.
 package mailsender
 
 import (

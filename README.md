@@ -43,12 +43,15 @@
   results, URL aliases and redirects, title and description templates,
   schema.org markup, a sitemap, RSS.
 - **[Media](https://kosatka-cms.github.io/kosatka/guides/files-and-images/)** - image
-  styles, a media library, files on disk or in
+  styles, a media library, files on disk or, with a storage package, in
   [S3-compatible storage or Azure Blob Storage](https://kosatka-cms.github.io/kosatka/guides/file-storage/).
 - **[Mail](https://kosatka-cms.github.io/kosatka/guides/mail/)** - e-mail settings
-  and texts in the admin; sending through any SMTP server or Resend.
-- **[Languages](https://kosatka-cms.github.io/kosatka/guides/languages/)** - a site
-  in several languages with the *Languages* module.
+  and texts in the admin; sending through any SMTP server, or a mail
+  service's API with its module (Resend).
+- **[Languages](https://kosatka-cms.github.io/kosatka/guides/languages/)** - a
+  multilingual interface, the languages
+  [downloaded separately](https://kosatka-cms.github.io/kosatka/guides/languages/#downloading-a-language);
+  a site in several languages with the *Languages* module.
 - **[Statistics](https://kosatka-cms.github.io/kosatka/guides/statistics/) and reports** -
   content views and other statistics, and a status report on the site's
   health.
@@ -59,10 +62,13 @@
 ## Extending
 
 - **[Modules](https://kosatka-cms.github.io/kosatka/modules/)** - add features with
-  ready-made modules, switched on and off in the admin, or
-  [write your own](https://kosatka-cms.github.io/kosatka/modules/write-a-module/) in Go.
-- **[Themes](https://kosatka-cms.github.io/kosatka/themes/)** - change the look with a
-  bundled theme or [create your own](https://kosatka-cms.github.io/kosatka/themes/create-a-theme/).
+  the built-in modules, switched on and off in the admin, and with modules
+  from [their own repositories](https://kosatka-cms.github.io/kosatka/modules/using-modules/#add-a-module-from-its-own-repository),
+  or [write your own](https://kosatka-cms.github.io/kosatka/modules/write-a-module/) in Go.
+- **[Themes](https://kosatka-cms.github.io/kosatka/themes/)** - change the look with the
+  bundled theme, one from the
+  [themes catalog](https://kosatka-cms.github.io/kosatka/themes/distribute/#the-themes-catalog), or
+  [create your own](https://kosatka-cms.github.io/kosatka/themes/create-a-theme/).
 
 ## Running
 
@@ -83,7 +89,7 @@ git clone https://github.com/kosatka-cms/kosatka.git && cd kosatka
 docker compose up --build
 ```
 
-Open <http://localhost:8080>: a site with demo content and every module.
+Open <http://localhost:8080>: a site with demo content.
 Sign in as `admin` with the password printed once in the log:
 
 ```bash
@@ -110,8 +116,8 @@ and, for those who change the engine,
 ## Contributing
 
 ```bash
-./scripts/check.sh       # gofmt, go vet, unit tests, golangci-lint when installed
-./scripts/check.sh -db   # plus the tests on MySQL and PostgreSQL (Docker)
+./scripts/check.sh       # golangci-lint (gofmt, go vet and more), unit tests
+./scripts/check.sh -db   # plus the tests on MySQL and PostgreSQL and the migrations against the schema (Docker)
 ```
 
 How changes are made: [CONTRIBUTING.md](CONTRIBUTING.md). To report a

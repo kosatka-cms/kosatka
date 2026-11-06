@@ -441,6 +441,18 @@ func (f MailTemplateFunc) Mutate(ctx context.Context, m generated.Mutation) (gen
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *generated.MailTemplateMutation", m)
 }
 
+// The MailTransportSettingFunc type is an adapter to allow the use of ordinary
+// function as MailTransportSetting mutator.
+type MailTransportSettingFunc func(context.Context, *generated.MailTransportSettingMutation) (generated.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MailTransportSettingFunc) Mutate(ctx context.Context, m generated.Mutation) (generated.Value, error) {
+	if mv, ok := m.(*generated.MailTransportSettingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *generated.MailTransportSettingMutation", m)
+}
+
 // The MaintenanceSettingsFunc type is an adapter to allow the use of ordinary
 // function as MaintenanceSettings mutator.
 type MaintenanceSettingsFunc func(context.Context, *generated.MaintenanceSettingsMutation) (generated.Value, error)

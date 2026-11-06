@@ -76,16 +76,9 @@ managed MySQL hosts accept no other connections.
 | `public_dir` | `FILES_PUBLIC_DIR` | `./web/uploads` | where uploads go |
 | `public_url` | `FILES_PUBLIC_URL` | `/uploads/` | the URL path they are served at. Content stores the files' URLs: change it only on a new site |
 | `private_dir` | `FILES_PRIVATE_DIR` | `./private` | files never served as they are, only through the application with a permission check (files sent with forms, the files of fields with *Private files*) |
-| `storage` | `FILES_STORAGE` | `local` | where the public files are kept: `local` (`public_dir`), `s3` (an S3-compatible bucket) or `azure` (an Azure Blob Storage container) |
-| `s3.endpoint`, `s3.region`, `s3.bucket`, `s3.prefix` | `FILES_S3_ENDPOINT`, `FILES_S3_REGION`, `FILES_S3_BUCKET`, `FILES_S3_PREFIX` | - | the bucket of `storage: s3` and its folder for the site |
-| `s3.public_url` | `FILES_S3_PUBLIC_URL` | - | where the bucket or its CDN serves the files itself; the site redirects there. Empty - the site serves them from the bucket |
-| `s3.path_style` | `FILES_S3_PATH_STYLE` | `false` | `<endpoint>/<bucket>` addresses (MinIO, some providers) |
-| - | `FILES_S3_ACCESS_KEY`, `FILES_S3_SECRET_KEY` | - | the bucket's key: only from the environment |
-| `azure.account`, `azure.container`, `azure.prefix`, `azure.endpoint`, `azure.public_url` | `FILES_AZURE_ACCOUNT`, `FILES_AZURE_CONTAINER`, `FILES_AZURE_PREFIX`, `FILES_AZURE_ENDPOINT`, `FILES_AZURE_PUBLIC_URL` | - | the container of `storage: azure`, as `s3.*` |
-| - | `FILES_AZURE_KEY` | - | the account's access key: only from the environment |
-| `private_storage` | `FILES_PRIVATE_STORAGE` | `local` | where the private files are kept: `local` (`private_dir`), `s3` or `azure` |
-| `private_s3.bucket`, `private_s3.prefix` | `FILES_PRIVATE_S3_BUCKET`, `FILES_PRIVATE_S3_PREFIX` | - | the private files' bucket, reached with `s3`'s endpoint and keys; never where the public files are |
-| `private_azure.container`, `private_azure.prefix` | `FILES_PRIVATE_AZURE_CONTAINER`, `FILES_PRIVATE_AZURE_PREFIX` | - | the same in `azure`'s account |
+| `storage` | `FILES_STORAGE` | `local` | where the public files are kept: `local` (`public_dir`) or a storage the binary has - `s3`, `azure` ([Files in object storage](../guides/file-storage.md)) |
+| `private_storage` | `FILES_PRIVATE_STORAGE` | `local` | where the private files are kept: `local` (`private_dir`) or a storage the binary has |
+| `<storage>.…` | the storage's own | - | a storage's settings, its section of `files` (`files.s3`, `files.private_s3`, `files.azure`…) and its environment variables: [Files in object storage](../guides/file-storage.md) |
 
 The server needs to write to the directories of the files kept on disk.
 See [Files in object storage](../guides/file-storage.md).
@@ -98,16 +91,17 @@ See [Files in object storage](../guides/file-storage.md).
 
 ## E-mail: `email`
 
-With `resend_api_key` the site sends through
-[Resend](https://resend.com)'s API, else through SMTP when `smtp_host`
-is set. Either needs `from_address`. A transport set here wins over the
-one saved on the admin's Mail page, which then shows it but can't
-change it; its switch and log still apply.
+The site sends through SMTP when `smtp_host` is set, or through a mail
+service's API whose module the binary has when that module's variables
+are set ([Resend](https://resend.com)'s module: `RESEND_API_KEY`) - the
+module's first. Either needs `from_address`. A transport set here wins
+over the one saved on the admin's Mail page, which then shows it but
+can't change it; its switch and log still apply. See
+[Email](../guides/mail.md#sending).
 
 | Key | Variable |
 |---|---|
 | `from_address` | `EMAIL_FROM_ADDRESS` |
-| `resend_api_key` | `RESEND_API_KEY` |
 | `smtp_host` | `SMTP_HOST` |
 | `smtp_port` | `SMTP_PORT` (587 when unset) |
 | `smtp_user` | `SMTP_USER` |
@@ -138,7 +132,7 @@ In seconds.
 | `shutdown` | `TIMEOUT_SHUTDOWN` | `30` | a stopping server waits for the requests in flight |
 | `database_query` | `TIMEOUT_DATABASE_QUERY` | `30` | a page's database work |
 | `cache_update` | `TIMEOUT_CACHE_UPDATE` | `15` | one refresh of the in-memory caches (the sidebar's blocks) |
-| `http_request` | `TIMEOUT_HTTP_REQUEST` | `30` | a call to an outside service (reCAPTCHA, Resend), a session with the SMTP server |
+| `http_request` | `TIMEOUT_HTTP_REQUEST` | `30` | a call to an outside service (reCAPTCHA, a mail service's API), a session with the SMTP server |
 
 ## Other variables
 

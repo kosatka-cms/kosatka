@@ -34,4 +34,3 @@ email:
   smtp_user: ""
   smtp_password: ""
   from_address: noreply@example.com
-  resend_api_key: ""

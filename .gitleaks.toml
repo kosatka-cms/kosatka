@@ -4,11 +4,10 @@
 useDefault = true
 
 [[allowlists]]
-description = "Tests' made-up keys and the Azurite emulator's documented development key"
+description = "Tests' made-up keys"
 regexTarget = "line"
 regexes = [
   '''"test-secret-key-[0-9a-f]+"''',
-  '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
 ]
 
 [[allowlists]]

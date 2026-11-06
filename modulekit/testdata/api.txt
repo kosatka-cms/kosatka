@@ -81,9 +81,11 @@ package modulekit
 	func modulekit.AddDashboardBlock(b modulekit.DashboardBlock)
 	func modulekit.AddEmbedKind(k modulekit.EmbedKind)
 	func modulekit.AddFieldFormatter(f modulekit.FieldFormatter)
+	func modulekit.AddFileStorage(d modulekit.FileStorage)
 	func modulekit.AddFormSection(s modulekit.FormSection)
 	func modulekit.AddJob(module string, j modulekit.Job)
 	func modulekit.AddMail(d modulekit.MailDef)
+	func modulekit.AddMailTransport(t modulekit.MailTransport)
 	func modulekit.AddNodePage(module string, fn func(ctx context.Context, node modulekit.Node) modulekit.NodePageParts)
 	func modulekit.AddNodeSettings(s modulekit.NodeSettings)
 	func modulekit.AddPageData(module string, fn func(r *net/http.Request, data map[string]any))
@@ -544,6 +546,14 @@ package modulekit
 	type FileRepository interface
 		method ByIDs(ctx context.Context, ids []int) (map[int]modulekit.File, error)
 		method Create(ctx context.Context, uri string, mimeType string, width int, height int, sizeBytes int, createdBy int) (*modulekit.File, error)
+	type FileStorage = internal/infrastructure/filestorage.Driver
+		field Name string
+		field Public func(c internal/infrastructure/filestorage.Config) (store pkg/filestore.Store, publicURL string, err error)
+		field Private func(c internal/infrastructure/filestorage.Config) (pkg/filestore.Store, error)
+	type FileStorageConfig = internal/infrastructure/filestorage.Config
+		field PublicStorage string
+		field CacheControl string
+		method Decode(section string, v any) error
 	type FileUploader interface
 		method ImageTypes(ctx context.Context) ([]string, error)
 		method UploadImage(ctx context.Context, file mime/multipart.File, header *mime/multipart.FileHeader, dir string, policy modulekit.FieldUploadPolicy) (string, *modulekit.UploadResult, error)
@@ -611,11 +621,26 @@ package modulekit
 		field Load func(ctx context.Context) (internal/domain/entity.MailTemplate, error)
 		field Save func(ctx context.Context, t internal/domain/entity.MailTemplate) error
 		field Weight int
+	type MailSender = internal/lib/mailsender.EmailSender
+		method SendPlain(to string, subject string, body string) error
 	var modulekit.MailSitePlaceholders []string
 	type MailTemplate = internal/domain/entity.MailTemplate
 		field Subject string
 		field Body string
 	func modulekit.MailTemplatePath(key string) string
+	type MailTransport = internal/domain/service.MailTransport
+		field Name string
+		field Module string
+		field Title string
+		field Fields []internal/domain/service.MailTransportField
+		field New func(values map[string]string, from string, timeout time.Duration) (internal/lib/mailsender.EmailSender, error)
+	type MailTransportField = internal/domain/service.MailTransportField
+		field Name string
+		field Label string
+		field Help string
+		field Secret bool
+		field Required bool
+		field Env string
 	var modulekit.MailUserPlaceholders []string
 	type Mailer interface
 		method Send(ctx context.Context, key string, to string, data pkg/mailtemplate.TokenData) error
@@ -1392,6 +1417,7 @@ package modulekit/testkit
 		method VerifyPassword(ctx context.Context, userID int, password string) (bool, error)
 	func modulekit/testkit.CaptureActions(t *testing.T) *[]modulekit.ActionEvent
 	func modulekit/testkit.EngineRoot() string
+	func modulekit/testkit.FileStorageConfig(publicStorage string, sections map[string]any) modulekit.FileStorageConfig
 	func modulekit/testkit.Logger() *log/slog.Logger
 	func modulekit/testkit.ModuleMux(mux *net/http.ServeMux, module string, notFound net/http.HandlerFunc) modulekit.Mux
 	func modulekit/testkit.NodeDeleter(nodes modulekit.NodesRepository, deleteNode func(ctx context.Context, id int) error) modulekit.NodeDeleter

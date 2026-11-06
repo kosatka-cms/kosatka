@@ -35,6 +35,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maillog"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtemplate"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maintenancesettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menudef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menulinkdef"
@@ -1083,6 +1084,16 @@ func init() {
 	mailtemplate.DefaultSubject = mailtemplateDescSubject.Default.(string)
 	// mailtemplate.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
 	mailtemplate.SubjectValidator = mailtemplateDescSubject.Validators[0].(func(string) error)
+	mailtransportsettingFields := schema.MailTransportSetting{}.Fields()
+	_ = mailtransportsettingFields
+	// mailtransportsettingDescTransport is the schema descriptor for transport field.
+	mailtransportsettingDescTransport := mailtransportsettingFields[1].Descriptor()
+	// mailtransportsetting.TransportValidator is a validator for the "transport" field. It is called by the builders before save.
+	mailtransportsetting.TransportValidator = mailtransportsettingDescTransport.Validators[0].(func(string) error)
+	// mailtransportsettingDescName is the schema descriptor for name field.
+	mailtransportsettingDescName := mailtransportsettingFields[2].Descriptor()
+	// mailtransportsetting.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	mailtransportsetting.NameValidator = mailtransportsettingDescName.Validators[0].(func(string) error)
 	maintenancesettingsFields := schema.MaintenanceSettings{}.Fields()
 	_ = maintenancesettingsFields
 	// maintenancesettingsDescEnabled is the schema descriptor for enabled field.

@@ -1,6 +1,4 @@
-# Databases, an S3-compatible storage (SeaweedFS) and Azure Blob Storage
-# (the Azurite emulator) for the integration
-# tests (go test -tags dbintegration): scripts/test_db.sh starts them,
+# The databases for the integration tests (go test -tags dbintegration): scripts/test_db.sh starts them,
 # runs the tests and stops them.
 # Ports are offset so they don't clash with a local MySQL/PostgreSQL.
 services:
@@ -23,29 +21,5 @@ services:
     tmpfs: ["/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 2s
-      retries: 60
-  s3:
-    image: chrislusf/seaweedfs:4.45
-    # Room for many small volumes: a bucket is a collection of its own and
-    # takes 7 volumes, and so does the storage's default collection a
-    # minute after the start - by default (8 volumes) a test bucket made
-    # later than that got none, and every write failed.
-    command: ["server", "-s3", "-dir=/data", "-ip.bind=0.0.0.0", "-volume.max=100", "-master.volumeSizeLimitMB=64"]
-    environment:
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test-secret
-    ports: ["39000:8333"]
-    tmpfs: ["/data"]
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/status || wget -q -S -O /dev/null http://127.0.0.1:8333/ 2>&1 | grep -q 'HTTP/'"]
-      interval: 2s
-      retries: 60
-  azure:
-    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
-    command: ["azurite-blob", "--blobHost", "0.0.0.0", "--skipApiVersionCheck", "--inMemoryPersistence"]
-    ports: ["31000:10000"]
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 10000"]
       interval: 2s
       retries: 60

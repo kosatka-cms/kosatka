@@ -20,6 +20,8 @@ export default defineConfig({
 			logo: { src: './src/content/docs/assets/logo.svg' },
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/kosatka-cms/kosatka' }],
 			editLink: { baseUrl: 'https://github.com/kosatka-cms/kosatka/edit/main/docs/' },
+			// The edit link's path: docs/<page>, not the content link's (src/routeData.ts).
+			routeMiddleware: './src/routeData.ts',
 			sidebar: [
 				{ label: 'Getting started', items: [{ autogenerate: { directory: 'getting-started' } }] },
 				{ label: 'Building a site', items: [{ autogenerate: { directory: 'guides' } }] },

@@ -5,8 +5,8 @@
 # history (gitleaks, .gitleaks.toml), the unit tests
 # with the race detector, the integration tests
 # (-tags dbintegration) on MySQL 8.4 and PostgreSQL 16 - the engine
-# supports both (docs/contributing/database.md) - with the S3 and Azure
-# storages, and the Docker image's build.
+# supports both (docs/contributing/database.md) - and the Docker image's
+# build.
 # Locally: scripts/check.sh (golangci-lint - the same version, installed
 # when missing; unit tests, govulncheck and gitleaks when installed;
 # -race: the race detector; -db: and the database tests and the
@@ -122,17 +122,11 @@ jobs:
     env:
       KOSATKA_TEST_MYSQL_DSN: root:test@tcp(127.0.0.1:33306)/?parseTime=true
       KOSATKA_TEST_POSTGRES_DSN: postgres://postgres:test@127.0.0.1:35432/postgres?sslmode=disable
-      KOSATKA_TEST_S3: http://test:test-secret@127.0.0.1:39000/kosatka-test
-      KOSATKA_TEST_AZURE: http://127.0.0.1:31000/devstoreaccount1
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      # The S3 storage and the Azure emulator, as scripts/test_db.sh starts
-      # them (their commands aren't a service container's): the file
-      # storage tests run on them.
-      - run: docker compose -f docker-compose.test.yml up -d --wait s3 azure
       # Includes internal/app TestInstallAndServe: "app install" on an empty
       # database of each, then the server's pages and the admin sign-in.
       # The tag adds the integration tests to the unit ones: the coverage
@@ -140,11 +134,6 @@ jobs:
       # internal/app takes most of 10 minutes on a runner with the
       # coverage on: go test's default timeout.
       - run: go test -tags dbintegration -count=1 -timeout 30m -coverpkg=./... -coverprofile=cover-all.out ./...
-      - name: The storages' logs
-        if: failure()
-        run: |
-          docker compose -f docker-compose.test.yml logs --no-color s3 | head -150
-          docker compose -f docker-compose.test.yml logs --no-color s3 azure | tail -50
       - name: Coverage
         run: |
           summary=$(./scripts/coverage_summary.sh cover-all.out "Unit and integration tests")

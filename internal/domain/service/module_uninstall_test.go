@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
+	"github.com/kosatka-cms/kosatka/internal/lib/mailsender"
 )
 
 type fakeUninstallModules struct {
@@ -99,14 +100,16 @@ func TestModuleUninstall(t *testing.T) {
 }
 
 type fakeUninstallStore struct {
-	nodes       []int
-	files       []int
-	settings    []string
-	viewPrefix  string
-	textFilters []string
-	formatters  []string
-	columns     [][2]string
-	log         *[]string
+	nodes      []int
+	files      []int
+	settings   []string
+	viewPrefix string
+	// mailTransports - the ways of sending whose settings were deleted.
+	mailTransports []string
+	textFilters    []string
+	formatters     []string
+	columns        [][2]string
+	log            *[]string
 }
 
 func (f *fakeUninstallStore) NodeIDsOfTypes(_ context.Context, _ []string, limit int) ([]int, error) {
@@ -124,6 +127,11 @@ func (f *fakeUninstallStore) FileIDs(_ context.Context, columns [][2]string) ([]
 
 func (f *fakeUninstallStore) DeleteNodeTypeSettings(_ context.Context, types []string) error {
 	f.settings = types
+	return nil
+}
+
+func (f *fakeUninstallStore) DeleteMailTransportSettings(_ context.Context, transports []string) error {
+	f.mailTransports = transports
 	return nil
 }
 
@@ -166,6 +174,8 @@ func TestModuleUninstallContent(t *testing.T) {
 	withModules(t, map[string]bool{"polls": false})
 	withTextFilters(t, map[int][]string{3: {"poll_results", "kept"}}, TextFilter{Name: "poll_results", Module: "polls"}, TextFilter{Name: "kept", Module: "other"})
 	withFieldFormatters(t, FieldFormatter{Name: "poll_link", Module: "polls", FieldType: entity.FieldTypeLink}, FieldFormatter{Name: "other_link", Module: "other", FieldType: entity.FieldTypeLink})
+	RegisterMailTransport(MailTransport{Name: "poll_mail", Module: "polls", Title: "Poll mail", New: func(map[string]string, string, time.Duration) (mailsender.EmailSender, error) { return nil, nil }})
+	t.Cleanup(func() { UnregisterMailTransport("poll_mail") })
 	var log []string
 	installed := map[string]bool{"polls": true}
 	store := &fakeUninstallStore{nodes: []int{1, 2, 3}, files: []int{7, 8}, log: &log}
@@ -212,6 +222,10 @@ func TestModuleUninstallContent(t *testing.T) {
 	}
 	if !slices.Equal(store.settings, []string{"poll"}) || !slices.Equal(log, []string{"files", "step", "drop"}) {
 		t.Errorf("settings %v, order %v", store.settings, log)
+	}
+	// Its ways of sending email's settings.
+	if !slices.Equal(store.mailTransports, []string{"poll_mail"}) {
+		t.Errorf("mail transports' settings deleted %v", store.mailTransports)
 	}
 	if store.viewPrefix != "polls." {
 		t.Errorf("View criteria removed by prefix %q, want %q", store.viewPrefix, "polls.")

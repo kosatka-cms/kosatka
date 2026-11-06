@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"gopkg.in/yaml.v3"
 )
 
 // The environments a site runs in (env / APP_ENV): LoadPath accepts these
@@ -109,70 +110,35 @@ type FilesConfig struct {
 	// Empty - ./private next to the application.
 	PrivateDir string `yaml:"private_dir" env:"FILES_PRIVATE_DIR"`
 	// Storage - where the public files are kept: "local" (the default,
-	// PublicDir), "s3" (an S3-compatible bucket, S3) or "azure" (an Azure
-	// Blob Storage container, Azure).
-	Storage string      `yaml:"storage" env:"FILES_STORAGE"`
-	S3      S3Config    `yaml:"s3"`
-	Azure   AzureConfig `yaml:"azure"`
+	// PublicDir) or a storage driver the binary has (a package outside
+	// the engine registers it: modulekit.AddFileStorage), configured by
+	// its own section of files (e.g. files.s3) and environment.
+	Storage string `yaml:"storage" env:"FILES_STORAGE"`
 	// PrivateStorage - where the private files are kept: "local" (the
-	// default, PrivateDir), "s3" (PrivateS3's bucket, reached with S3's
-	// endpoint and keys) or "azure" (PrivateAzure's container of Azure's
-	// account).
-	PrivateStorage string             `yaml:"private_storage" env:"FILES_PRIVATE_STORAGE"`
-	PrivateS3      PrivateS3Config    `yaml:"private_s3"`
-	PrivateAzure   PrivateAzureConfig `yaml:"private_azure"`
+	// default, PrivateDir) or a storage driver, like Storage.
+	PrivateStorage string `yaml:"private_storage" env:"FILES_PRIVATE_STORAGE"`
+	// Drivers - the other keys of files: the storage drivers' sections,
+	// read by the drivers (DecodeDriver).
+	Drivers map[string]any `yaml:",inline"`
 }
 
-// AzureConfig - the container of files.storage "azure". The account's
-// key comes only from the environment, never the config file.
-type AzureConfig struct {
-	Account   string `yaml:"account" env:"FILES_AZURE_ACCOUNT"`
-	Container string `yaml:"container" env:"FILES_AZURE_CONTAINER"`
-	// Prefix - the container's folder for this site's files ("" - its
-	// root).
-	Prefix string `yaml:"prefix" env:"FILES_AZURE_PREFIX"`
-	// Endpoint - the account's blob address ("" -
-	// https://<account>.blob.core.windows.net).
-	Endpoint string `yaml:"endpoint" env:"FILES_AZURE_ENDPOINT"`
-	// PublicURL - where the container (or a CDN in front of it) serves the
-	// files itself: the site redirects its files' addresses there. Empty -
-	// the site serves them from the container.
-	PublicURL string `yaml:"public_url" env:"FILES_AZURE_PUBLIC_URL"`
-	Key       string `yaml:"-" env:"FILES_AZURE_KEY"`
-}
-
-// PrivateAzureConfig - the container of files.private_storage "azure", in
-// files.azure's account: one the public files' address never reaches.
-type PrivateAzureConfig struct {
-	Container string `yaml:"container" env:"FILES_PRIVATE_AZURE_CONTAINER"`
-	Prefix    string `yaml:"prefix" env:"FILES_PRIVATE_AZURE_PREFIX"`
-}
-
-// PrivateS3Config - the bucket of files.private_storage "s3": one the
-// public files' address never reaches (another bucket, or a prefix
-// outside theirs).
-type PrivateS3Config struct {
-	Bucket string `yaml:"bucket" env:"FILES_PRIVATE_S3_BUCKET"`
-	Prefix string `yaml:"prefix" env:"FILES_PRIVATE_S3_PREFIX"`
-}
-
-// S3Config - the bucket of files.storage "s3". The keys come only from
-// the environment, never the config file.
-type S3Config struct {
-	// Endpoint - the storage's address, e.g. https://storage.yandexcloud.net.
-	Endpoint string `yaml:"endpoint" env:"FILES_S3_ENDPOINT"`
-	Region   string `yaml:"region" env:"FILES_S3_REGION"`
-	Bucket   string `yaml:"bucket" env:"FILES_S3_BUCKET"`
-	// Prefix - the bucket's folder for this site's files ("" - its root).
-	Prefix string `yaml:"prefix" env:"FILES_S3_PREFIX"`
-	// PublicURL - where the bucket (or a CDN in front of it) serves the
-	// files itself: the site redirects its files' addresses there. Empty -
-	// the site serves them from the bucket.
-	PublicURL string `yaml:"public_url" env:"FILES_S3_PUBLIC_URL"`
-	// PathStyle - <endpoint>/<bucket> addresses (MinIO, some providers).
-	PathStyle bool   `yaml:"path_style" env:"FILES_S3_PATH_STYLE"`
-	AccessKey string `yaml:"-" env:"FILES_S3_ACCESS_KEY"`
-	SecretKey string `yaml:"-" env:"FILES_S3_SECRET_KEY"`
+// DecodeDriver fills v from the section files.<section> of the config
+// file (v's yaml tags), then from the environment (its env tags win, as
+// for the engine's own settings): a storage driver's settings.
+func (c FilesConfig) DecodeDriver(section string, v any) error {
+	if raw, ok := c.Drivers[section]; ok && raw != nil {
+		b, err := yaml.Marshal(raw)
+		if err != nil {
+			return fmt.Errorf("files.%s: %w", section, err)
+		}
+		if err := yaml.Unmarshal(b, v); err != nil {
+			return fmt.Errorf("files.%s: %w", section, err)
+		}
+	}
+	if err := cleanenv.ReadEnv(v); err != nil {
+		return fmt.Errorf("files.%s: %w", section, err)
+	}
+	return nil
 }
 
 // RecaptchaConfig enables Google reCAPTCHA v2 on auth forms when both keys are non-empty.
@@ -235,17 +201,16 @@ func (c YandexOAuthConfig) Config() OAuthProviderConfig {
 	return OAuthProviderConfig(c)
 }
 
-// EmailConfig - the outgoing mail's transport when the admin's mail
-// settings name none: an SMTP server (host, port, account) or a Resend
-// API key, and the sender's address.
+// EmailConfig - the outgoing mail's SMTP server (host, port, account)
+// and the sender's address: the server's settings win over the admin's.
+// A module's way of sending is set by its own environment variables
+// (service.MailTransportField.Env).
 type EmailConfig struct {
 	SMTPHost     string `yaml:"smtp_host" env:"SMTP_HOST"`
 	SMTPPort     int    `yaml:"smtp_port" env:"SMTP_PORT" env-default:"587"`
 	SMTPUser     string `yaml:"smtp_user" env:"SMTP_USER"`
 	SMTPPassword string `yaml:"smtp_password" env:"SMTP_PASSWORD"`
 	FromAddress  string `yaml:"from_address" env:"EMAIL_FROM_ADDRESS"`
-	// ResendAPIKey enables HTTPS API sending (https://resend.com). If set with from_address, used instead of SMTP.
-	ResendAPIKey string `yaml:"resend_api_key" env:"RESEND_API_KEY"`
 }
 
 // DBConfig - the site database's connection: the server (Driver, Host,

@@ -114,6 +114,9 @@ type MailSettings func(*sql.Selector)
 // MailTemplate is the predicate function for mailtemplate builders.
 type MailTemplate func(*sql.Selector)
 
+// MailTransportSetting is the predicate function for mailtransportsetting builders.
+type MailTransportSetting func(*sql.Selector)
+
 // MaintenanceSettings is the predicate function for maintenancesettings builders.
 type MaintenanceSettings func(*sql.Selector)
 

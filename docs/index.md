@@ -26,7 +26,7 @@ git clone https://github.com/kosatka-cms/kosatka.git && cd kosatka
 docker compose up --build
 ```
 
-Open http://localhost:8080: a site with demo content and every module.
+Open http://localhost:8080: a site with demo content and every built-in module.
 Sign in at http://localhost:8080/login as `admin` with the password
 printed once in the log:
 

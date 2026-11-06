@@ -1,8 +1,5 @@
 .idea
 .cursor
-.claude/
-# The instructions for Claude Code - kept locally, not published.
-CLAUDE.md
 .DS_Store
 # app assets export ./web/static writes the modules' static files here.
 web/static/modules/

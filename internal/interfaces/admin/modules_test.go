@@ -285,9 +285,10 @@ func (s *stubUninstallStore) NodeIDsOfTypes(_ context.Context, _ []string, limit
 	}
 	return slices.Clone(s.nodes[:limit]), nil
 }
-func (s *stubUninstallStore) FileIDs(context.Context, [][2]string) ([]int, error)    { return nil, nil }
-func (s *stubUninstallStore) DeleteNodeTypeSettings(context.Context, []string) error { return nil }
-func (s *stubUninstallStore) DeleteViewCriteria(context.Context, string) error       { return nil }
+func (s *stubUninstallStore) FileIDs(context.Context, [][2]string) ([]int, error)         { return nil, nil }
+func (s *stubUninstallStore) DeleteNodeTypeSettings(context.Context, []string) error      { return nil }
+func (s *stubUninstallStore) DeleteMailTransportSettings(context.Context, []string) error { return nil }
+func (s *stubUninstallStore) DeleteViewCriteria(context.Context, string) error            { return nil }
 func (s *stubUninstallStore) RemoveTextFilters(context.Context, []string) (map[int][]string, error) {
 	return nil, nil
 }

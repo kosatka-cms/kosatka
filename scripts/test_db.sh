@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Integration tests on MySQL, PostgreSQL, an S3 storage and Azurite (go test -tags
+# Integration tests on MySQL and PostgreSQL (go test -tags
 # dbintegration): starts them from docker-compose.test.yml, runs the tests, stops them.
 #   ./scripts/test_db.sh            - every integration test (the example module's too)
 #   ./scripts/test_db.sh ./internal/infrastructure/sqldialect/...
@@ -12,8 +12,6 @@ $compose up -d --wait
 
 export KOSATKA_TEST_MYSQL_DSN="root:test@tcp(127.0.0.1:33306)/?parseTime=true"
 export KOSATKA_TEST_POSTGRES_DSN="postgres://postgres:test@127.0.0.1:35432/postgres?sslmode=disable"
-export KOSATKA_TEST_S3="http://test:test-secret@127.0.0.1:39000/kosatka-test"
-export KOSATKA_TEST_AZURE="http://127.0.0.1:31000/devstoreaccount1"
 
 pkgs=("$@")
 all=""

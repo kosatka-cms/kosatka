@@ -52,8 +52,8 @@ Each part is shown only to who may open what it lists. The main places:
    e-mail with a link is sent (registration, password resets,
    notifications).
 2. **E-mail.** Password resets and e-mail verification need it: set up
-   SMTP or [Resend](https://resend.com) on the Mail page, or in the
-   config (`email`); see [Email](../guides/mail.md).
+   SMTP on the Mail page (or a mail service's API with its module, such
+   as Resend's), or in the config (`email`); see [Email](../guides/mail.md).
 3. **Modules.** A new site has the standard ones (forms, private
    messages, subscriptions, video embeds, the action log and the 404
    log). Enabling another module on the Modules page installs it:

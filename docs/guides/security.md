@@ -196,8 +196,8 @@ its field is empty, and left empty it keeps the key.
   names where: enter it again in the admin. Users set up two-factor
   sign-in again; their recovery codes still work.
 
-A key set in the server's configuration (`RESEND_API_KEY`,
-`SMTP_PASSWORD`, `RECAPTCHA_*`, `*_OAUTH_*`) wins over the one saved in
+A key set in the server's configuration (`SMTP_PASSWORD`, a mail
+module's such as `RESEND_API_KEY`, `RECAPTCHA_*`, `*_OAUTH_*`) wins over the one saved in
 the admin, and the admin page doesn't offer the field: someone with the
 admin's password can't send the site's email - password resets
 included - through an account of their own. Set the keys there when the

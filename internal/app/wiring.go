@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -103,22 +104,22 @@ func (c derivativeCaches) ClearAllGeneratedImages(ctx context.Context) error {
 	return c.Repositories.ClearAllGeneratedImages(ctx)
 }
 
-// newMailService - the site's email sender: the config's Resend/SMTP
-// settings when it has them, else the transport saved in the admin
-// (Configuration → Mail).
+// newMailService - the site's email sender: the server config's way of
+// sending when it sets one - a module's transport from the environment
+// (MailTransportField.Env), else its SMTP server - otherwise the one
+// saved in the admin (Configuration → Mail).
 func newMailService(cfg *config.Config, drv *sql.Driver, baseLogger *slog.Logger) *service.MailService {
 	configured := entity.MailSettings{
 		FromAddress:  cfg.Email.FromAddress,
-		ResendAPIKey: cfg.Email.ResendAPIKey,
 		SMTPHost:     cfg.Email.SMTPHost,
 		SMTPPort:     cfg.Email.SMTPPort,
 		SMTPUser:     cfg.Email.SMTPUser,
 		SMTPPassword: cfg.Email.SMTPPassword,
 	}
-	switch {
-	case configured.ResendAPIKey != "":
-		configured.Transport = entity.MailTransportResend
-	case configured.SMTPHost != "":
+	if name, values, ok := service.ConfiguredMailTransport(os.Getenv); ok {
+		configured.Transport = name
+		configured.TransportSettings = map[string]map[string]string{name: values}
+	} else if configured.SMTPHost != "" {
 		configured.Transport = entity.MailTransportSMTP
 	}
 	mailService := service.NewMailService(database.NewMailSettingsRepository(drv.DB()), configured, baseLogger, config.Seconds(cfg.Timeouts.HTTPRequest))
@@ -128,6 +129,9 @@ func newMailService(cfg *config.Config, drv *sql.Driver, baseLogger *slog.Logger
 		baseLogger.Error("error loading the mail settings", "error", err)
 	}
 	st := mailService.Status()
+	if st.Missing != "" {
+		baseLogger.Warn("the mail transport saved in the admin isn't in this binary: add its module to the site's binary (app module add), or choose another on the Mail page", "transport", st.Missing)
+	}
 	if st.Source == service.MailSourceNone || !st.Enabled {
 		baseLogger.Warn("email off or not configured: transactional mail disabled (password reset, verification, templated mail)", "enabled", st.Enabled, "source", st.Source)
 	} else {

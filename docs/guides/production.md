@@ -640,3 +640,18 @@ docker run -d --name kosatka --restart unless-stopped \
 - nginx in front proxies everything to `127.0.0.1:3333` (only the
   `location /` block above): the static and public files are inside the
   container, and the application serves them.
+
+The image has the engine alone. A site with modules or a [file
+storage](./file-storage.md) from their own repositories puts its own
+binary on it, built from the site's main package on the engine version
+the image has:
+
+```dockerfile
+FROM golang:1.27-alpine AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -o /out/kosatka .
+
+FROM ghcr.io/kosatka-cms/kosatka:0.1.1
+COPY --from=build /out/kosatka /app/kosatka
+```

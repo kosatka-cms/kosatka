@@ -1,91 +1,132 @@
 package app
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/kosatka-cms/kosatka/internal/config"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/filestorage"
+	"github.com/kosatka-cms/kosatka/pkg/filestore"
 )
 
-// TestPublicStore - files.storage picks the store; an S3 one checks its
-// settings and gets its public address with a trailing slash.
+// namedStore - a store that says where it keeps the files.
+type namedStore struct {
+	filestore.Store
+	name string
+}
+
+func (s namedStore) String() string { return s.name }
+
+// fakeSettings - the test driver's section, files.fake.
+type fakeSettings struct {
+	Bucket    string `yaml:"bucket" env:"KOSATKA_TEST_FAKE_BUCKET"`
+	PublicURL string `yaml:"public_url"`
+}
+
+// useFakeStorage registers the storage "fake" for the test: its stores
+// are directories named after files.fake's bucket; seen - the configs
+// its Private got.
+func useFakeStorage(t *testing.T, private bool) *[]filestorage.Config {
+	t.Helper()
+	var seen []filestorage.Config
+	open := func(c filestorage.Config) (filestore.Store, fakeSettings, error) {
+		var s fakeSettings
+		if err := c.Decode("fake", &s); err != nil {
+			return nil, s, err
+		}
+		if s.Bucket == "" {
+			return nil, s, errors.New("files.fake: no bucket")
+		}
+		return namedStore{filestore.NewLocal(t.TempDir()), "fake://" + s.Bucket + "/"}, s, nil
+	}
+	d := filestorage.Driver{Name: "fake", Public: func(c filestorage.Config) (filestore.Store, string, error) {
+		store, s, err := open(c)
+		return store, s.PublicURL, err
+	}}
+	if private {
+		d.Private = func(c filestorage.Config) (filestore.Store, error) {
+			seen = append(seen, c)
+			store, _, err := open(c)
+			return store, err
+		}
+	}
+	filestorage.Register(d)
+	t.Cleanup(func() { filestorage.Unregister("fake") })
+	return &seen
+}
+
+// TestPublicStore - files.storage picks the store of a registered
+// storage, from its own section; the public address gets a trailing
+// slash, a bad one or an unknown storage is an error naming the setting.
 func TestPublicStore(t *testing.T) {
 	if s, url, err := publicStore(config.FilesConfig{}); s != nil || url != "" || err != nil {
 		t.Errorf("local: %v %q %v", s, url, err)
 	}
-	s3 := config.S3Config{Endpoint: "https://storage.example.com", Bucket: "site", Prefix: "/blog/", AccessKey: "k", SecretKey: "s", PublicURL: "https://cdn.example.com/blog"}
-	s, url, err := publicStore(config.FilesConfig{Storage: "S3", S3: s3})
+	useFakeStorage(t, false)
+	section := func(s map[string]any) map[string]any { return map[string]any{"fake": s} }
+	s, url, err := publicStore(config.FilesConfig{Storage: " FAKE ", Drivers: section(map[string]any{"bucket": "site", "public_url": "https://cdn.example.com/blog"})})
 	if err != nil || s == nil || url != "https://cdn.example.com/blog/" {
-		t.Fatalf("s3: %v %q %v", s, url, err)
+		t.Fatalf("fake: %v %q %v", s, url, err)
 	}
-	if got := storageName("s3", s3.Bucket, s3.Prefix); got != "s3://site/blog/" || got != s.(interface{ String() string }).String() {
-		t.Errorf("storageName = %q, store %v", got, s)
+	t.Setenv("KOSATKA_TEST_FAKE_BUCKET", "from-env")
+	if s, _, err := publicStore(config.FilesConfig{Storage: "fake", Drivers: section(map[string]any{"bucket": "site"})}); err != nil || s.(namedStore).name != "fake://from-env/" {
+		t.Errorf("the environment doesn't win: %v %v", s, err)
 	}
-	for name, cfg := range map[string]config.FilesConfig{
-		"unknown storage": {Storage: "ftp"},
-		"no keys":         {Storage: "s3", S3: config.S3Config{Endpoint: s3.Endpoint, Bucket: "b"}},
-		"bad public url":  {Storage: "s3", S3: func() config.S3Config { c := s3; c.PublicURL = "cdn.example.com"; return c }()},
+	for name, tc := range map[string]struct {
+		cfg  config.FilesConfig
+		want string
+	}{
+		"unknown storage": {config.FilesConfig{Storage: "ftp"}, `files.storage "ftp"`},
+		"bad public url":  {config.FilesConfig{Storage: "fake", Drivers: section(map[string]any{"public_url": "cdn.example.com"})}, "isn't an http(s) address"},
 	} {
-		if _, _, err := publicStore(cfg); err == nil || !strings.Contains(err.Error(), "files.") {
+		if _, _, err := publicStore(tc.cfg); err == nil || !strings.Contains(err.Error(), tc.want) {
 			t.Errorf("%s: %v", name, err)
 		}
 	}
+	t.Setenv("KOSATKA_TEST_FAKE_BUCKET", "")
+	if _, _, err := publicStore(config.FilesConfig{Storage: "fake"}); err == nil || !strings.Contains(err.Error(), "files.fake") {
+		t.Errorf("the driver's error: %v", err)
+	}
 }
 
-// TestPrivateStore - the private files' bucket is reached with files.s3's
-// connection and never where the public files' address reaches.
+// TestPrivateStore - files.private_storage picks the store of a
+// registered storage, which learns where the public files are; a storage
+// without private files or an unknown one is an error.
 func TestPrivateStore(t *testing.T) {
 	if s, err := privateStore(config.FilesConfig{}); s != nil || err != nil {
 		t.Errorf("local: %v %v", s, err)
 	}
-	s3 := config.S3Config{Endpoint: "https://storage.example.com", Bucket: "site", Prefix: "public", AccessKey: "k", SecretKey: "s"}
-	for name, tc := range map[string]struct {
-		storage string
-		priv    config.PrivateS3Config
-		ok      bool
-	}{
-		"another bucket":           {"s3", config.PrivateS3Config{Bucket: "site-private"}, true},
-		"a prefix beside":          {"s3", config.PrivateS3Config{Bucket: "site", Prefix: "private"}, true},
-		"public files on disk":     {"local", config.PrivateS3Config{Bucket: "site"}, true},
-		"the same prefix":          {"s3", config.PrivateS3Config{Bucket: "site", Prefix: "/public/"}, false},
-		"inside the public prefix": {"s3", config.PrivateS3Config{Bucket: "site", Prefix: "public/forms"}, false},
-		"the whole bucket":         {"s3", config.PrivateS3Config{Bucket: "site"}, false},
-		"no bucket":                {"s3", config.PrivateS3Config{}, false},
-	} {
-		s, err := privateStore(config.FilesConfig{Storage: tc.storage, S3: s3, PrivateStorage: "s3", PrivateS3: tc.priv})
-		if (err == nil) != tc.ok || (tc.ok && s == nil) {
-			t.Errorf("%s: %v %v", name, s, err)
-		}
+	seen := useFakeStorage(t, true)
+	cfg := config.FilesConfig{Storage: "fake", PrivateStorage: "fake", Drivers: map[string]any{"fake": map[string]any{"bucket": "site"}}}
+	if s, err := privateStore(cfg); err != nil || s == nil || len(*seen) != 1 || (*seen)[0].PublicStorage != "fake" {
+		t.Fatalf("fake: %v %v %+v", s, err, *seen)
 	}
-	if _, err := privateStore(config.FilesConfig{PrivateStorage: "ftp"}); err == nil {
-		t.Error("an unknown storage accepted")
+	cfg.Storage = ""
+	if _, err := privateStore(cfg); err != nil || (*seen)[1].PublicStorage != filestorage.Local {
+		t.Errorf("public files on disk: %v %+v", err, *seen)
+	}
+	if _, err := privateStore(config.FilesConfig{PrivateStorage: "ftp"}); err == nil || !strings.Contains(err.Error(), "files.private_storage") {
+		t.Errorf("an unknown storage: %v", err)
+	}
+	filestorage.Unregister("fake")
+	useFakeStorage(t, false)
+	if _, err := privateStore(cfg); err == nil || !strings.Contains(err.Error(), "no private files") {
+		t.Errorf("a storage without private files: %v", err)
 	}
 }
 
-// TestAzureStores - files.storage and files.private_storage "azure": the
-// container's store, its public address, and no private container where
-// the public files' address reaches.
-func TestAzureStores(t *testing.T) {
-	az := config.AzureConfig{Account: "acc", Key: "a2V5", Container: "site", Prefix: "public", PublicURL: "https://cdn.example.com/site"}
-	s, url, err := publicStore(config.FilesConfig{Storage: "azure", Azure: az})
-	if err != nil || s == nil || url != "https://cdn.example.com/site/" || s.(interface{ String() string }).String() != "azure://site/public/" {
-		t.Fatalf("public: %v %q %v", s, url, err)
+// TestStorageName - app config's storage: local, what the store says, or
+// the storage's name when it can't be opened.
+func TestStorageName(t *testing.T) {
+	useFakeStorage(t, true)
+	cfg := config.FilesConfig{Storage: "fake", Drivers: map[string]any{"fake": map[string]any{"bucket": "site"}}}
+	info := configInfo(&config.Config{Files: cfg})
+	if info.Files.Storage != "fake://site/" || info.Files.PrivateStorage != "local" {
+		t.Errorf("storages = %q, %q", info.Files.Storage, info.Files.PrivateStorage)
 	}
-	for name, tc := range map[string]struct {
-		priv config.PrivateAzureConfig
-		ok   bool
-	}{
-		"another container": {config.PrivateAzureConfig{Container: "site-private"}, true},
-		"a prefix beside":   {config.PrivateAzureConfig{Container: "site", Prefix: "private"}, true},
-		"the same prefix":   {config.PrivateAzureConfig{Container: "site", Prefix: "public"}, false},
-		"no container":      {config.PrivateAzureConfig{}, false},
-	} {
-		s, err := privateStore(config.FilesConfig{Storage: "azure", Azure: az, PrivateStorage: "azure", PrivateAzure: tc.priv})
-		if (err == nil) != tc.ok || (tc.ok && s == nil) {
-			t.Errorf("%s: %v %v", name, s, err)
-		}
-	}
-	if got := storageName("azure", "site", "/public/"); got != "azure://site/public/" {
-		t.Errorf("storageName = %q", got)
+	cfg.PrivateStorage, cfg.Drivers = "fake", nil
+	if info := configInfo(&config.Config{Files: cfg}); info.Files.Storage != "fake" || info.Files.PrivateStorage != "fake" {
+		t.Errorf("not opened = %q, %q", info.Files.Storage, info.Files.PrivateStorage)
 	}
 }
