@@ -36,8 +36,8 @@
   },
   "articles": [
     {
-      "title": "Kosatka 0.2: what is new", "sticky": true,
-      "body": "<p>A new version of the engine is out. The highlights: template safety, shared script mechanisms and a new theme.</p><h2>In short</h2><ul><li>Text is output as HTML only for fields with a text format.</li><li>Logging out is a POST request.</li><li>Confirmations, drag and drop and autocomplete share one piece of code driven by data attributes.</li></ul><p>To update, run <strong>app migrate -apply</strong> after deploying.</p>",
+      "title": "Kosatka 0.1: the first public release", "sticky": true,
+      "body": "<p>The engine's first public release is out: the code, the documentation and the Docker image are open. A site is built in the admin - content types, fields, lists and menus - and grows with modules and themes from their own repositories.</p><h2>What is in it</h2><ul><li>Content types, fields, lists (Views), blocks and menus, set up in the admin.</li><li>Modules from their own repositories, added to a site's binary.</li><li>A catalog of themes and a catalog of interface translations.</li><li>Files on disk or, with a storage package, in S3-compatible storage or Azure; mail through SMTP or a service's API.</li></ul><p>To update a site later, run <strong>app migrate -apply</strong> after deploying.</p>",
       "section": "News",
       "tags": [
         "release"
@@ -46,7 +46,7 @@
       "comments": [
         {
           "author": "ishmael",
-          "body": "Finally! Updated in five minutes, everything works.",
+          "body": "Finally! Installed in five minutes, everything works.",
           "replies": [
             {
               "author": "starbuck",
@@ -56,7 +56,7 @@
         },
         {
           "author": "queequeg",
-          "body": "Will there be a dark theme?",
+          "body": "Is there a light scheme too?",
           "replies": [
             {
               "author": "starbuck",
@@ -77,7 +77,7 @@
     },
     {
       "title": "Meet Kosatka CMS",
-      "body": "<p>Kosatka is a content management system written in Go. Content types, fields, lists and menus are set up in the admin, without touching the code.</p><h2>What the engine does</h2><ul><li>Content types with their own fields: text, dates, images, files, links, terms.</li><li>Lists (Views) with filters, sorting and paging.</li><li>Blocks and regions, menus, breadcrumbs, SEO patterns.</li><li>Modules: galleries, polls, forms, feeds, ratings.</li></ul><p>A site runs on MySQL or PostgreSQL and ships as a single binary.</p>",
+      "body": "<p>Kosatka is a content management system written in Go. Content types, fields, lists and menus are set up in the admin, without touching the code. Modules add features, themes change the look, and both can come from their own repositories.</p><h2>What the engine does</h2><ul><li>Content types with their own fields: text, dates, images, files, links, terms.</li><li>Lists (Views) with filters, sorting and paging.</li><li>Blocks and regions, menus, breadcrumbs, SEO patterns.</li><li>Modules: galleries, polls, forms, feeds, ratings.</li></ul><p>A site runs on MySQL or PostgreSQL. A release is a binary with its templates and themes, or a Docker image.</p>",
       "section": "News",
       "tags": [
         "release",
@@ -94,7 +94,7 @@
     },
     {
       "title": "How themes work",
-      "body": "<p>A theme changes the look without touching the data. It can override any template of the engine or only a part of one - say, how the fields are shown on a content page.</p><blockquote><p>A good theme overrides the layout, not the engine's logic.</p></blockquote><p>Without a theme a site is shown in the engine's neutral look - the one you see now. It is light or dark, following your system's setting.</p>",
+      "body": "<p>A theme changes the look without touching the data. It can override any template of the engine or only a part of one - say, how the fields are shown on a content page.</p><blockquote><p>A good theme overrides the layout, not the engine's logic.</p></blockquote><p>A new site gets the Kosatka theme - the one you see now: dark by default, light with the switch in the header. More themes are in the themes catalog; a site installs one with <strong>app theme add</strong>.</p>",
       "section": "Guides",
       "tags": [
         "themes",
@@ -274,6 +274,15 @@
         "search"
       ],
       "views": 455
+    },
+    {
+      "title": "The interface in your language",
+      "body": "<p>The engine's interface is in English; other languages are downloaded from the translations catalog - on the Languages tab of Interface translations, or with <strong>app translations add</strong>. A new site in another language gets it at installation: <strong>app install -language</strong>.</p><p>Any string of the interface can be changed on the site itself, and a site in several languages is the Languages module's.</p>",
+      "section": "Guides",
+      "tags": [
+        "languages"
+      ],
+      "views": 430
     },
     {
       "title": "Permissions and roles",
