@@ -93,6 +93,13 @@ documentation in its README:
 | [Forum](https://github.com/kosatka-cms/kosatka-module-forum) | `forum` | Forum sections and topics under `/forum`, its settings page and the *Forum* topic content type |
 | [Quotes](https://github.com/kosatka-cms/kosatka-module-quotes) | `quotes` | Quotes and their authors: the `/quotes` pages and a *Random quote* block |
 | [Editorial workflow](https://github.com/kosatka-cms/kosatka-module-workflow) | `workflow` | States of content (draft, in review, approved, published, archived or your own) and the transitions between them by role, with comments; the editorial queue (**Content → Editorial**) |
+| [Resend](https://github.com/kosatka-cms/kosatka-module-resend) | `resend` | The site's email through the [Resend](https://resend.com) API: a way of sending on the Mail page besides SMTP ([Email](../guides/mail.md#sending)) |
+
+The same way a site adds a file storage - a package that keeps the
+site's files elsewhere than its disk, chosen by `files.storage` rather
+than on the Modules page: [`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3)
+(S3-compatible buckets) and [`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure)
+(Azure Blob Storage). See [Files in object storage](../guides/file-storage.md).
 
 ## Where to go next
 

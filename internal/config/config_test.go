@@ -160,3 +160,40 @@ func TestLoadPathMissing(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+// TestFilesDriverSections - the other keys of files are the storage
+// drivers' sections: the engine's own keys stay out of them, and
+// DecodeDriver reads one, the environment winning.
+func TestFilesDriverSections(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "config.yaml")
+	body := "files:\n  storage: blob\n  private_dir: /srv/private\n  blob:\n    bucket: site\n    path_style: true\n"
+	if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := LoadPath(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Files.Storage != "blob" || cfg.Files.PrivateDir != "/srv/private" || len(cfg.Files.Drivers) != 1 || cfg.Files.Drivers["blob"] == nil {
+		t.Fatalf("files = %+v", cfg.Files)
+	}
+	type blob struct {
+		Bucket    string `yaml:"bucket" env:"KOSATKA_TEST_BLOB_BUCKET"`
+		PathStyle bool   `yaml:"path_style"`
+		Key       string `yaml:"-" env:"KOSATKA_TEST_BLOB_KEY"`
+	}
+	t.Setenv("KOSATKA_TEST_BLOB_KEY", "secret")
+	var b blob
+	if err := cfg.Files.DecodeDriver("blob", &b); err != nil || b != (blob{Bucket: "site", PathStyle: true, Key: "secret"}) {
+		t.Errorf("blob = %+v %v", b, err)
+	}
+	t.Setenv("KOSATKA_TEST_BLOB_BUCKET", "other")
+	b = blob{}
+	if err := cfg.Files.DecodeDriver("blob", &b); err != nil || b.Bucket != "other" {
+		t.Errorf("the environment doesn't win: %+v %v", b, err)
+	}
+	b = blob{}
+	if err := cfg.Files.DecodeDriver("missing", &b); err != nil || b != (blob{Bucket: "other", Key: "secret"}) {
+		t.Errorf("no section: %+v %v", b, err)
+	}
+}

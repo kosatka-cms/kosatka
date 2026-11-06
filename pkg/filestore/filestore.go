@@ -110,18 +110,21 @@ func Join(elem ...string) string {
 // validPath - p is a valid key: fs.ValidPath, not the root.
 func validPath(p string) bool { return p != "" && p != "." && fs.ValidPath(p) }
 
-// checkKey returns key if it names a file: a valid path, not the root.
-func checkKey(key string) (string, error) {
+// CheckKey returns key if it names a file: a valid path (fs.ValidPath),
+// not the root; else an error wrapping ErrInvalidKey. A Store checks the
+// keys it is given with it.
+func CheckKey(key string) (string, error) {
 	if !validPath(key) {
 		return "", fmt.Errorf("%w: %q", ErrInvalidKey, key)
 	}
 	return key, nil
 }
 
-// checkDir returns dir as a key ("" - the root) if it names a folder.
-func checkDir(dir string) (string, error) {
+// CheckDir returns dir as a key ("" - the root, as "." is) if it names a
+// folder; else an error wrapping ErrInvalidKey.
+func CheckDir(dir string) (string, error) {
 	if dir == "" || dir == "." {
 		return "", nil
 	}
-	return checkKey(dir)
+	return CheckKey(dir)
 }

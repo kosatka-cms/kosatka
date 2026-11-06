@@ -15,12 +15,26 @@ keys.
 ## Sending
 
 The first tab sets how email leaves the site: the switch that turns all
-of it off, the transport - [Resend](https://resend.com) or an SMTP
-server - and the sender's address. Saved keys and passwords are never
-shown again; leave a field empty to keep the saved one. When the
+of it off, the transport - an SMTP server, or a mail service's API that
+a module adds - and the sender's address. Saved keys and passwords are
+never shown again; leave a field empty to keep the saved one. When the
 server's [configuration](../reference/configuration.md#e-mail-email)
 sets a transport, it is the one in use: the page names it and offers
-only the switch and the log. *Delete the saved settings* removes the
+only the switch and the log.
+
+The engine sends through SMTP itself; almost every mail service also
+takes mail over SMTP. Its API is a module's:
+
+| Service | Module | Its setting from the server's environment |
+|---|---|---|
+| [Resend](https://resend.com) | [`kosatka-module-resend`](https://github.com/kosatka-cms/kosatka-module-resend) | `RESEND_API_KEY` |
+
+Such a module is added to the site's binary ([Add a module from its own
+repository](../modules/using-modules.md#add-a-module-from-its-own-repository)),
+and its transport is offered here while it is enabled; with the module
+disabled, no email goes through it, and the page says so. Another
+service's module can add one: see [Ways of sending
+email](../modules/sdk.md#ways-of-sending-email) in the module SDK. *Delete the saved settings* removes the
 ones saved here. *Mail log* - how many days
 the log keeps an email (7, 30 - the default, 90 or 365), or *don't keep
 a log*. *Send a test email* sends one to your own address, with the
@@ -102,7 +116,7 @@ The *Log* tab lists every email the site sent or tried to, newest
 first: when, to whom, which email and its subject, and what came of it:
 
 - **Sent** - the sending service took it (whether it reached the inbox
-  is the service's to say: Resend's dashboard, the SMTP server's log);
+  is the service's to say: its dashboard, the SMTP server's log);
 - **Failed** - the service refused it, with its answer, such as
   `550 mailbox unavailable`;
 - **Not sent** - email was off or not configured.

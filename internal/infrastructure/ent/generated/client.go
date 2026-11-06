@@ -51,6 +51,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maillog"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtemplate"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maintenancesettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menudef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menulinkdef"
@@ -170,6 +171,8 @@ type Client struct {
 	MailSettings *MailSettingsClient
 	// MailTemplate is the client for interacting with the MailTemplate builders.
 	MailTemplate *MailTemplateClient
+	// MailTransportSetting is the client for interacting with the MailTransportSetting builders.
+	MailTransportSetting *MailTransportSettingClient
 	// MaintenanceSettings is the client for interacting with the MaintenanceSettings builders.
 	MaintenanceSettings *MaintenanceSettingsClient
 	// MenuDef is the client for interacting with the MenuDef builders.
@@ -293,6 +296,7 @@ func (c *Client) init() {
 	c.MailLog = NewMailLogClient(c.config)
 	c.MailSettings = NewMailSettingsClient(c.config)
 	c.MailTemplate = NewMailTemplateClient(c.config)
+	c.MailTransportSetting = NewMailTransportSettingClient(c.config)
 	c.MaintenanceSettings = NewMaintenanceSettingsClient(c.config)
 	c.MenuDef = NewMenuDefClient(c.config)
 	c.MenuLinkDef = NewMenuLinkDefClient(c.config)
@@ -459,6 +463,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		MailLog:                  NewMailLogClient(cfg),
 		MailSettings:             NewMailSettingsClient(cfg),
 		MailTemplate:             NewMailTemplateClient(cfg),
+		MailTransportSetting:     NewMailTransportSettingClient(cfg),
 		MaintenanceSettings:      NewMaintenanceSettingsClient(cfg),
 		MenuDef:                  NewMenuDefClient(cfg),
 		MenuLinkDef:              NewMenuLinkDefClient(cfg),
@@ -552,6 +557,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		MailLog:                  NewMailLogClient(cfg),
 		MailSettings:             NewMailSettingsClient(cfg),
 		MailTemplate:             NewMailTemplateClient(cfg),
+		MailTransportSetting:     NewMailTransportSettingClient(cfg),
 		MaintenanceSettings:      NewMaintenanceSettingsClient(cfg),
 		MenuDef:                  NewMenuDefClient(cfg),
 		MenuLinkDef:              NewMenuLinkDefClient(cfg),
@@ -628,9 +634,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.FieldValueReferenceMulti, c.FieldValueTaxonomy, c.FieldValueTaxonomyMulti,
 		c.FieldValueText, c.FieldValueUser, c.File, c.ImageStyle,
 		c.IntegrationSettings, c.InterfacePack, c.InterfaceString, c.MailLog,
-		c.MailSettings, c.MailTemplate, c.MaintenanceSettings, c.MenuDef,
-		c.MenuLinkDef, c.Module, c.Node, c.NodeCounter, c.NodeRevision, c.NodeViewDay,
-		c.OAuthSettings, c.PageSeo, c.PreviewLink, c.Redirect, c.Role,
+		c.MailSettings, c.MailTemplate, c.MailTransportSetting, c.MaintenanceSettings,
+		c.MenuDef, c.MenuLinkDef, c.Module, c.Node, c.NodeCounter, c.NodeRevision,
+		c.NodeViewDay, c.OAuthSettings, c.PageSeo, c.PreviewLink, c.Redirect, c.Role,
 		c.SearchSettings, c.SearchType, c.SearchWord, c.SeoRule, c.SeoTemplate,
 		c.SiteInformation, c.StatisticsSettings, c.TaxonomyIndex, c.TaxonomyTermData,
 		c.TaxonomyVocabulary, c.TextFormatDef, c.ThemeSettings, c.UploadSettings,
@@ -655,9 +661,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.FieldValueReferenceMulti, c.FieldValueTaxonomy, c.FieldValueTaxonomyMulti,
 		c.FieldValueText, c.FieldValueUser, c.File, c.ImageStyle,
 		c.IntegrationSettings, c.InterfacePack, c.InterfaceString, c.MailLog,
-		c.MailSettings, c.MailTemplate, c.MaintenanceSettings, c.MenuDef,
-		c.MenuLinkDef, c.Module, c.Node, c.NodeCounter, c.NodeRevision, c.NodeViewDay,
-		c.OAuthSettings, c.PageSeo, c.PreviewLink, c.Redirect, c.Role,
+		c.MailSettings, c.MailTemplate, c.MailTransportSetting, c.MaintenanceSettings,
+		c.MenuDef, c.MenuLinkDef, c.Module, c.Node, c.NodeCounter, c.NodeRevision,
+		c.NodeViewDay, c.OAuthSettings, c.PageSeo, c.PreviewLink, c.Redirect, c.Role,
 		c.SearchSettings, c.SearchType, c.SearchWord, c.SeoRule, c.SeoTemplate,
 		c.SiteInformation, c.StatisticsSettings, c.TaxonomyIndex, c.TaxonomyTermData,
 		c.TaxonomyVocabulary, c.TextFormatDef, c.ThemeSettings, c.UploadSettings,
@@ -744,6 +750,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.MailSettings.mutate(ctx, m)
 	case *MailTemplateMutation:
 		return c.MailTemplate.mutate(ctx, m)
+	case *MailTransportSettingMutation:
+		return c.MailTransportSetting.mutate(ctx, m)
 	case *MaintenanceSettingsMutation:
 		return c.MaintenanceSettings.mutate(ctx, m)
 	case *MenuDefMutation:
@@ -6507,6 +6515,139 @@ func (c *MailTemplateClient) mutate(ctx context.Context, m *MailTemplateMutation
 		return (&MailTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("generated: unknown MailTemplate mutation op: %q", m.Op())
+	}
+}
+
+// MailTransportSettingClient is a client for the MailTransportSetting schema.
+type MailTransportSettingClient struct {
+	config
+}
+
+// NewMailTransportSettingClient returns a client for the MailTransportSetting from the given config.
+func NewMailTransportSettingClient(c config) *MailTransportSettingClient {
+	return &MailTransportSettingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mailtransportsetting.Hooks(f(g(h())))`.
+func (c *MailTransportSettingClient) Use(hooks ...Hook) {
+	c.hooks.MailTransportSetting = append(c.hooks.MailTransportSetting, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mailtransportsetting.Intercept(f(g(h())))`.
+func (c *MailTransportSettingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MailTransportSetting = append(c.inters.MailTransportSetting, interceptors...)
+}
+
+// Create returns a builder for creating a MailTransportSetting entity.
+func (c *MailTransportSettingClient) Create() *MailTransportSettingCreate {
+	mutation := newMailTransportSettingMutation(c.config, OpCreate)
+	return &MailTransportSettingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MailTransportSetting entities.
+func (c *MailTransportSettingClient) CreateBulk(builders ...*MailTransportSettingCreate) *MailTransportSettingCreateBulk {
+	return &MailTransportSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MailTransportSettingClient) MapCreateBulk(slice any, setFunc func(*MailTransportSettingCreate, int)) *MailTransportSettingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MailTransportSettingCreateBulk{err: fmt.Errorf("calling to MailTransportSettingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MailTransportSettingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MailTransportSettingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MailTransportSetting.
+func (c *MailTransportSettingClient) Update() *MailTransportSettingUpdate {
+	mutation := newMailTransportSettingMutation(c.config, OpUpdate)
+	return &MailTransportSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MailTransportSettingClient) UpdateOne(_m *MailTransportSetting) *MailTransportSettingUpdateOne {
+	mutation := newMailTransportSettingMutation(c.config, OpUpdateOne, withMailTransportSetting(_m))
+	return &MailTransportSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MailTransportSettingClient) UpdateOneID(id int) *MailTransportSettingUpdateOne {
+	mutation := newMailTransportSettingMutation(c.config, OpUpdateOne, withMailTransportSettingID(id))
+	return &MailTransportSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MailTransportSetting.
+func (c *MailTransportSettingClient) Delete() *MailTransportSettingDelete {
+	mutation := newMailTransportSettingMutation(c.config, OpDelete)
+	return &MailTransportSettingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MailTransportSettingClient) DeleteOne(_m *MailTransportSetting) *MailTransportSettingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MailTransportSettingClient) DeleteOneID(id int) *MailTransportSettingDeleteOne {
+	builder := c.Delete().Where(mailtransportsetting.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MailTransportSettingDeleteOne{builder}
+}
+
+// Query returns a query builder for MailTransportSetting.
+func (c *MailTransportSettingClient) Query() *MailTransportSettingQuery {
+	return &MailTransportSettingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMailTransportSetting},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MailTransportSetting entity by its id.
+func (c *MailTransportSettingClient) Get(ctx context.Context, id int) (*MailTransportSetting, error) {
+	return c.Query().Where(mailtransportsetting.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MailTransportSettingClient) GetX(ctx context.Context, id int) *MailTransportSetting {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MailTransportSettingClient) Hooks() []Hook {
+	return c.hooks.MailTransportSetting
+}
+
+// Interceptors returns the client interceptors.
+func (c *MailTransportSettingClient) Interceptors() []Interceptor {
+	return c.inters.MailTransportSetting
+}
+
+func (c *MailTransportSettingClient) mutate(ctx context.Context, m *MailTransportSettingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MailTransportSettingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MailTransportSettingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MailTransportSettingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MailTransportSettingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("generated: unknown MailTransportSetting mutation op: %q", m.Op())
 	}
 }
 
@@ -12377,13 +12518,14 @@ type (
 		FieldValueReferenceMulti, FieldValueTaxonomy, FieldValueTaxonomyMulti,
 		FieldValueText, FieldValueUser, File, ImageStyle, IntegrationSettings,
 		InterfacePack, InterfaceString, MailLog, MailSettings, MailTemplate,
-		MaintenanceSettings, MenuDef, MenuLinkDef, Module, Node, NodeCounter,
-		NodeRevision, NodeViewDay, OAuthSettings, PageSeo, PreviewLink, Redirect, Role,
-		SearchSettings, SearchType, SearchWord, SeoRule, SeoTemplate, SiteInformation,
-		StatisticsSettings, TaxonomyIndex, TaxonomyTermData, TaxonomyVocabulary,
-		TextFormatDef, ThemeSettings, UploadSettings, User, UserAuthToken, UserField,
-		UserFieldValue, UserOAuthIdentity, UserRecoveryCode, UserTwoFactor, View,
-		ViewDisplayDef, ViewFieldDef, ViewFilterDef, ViewSortDef []ent.Hook
+		MailTransportSetting, MaintenanceSettings, MenuDef, MenuLinkDef, Module, Node,
+		NodeCounter, NodeRevision, NodeViewDay, OAuthSettings, PageSeo, PreviewLink,
+		Redirect, Role, SearchSettings, SearchType, SearchWord, SeoRule, SeoTemplate,
+		SiteInformation, StatisticsSettings, TaxonomyIndex, TaxonomyTermData,
+		TaxonomyVocabulary, TextFormatDef, ThemeSettings, UploadSettings, User,
+		UserAuthToken, UserField, UserFieldValue, UserOAuthIdentity, UserRecoveryCode,
+		UserTwoFactor, View, ViewDisplayDef, ViewFieldDef, ViewFilterDef,
+		ViewSortDef []ent.Hook
 	}
 	inters struct {
 		AccountSettings, BlockDef, BlockPlacementDef, BlockedBot, BlockedIP,
@@ -12394,13 +12536,14 @@ type (
 		FieldValueReferenceMulti, FieldValueTaxonomy, FieldValueTaxonomyMulti,
 		FieldValueText, FieldValueUser, File, ImageStyle, IntegrationSettings,
 		InterfacePack, InterfaceString, MailLog, MailSettings, MailTemplate,
-		MaintenanceSettings, MenuDef, MenuLinkDef, Module, Node, NodeCounter,
-		NodeRevision, NodeViewDay, OAuthSettings, PageSeo, PreviewLink, Redirect, Role,
-		SearchSettings, SearchType, SearchWord, SeoRule, SeoTemplate, SiteInformation,
-		StatisticsSettings, TaxonomyIndex, TaxonomyTermData, TaxonomyVocabulary,
-		TextFormatDef, ThemeSettings, UploadSettings, User, UserAuthToken, UserField,
-		UserFieldValue, UserOAuthIdentity, UserRecoveryCode, UserTwoFactor, View,
-		ViewDisplayDef, ViewFieldDef, ViewFilterDef, ViewSortDef []ent.Interceptor
+		MailTransportSetting, MaintenanceSettings, MenuDef, MenuLinkDef, Module, Node,
+		NodeCounter, NodeRevision, NodeViewDay, OAuthSettings, PageSeo, PreviewLink,
+		Redirect, Role, SearchSettings, SearchType, SearchWord, SeoRule, SeoTemplate,
+		SiteInformation, StatisticsSettings, TaxonomyIndex, TaxonomyTermData,
+		TaxonomyVocabulary, TextFormatDef, ThemeSettings, UploadSettings, User,
+		UserAuthToken, UserField, UserFieldValue, UserOAuthIdentity, UserRecoveryCode,
+		UserTwoFactor, View, ViewDisplayDef, ViewFieldDef, ViewFilterDef,
+		ViewSortDef []ent.Interceptor
 	}
 )
 

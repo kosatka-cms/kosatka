@@ -582,6 +582,79 @@ helpers, in the install's transaction.
   (`"<module>.<key>"`, with its `Params`) - say, a top list with the
   module's own field and sort.
 
+## File storages
+
+A file storage keeps the site's files elsewhere than its disk - a
+bucket, a container: the site chooses it with `files.storage` (the
+public files) and `files.private_storage` (the private ones), not on
+the Modules page, so it is a package of its own rather than a module. It
+registers itself from its `init()`:
+
+```go
+func init() {
+	modulekit.AddFileStorage(modulekit.FileStorage{
+		Name:    "blob",      // the value of files.storage choosing it
+		Public:  openPublic,  // func(modulekit.FileStorageConfig) (filestore.Store, publicURL string, error)
+		Private: openPrivate, // func(modulekit.FileStorageConfig) (filestore.Store, error); nil - no private files
+	})
+}
+```
+
+A store is a `filestore.Store` (`pkg/filestore`); `filestore.CheckKey`
+and `CheckDir` check the keys it is given, and a store that is a
+`fmt.Stringer` names where it keeps the files in `app config`
+(`blob://bucket/prefix/`). `Public` may return the address where the
+storage serves the files itself (a bucket's public address, a CDN): the
+site redirects its files' addresses there and checks it is an http(s)
+one.
+
+`FileStorageConfig.Decode(section, &settings)` reads the storage's
+settings: the config file's `files.<section>` by the struct's `yaml`
+tags, then the environment by its `env` tags, as the engine's own
+settings. Keep keys out of the file (`yaml:"-"` with an `env` tag).
+`PublicStorage` names where the public files are, so a private store can
+refuse to share their place; `CacheControl` is the header of the public
+files a store writes.
+
+A storage's tests get a config with `testkit.FileStorageConfig(publicStorage,
+sections)`, and a store passes the checks every store does with
+`filestoretest.Run` (`pkg/filestore/filestoretest`). The S3 and Azure
+storages are examples:
+[`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3),
+[`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure).
+
+## Ways of sending email
+
+The engine sends email through SMTP. A module adds another way - a mail
+service's HTTP API - from its `init()`, next to its `Register`:
+
+```go
+modulekit.AddMailTransport(modulekit.MailTransport{
+	Name:   "mailapi", // the saved choice: lower case, digits, _; at most 16
+	Module: "mailapi", // the module it belongs to: it sends while the module is enabled
+	Title:  "Mail API",
+	Fields: []modulekit.MailTransportField{{
+		Name: "api_key", Label: i18n.N("API key"), Secret: true, Required: true,
+		Env: "MAILAPI_KEY", // set from the server's environment, the admin can't change it
+	}},
+	New: func(values map[string]string, from string, timeout time.Duration) (modulekit.MailSender, error) {
+		return newSender(values["api_key"], from, timeout), nil
+	},
+})
+```
+
+The Mail page offers it while the module is enabled, with its fields: a
+secret is never shown back, and an empty one keeps the saved value. The
+values are kept with the site's mail settings, sealed with its key
+(`SECRETS_KEY`). When every required field has its `Env` variable set,
+the transport is the server's and wins over the one saved in the admin.
+`New` builds the sender (`SendPlain(to, subject, body)`); the sends go
+through the site's mail service, so its switch, its log and its emails'
+texts apply. Uninstalling the module forgets its settings, and a site
+that sent through it goes back to the server's settings. The Resend
+module is an example:
+[`kosatka-module-resend`](https://github.com/kosatka-cms/kosatka-module-resend).
+
 ## Tests
 
 `modulekit/testkit` has what a module's tests need, so they import

@@ -86,6 +86,8 @@ type Tx struct {
 	MailSettings *MailSettingsClient
 	// MailTemplate is the client for interacting with the MailTemplate builders.
 	MailTemplate *MailTemplateClient
+	// MailTransportSetting is the client for interacting with the MailTransportSetting builders.
+	MailTransportSetting *MailTransportSettingClient
 	// MaintenanceSettings is the client for interacting with the MaintenanceSettings builders.
 	MaintenanceSettings *MaintenanceSettingsClient
 	// MenuDef is the client for interacting with the MenuDef builders.
@@ -329,6 +331,7 @@ func (tx *Tx) init() {
 	tx.MailLog = NewMailLogClient(tx.config)
 	tx.MailSettings = NewMailSettingsClient(tx.config)
 	tx.MailTemplate = NewMailTemplateClient(tx.config)
+	tx.MailTransportSetting = NewMailTransportSettingClient(tx.config)
 	tx.MaintenanceSettings = NewMaintenanceSettingsClient(tx.config)
 	tx.MenuDef = NewMenuDefClient(tx.config)
 	tx.MenuLinkDef = NewMenuLinkDefClient(tx.config)

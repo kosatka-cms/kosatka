@@ -1,7 +1,9 @@
 package admin
 
 import (
+	"context"
 	"errors"
+	"maps"
 	"net/http"
 	"net/mail"
 	"strconv"
@@ -29,7 +31,8 @@ func (c *Controller) mailAdmin(w http.ResponseWriter, r *http.Request) *entity.U
 }
 
 // MailPage handles GET/POST /admin/config/mail: whether the site sends
-// email, the transport (Resend or SMTP) and the sender address - not
+// email, the transport (SMTP, or a module's: service.MailTransport) and
+// the sender address - not
 // while the server config sets the transport (it wins). Secrets are
 // never shown back; an empty field keeps the saved one.
 func (c *Controller) MailPage(w http.ResponseWriter, r *http.Request) {
@@ -72,13 +75,13 @@ func (c *Controller) renderMailPage(w http.ResponseWriter, r *http.Request, user
 	data["title"] = title
 	data["pageSEO"] = entity.PageSEO{Title: i18n.T(ctx, "@title - Admin panel", "@title", title)}
 	data["settings"] = saved
-	data["resendKeySaved"] = saved.ResendAPIKey != ""
 	data["smtpPasswordSaved"] = saved.SMTPPassword != ""
 	transport := saved.Transport
 	if transport == "" {
-		transport = entity.MailTransportResend
+		transport = entity.MailTransportSMTP
 	}
 	data["transport"] = transport
+	data["transports"] = mailTransportSections(ctx, *saved)
 	data["logKeepOptions"] = settingOptions(mailLogKeepChoices, saved.LogKeepDays, func(v int) string {
 		if v == 0 {
 			return i18n.T(ctx, "don't keep a log")
@@ -121,7 +124,7 @@ func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig
 		return entity.MailSettings{Enabled: next.Enabled, LogKeepDays: next.LogKeepDays}, ""
 	}
 	next.Transport = r.FormValue("transport")
-	if next.Transport != entity.MailTransportResend && next.Transport != entity.MailTransportSMTP {
+	if _, ok := availableMailTransport(next.Transport); !ok && next.Transport != entity.MailTransportSMTP {
 		return saved, "transport"
 	}
 	next.FromAddress = strings.TrimSpace(r.FormValue("from_address"))
@@ -131,9 +134,7 @@ func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig
 		}
 	}
 	// Empty secret fields keep the saved secrets (they are never shown).
-	if key := strings.TrimSpace(r.FormValue("resend_api_key")); key != "" {
-		next.ResendAPIKey = key
-	}
+	next.TransportSettings = mailTransportSettingsFromForm(r, saved.TransportSettings)
 	next.SMTPHost = strings.TrimSpace(r.FormValue("smtp_host"))
 	next.SMTPPort = 0
 	if p := strings.TrimSpace(r.FormValue("smtp_port")); p != "" {
@@ -150,17 +151,126 @@ func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig
 	if next.FromAddress == "" {
 		return saved, "from"
 	}
-	switch next.Transport {
-	case entity.MailTransportResend:
-		if next.ResendAPIKey == "" {
-			return saved, "resend"
-		}
-	case entity.MailTransportSMTP:
+	if next.Transport == entity.MailTransportSMTP {
 		if next.SMTPHost == "" || next.SMTPPort == 0 {
 			return saved, "smtp"
 		}
+	} else if t, _ := availableMailTransport(next.Transport); !mailTransportFilled(t, next.TransportSettings[t.Name]) {
+		return saved, "required"
 	}
 	return next, ""
+}
+
+// mailTransportField - a setting of a module's way of sending on the
+// Mail page: its form name and input, the saved value (not a secret's),
+// whether a secret is saved.
+type mailTransportField struct {
+	Input, Label, Help string
+	Secret, Required   bool
+	Value              string
+	Saved              bool
+}
+
+// mailTransportSection - a module's way of sending on the Mail page.
+type mailTransportSection struct {
+	Name, Title string
+	Fields      []mailTransportField
+}
+
+// availableMailTransport - the module's way of sending named name if its
+// module is enabled.
+func availableMailTransport(name string) (service.MailTransport, bool) {
+	t, ok := service.MailTransportByName(name)
+	if !ok || !service.ModuleEnabled(t.Module) {
+		return service.MailTransport{}, false
+	}
+	return t, true
+}
+
+// availableMailTransports - the modules' ways of sending whose modules
+// are enabled.
+func availableMailTransports() []service.MailTransport {
+	var out []service.MailTransport
+	for _, t := range service.MailTransports() {
+		if service.ModuleEnabled(t.Module) {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// mailTransportInput - the form name of the transport's setting (the
+// names have no dots).
+func mailTransportInput(transport, field string) string {
+	return "ts." + transport + "." + field
+}
+
+// mailTransportSections - the Mail page's sections of the available
+// modules' ways of sending, with the saved settings (no secret shown).
+func mailTransportSections(ctx context.Context, saved entity.MailSettings) []mailTransportSection {
+	var out []mailTransportSection
+	for _, t := range availableMailTransports() {
+		sec := mailTransportSection{Name: t.Name, Title: t.Title}
+		for _, f := range t.Fields {
+			value := saved.TransportSetting(t.Name, f.Name)
+			field := mailTransportField{
+				Input: mailTransportInput(t.Name, f.Name), Label: i18n.T(ctx, f.Label),
+				Secret: f.Secret, Required: f.Required, Saved: f.Secret && value != "",
+			}
+			if f.Help != "" {
+				field.Help = i18n.T(ctx, f.Help)
+			}
+			if !f.Secret {
+				field.Value = value
+			}
+			sec.Fields = append(sec.Fields, field)
+		}
+		out = append(out, sec)
+	}
+	return out
+}
+
+// mailTransportSettingsFromForm - the modules' ways of sending's
+// settings the form submits on top of the saved ones: an empty secret
+// keeps the saved one; a transport not on the page (its module off, or
+// not in the binary) keeps its settings.
+func mailTransportSettingsFromForm(r *http.Request, saved map[string]map[string]string) map[string]map[string]string {
+	out := make(map[string]map[string]string, len(saved))
+	for transport, values := range saved {
+		out[transport] = maps.Clone(values)
+	}
+	for _, t := range availableMailTransports() {
+		values := out[t.Name]
+		if values == nil {
+			values = map[string]string{}
+		}
+		for _, f := range t.Fields {
+			v := r.FormValue(mailTransportInput(t.Name, f.Name))
+			if f.Secret {
+				if v = strings.TrimSpace(v); v != "" {
+					values[f.Name] = v
+				}
+				continue
+			}
+			values[f.Name] = strings.TrimSpace(v)
+		}
+		out[t.Name] = values
+	}
+	return out
+}
+
+// mailTransportFilled - whether the transport's required settings are
+// in values.
+func mailTransportFilled(t service.MailTransport, values map[string]string) bool {
+	if t.Name == "" {
+		return false
+	}
+	for _, f := range t.Fields {
+		if f.Required && strings.TrimSpace(values[f.Name]) == "" {
+			return false
+		}
+	}
+	return true
 }
 
 // MailTest handles POST /admin/config/mail/test: a test email to the

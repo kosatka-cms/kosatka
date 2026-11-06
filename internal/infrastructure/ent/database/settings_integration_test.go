@@ -63,14 +63,30 @@ func TestSettingsRepositories(t *testing.T) {
 		}
 
 		mail := database.NewMailSettingsRepository(db.DB)
-		wantMail := &entity.MailSettings{Enabled: true, Transport: "smtp", FromAddress: "a@example.com", SMTPHost: "h", SMTPPort: 587}
+		// The modules' ways of sending's settings come back as saved, an
+		// empty one not kept.
+		wantMail := &entity.MailSettings{Enabled: true, Transport: "smtp", FromAddress: "a@example.com", SMTPHost: "h", SMTPPort: 587,
+			TransportSettings: map[string]map[string]string{"mailapi": {"api_key": "k", "region": "eu"}}}
+		saveMail := *wantMail
+		saveMail.TransportSettings = map[string]map[string]string{"mailapi": {"api_key": "k", "region": "eu", "unset": ""}, "other": {"unset": ""}}
 		for range 2 {
-			if err := mail.Update(ctx, wantMail); err != nil {
+			if err := mail.Update(ctx, &saveMail); err != nil {
 				t.Fatal(err)
 			}
 		}
 		if got, err := mail.Get(ctx); err != nil || !reflect.DeepEqual(got, wantMail) {
 			t.Errorf("mail: %+v %v", got, err)
+		}
+		uninstall := database.NewModuleUninstallRepository(db.DB)
+		saveMail.Transport = "mailapi"
+		if err := mail.Update(ctx, &saveMail); err != nil {
+			t.Fatal(err)
+		}
+		if err := uninstall.DeleteMailTransportSettings(ctx, []string{"mailapi"}); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := mail.Get(ctx); err != nil || got.Transport != "" || len(got.TransportSettings) != 0 || got.SMTPHost != "h" {
+			t.Errorf("after a module's transport is gone: %+v %v", got, err)
 		}
 
 		integ := database.NewIntegrationSettingsRepository(db.DB)

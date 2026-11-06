@@ -9,3 +9,7 @@ var (
 	DropRemovedTables = dropRemovedTables
 	AtlasDriver       = atlasDriver
 )
+
+// MoveResendKey - moveResendKey for the external tests
+// (update_core_integration_test.go).
+var MoveResendKey = moveResendKey

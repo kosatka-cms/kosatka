@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/filestorage"
 	"github.com/kosatka-cms/kosatka/modulekit"
 	"github.com/kosatka-cms/kosatka/modulekit/manifestkit"
+	"github.com/kosatka-cms/kosatka/pkg/filestore"
 )
 
 // TestModuleAddRemove - "app module add" writes the site's modules file
@@ -162,3 +164,56 @@ func TestModuleRemoveInstalled(t *testing.T) {
 
 // testWire - a module's Wire in this package (TestModuleRemoveInstalled).
 func testWire(modulekit.Deps) modulekit.Parts { return modulekit.Parts{} }
+
+// TestModuleRemoveStorage - "app module remove" refuses a package whose
+// file storage the site keeps its files in, -force removes it anyway; a
+// config that can't be read - a warning, and it is removed. app module
+// list shows the binary's storages.
+func TestModuleRemoveStorage(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/site\n\ngo 1.27\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	filestorage.Register(filestorage.Driver{Name: "teststore", Public: testStorePublic})
+	t.Cleanup(func() { filestorage.Unregister("teststore") })
+	pkg := funcPackage(testStorePublic)
+	savedGo, savedRegs, savedStorages := goCommand, moduleRegistrations, siteStorages
+	t.Cleanup(func() { goCommand, moduleRegistrations, siteStorages = savedGo, savedRegs, savedStorages })
+	goCommand = func(string, io.Writer, io.Writer, ...string) error { return nil }
+	moduleRegistrations = func() []modulekit.Registration { return nil }
+	used, readErr := []string{"local", "teststore"}, error(nil)
+	siteStorages = func() ([]string, error) { return used, readErr }
+	remove := func(args ...string) (int, string) {
+		t.Helper()
+		if err := writeModulesFile(dir, map[string]bool{pkg: true}); err != nil {
+			t.Fatal(err)
+		}
+		var stderr strings.Builder
+		return moduleCommand(append([]string{"remove"}, args...), dir, io.Discard, &stderr), stderr.String()
+	}
+
+	if code, stderr := remove(pkg); code != 1 || !strings.Contains(stderr, "keeps its files in teststore") {
+		t.Errorf("a storage in use: %d %q", code, stderr)
+	}
+	if code, _ := remove("-force", pkg); code != 0 {
+		t.Errorf("-force: %d", code)
+	}
+	used = []string{"local", "local"}
+	if code, stderr := remove(pkg); code != 0 || stderr != "" {
+		t.Errorf("a storage not in use: %d %q", code, stderr)
+	}
+	readErr = errors.New("no config")
+	if code, stderr := remove(pkg); code != 0 || !strings.Contains(stderr, "couldn't read the site's config (no config)") {
+		t.Errorf("no config to read: %d %q", code, stderr)
+	}
+
+	var list strings.Builder
+	moduleList(&list)
+	if !strings.Contains(list.String(), "teststore        file storage: "+pkg) {
+		t.Errorf("list: %s", list.String())
+	}
+}
+
+// testStorePublic - a file storage's Public in this package
+// (TestModuleRemoveStorage).
+func testStorePublic(filestorage.Config) (filestore.Store, string, error) { return nil, "", nil }

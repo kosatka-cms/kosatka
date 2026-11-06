@@ -44,6 +44,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maillog"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtemplate"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maintenancesettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menudef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menulinkdef"
@@ -1111,6 +1112,33 @@ func (f TraverseMailTemplate) Traverse(ctx context.Context, q generated.Query) e
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *generated.MailTemplateQuery", q)
+}
+
+// The MailTransportSettingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type MailTransportSettingFunc func(context.Context, *generated.MailTransportSettingQuery) (generated.Value, error)
+
+// Query calls f(ctx, q).
+func (f MailTransportSettingFunc) Query(ctx context.Context, q generated.Query) (generated.Value, error) {
+	if q, ok := q.(*generated.MailTransportSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *generated.MailTransportSettingQuery", q)
+}
+
+// The TraverseMailTransportSetting type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseMailTransportSetting func(context.Context, *generated.MailTransportSettingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseMailTransportSetting) Intercept(next generated.Querier) generated.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseMailTransportSetting) Traverse(ctx context.Context, q generated.Query) error {
+	if q, ok := q.(*generated.MailTransportSettingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *generated.MailTransportSettingQuery", q)
 }
 
 // The MaintenanceSettingsFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -2214,6 +2242,8 @@ func NewQuery(q generated.Query) (Query, error) {
 		return &query[*generated.MailSettingsQuery, predicate.MailSettings, mailsettings.OrderOption]{typ: generated.TypeMailSettings, tq: q}, nil
 	case *generated.MailTemplateQuery:
 		return &query[*generated.MailTemplateQuery, predicate.MailTemplate, mailtemplate.OrderOption]{typ: generated.TypeMailTemplate, tq: q}, nil
+	case *generated.MailTransportSettingQuery:
+		return &query[*generated.MailTransportSettingQuery, predicate.MailTransportSetting, mailtransportsetting.OrderOption]{typ: generated.TypeMailTransportSetting, tq: q}, nil
 	case *generated.MaintenanceSettingsQuery:
 		return &query[*generated.MaintenanceSettingsQuery, predicate.MaintenanceSettings, maintenancesettings.OrderOption]{typ: generated.TypeMaintenanceSettings, tq: q}, nil
 	case *generated.MenuDefQuery:

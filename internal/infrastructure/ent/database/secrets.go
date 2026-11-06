@@ -55,7 +55,7 @@ type secretColumn struct {
 
 // secretColumns - every column sealed with the site's key.
 var secretColumns = []secretColumn{
-	{"mail_settings", "id", "resend_api_key", i18n.N("Mail: Resend API key")},
+	{"mail_transport_settings", "id", "value", i18n.N("Mail: the sending services' settings")},
 	{"mail_settings", "id", "smtp_password", i18n.N("Mail: SMTP password")},
 	{"captcha_settings", "id", "secret_key", i18n.N("CAPTCHA: secret key")},
 	{"oauth_settings", "provider", "client_secret", i18n.N("Social sign-in: client secrets")},

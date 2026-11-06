@@ -67,7 +67,7 @@ The tests aren't run again: they ran on the pull request and on `main`.
 The test workflow (`.github/workflows/test.yml`) runs on every pull
 request and push to `main`: golangci-lint, govulncheck, gitleaks, the
 unit tests with the race detector, the integration tests on MySQL and
-PostgreSQL (with the S3 and Azure storages), the check that the
+PostgreSQL, the check that the
 migration files keep up with the ent schemas, the example module and
 site, and a build of the Docker image. Locally,
 `./scripts/check.sh -race -db` runs them all but the image's build;
@@ -75,6 +75,6 @@ golangci-lint, govulncheck and gitleaks only when they are installed.
 
 gitleaks scans the whole history for secrets: an API key or a password
 committed by mistake fails it, even when a later commit removes it. What
-only looks like a secret - a test's made-up key, the Azurite emulator's
-documented one, a demo set's item keys - is listed in `.gitleaks.toml`,
+only looks like a secret - a test's made-up key, a demo set's item
+keys - is listed in `.gitleaks.toml`,
 each with the narrowest pattern that matches it.

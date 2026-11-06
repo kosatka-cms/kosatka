@@ -21,9 +21,11 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/views"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/database"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/database/dao"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/filestorage"
 	"github.com/kosatka-cms/kosatka/internal/interfaces"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/form"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/middleware"
+	"github.com/kosatka-cms/kosatka/internal/lib/mailsender"
 	"github.com/kosatka-cms/kosatka/internal/paths"
 	"github.com/kosatka-cms/kosatka/pkg/filestore"
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
@@ -212,6 +214,20 @@ func PublicFilesURL() string { return paths.PublicFilesURL() }
 // storage): a module keeps files of its own there under a folder named
 // after it; a file's key is its path under PublicFilesURL.
 func PublicFiles() filestore.Store { return paths.PublicStore() }
+
+// FileStorage - a storage the site's files can be kept in besides its
+// directories (files.storage, files.private_storage name it): Public opens
+// the public files' store, Private the private files' (nil - none).
+type FileStorage = filestorage.Driver
+
+// FileStorageConfig - what a FileStorage opens its store from: its own
+// section of the config's files (Decode) and the environment.
+type FileStorageConfig = filestorage.Config
+
+// AddFileStorage adds a file storage, from the package's init: importing
+// the package ("_" in the site's main package, app module add) is all it
+// takes. A name already taken panics at startup.
+func AddFileStorage(d FileStorage) { filestorage.Register(d) }
 
 // OriginalImage - an image's original file's address.
 func OriginalImage(f File) File { return imageurl.Original(f) }
@@ -463,6 +479,23 @@ func MailTemplatePath(key string) string { return entity.MailTemplatePath(key) }
 // AddMail adds the module's email to the site's (the Mail page, Deps.Mail's
 // Send): listed while the module is on. Called once, from Wire.
 func AddMail(d MailDef) { service.RegisterMail(d) }
+
+// MailTransport - a way of sending the site's email besides the engine's
+// SMTP (an HTTP API of a mail service): its name, its module (it sends
+// while the module is enabled), its title and settings on the Mail page,
+// and New, building its sender from the saved settings.
+type MailTransport = service.MailTransport
+
+// MailTransportField - a setting of a MailTransport: shown on the Mail
+// page (a secret never shown back), set from the environment by Env.
+type MailTransportField = service.MailTransportField
+
+// MailSender - what a MailTransport's New gives: it sends a message.
+type MailSender = mailsender.EmailSender
+
+// AddMailTransport adds a way of sending email, from the module's init. A
+// mistake in it (a name not allowed or taken, no New) panics at startup.
+func AddMailTransport(t MailTransport) { service.RegisterMailTransport(t) }
 
 // AddDashboardBlock adds the module's block to the admin's Overview
 // (shown while the module is enabled, to whom has b.Permission). Called

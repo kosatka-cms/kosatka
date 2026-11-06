@@ -43,10 +43,11 @@
   results, URL aliases and redirects, title and description templates,
   schema.org markup, a sitemap, RSS.
 - **[Media](https://kosatka-cms.github.io/kosatka/guides/files-and-images/)** - image
-  styles, a media library, files on disk or in
+  styles, a media library, files on disk or, with a storage package, in
   [S3-compatible storage or Azure Blob Storage](https://kosatka-cms.github.io/kosatka/guides/file-storage/).
 - **[Mail](https://kosatka-cms.github.io/kosatka/guides/mail/)** - e-mail settings
-  and texts in the admin; sending through any SMTP server or Resend.
+  and texts in the admin; sending through any SMTP server, or a mail
+  service's API with its module (Resend).
 - **[Languages](https://kosatka-cms.github.io/kosatka/guides/languages/)** - a
   multilingual interface, the languages
   [downloaded separately](https://kosatka-cms.github.io/kosatka/guides/languages/#downloading-a-language);

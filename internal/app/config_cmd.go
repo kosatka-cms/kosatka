@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/kosatka-cms/kosatka/internal/config"
+	"github.com/kosatka-cms/kosatka/pkg/filestore"
 )
 
 // siteConfigInfo - what app config prints: the site's settings as the
@@ -30,8 +30,8 @@ type siteConfigInfo struct {
 		PublicDir  string `json:"public_dir"`
 		PublicURL  string `json:"public_url"`
 		PrivateDir string `json:"private_dir"`
-		// Storage, PrivateStorage - "local" or the bucket,
-		// s3://bucket/prefix.
+		// Storage, PrivateStorage - "local", where the store keeps the
+		// files (s3://bucket/prefix/) or the storage's name.
 		Storage        string `json:"storage"`
 		PrivateStorage string `json:"private_storage"`
 	} `json:"files"`
@@ -59,14 +59,11 @@ func configInfo(cfg *config.Config) siteConfigInfo {
 	info.Env, info.Port, info.PublicBaseURL, info.Theme, info.EngineDir = cfg.Env, cfg.Port, cfg.PublicBaseURL, cfg.Theme, cfg.EngineDir
 	info.DB.Driver, info.DB.Host, info.DB.Port, info.DB.Name = cfg.DB.Driver, cfg.DB.Host, cfg.DB.Port, cfg.DB.Scheme
 	info.Files.PublicDir, info.Files.PublicURL, info.Files.PrivateDir = cfg.Files.PublicDir, cfg.Files.PublicURL, cfg.Files.PrivateDir
-	info.Files.Storage = storageName(cfg.Files.Storage, cfg.Files.S3.Bucket, cfg.Files.S3.Prefix)
-	if publicStorage(cfg.Files) == "azure" {
-		info.Files.Storage = storageName("azure", cfg.Files.Azure.Container, cfg.Files.Azure.Prefix)
-	}
-	info.Files.PrivateStorage = storageName(cfg.Files.PrivateStorage, cfg.Files.PrivateS3.Bucket, cfg.Files.PrivateS3.Prefix)
-	if strings.EqualFold(strings.TrimSpace(cfg.Files.PrivateStorage), "azure") {
-		info.Files.PrivateStorage = storageName("azure", cfg.Files.PrivateAzure.Container, cfg.Files.PrivateAzure.Prefix)
-	}
+	info.Files.Storage = storageName(storageOf(cfg.Files.Storage), func() (filestore.Store, error) {
+		s, _, err := publicStore(cfg.Files)
+		return s, err
+	})
+	info.Files.PrivateStorage = storageName(storageOf(cfg.Files.PrivateStorage), func() (filestore.Store, error) { return privateStore(cfg.Files) })
 	return info
 }
 

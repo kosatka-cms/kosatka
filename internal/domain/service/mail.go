@@ -26,10 +26,19 @@ var ErrMailOff = errors.New("email sending is off or not configured")
 // MailStatus - the mail settings in effect, for the settings page (no
 // secrets): FromAddress - the sender's address in effect.
 type MailStatus struct {
-	Enabled     bool
-	Transport   string
-	FromAddress string
-	Source      string
+	Enabled bool
+	// Transport - the way of sending in effect, TransportTitle - its name
+	// on the page.
+	Transport      string
+	TransportTitle string
+	FromAddress    string
+	Source         string
+	// Missing - the saved way of sending when this binary has none of
+	// that name (its module left the binary): nothing is sent through it.
+	Missing string
+	// ModuleOff - the transport in effect is a module's that is
+	// disabled: no email is sent until it is enabled again.
+	ModuleOff bool
 }
 
 // MailService sends the site's email through the transport in effect:
@@ -42,7 +51,7 @@ type MailService struct {
 	configured entity.MailSettings
 	logger     *slog.Logger
 	// newSender builds the transport for settings (tests replace it).
-	newSender func(entity.MailSettings) mailsender.EmailSender
+	newSender func(entity.MailSettings) (mailsender.EmailSender, error)
 	// templates - what the Mail page changed of the emails (SetTemplates).
 	templates entity.MailTemplateRepository
 	// log - the mail log (SetLog); nil - none.
@@ -61,41 +70,48 @@ var _ mailsender.EmailSender = (*MailService)(nil)
 // NewMailService - the service with the server config's settings (config:
 // Transport set when the config has a transport), which win over the
 // admin's.
-// timeout bounds a send: a request to an HTTP mail API (Resend) or an
-// SMTP session.
+// timeout bounds a send: an SMTP session or a module's transport's
+// request.
 func NewMailService(repo entity.MailSettingsRepository, config entity.MailSettings, logger *slog.Logger, timeout time.Duration) *MailService {
-	s := &MailService{repo: repo, configured: config, logger: logger.With("component", "mail"), newSender: func(m entity.MailSettings) mailsender.EmailSender {
+	s := &MailService{repo: repo, configured: config, logger: logger.With("component", "mail"), newSender: func(m entity.MailSettings) (mailsender.EmailSender, error) {
 		return buildMailSender(m, timeout)
 	}}
 	s.apply(entity.MailSettings{Enabled: true})
 	return s
 }
 
-func buildMailSender(m entity.MailSettings, timeout time.Duration) mailsender.EmailSender {
-	switch m.Transport {
-	case entity.MailTransportResend:
-		return mailsender.NewResendEmailSender(m.ResendAPIKey, m.FromAddress, timeout)
-	case entity.MailTransportSMTP:
+// buildMailSender - the sender of the settings' transport: SMTP, or a
+// module's (MailTransport.New).
+func buildMailSender(m entity.MailSettings, timeout time.Duration) (mailsender.EmailSender, error) {
+	if m.Transport == entity.MailTransportSMTP {
 		return mailsender.NewSMTPEmailSender(mailsender.EmailConfig{
 			SMTPHost: m.SMTPHost, SMTPPort: m.SMTPPort, SMTPUser: m.SMTPUser, SMTPPassword: m.SMTPPassword, FromAddress: m.FromAddress,
 			Timeout: timeout,
-		})
+		}), nil
 	}
-	return nil
+	t, ok := MailTransportByName(m.Transport)
+	if !ok {
+		return nil, fmt.Errorf("no mail transport %q in this binary", m.Transport)
+	}
+	sender, err := t.New(m.TransportSettings[m.Transport], m.FromAddress, timeout)
+	if err != nil {
+		return nil, fmt.Errorf("the mail transport %q: %w", m.Transport, err)
+	}
+	return sender, nil
 }
 
-// mailConfigured - whether settings name a usable transport.
+// mailConfigured - whether settings name a usable transport: SMTP with
+// its server, or a module's this binary has, with its required settings
+// (whether its module is enabled is asked when sending: it may change).
 func mailConfigured(m entity.MailSettings) bool {
 	if strings.TrimSpace(m.FromAddress) == "" {
 		return false
 	}
-	switch m.Transport {
-	case entity.MailTransportResend:
-		return strings.TrimSpace(m.ResendAPIKey) != ""
-	case entity.MailTransportSMTP:
+	if m.Transport == entity.MailTransportSMTP {
 		return strings.TrimSpace(m.SMTPHost) != "" && m.SMTPPort > 0
 	}
-	return false
+	t, ok := MailTransportByName(m.Transport)
+	return ok && mailTransportReady(t, m.TransportSettings[m.Transport])
 }
 
 // Reload reads the saved settings and makes them current.
@@ -139,11 +155,20 @@ func (s *MailService) apply(saved entity.MailSettings) {
 	effective.Enabled = saved.Enabled
 	var sender mailsender.EmailSender
 	if effective.Enabled && source != MailSourceNone {
-		sender = s.newSender(effective)
+		var err error
+		if sender, err = s.newSender(effective); err != nil {
+			s.logger.Error("error setting up the mail transport: no email is sent", "error", err)
+			sender = nil
+		}
 	}
 	status := MailStatus{Enabled: effective.Enabled, Source: source}
 	if source != MailSourceNone {
-		status.Transport, status.FromAddress = effective.Transport, effective.FromAddress
+		status.Transport, status.TransportTitle, status.FromAddress = effective.Transport, MailTransportTitle(effective.Transport), effective.FromAddress
+	}
+	if t := saved.Transport; t != "" && t != entity.MailTransportSMTP {
+		if _, ok := MailTransportByName(t); !ok {
+			status.Missing = t
+		}
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -153,13 +178,20 @@ func (s *MailService) apply(saved entity.MailSettings) {
 // Status - the settings in effect.
 func (s *MailService) Status() MailStatus {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.status
+	st := s.status
+	s.mu.RUnlock()
+	st.ModuleOff = st.Transport != "" && !mailTransportOn(st.Transport)
+	return st
 }
 
+// current - the sender in effect; nil while sending is off, not
+// configured, or the transport's module is disabled.
 func (s *MailService) current() mailsender.EmailSender {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	if s.sender == nil || !mailTransportOn(s.status.Transport) {
+		return nil
+	}
 	return s.sender
 }
 

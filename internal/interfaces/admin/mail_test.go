@@ -13,6 +13,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/domain/service"
 	"github.com/kosatka-cms/kosatka/internal/interfaces"
+	"github.com/kosatka-cms/kosatka/internal/lib/mailsender"
 )
 
 type stubMailRepo struct{ s entity.MailSettings }
@@ -41,51 +42,79 @@ func postMail(repo *stubMailRepo, full bool, path string, form url.Values) *http
 	return rec
 }
 
+// useTestMailTransport registers a module's way of sending for the test,
+// testapi (its module unknown to the engine: on): a required secret
+// "key" and an optional "region".
+func useTestMailTransport(t *testing.T) {
+	t.Helper()
+	service.RegisterMailTransport(service.MailTransport{
+		Name: "testapi", Module: "testapi_module", Title: "Test API",
+		Fields: []service.MailTransportField{
+			{Name: "key", Label: "API key", Secret: true, Required: true},
+			{Name: "region", Label: "Region", Help: "Where the service is."},
+		},
+		New: func(map[string]string, string, time.Duration) (mailsender.EmailSender, error) {
+			return mailsender.NoopEmailSender{}, nil
+		},
+	})
+	t.Cleanup(func() { service.UnregisterMailTransport("testapi") })
+}
+
+// testapiSettings - the test transport's saved settings.
+func testapiSettings(key, region string) map[string]map[string]string {
+	return map[string]map[string]string{"testapi": {"key": key, "region": region}}
+}
+
 // TestMailPageSave - full access only; empty secret fields keep the saved
 // secrets; "delete" goes back to the server config.
 func TestMailPageSave(t *testing.T) {
-	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: entity.MailTransportResend, FromAddress: "old@example.com", ResendAPIKey: "re_old", SMTPPassword: "pw"}}
+	useTestMailTransport(t)
+	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: "testapi", FromAddress: "old@example.com", TransportSettings: testapiSettings("k_old", "eu"), SMTPPassword: "pw"}}
 
 	for _, path := range []string{"/admin/config/mail", "/admin/config/mail/test"} {
-		if rec := postMail(repo, false, path, url.Values{"transport": {"smtp"}}); rec.Code != http.StatusForbidden || repo.s.Transport != entity.MailTransportResend {
+		if rec := postMail(repo, false, path, url.Values{"transport": {"smtp"}}); rec.Code != http.StatusForbidden || repo.s.Transport != "testapi" {
 			t.Fatalf("%s without full access: %d, %+v", path, rec.Code, repo.s)
 		}
 	}
 
-	rec := postMail(repo, true, "/admin/config/mail", url.Values{"enabled": {"1"}, "transport": {"resend"}, "from_address": {"Site <new@example.com>"}})
-	if !strings.Contains(rec.Header().Get("Location"), "saved=1") || repo.s.FromAddress != "Site <new@example.com>" || repo.s.ResendAPIKey != "re_old" || repo.s.SMTPPassword != "pw" {
+	rec := postMail(repo, true, "/admin/config/mail", url.Values{"enabled": {"1"}, "transport": {"testapi"}, "from_address": {"Site <new@example.com>"}, "ts.testapi.region": {" us "}})
+	if !strings.Contains(rec.Header().Get("Location"), "saved=1") || repo.s.FromAddress != "Site <new@example.com>" ||
+		repo.s.TransportSetting("testapi", "key") != "k_old" || repo.s.TransportSetting("testapi", "region") != "us" || repo.s.SMTPPassword != "pw" {
 		t.Fatalf("keep the secrets: %s %+v", rec.Header().Get("Location"), repo.s)
 	}
 
-	postMail(repo, true, "/admin/config/mail", url.Values{"transport": {"resend"}, "from_address": {"new@example.com"}})
-	if repo.s.Enabled {
-		t.Error("the switch unchecked keeps email on")
+	postMail(repo, true, "/admin/config/mail", url.Values{"transport": {"testapi"}, "from_address": {"new@example.com"}, "ts.testapi.key": {"k_new"}})
+	if repo.s.Enabled || repo.s.TransportSetting("testapi", "key") != "k_new" || repo.s.TransportSetting("testapi", "region") != "" {
+		t.Errorf("the switch unchecked keeps email on, or the settings: %+v", repo.s)
 	}
 
 	postMail(repo, true, "/admin/config/mail", url.Values{"enabled": {"1"}, "clear": {"1"}, "log_keep_days": {"90"}})
-	if repo.s != (entity.MailSettings{Enabled: true, LogKeepDays: 90}) {
+	if s := repo.s; !s.Enabled || s.LogKeepDays != 90 || s.Transport != "" || s.FromAddress != "" || len(s.TransportSettings) != 0 || s.SMTPPassword != "" {
 		t.Errorf("clear (the log's days kept): %+v", repo.s)
 	}
 }
 
 // TestMailSettingsFromForm - validation of the submitted settings; with
-// the transport in the server config only the switch and the log change.
+// the transport in the server config only the switch and the log change;
+// a transport whose module is off isn't offered and keeps its settings.
 func TestMailSettingsFromForm(t *testing.T) {
-	saved := entity.MailSettings{Enabled: true, Transport: entity.MailTransportResend, FromAddress: "a@example.com", ResendAPIKey: "re_saved"}
+	useTestMailTransport(t)
+	saved := entity.MailSettings{Enabled: true, Transport: "testapi", FromAddress: "a@example.com", TransportSettings: testapiSettings("k_saved", "")}
 	cases := []struct {
 		name string
 		form url.Values
 		code string
 	}{
 		{"no transport", url.Values{"from_address": {"a@example.com"}}, "transport"},
-		{"bad sender", url.Values{"transport": {"resend"}, "from_address": {"not an address"}}, "from"},
-		{"no sender", url.Values{"transport": {"resend"}}, "from"},
+		{"an unknown transport", url.Values{"transport": {"other"}, "from_address": {"a@example.com"}}, "transport"},
+		{"bad sender", url.Values{"transport": {"testapi"}, "from_address": {"not an address"}}, "from"},
+		{"no sender", url.Values{"transport": {"testapi"}}, "from"},
 		{"bad port", url.Values{"transport": {"smtp"}, "from_address": {"a@example.com"}, "smtp_host": {"h"}, "smtp_port": {"70000"}}, "port"},
 		{"smtp without host", url.Values{"transport": {"smtp"}, "from_address": {"a@example.com"}, "smtp_port": {"587"}}, "smtp"},
 		{"smtp", url.Values{"transport": {"smtp"}, "from_address": {"a@example.com"}, "smtp_host": {"h"}, "smtp_port": {"587"}}, ""},
-		{"resend with the saved key", url.Values{"transport": {"resend"}, "from_address": {"a@example.com"}}, ""},
-		{"a log's days not offered", url.Values{"transport": {"resend"}, "from_address": {"a@example.com"}, "log_keep_days": {"5"}}, "log"},
-		{"no log", url.Values{"transport": {"resend"}, "from_address": {"a@example.com"}, "log_keep_days": {"0"}}, ""},
+		{"the saved key", url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}}, ""},
+		{"a log's days not offered", url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}, "log_keep_days": {"5"}}, "log"},
+		{"no log", url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}, "log_keep_days": {"0"}}, ""},
 	}
 	for _, c := range cases {
 		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(c.form.Encode()))
@@ -95,18 +124,30 @@ func TestMailSettingsFromForm(t *testing.T) {
 		}
 	}
 
-	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"transport": {"resend"}, "from_address": {"a@example.com"}}.Encode()))
+	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}}.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	if _, code := mailSettingsFromForm(r, entity.MailSettings{}, false); code != "resend" {
-		t.Errorf("resend without a key: %q", code)
+	if _, code := mailSettingsFromForm(r, entity.MailSettings{}, false); code != "required" {
+		t.Errorf("without the required key: %q", code)
 	}
 
-	form := url.Values{"transport": {"smtp"}, "from_address": {"other@example.com"}, "resend_api_key": {"re_new"}, "log_keep_days": {"30"}}
+	form := url.Values{"transport": {"smtp"}, "from_address": {"other@example.com"}, "ts.testapi.key": {"k_new"}, "log_keep_days": {"30"}}
 	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	next, code := mailSettingsFromForm(r, saved, true)
-	if code != "" || next.Enabled || next.LogKeepDays != 30 || next.Transport != saved.Transport || next.FromAddress != saved.FromAddress || next.ResendAPIKey != saved.ResendAPIKey {
+	if code != "" || next.Enabled || next.LogKeepDays != 30 || next.Transport != saved.Transport || next.FromAddress != saved.FromAddress || next.TransportSetting("testapi", "key") != "k_saved" {
 		t.Errorf("with the config's transport: %+v %q, want the switch and the log only", next, code)
+	}
+
+	service.SetModules(map[string]bool{"testapi_module": false})
+	t.Cleanup(func() { service.SetModules(map[string]bool{"testapi_module": true}) })
+	form = url.Values{"transport": {"smtp"}, "from_address": {"a@example.com"}, "smtp_host": {"h"}, "smtp_port": {"587"}, "ts.testapi.key": {"k_new"}}
+	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if next, code := mailSettingsFromForm(r, saved, false); code != "" || next.TransportSetting("testapi", "key") != "k_saved" {
+		t.Errorf("the module off: %+v %q, want its settings kept", next, code)
+	}
+	if saved.TransportSetting("testapi", "key") != "k_saved" {
+		t.Error("the saved settings changed")
 	}
 }
 

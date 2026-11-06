@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/debug"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/kosatka-cms/kosatka/internal/config"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/filestorage"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/migrations"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/sqldialect"
 	"github.com/kosatka-cms/kosatka/modulekit"
@@ -29,7 +31,7 @@ import (
 // moduleUsage - "app module" (the modules from outside the engine,
 // docs/modules/using-modules.md).
 const moduleUsage = `usage:
-  app module list                   the modules the binary has: the engine's and those from outside it, with their Go modules' versions
+  app module list                   the modules the binary has: the engine's and those from outside it, with their Go modules' versions; then its file storages
   app module add <path>[@version]   add a module from its Go module to the site (go get; latest without a version)
   app module remove [-force] <path> remove it from the site: refused while it is installed in the site's database (-config or CONFIG_PATH; uninstall it on the Modules page first), -force removes it anyway
 add and remove work in the site's own main package (its go.mod and ` + modulesFile + `); rebuild the binary after them.`
@@ -132,7 +134,7 @@ func moduleCommand(args []string, dir string, stdout, stderr io.Writer) int {
 		if err := markDirect(dir, path); err != nil {
 			return fail(err)
 		}
-		_, _ = fmt.Fprintln(stdout, "rebuild the binary and deploy it, then run app migrate -apply: it installs the module (one off by default: enable it on the Modules page)")
+		_, _ = fmt.Fprintln(stdout, "rebuild the binary and deploy it, then run app migrate -apply: it installs a module (one off by default: enable it on the Modules page); a file storage is chosen by files.storage (files.private_storage)")
 		return 0
 	default:
 		_, _ = fmt.Fprintln(stderr, moduleUsage)
@@ -183,13 +185,57 @@ func packageModules(path string) []string {
 	return out
 }
 
+// packageStorages - the file storages the Go package path registers
+// (their Public in it or under it).
+func packageStorages(path string) []string {
+	var out []string
+	for _, name := range filestorage.Names() {
+		d, _ := filestorage.Lookup(name)
+		if pkg := funcPackage(d.Public); pkg == path || strings.HasPrefix(pkg, path+"/") {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+// siteStorages - the storages the site's config (-config or CONFIG_PATH)
+// keeps its files in (a variable: the tests replace it).
+var siteStorages = func() ([]string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+	return []string{storageOf(cfg.Files.Storage), storageOf(cfg.Files.PrivateStorage)}, nil
+}
+
+// checkStoragesUnused - the site doesn't keep its files in a storage from
+// path: a binary without it couldn't reach them. A config that can't be
+// read - a warning, and the removal goes on.
+func checkStoragesUnused(path string, storages []string, stderr io.Writer) error {
+	used, err := siteStorages()
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "module: couldn't read the site's config (%v): make sure files.storage and files.private_storage don't name %s\n", err, strings.Join(storages, ", "))
+		return nil
+	}
+	for _, name := range storages {
+		if slices.Contains(used, name) {
+			return fmt.Errorf("the site keeps its files in %s (files.storage or files.private_storage): move them first (app files migrate -to-local) and change the setting (-force removes it anyway: the site won't start without it)", name)
+		}
+	}
+	return nil
+}
+
 // checkUninstalled - the modules from path aren't installed in the site's
-// database: a binary without one can't uninstall it, its data would stay.
-// A database that can't be checked (no config here, say) - a warning, and
-// the removal goes on.
+// database: a binary without one can't uninstall it, its data would stay;
+// nor does the site keep its files in a storage from path. A database
+// that can't be checked (no config here, say) - a warning, and the
+// removal goes on.
 func checkUninstalled(path string, stderr io.Writer) error {
 	names := packageModules(path)
 	if len(names) == 0 {
+		if storages := packageStorages(path); len(storages) > 0 {
+			return checkStoragesUnused(path, storages, stderr)
+		}
 		_, _ = fmt.Fprintf(stderr, "module: this binary has no module from %s to check: make sure it is uninstalled on the Modules page\n", path)
 		return nil
 	}
@@ -207,7 +253,8 @@ func checkUninstalled(path string, stderr io.Writer) error {
 }
 
 // moduleList prints the modules the binary has: the engine's own, then
-// each from outside it with the Go package it came from and its version.
+// each from outside it with the Go package it came from and its version;
+// then the file storages besides the site's directories.
 func moduleList(w io.Writer) {
 	external := map[string]string{}
 	for _, r := range modulekit.Registered() {
@@ -221,6 +268,11 @@ func moduleList(w io.Writer) {
 		}
 		_, _ = fmt.Fprintf(w, "%-16s %s %s\n", m.Name, pkg, packageVersion(pkg))
 	}
+	for _, name := range filestorage.Names() {
+		d, _ := filestorage.Lookup(name)
+		pkg := funcPackage(d.Public)
+		_, _ = fmt.Fprintf(w, "%-16s file storage: %s %s\n", name, pkg, packageVersion(pkg))
+	}
 }
 
 // registrationPackage - the Go package a module from outside the engine
@@ -229,7 +281,16 @@ func registrationPackage(r modulekit.Registration) string {
 	if r.Wire == nil {
 		return ""
 	}
-	fn := runtime.FuncForPC(reflect.ValueOf(r.Wire).Pointer())
+	return funcPackage(r.Wire)
+}
+
+// funcPackage - the Go package of the function f, "" when unknown.
+func funcPackage(f any) string {
+	v := reflect.ValueOf(f)
+	if !v.IsValid() || v.Kind() != reflect.Func || v.IsNil() {
+		return ""
+	}
+	fn := runtime.FuncForPC(v.Pointer())
 	if fn == nil {
 		return ""
 	}

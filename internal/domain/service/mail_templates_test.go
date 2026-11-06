@@ -98,8 +98,8 @@ func TestMailServiceSend(t *testing.T) {
 			Save: func(_ context.Context, t entity.MailTemplate) error { saved = t; return nil }},
 	)
 	sender := &textSender{}
-	svc, _ := newTestMailService(&stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: entity.MailTransportResend, FromAddress: "a@example.com", ResendAPIKey: "re"}}, entity.MailSettings{})
-	svc.newSender = func(entity.MailSettings) mailsender.EmailSender { return sender }
+	svc, _ := newTestMailService(&stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: entity.MailTransportSMTP, FromAddress: "a@example.com", SMTPHost: "smtp.example.com", SMTPPort: 587}}, entity.MailSettings{})
+	svc.newSender = func(entity.MailSettings) (mailsender.EmailSender, error) { return sender, nil }
 	if err := svc.Reload(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func (failingSender) SendPlain(string, string, string) error {
 func TestMailLog(t *testing.T) {
 	ctx := context.Background()
 	useMailDefs(t, entity.MailDef{Key: "mod.x", Default: entity.MailTemplate{Subject: "Hi [user:name]", Body: "B"}})
-	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: entity.MailTransportResend, FromAddress: "a@example.com", ResendAPIKey: "re", LogKeepDays: 30}}
+	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true, Transport: entity.MailTransportSMTP, FromAddress: "a@example.com", SMTPHost: "smtp.example.com", SMTPPort: 587, LogKeepDays: 30}}
 	svc, _ := newTestMailService(repo, entity.MailSettings{})
 	log := &stubMailLog{}
 	svc.SetLog(log)
@@ -205,7 +205,7 @@ func TestMailLog(t *testing.T) {
 	if err := svc.SendPlain("site@example.com", "A form", "Body"); err != nil {
 		t.Fatal(err)
 	}
-	svc.newSender = func(entity.MailSettings) mailsender.EmailSender { return failingSender{} }
+	svc.newSender = func(entity.MailSettings) (mailsender.EmailSender, error) { return failingSender{}, nil }
 	if err := svc.Reload(ctx); err != nil {
 		t.Fatal(err)
 	}

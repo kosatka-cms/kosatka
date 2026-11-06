@@ -45,7 +45,7 @@ func TestSecretsSealed(t *testing.T) {
 		seedUser(t, db)
 
 		mail := database.NewMailSettingsRepository(db.DB)
-		if err := mail.Update(ctx, &entity.MailSettings{Enabled: true, Transport: entity.MailTransportResend, FromAddress: "site@example.com", ResendAPIKey: "re_live_key", SMTPPassword: "smtp-pass"}); err != nil {
+		if err := mail.Update(ctx, &entity.MailSettings{Enabled: true, Transport: "mailapi", FromAddress: "site@example.com", TransportSettings: map[string]map[string]string{"mailapi": {"api_key": "re_live_key"}}, SMTPPassword: "smtp-pass"}); err != nil {
 			t.Fatal(err)
 		}
 		captcha := database.NewCaptchaSettingsRepository(db.DB)
@@ -62,11 +62,11 @@ func TestSecretsSealed(t *testing.T) {
 		}
 
 		for query, plain := range map[string]string{
-			"SELECT resend_api_key FROM mail_settings": "re_live_key",
-			"SELECT smtp_password FROM mail_settings":  "smtp-pass",
-			"SELECT secret_key FROM captcha_settings":  "captcha-secret",
-			"SELECT client_secret FROM oauth_settings": "oauth-secret",
-			"SELECT secret FROM user_two_factor":       "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
+			"SELECT value FROM mail_transport_settings": "re_live_key",
+			"SELECT smtp_password FROM mail_settings":   "smtp-pass",
+			"SELECT secret_key FROM captcha_settings":   "captcha-secret",
+			"SELECT client_secret FROM oauth_settings":  "oauth-secret",
+			"SELECT secret FROM user_two_factor":        "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
 		} {
 			if v := storedSecret(t, db, query); !secretbox.Sealed(v) || strings.Contains(v, plain) {
 				t.Errorf("%s: %q, want it sealed", query, v)
@@ -76,7 +76,7 @@ func TestSecretsSealed(t *testing.T) {
 			t.Errorf("from_address %q", v)
 		}
 
-		if m, err := mail.Get(ctx); err != nil || m.ResendAPIKey != "re_live_key" || m.SMTPPassword != "smtp-pass" {
+		if m, err := mail.Get(ctx); err != nil || m.TransportSetting("mailapi", "api_key") != "re_live_key" || m.SMTPPassword != "smtp-pass" {
 			t.Errorf("mail read back: %+v %v", m, err)
 		}
 		if c, err := captcha.Get(ctx); err != nil || c.SecretKey != "captcha-secret" {
@@ -101,10 +101,10 @@ func TestSealSecrets(t *testing.T) {
 		// Saved without a key: plain.
 		database.SetSecrets(nil)
 		mail := database.NewMailSettingsRepository(db.DB)
-		if err := mail.Update(ctx, &entity.MailSettings{Transport: entity.MailTransportResend, FromAddress: "site@example.com", ResendAPIKey: "re_plain"}); err != nil {
+		if err := mail.Update(ctx, &entity.MailSettings{Transport: "mailapi", FromAddress: "site@example.com", TransportSettings: map[string]map[string]string{"mailapi": {"api_key": "re_plain"}}}); err != nil {
 			t.Fatal(err)
 		}
-		if v := storedSecret(t, db, "SELECT resend_api_key FROM mail_settings"); v != "re_plain" {
+		if v := storedSecret(t, db, "SELECT value FROM mail_transport_settings"); v != "re_plain" {
 			t.Fatalf("without a key: %q", v)
 		}
 
@@ -112,7 +112,7 @@ func TestSealSecrets(t *testing.T) {
 		if sealed, bad, err := database.SealSecrets(ctx, db.DB); err != nil || sealed != 1 || len(bad) != 0 {
 			t.Fatalf("sealing the plain one: %d %v %v", sealed, bad, err)
 		}
-		byOld := storedSecret(t, db, "SELECT resend_api_key FROM mail_settings")
+		byOld := storedSecret(t, db, "SELECT value FROM mail_transport_settings")
 		if !secretbox.Sealed(byOld) {
 			t.Fatalf("not sealed: %q", byOld)
 		}
@@ -121,7 +121,7 @@ func TestSealSecrets(t *testing.T) {
 		if sealed, bad, err := database.SealSecrets(ctx, db.DB); err != nil || sealed != 1 || len(bad) != 0 {
 			t.Fatalf("sealing again with the new key: %d %v %v", sealed, bad, err)
 		}
-		if v := storedSecret(t, db, "SELECT resend_api_key FROM mail_settings"); v == byOld {
+		if v := storedSecret(t, db, "SELECT value FROM mail_transport_settings"); v == byOld {
 			t.Error("still sealed with the old key")
 		}
 		if sealed, _, err := database.SealSecrets(ctx, db.DB); err != nil || sealed != 0 {
@@ -129,11 +129,11 @@ func TestSealSecrets(t *testing.T) {
 		}
 
 		useSecretsKey(t, "a-key-it-was-never-sealed-with")
-		if m, err := mail.Get(ctx); err != nil || m.ResendAPIKey != "" {
+		if m, err := mail.Get(ctx); err != nil || m.TransportSetting("mailapi", "api_key") != "" {
 			t.Errorf("a wrong key read %+v %v, want no key", m, err)
 		}
 		bad, err := database.UnreadableSecrets(ctx, db.DB)
-		if err != nil || bad["Mail: Resend API key"] != 1 || len(bad) != 1 {
+		if err != nil || bad["Mail: the sending services' settings"] != 1 || len(bad) != 1 {
 			t.Errorf("unreadable %v %v", bad, err)
 		}
 	})

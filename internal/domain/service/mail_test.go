@@ -39,10 +39,10 @@ func (s *recordingSender) SendPlain(to, _, _ string) error {
 func newTestMailService(repo *stubMailRepo, config entity.MailSettings) (*MailService, *[]*recordingSender) {
 	built := &[]*recordingSender{}
 	svc := NewMailService(repo, config, slog.New(slog.NewTextHandler(io.Discard, nil)), time.Second)
-	svc.newSender = func(m entity.MailSettings) mailsender.EmailSender {
+	svc.newSender = func(m entity.MailSettings) (mailsender.EmailSender, error) {
 		s := &recordingSender{built: m}
 		*built = append(*built, s)
-		return s
+		return s, nil
 	}
 	return svc, built
 }
@@ -51,14 +51,15 @@ func newTestMailService(repo *stubMailRepo, config entity.MailSettings) (*MailSe
 // without one the admin's apply, "off" sends nothing.
 func TestMailServiceSettings(t *testing.T) {
 	ctx := context.Background()
-	config := entity.MailSettings{Transport: entity.MailTransportResend, FromAddress: "config@example.com", ResendAPIKey: "re_config"}
+	useTestMailTransport(t)
+	config := entity.MailSettings{Transport: testTransport, FromAddress: "config@example.com", TransportSettings: map[string]map[string]string{testTransport: {"key": "k_config"}}}
 	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true}}
 	svc, built := newTestMailService(repo, config)
 
 	if err := svc.Reload(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if st := svc.Status(); st.Source != MailSourceConfig || st.Transport != entity.MailTransportResend || !st.Enabled {
+	if st := svc.Status(); st.Source != MailSourceConfig || st.Transport != testTransport || !st.Enabled {
 		t.Fatalf("empty row: %+v", st)
 	}
 	if err := svc.SendPlain("a@example.com", "s", "b"); err != nil || len((*built)[0].sent) != 1 {
@@ -70,7 +71,7 @@ func TestMailServiceSettings(t *testing.T) {
 	if err := svc.Reload(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if st := svc.Status(); st.Source != MailSourceConfig || st.Transport != entity.MailTransportResend || st.FromAddress != "config@example.com" {
+	if st := svc.Status(); st.Source != MailSourceConfig || st.Transport != testTransport || st.FromAddress != "config@example.com" {
 		t.Fatalf("admin settings over the config's: %+v", st)
 	}
 
@@ -130,14 +131,20 @@ func TestMailServiceNotConfigured(t *testing.T) {
 	}
 }
 
+// TestMailConfigured - SMTP with its server and port, a module's
+// transport the binary has with its required settings, and a sender.
 func TestMailConfigured(t *testing.T) {
+	useTestMailTransport(t)
+	withKey := map[string]map[string]string{testTransport: {"key": "k"}}
 	cases := []struct {
 		m    entity.MailSettings
 		want bool
 	}{
 		{entity.MailSettings{}, false},
-		{entity.MailSettings{Transport: entity.MailTransportResend, FromAddress: "a@example.com"}, false},
-		{entity.MailSettings{Transport: entity.MailTransportResend, FromAddress: "a@example.com", ResendAPIKey: "k"}, true},
+		{entity.MailSettings{Transport: testTransport, FromAddress: "a@example.com"}, false},
+		{entity.MailSettings{Transport: testTransport, FromAddress: "a@example.com", TransportSettings: map[string]map[string]string{testTransport: {"region": "eu"}}}, false},
+		{entity.MailSettings{Transport: testTransport, FromAddress: "a@example.com", TransportSettings: withKey}, true},
+		{entity.MailSettings{Transport: "missing", FromAddress: "a@example.com", TransportSettings: map[string]map[string]string{"missing": {"key": "k"}}}, false},
 		{entity.MailSettings{Transport: entity.MailTransportSMTP, FromAddress: "a@example.com", SMTPHost: "h"}, false},
 		{entity.MailSettings{Transport: entity.MailTransportSMTP, FromAddress: "a@example.com", SMTPHost: "h", SMTPPort: 25}, true},
 		{entity.MailSettings{Transport: entity.MailTransportSMTP, SMTPHost: "h", SMTPPort: 25}, false},

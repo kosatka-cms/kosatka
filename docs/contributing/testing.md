@@ -48,24 +48,25 @@ go test ./...                 # unit and render tests
 ```
 
 `go test ./...` doesn't build the database tests: they need the
-`dbintegration` tag. `./scripts/test_db.sh` starts MySQL, PostgreSQL, an
-S3-compatible storage (SeaweedFS) and Azure Blob Storage's emulator
-(Azurite) in Docker (`docker-compose.test.yml`), runs
+`dbintegration` tag. `./scripts/test_db.sh` starts MySQL and PostgreSQL
+in Docker (`docker-compose.test.yml`), runs
 `go test -tags dbintegration` on the packages given (all of them by
 default, and then `examples/hello`'s), and stops the servers. Extra
 flags for `go test` go in `GOTESTFLAGS`, for example
 `GOTESTFLAGS="-run TestAdminFormsResave"`.
 
-The integration tests find their servers through four variables:
+The integration tests find their servers through two variables:
 
 - `KOSATKA_TEST_MYSQL_DSN`, for example
   `root:test@tcp(127.0.0.1:33306)/?parseTime=true`;
 - `KOSATKA_TEST_POSTGRES_DSN`, for example
-  `postgres://postgres:test@127.0.0.1:35432/postgres?sslmode=disable`;
-- `KOSATKA_TEST_S3` (`http://<key>:<secret>@<host>:<port>/<bucket>`)
-  and `KOSATKA_TEST_AZURE` (Azurite's blob endpoint, for example
-  `http://127.0.0.1:31000/devstoreaccount1`), for the file storages'
-  tests (`pkg/filestore`).
+  `postgres://postgres:test@127.0.0.1:35432/postgres?sslmode=disable`.
+
+The file storages ([`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3),
+[`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure))
+are tested in their own repositories, on an S3-compatible storage and
+Azure Blob Storage's emulator; a storage of your own can run the same
+checks every store passes (`pkg/filestore/filestoretest`).
 
 The DSN needs the right to create databases. To run the tests against
 servers of your own, set the variables and run

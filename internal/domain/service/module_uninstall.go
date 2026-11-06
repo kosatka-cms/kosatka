@@ -35,6 +35,9 @@ type ModuleUninstallStore interface {
 	// DeleteNodeTypeSettings - the search, SEO, breadcrumb and block
 	// visibility settings of the content types.
 	DeleteNodeTypeSettings(ctx context.Context, types []string) error
+	// DeleteMailTransportSettings - the settings of the ways of sending
+	// (and the saved choice of one of them).
+	DeleteMailTransportSettings(ctx context.Context, transports []string) error
 	// DeleteViewCriteria - the Views' sort criteria, filters and fields
 	// whose key starts with prefix (a module's, views.ModuleKeyPrefix).
 	DeleteViewCriteria(ctx context.Context, prefix string) error
@@ -51,7 +54,8 @@ type ModuleUninstallStore interface {
 // the schema: its plugin blocks' placements, the menu links to its pages
 // (Module.Paths), its permissions (and those of
 // its content types) in roles, its content types' settings, its criteria
-// in Views (views.AddModuleSort…), its text filters in the text formats
+// in Views (views.AddModuleSort…), its ways of sending email's settings
+// (MailTransport), its text filters in the text formats
 // (AddTextFilter), its field formatters in the fields' settings
 // (AddFieldFormatter), its own steps
 // (Steps), its tables and
@@ -208,6 +212,9 @@ func (u ModuleUninstall) Run(ctx context.Context, name string) error {
 	var fileIDs []int
 	if u.Store != nil {
 		if err := u.Store.DeleteNodeTypeSettings(ctx, types); err != nil {
+			return err
+		}
+		if err := u.Store.DeleteMailTransportSettings(ctx, MailTransportsOfModule(name)); err != nil {
 			return err
 		}
 		if err := u.Store.DeleteViewCriteria(ctx, views.ModuleKeyPrefix(name)); err != nil {

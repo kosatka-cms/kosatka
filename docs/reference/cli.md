@@ -125,9 +125,9 @@ Rebuild the binary after them.
 
 | Command | |
 |---|---|
-| `app module list` | the modules the binary has: the engine's and those from outside it, with their Go modules' versions |
-| `app module add <path>[@version]` | add a module (`go get`; the latest version without one) |
-| `app module remove [-force] <path>` | remove it. It refuses while the module is installed in the site's database (the config: `-config` or `CONFIG_PATH`): uninstall it on the Modules page first. When the database can't be checked it warns and removes it; `-force` removes an installed module anyway |
+| `app module list` | the modules the binary has: the engine's and those from outside it, with their Go modules' versions; then its [file storages](../guides/file-storage.md) |
+| `app module add <path>[@version]` | add a module, or a file storage (`go get`; the latest version without one) |
+| `app module remove [-force] <path>` | remove it. It refuses while the module is installed in the site's database (the config: `-config` or `CONFIG_PATH`): uninstall it on the Modules page first; a storage - while `files.storage` or `files.private_storage` names it. When the database or the config can't be checked it warns and removes it; `-force` removes it anyway |
 
 ## `app assets`
 
@@ -150,7 +150,8 @@ Prints the site's settings as the engine reads them - the config file
 with the environment over it - without the secrets: the environment, the
 port, the site address, the theme, the engine directory, the database
 (driver, host, port, name), the file directories and where the files
-are kept (`local` or the bucket). `-json` prints them as JSON.
+are kept (`local`, or what the storage says: `s3://<bucket>/<prefix>/`).
+`-json` prints them as JSON.
 
 ## `app backup`
 
@@ -171,12 +172,12 @@ app files migrate [-private] [-to-local] [-derivatives] [-jobs 8] [-dry-run]
 ```
 
 Copies the public files from their directory (`files.public_dir`) to the
-bucket (or container) of `files.storage` - `s3` or `azure` - or back with
+storage of `files.storage` (a bucket, a container) or back with
 `-to-local`: those the destination has already with the same size are
 skipped, so it resumes; the image styles' derivatives and dotfiles are
 left out (`-derivatives` - the derivatives copied too); nothing is
 removed. `-private` copies the private files (`files.private_dir` and
-the bucket of `files.private_storage`). `-jobs` - how many files are
+the storage of `files.private_storage`). `-jobs` - how many files are
 copied at once (8 by default); `-dry-run` counts what it would copy. See
 [Files in object storage](../guides/file-storage.md#existing-files).
 

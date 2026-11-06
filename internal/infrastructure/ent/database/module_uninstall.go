@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	entsql "entgo.io/ent/dialect/sql"
-
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/blockplacementdef"
@@ -17,6 +16,8 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldstoragedef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldvaluetaxonomy"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldvaluetaxonomymulti"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/node"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/searchtype"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/seorule"
@@ -90,6 +91,24 @@ func (r *ModuleUninstallRepository) columnIDs(ctx context.Context, table, column
 		out = append(out, id)
 	}
 	return out, rows.Err()
+}
+
+// DeleteMailTransportSettings forgets the settings of the ways of
+// sending (a module's) and, if the saved mail settings send through one
+// of them, that choice: the server config's settings apply again.
+func (r *ModuleUninstallRepository) DeleteMailTransportSettings(ctx context.Context, transports []string) error {
+	if len(transports) == 0 {
+		return nil
+	}
+	return inTx(ctx, r.client, func(c *generated.Client) error {
+		if _, err := c.MailTransportSetting.Delete().Where(mailtransportsetting.TransportIn(transports...)).Exec(ctx); err != nil {
+			return fmt.Errorf("ModuleUninstallRepository.DeleteMailTransportSettings: %w", err)
+		}
+		if err := c.MailSettings.Update().Where(mailsettings.TransportIn(transports...)).SetTransport("").Exec(ctx); err != nil {
+			return fmt.Errorf("ModuleUninstallRepository.DeleteMailTransportSettings: %w", err)
+		}
+		return nil
+	})
 }
 
 // DeleteNodeTypeSettings removes what core settings keep for the content

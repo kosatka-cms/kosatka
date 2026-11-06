@@ -54,10 +54,10 @@ func runFilesMigrate(args []string, out io.Writer) int {
 		return 1
 	}
 	store, local := paths.PublicStore(), paths.PublicFilesDir()
-	setting := "files.storage is local - set files.storage (s3 or azure) and its bucket first"
+	setting := "files.storage is local - set files.storage (a storage of the binary) and its settings first"
 	if *private {
 		store, local = paths.PrivateStore(), paths.PrivateFilesDir()
-		setting = "files.private_storage is local - set files.private_storage (s3 or azure) and its bucket first"
+		setting = "files.private_storage is local - set files.private_storage (a storage of the binary) and its settings first"
 	}
 	if _, onDisk := store.(*filestore.Local); onDisk {
 		fmt.Fprintln(os.Stderr, "files migrate:", setting)

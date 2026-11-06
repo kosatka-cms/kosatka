@@ -1,6 +1,6 @@
 ---
 title: Files in object storage
-description: Keep the uploads and image styles in an S3-compatible bucket - AWS S3, Yandex Object Storage, Google Cloud Storage, Cloudflare R2, MinIO - or in Azure Blob Storage instead of the server's disk.
+description: Keep the uploads and image styles in an S3-compatible bucket - AWS S3, Yandex Object Storage, Google Cloud Storage, Cloudflare R2, MinIO - or in Azure Blob Storage instead of the server's disk, with a storage package added to the site's binary.
 sidebar:
   order: 13
 ---
@@ -15,6 +15,18 @@ container instead:
 - a site moved to another server takes no files with it;
 - the bucket, or a CDN in front of it, can serve the files itself,
   taking that traffic off the site.
+
+The engine keeps the files on disk itself; a storage elsewhere is a Go
+package of its own that the site adds to its binary, like a module from
+its own repository:
+
+| Storage | Package | `files.storage` |
+|---|---|---|
+| S3-compatible buckets | [`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3) | `s3` |
+| Azure Blob Storage | [`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure) | `azure` |
+
+Another storage can be written the same way: see [File
+storages](../modules/sdk.md#file-storages) in the module SDK.
 
 Any storage speaking the S3 API works:
 
@@ -36,9 +48,20 @@ go to a bucket of their own too (see [Private files](#private-files)).
 
 ## Set it up
 
-1. Create a bucket and a key with access to it (reading, writing, listing
+1. Add the storage to the site's binary (the site then builds its own,
+   see [Add a module from its own
+   repository](../modules/using-modules.md#add-a-module-from-its-own-repository)):
+
+   ```bash
+   app module add github.com/kosatka-cms/kosatka-storage-s3
+   go build -o app .
+   ```
+
+   The engine's Docker image has no storage of its own: a site keeping
+   its files in a bucket runs an image of its own binary.
+2. Create a bucket and a key with access to it (reading, writing, listing
    and deleting objects).
-2. Set the storage in the site's config:
+3. Set the storage in the site's config:
 
    ```yaml
    files:
@@ -58,15 +81,20 @@ go to a bucket of their own too (see [Private files](#private-files)).
    FILES_S3_SECRET_KEY=…
    ```
 
-3. Copy the existing files into the bucket (`app files migrate`, see
+4. Copy the existing files into the bucket (`app files migrate`, see
    [Existing files](#existing-files)) and restart the site.
 
 The status report (Reports → Status report) shows the bucket under
 *Public files* and checks that the site can write there.
 
+A `storage` the binary doesn't have - its package not added, or taken
+out - stops the site at startup with the setting's name: add the package
+or set `storage` back. `app module remove` refuses to take out a storage
+the site keeps its files in.
+
 | Key | Variable | |
 |---|---|---|
-| `storage` | `FILES_STORAGE` | `local` (default), `s3` or `azure` ([below](#azure-blob-storage)) |
+| `storage` | `FILES_STORAGE` | `local` (default), or a storage the binary has: `s3`, `azure` ([below](#azure-blob-storage)) |
 | `s3.endpoint` | `FILES_S3_ENDPOINT` | the storage's address, `https://…` (`http://` - without TLS) |
 | `s3.region` | `FILES_S3_REGION` | the bucket's region |
 | `s3.bucket` | `FILES_S3_BUCKET` | the bucket |
@@ -105,8 +133,10 @@ from the bucket.
 
 ## Azure Blob Storage
 
-1. Create a storage account and a container in it.
-2. Set the storage in the site's config:
+1. Add the storage to the site's binary: `app module add
+   github.com/kosatka-cms/kosatka-storage-azure`, as above.
+2. Create a storage account and a container in it.
+3. Set the storage in the site's config:
 
    ```yaml
    files:
@@ -167,7 +197,7 @@ bucket, or a prefix beside the public files' one.
 
 | Key | Variable | |
 |---|---|---|
-| `private_storage` | `FILES_PRIVATE_STORAGE` | `local` (default), `s3` or `azure` |
+| `private_storage` | `FILES_PRIVATE_STORAGE` | `local` (default), or a storage the binary has: `s3`, `azure` |
 | `private_s3.bucket` | `FILES_PRIVATE_S3_BUCKET` | the private files' bucket |
 | `private_s3.prefix` | `FILES_PRIVATE_S3_PREFIX` | its folder for the site's files |
 | `private_azure.container`, `private_azure.prefix` | `FILES_PRIVATE_AZURE_CONTAINER`, `FILES_PRIVATE_AZURE_PREFIX` | the same in Azure |

@@ -48,6 +48,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maillog"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtemplate"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/maintenancesettings"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menudef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/menulinkdef"
@@ -182,6 +183,7 @@ func checkColumn(t, c string) error {
 			maillog.Table:                  maillog.ValidColumn,
 			mailsettings.Table:             mailsettings.ValidColumn,
 			mailtemplate.Table:             mailtemplate.ValidColumn,
+			mailtransportsetting.Table:     mailtransportsetting.ValidColumn,
 			maintenancesettings.Table:      maintenancesettings.ValidColumn,
 			menudef.Table:                  menudef.ValidColumn,
 			menulinkdef.Table:              menulinkdef.ValidColumn,

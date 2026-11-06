@@ -1375,6 +1375,26 @@ var (
 			},
 		},
 	}
+	// MailTransportSettingsColumns holds the columns for the "mail_transport_settings" table.
+	MailTransportSettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true, SchemaType: map[string]string{"mysql": "int unsigned"}},
+		{Name: "transport", Type: field.TypeString, Size: 16},
+		{Name: "name", Type: field.TypeString, Size: 64},
+		{Name: "value", Type: field.TypeString, Size: 2147483647, SchemaType: map[string]string{"mysql": "text"}},
+	}
+	// MailTransportSettingsTable holds the schema information for the "mail_transport_settings" table.
+	MailTransportSettingsTable = &schema.Table{
+		Name:       "mail_transport_settings",
+		Columns:    MailTransportSettingsColumns,
+		PrimaryKey: []*schema.Column{MailTransportSettingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "uniq_mail_transport_settings_name",
+				Unique:  true,
+				Columns: []*schema.Column{MailTransportSettingsColumns[1], MailTransportSettingsColumns[2]},
+			},
+		},
+	}
 	// MaintenanceSettingsColumns holds the columns for the "maintenance_settings" table.
 	MaintenanceSettingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Default: "1", SchemaType: map[string]string{"mysql": "int"}},
@@ -2699,6 +2719,7 @@ var (
 		MailLogTable,
 		MailSettingsTable,
 		MailTemplatesTable,
+		MailTransportSettingsTable,
 		MaintenanceSettingsTable,
 		MenusTable,
 		MenuLinksTable,
@@ -2970,6 +2991,11 @@ func init() {
 	}
 	MailTemplatesTable.Annotation = &entsql.Annotation{
 		Table:     "mail_templates",
+		Charset:   "utf8mb4",
+		Collation: "utf8mb4_unicode_ci",
+	}
+	MailTransportSettingsTable.Annotation = &entsql.Annotation{
+		Table:     "mail_transport_settings",
 		Charset:   "utf8mb4",
 		Collation: "utf8mb4_unicode_ci",
 	}

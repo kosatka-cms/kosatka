@@ -1,6 +1,7 @@
 # Copy to /opt/<site>/prod.yaml (docs/guides/production.md).
-# Secrets: set DB_*, SESSION_SECRET_KEY, SECRETS_KEY, SMTP_*, RESEND_API_KEY
-# in the site's env file, /opt/<site>/<site>.env (they override YAML).
+# Secrets: set DB_*, SESSION_SECRET_KEY, SECRETS_KEY, SMTP_* (or a mail
+# module's, e.g. RESEND_API_KEY) in the site's env file,
+# /opt/<site>/<site>.env (they override YAML).
 
 env: prod
 port: 3333
@@ -34,7 +35,7 @@ timeouts:
   shutdown: 30          # finishing requests in flight on stop
   database_query: 30    # a page's database work
   cache_update: 15      # one refresh of the in-memory caches
-  http_request: 30      # calls to outside services (reCAPTCHA, Resend)
+  http_request: 30      # calls to outside services (reCAPTCHA, a mail service's API)
 
 email:
   smtp_host: ""
@@ -42,4 +43,3 @@ email:
   smtp_user: ""
   smtp_password: ""
   from_address: ""
-  resend_api_key: ""
