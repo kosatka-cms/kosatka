@@ -95,11 +95,16 @@ documentation in its README:
 | [Editorial workflow](https://github.com/kosatka-cms/kosatka-module-workflow) | `workflow` | States of content (draft, in review, approved, published, archived or your own) and the transitions between them by role, with comments; the editorial queue (**Content → Editorial**) |
 | [Resend](https://github.com/kosatka-cms/kosatka-module-resend) | `resend` | The site's email through the [Resend](https://resend.com) API: a way of sending on the Mail page besides SMTP ([Email](../guides/mail.md#sending)) |
 
-The same way a site adds a file storage - a package that keeps the
-site's files elsewhere than its disk, chosen by `files.storage` rather
-than on the Modules page: [`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3)
-(S3-compatible buckets) and [`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure)
-(Azure Blob Storage). See [Files in object storage](../guides/file-storage.md).
+## File storages
+
+The file storages - [`kosatka-storage-s3`](https://github.com/kosatka-cms/kosatka-storage-s3)
+and [`kosatka-storage-azure`](https://github.com/kosatka-cms/kosatka-storage-azure) -
+also come from their own repositories and get into the site's binary
+with `app module add`, but they aren't modules: the config chooses one
+(`files.storage`) before the site reaches its database, so a storage
+isn't on the Modules page and can't be switched off there - hence the
+other name. Which there are and how to set one up: [Files in object
+storage](../guides/file-storage.md).
 
 ## Where to go next
 
