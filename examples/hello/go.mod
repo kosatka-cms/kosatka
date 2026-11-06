@@ -44,7 +44,7 @@ require (
 	github.com/jackc/pgx/v5 v5.12.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/klauspost/compress v1.19.2 // indirect
+	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
