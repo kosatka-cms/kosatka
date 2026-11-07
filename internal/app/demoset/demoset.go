@@ -180,20 +180,22 @@ type Node struct {
 // attachment to the pages of content types (AttachTypes) or the pages of
 // terms (TermVocabularies); its fields, filters and sorts in order.
 type View struct {
-	Name             string                  `yaml:"name"`
-	Label            string                  `yaml:"label"`
-	DisplayType      entity.ViewDisplayType  `yaml:"display_type"`
-	Path             string                  `yaml:"path"`
-	Style            entity.ViewDisplayStyle `yaml:"style"`
-	GridColumns      int                     `yaml:"grid_columns"`
-	Pager            bool                    `yaml:"pager"`
-	PageSize         int                     `yaml:"page_size"`
-	AttachTypes      []string                `yaml:"attach_types"`
-	AttachTitle      string                  `yaml:"attach_title"`
-	TermVocabularies []string                `yaml:"term_vocabularies"`
-	GroupBy          string                  `yaml:"group_by"`
-	GroupDateFormat  string                  `yaml:"group_date_format"`
-	Header           string                  `yaml:"header"`
+	Name        string                  `yaml:"name"`
+	Label       string                  `yaml:"label"`
+	DisplayType entity.ViewDisplayType  `yaml:"display_type"`
+	Path        string                  `yaml:"path"`
+	Style       entity.ViewDisplayStyle `yaml:"style"`
+	GridColumns int                     `yaml:"grid_columns"`
+	Pager       bool                    `yaml:"pager"`
+	PageSize    int                     `yaml:"page_size"`
+	// Skip - the first Skip items left out (entity.ViewDisplayDef.SkipItems).
+	Skip             int      `yaml:"skip"`
+	AttachTypes      []string `yaml:"attach_types"`
+	AttachTitle      string   `yaml:"attach_title"`
+	TermVocabularies []string `yaml:"term_vocabularies"`
+	GroupBy          string   `yaml:"group_by"`
+	GroupDateFormat  string   `yaml:"group_date_format"`
+	Header           string   `yaml:"header"`
 	// TabPath and TabAccess - a profile tab's (display_type user_tab):
 	// its address under a profile and who sees it (all, owner).
 	TabPath   string       `yaml:"tab_path"`

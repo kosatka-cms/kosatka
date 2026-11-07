@@ -2080,20 +2080,24 @@ func init() {
 	viewdisplaydefDescPageSize := viewdisplaydefFields[36].Descriptor()
 	// viewdisplaydef.DefaultPageSize holds the default value on creation for the page_size field.
 	viewdisplaydef.DefaultPageSize = viewdisplaydefDescPageSize.Default.(int)
+	// viewdisplaydefDescSkipItems is the schema descriptor for skip_items field.
+	viewdisplaydefDescSkipItems := viewdisplaydefFields[37].Descriptor()
+	// viewdisplaydef.DefaultSkipItems holds the default value on creation for the skip_items field.
+	viewdisplaydef.DefaultSkipItems = viewdisplaydefDescSkipItems.Default.(int)
 	// viewdisplaydefDescOverflowHeaderText is the schema descriptor for overflow_header_text field.
-	viewdisplaydefDescOverflowHeaderText := viewdisplaydefFields[39].Descriptor()
+	viewdisplaydefDescOverflowHeaderText := viewdisplaydefFields[40].Descriptor()
 	// viewdisplaydef.OverflowHeaderTextValidator is a validator for the "overflow_header_text" field. It is called by the builders before save.
 	viewdisplaydef.OverflowHeaderTextValidator = viewdisplaydefDescOverflowHeaderText.Validators[0].(func(string) error)
 	// viewdisplaydefDescGroupByField is the schema descriptor for group_by_field field.
-	viewdisplaydefDescGroupByField := viewdisplaydefFields[42].Descriptor()
+	viewdisplaydefDescGroupByField := viewdisplaydefFields[43].Descriptor()
 	// viewdisplaydef.GroupByFieldValidator is a validator for the "group_by_field" field. It is called by the builders before save.
 	viewdisplaydef.GroupByFieldValidator = viewdisplaydefDescGroupByField.Validators[0].(func(string) error)
 	// viewdisplaydefDescGroupDateFormat is the schema descriptor for group_date_format field.
-	viewdisplaydefDescGroupDateFormat := viewdisplaydefFields[43].Descriptor()
+	viewdisplaydefDescGroupDateFormat := viewdisplaydefFields[44].Descriptor()
 	// viewdisplaydef.GroupDateFormatValidator is a validator for the "group_date_format" field. It is called by the builders before save.
 	viewdisplaydef.GroupDateFormatValidator = viewdisplaydefDescGroupDateFormat.Validators[0].(func(string) error)
 	// viewdisplaydefDescStatus is the schema descriptor for status field.
-	viewdisplaydefDescStatus := viewdisplaydefFields[46].Descriptor()
+	viewdisplaydefDescStatus := viewdisplaydefFields[47].Descriptor()
 	// viewdisplaydef.DefaultStatus holds the default value on creation for the status field.
 	viewdisplaydef.DefaultStatus = viewdisplaydefDescStatus.Default.(int)
 	viewfielddefFields := schema.ViewFieldDef{}.Fields()

@@ -91,6 +91,8 @@ type ViewDisplayDef struct {
 	GlossaryFieldStorageID *int `json:"glossary_field_storage_id,omitempty"`
 	// PageSize holds the value of the "page_size" field.
 	PageSize int `json:"page_size,omitempty"`
+	// SkipItems holds the value of the "skip_items" field.
+	SkipItems int `json:"skip_items,omitempty"`
 	// HeaderText holds the value of the "header_text" field.
 	HeaderText string `json:"header_text,omitempty"`
 	// FooterText holds the value of the "footer_text" field.
@@ -209,7 +211,7 @@ func (*ViewDisplayDef) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case viewdisplaydef.FieldIsDefault, viewdisplaydef.FieldOverrideSettings, viewdisplaydef.FieldOverrideFilters, viewdisplaydef.FieldOverrideSort, viewdisplaydef.FieldOverrideFields, viewdisplaydef.FieldAttachShowTitle, viewdisplaydef.FieldCarouselAutoplay, viewdisplaydef.FieldCarouselLoop, viewdisplaydef.FieldCarouselShowNavigation, viewdisplaydef.FieldCarouselShowPagination, viewdisplaydef.FieldShowPagination, viewdisplaydef.FieldPaginationAjax, viewdisplaydef.FieldShowGlossary:
 			values[i] = new(sql.NullBool)
-		case viewdisplaydef.FieldID, viewdisplaydef.FieldViewID, viewdisplaydef.FieldAttachWeight, viewdisplaydef.FieldGridColumns, viewdisplaydef.FieldOverflowAfter, viewdisplaydef.FieldCarouselSlidesPerView, viewdisplaydef.FieldCarouselLinkFieldStorageID, viewdisplaydef.FieldGlossaryFieldStorageID, viewdisplaydef.FieldPageSize, viewdisplaydef.FieldStatus, viewdisplaydef.FieldCreatedBy:
+		case viewdisplaydef.FieldID, viewdisplaydef.FieldViewID, viewdisplaydef.FieldAttachWeight, viewdisplaydef.FieldGridColumns, viewdisplaydef.FieldOverflowAfter, viewdisplaydef.FieldCarouselSlidesPerView, viewdisplaydef.FieldCarouselLinkFieldStorageID, viewdisplaydef.FieldGlossaryFieldStorageID, viewdisplaydef.FieldPageSize, viewdisplaydef.FieldSkipItems, viewdisplaydef.FieldStatus, viewdisplaydef.FieldCreatedBy:
 			values[i] = new(sql.NullInt64)
 		case viewdisplaydef.FieldBaseEntity, viewdisplaydef.FieldMachineName, viewdisplaydef.FieldLabel, viewdisplaydef.FieldMetaTitle, viewdisplaydef.FieldMetaDescription, viewdisplaydef.FieldURLPath, viewdisplaydef.FieldDisplayType, viewdisplaydef.FieldAttachContentTypes, viewdisplaydef.FieldTermVocabularies, viewdisplaydef.FieldProfileTabPath, viewdisplaydef.FieldProfileTabAccess, viewdisplaydef.FieldThemeTemplate, viewdisplaydef.FieldAttachTitle, viewdisplaydef.FieldDisplayStyle, viewdisplaydef.FieldCarouselEffect, viewdisplaydef.FieldHeaderText, viewdisplaydef.FieldFooterText, viewdisplaydef.FieldOverflowHeaderText, viewdisplaydef.FieldCustomCSS, viewdisplaydef.FieldRowTemplate, viewdisplaydef.FieldGroupByField, viewdisplaydef.FieldGroupDateFormat, viewdisplaydef.FieldPublishedSnapshot:
 			values[i] = new(sql.NullString)
@@ -454,6 +456,12 @@ func (_m *ViewDisplayDef) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field page_size", values[i])
 			} else if value.Valid {
 				_m.PageSize = int(value.Int64)
+			}
+		case viewdisplaydef.FieldSkipItems:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field skip_items", values[i])
+			} else if value.Valid {
+				_m.SkipItems = int(value.Int64)
 			}
 		case viewdisplaydef.FieldHeaderText:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -713,6 +721,9 @@ func (_m *ViewDisplayDef) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("page_size=")
 	builder.WriteString(fmt.Sprintf("%v", _m.PageSize))
+	builder.WriteString(", ")
+	builder.WriteString("skip_items=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SkipItems))
 	builder.WriteString(", ")
 	builder.WriteString("header_text=")
 	builder.WriteString(_m.HeaderText)

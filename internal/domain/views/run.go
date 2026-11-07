@@ -204,6 +204,7 @@ func (s *DefaultService) runView(ctx context.Context, effective entity.ViewDispl
 		QueryParams:        queryParams,
 		PageSize:           effective.PageSize,
 		Page:               page,
+		Skip:               effective.SkipItems,
 		ContextCreatedByID: contextCreatedByID,
 		ContextNodeID:      contextNodeID,
 		ContextTermID:      contextTermID,
@@ -252,6 +253,7 @@ func (s *DefaultService) runCommentView(ctx context.Context, view entity.ViewDis
 		QueryParams:        queryParams,
 		PageSize:           effective.PageSize,
 		Page:               page,
+		Skip:               effective.SkipItems,
 		ContextCreatedByID: contextCreatedByID,
 	})
 	if err != nil {
@@ -350,6 +352,7 @@ func (s *DefaultService) PreviewView(ctx context.Context, view entity.ViewDispla
 		QueryParams:   settings.ExposedFilterValues,
 		PageSize:      pageSize,
 		Page:          page,
+		Skip:          settings.SkipItems,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("previewing view (viewID %v): %w", view.ID, err)

@@ -694,3 +694,69 @@ func TestRunViewListFilter(t *testing.T) {
 		}
 	})
 }
+
+// TestRunViewSkip - the skipped items (ViewRunParams.Skip) are left out
+// of every page and of the total, on each sort path (one SQL ORDER BY,
+// several of the node's columns, a sort in Go), and of a comment View.
+func TestRunViewSkip(t *testing.T) {
+	schemaDB(t, func(t *testing.T, db testdb.DB) {
+		ctx := context.Background()
+		seedUser(t, db)
+		client := entClient(db)
+		base := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
+		for id := 1; id <= 5; id++ {
+			seedNode(t, db, id, "article", "n", "article/n"+strconv.Itoa(id))
+			if err := client.Node.UpdateOneID(id).SetCreatedAt(base.AddDate(0, 0, id)).Exec(ctx); err != nil {
+				t.Fatal(err)
+			}
+		}
+		repo := viewquery.New(client)
+		newest := entity.ViewRunSort{Builtin: entity.ViewSortBuiltinCreatedAt, Direction: "desc"}
+		for name, sorts := range map[string][]entity.ViewRunSort{
+			"one criterion":      {newest},
+			"the node's columns": {{Builtin: entity.ViewSortBuiltinSticky, Direction: "desc"}, newest},
+			"sorted in Go":       {{Builtin: entity.ViewSortBuiltinViews, Direction: "desc"}, newest},
+		} {
+			for _, tc := range []struct {
+				skip, page int
+				want       []int
+				total      int
+			}{
+				{1, 1, []int{4, 3}, 4},
+				{1, 2, []int{2, 1}, 4},
+				{1, 3, nil, 4},
+				{0, 1, []int{5, 4}, 5},
+				{5, 1, nil, 0},
+				{9, 1, nil, 0},
+			} {
+				nodes, total, err := repo.RunView(ctx, entity.ViewRunParams{Sorts: sorts, PageSize: 2, Page: tc.page, Skip: tc.skip})
+				if err != nil {
+					t.Fatal(err)
+				}
+				var got []int
+				for _, n := range nodes {
+					got = append(got, n.ID)
+				}
+				if total != tc.total || !slices.Equal(got, tc.want) {
+					t.Errorf("%s, skip %d, page %d: %v of %d, want %v of %d", name, tc.skip, tc.page, got, total, tc.want, tc.total)
+				}
+			}
+		}
+
+		if _, err := db.DB.Exec(`INSERT INTO comments (id, nid, subject, content, created_by, status) VALUES (1, 1, 'a', 'a', 1, 1), (2, 1, 'b', 'b', 1, 1), (3, 1, 'c', 'c', 1, 1)`); err != nil {
+			t.Fatal(err)
+		}
+		bySubject := []entity.ViewRunSort{{Builtin: entity.ViewSortBuiltinCommentSubject, Direction: "asc"}}
+		comments, total, err := repo.RunCommentView(ctx, entity.ViewRunParams{Sorts: bySubject, PageSize: 10, Skip: 1})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got []int
+		for _, c := range comments {
+			got = append(got, c.ID)
+		}
+		if total != 2 || !slices.Equal(got, []int{2, 3}) {
+			t.Errorf("comments, skip 1: %v of %d, want [2 3] of 2", got, total)
+		}
+	})
+}

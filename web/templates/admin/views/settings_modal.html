@@ -261,6 +261,13 @@
                         <label for="settings-page-size" class="form-label">{{t "Items per page"}}</label>
                         <input type="number" id="settings-page-size" name="page_size" class="form-control admin-max-xs" value="{{.view.PageSize}}" min="1">
                     </div>
+                    {{/* skip_items (entity.ViewDisplayDef.SkipItems) - the first N of the result
+                         left out on every page; 0 = none. */}}
+                    <div class="mb-3">
+                        <label for="settings-skip-items" class="form-label">{{t "Skip the first N items"}}</label>
+                        <input type="number" id="settings-skip-items" name="skip_items" class="form-control admin-max-xs" value="{{.view.SkipItems}}" min="0">
+                        <div class="form-text">{{t "0 - none. For example, the lead story in one block and the rest of the list in another, without repeating it."}}</div>
+                    </div>
                     {{/* header_text/footer_text (entity.ViewDisplayDef.HeaderText/FooterText) -
                          rich text rendered before/after the list, independent of Fields, in the
                          editor (the "text" preset, data-editor-autoload). */}}

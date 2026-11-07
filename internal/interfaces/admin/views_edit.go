@@ -442,7 +442,7 @@ func viewPlacementFromForm(r *http.Request, v *entity.ViewDisplayDef) {
 }
 
 // viewSettingsFromForm sets v's settings section (display style, grid,
-// carousel, pagination, glossary, page size, texts, CSS, row template,
+// carousel, pagination, glossary, page size, skipped items, texts, CSS, row template,
 // grouping) from the form; an empty or invalid number keeps the stored
 // value, an invalid choice falls back to the default. A code - the
 // form's error (custom CSS closing its <style>).
@@ -482,6 +482,8 @@ func (c *Controller) viewSettingsFromForm(ctx context.Context, r *http.Request, 
 	// glossary_field_storage_id - nil is the default (the title).
 	v.GlossaryFieldStorageID = storageID("glossary_field_storage_id")
 	positive("page_size", 1, &v.PageSize)
+	// skip_items - 0 skips none.
+	positive("skip_items", 0, &v.SkipItems)
 	// header_text/footer_text - admin-authored rich text (TinyMCE), sanitized
 	// with SanitizeAdmin rather than the stricter end-user Sanitize so "class"
 	// and text-align "style" survive.

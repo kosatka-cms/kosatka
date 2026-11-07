@@ -1118,6 +1118,7 @@ package modulekit
 		field ShowGlossary bool
 		field GlossaryFieldStorageID *int
 		field PageSize int
+		field SkipItems int
 		field HeaderText string
 		field FooterText string
 		field OverflowHeaderText string

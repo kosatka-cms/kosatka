@@ -909,6 +909,7 @@
                 carousel_effect: carouselEffectInput ? carouselEffectInput.value : 'slide',
                 show_pagination: document.getElementById('settings-show-pagination').checked,
                 page_size: parseInt(document.getElementById('settings-page-size').value, 10) || 0,
+                skip_items: document.getElementById('settings-skip-items') ? (parseInt(document.getElementById('settings-skip-items').value, 10) || 0) : null,
                 header_text: currentRichText('settings-header-text'),
                 footer_text: currentRichText('settings-footer-text'),
                 custom_css: document.getElementById('settings-custom-css') ? document.getElementById('settings-custom-css').value : '',

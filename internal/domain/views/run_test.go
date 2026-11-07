@@ -59,3 +59,33 @@ func TestViewByURLArgument(t *testing.T) {
 		t.Fatal("news/ishmael must not match")
 	}
 }
+
+// TestRunViewSkipItems - a run skips the display's effective SkipItems
+// (a display inheriting the settings - its Default's), for content and
+// for comments; a preview - the draft value.
+func TestRunViewSkipItems(t *testing.T) {
+	viewID := 3
+	repo := &fakeViewRepo{displays: map[int]entity.ViewDisplayDef{
+		1: {ID: 1, ViewID: &viewID, IsDefault: true, PageSize: 5, SkipItems: 2},
+		2: {ID: 2, ViewID: &viewID, PageSize: 9, SkipItems: 7},
+	}}
+	s := newTestViewService(repo)
+	ctx := context.Background()
+	if _, _, err := s.RunView(ctx, repo.displays[2], nil, 1); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.RunCommentView(ctx, repo.displays[2], nil, 1); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.PreviewView(ctx, repo.displays[2], PreviewSettings{PageSize: 4, SkipItems: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if len(repo.runs) != 3 {
+		t.Fatalf("%d runs, want 3", len(repo.runs))
+	}
+	for i, want := range []struct{ skip, pageSize int }{{2, 5}, {2, 5}, {1, 4}} {
+		if got := repo.runs[i]; got.Skip != want.skip || got.PageSize != want.pageSize {
+			t.Errorf("run %d: skip %d, page size %d, want %d, %d", i, got.Skip, got.PageSize, want.skip, want.pageSize)
+		}
+	}
+}

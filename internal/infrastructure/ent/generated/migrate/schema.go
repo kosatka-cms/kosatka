@@ -2456,6 +2456,7 @@ var (
 		{Name: "pagination_ajax", Type: field.TypeBool, Default: false},
 		{Name: "show_glossary", Type: field.TypeBool, Default: false},
 		{Name: "page_size", Type: field.TypeInt, Default: 30, SchemaType: map[string]string{"mysql": "int"}},
+		{Name: "skip_items", Type: field.TypeInt, Default: 0, SchemaType: map[string]string{"mysql": "int"}},
 		{Name: "header_text", Type: field.TypeString, Nullable: true, Size: 2147483647, SchemaType: map[string]string{"mysql": "mediumtext"}},
 		{Name: "footer_text", Type: field.TypeString, Nullable: true, Size: 2147483647, SchemaType: map[string]string{"mysql": "mediumtext"}},
 		{Name: "overflow_header_text", Type: field.TypeString, Nullable: true, Size: 255},
@@ -2481,19 +2482,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "view_displays_views_view",
-				Columns:    []*schema.Column{ViewDisplaysColumns[47]},
+				Columns:    []*schema.Column{ViewDisplaysColumns[48]},
 				RefColumns: []*schema.Column{ViewsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "view_displays_field_storages_glossary_field_storage",
-				Columns:    []*schema.Column{ViewDisplaysColumns[48]},
+				Columns:    []*schema.Column{ViewDisplaysColumns[49]},
 				RefColumns: []*schema.Column{FieldStoragesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "view_displays_field_storages_carousel_link_field_storage",
-				Columns:    []*schema.Column{ViewDisplaysColumns[49]},
+				Columns:    []*schema.Column{ViewDisplaysColumns[50]},
 				RefColumns: []*schema.Column{FieldStoragesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -2502,17 +2503,17 @@ var (
 			{
 				Name:    "viewdisplaydef_carousel_link_field_storage_id",
 				Unique:  false,
-				Columns: []*schema.Column{ViewDisplaysColumns[49]},
+				Columns: []*schema.Column{ViewDisplaysColumns[50]},
 			},
 			{
 				Name:    "viewdisplaydef_glossary_field_storage_id",
 				Unique:  false,
-				Columns: []*schema.Column{ViewDisplaysColumns[48]},
+				Columns: []*schema.Column{ViewDisplaysColumns[49]},
 			},
 			{
 				Name:    "viewdisplaydef_view_id",
 				Unique:  false,
-				Columns: []*schema.Column{ViewDisplaysColumns[47]},
+				Columns: []*schema.Column{ViewDisplaysColumns[48]},
 			},
 		},
 	}

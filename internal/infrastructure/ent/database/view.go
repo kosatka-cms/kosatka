@@ -187,6 +187,7 @@ func (r ViewRepository) CreateView(ctx context.Context, v entity.ViewDisplayDef)
 		SetPaginationAjax(v.PaginationAjax).
 		SetShowGlossary(v.ShowGlossary).
 		SetPageSize(v.PageSize).
+		SetSkipItems(v.SkipItems).
 		SetHeaderText(v.HeaderText).
 		SetFooterText(v.FooterText).
 		SetOverflowHeaderText(v.OverflowHeaderText).
@@ -256,6 +257,7 @@ func (r ViewRepository) UpdateView(ctx context.Context, v entity.ViewDisplayDef)
 		SetPaginationAjax(v.PaginationAjax).
 		SetShowGlossary(v.ShowGlossary).
 		SetPageSize(v.PageSize).
+		SetSkipItems(v.SkipItems).
 		SetHeaderText(v.HeaderText).
 		SetFooterText(v.FooterText).
 		SetOverflowHeaderText(v.OverflowHeaderText).

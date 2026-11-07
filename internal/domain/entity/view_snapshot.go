@@ -33,6 +33,7 @@ type ViewSnapshotSettings struct {
 	ShowGlossary               bool             `json:"show_glossary"`
 	GlossaryFieldStorageID     *int             `json:"glossary_field_storage_id"`
 	PageSize                   int              `json:"page_size"`
+	SkipItems                  int              `json:"skip_items"`
 	HeaderText                 string           `json:"header_text"`
 	FooterText                 string           `json:"footer_text"`
 	OverflowHeaderText         string           `json:"overflow_header_text"`
@@ -64,6 +65,7 @@ func (s ViewSnapshotSettings) ApplyTo(display ViewDisplayDef) ViewDisplayDef {
 	display.ShowGlossary = s.ShowGlossary
 	display.GlossaryFieldStorageID = s.GlossaryFieldStorageID
 	display.PageSize = s.PageSize
+	display.SkipItems = s.SkipItems
 	display.HeaderText = s.HeaderText
 	display.FooterText = s.FooterText
 	display.OverflowHeaderText = s.OverflowHeaderText
@@ -96,6 +98,7 @@ func SnapshotSettingsOf(display ViewDisplayDef) ViewSnapshotSettings {
 		ShowGlossary:               display.ShowGlossary,
 		GlossaryFieldStorageID:     display.GlossaryFieldStorageID,
 		PageSize:                   display.PageSize,
+		SkipItems:                  display.SkipItems,
 		HeaderText:                 display.HeaderText,
 		FooterText:                 display.FooterText,
 		OverflowHeaderText:         display.OverflowHeaderText,

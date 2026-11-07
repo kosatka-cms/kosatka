@@ -337,6 +337,7 @@ inherited.
 | *List display* | *List* (a row per item), *Grid (cards)* (*Grid columns* across), *Table* (a column per field), *Carousel* |
 | *Show the first N in full, the rest as a list* | the first N items in the chosen style, the rest as a compact list under *Heading above the compact list*; 0 - off |
 | *Show pagination*, *Items per page* | a pager (`?page=2`) and the page size; a block's pager loads its pages in place |
+| *Skip the first N items* | the first N items of the result are left out: every page starts after them, the pager counts the rest; 0 - none |
 | *AJAX pagination (no page reload)* | the pager and the index letters load the list in place (content View pages; a block always does) |
 | *Text before the list*, *Text after the list* | rich text around the list, shown even when the list is empty |
 | *Custom CSS* | CSS put in with the list; limit your selectors to the list's container yourself - `#view-list-container` on the View's own page, `#view-list-container-block-<display ID>` elsewhere (a block, an attachment, a profile tab) |
@@ -480,6 +481,12 @@ descending. Fields: `Title` with *Link* *To the content*,
 image with a style, `Title`, the body with *Trim text* 200. *Grid
 (cards)*, 3 columns, pagination on. Add it to the main menu as a *View*
 link.
+
+**A lead story and the rest.** Two displays with the same filters and
+sort (a group shares them): a block with *Items per page* 1 for the lead
+story, shown large, and a page or a block with *Skip the first N items*
+1 for the rest, in a grid with a pager. The lead story is not repeated
+in the list, on any of its pages.
 
 **A catalog with a search box.** A *Page* display at `products` of
 *Product* content with `title` `contains`, *Exposed to visitors*,

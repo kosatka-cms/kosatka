@@ -631,6 +631,7 @@ func (a *applier) view(ctx context.Context, v View) (int, error) {
 		SetGridColumns(v.GridColumns).
 		SetShowPagination(v.Pager).
 		SetPageSize(v.PageSize).
+		SetSkipItems(v.Skip).
 		SetAttachContentTypes(strings.Join(v.AttachTypes, ",")).
 		SetAttachTitle(v.AttachTitle).
 		SetAttachShowTitle(v.AttachTitle != "").

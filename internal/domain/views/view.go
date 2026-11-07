@@ -236,6 +236,8 @@ type PreviewSettings struct {
 	ShowPagination bool
 	PageSize       int
 	Page           int
+	// SkipItems - the draft ViewDisplayDef.SkipItems.
+	SkipItems int
 	// Letter - the preview's glossary letter. A preview has no real URL,
 	// so a letter click re-POSTs it instead of navigating. Used only when
 	// the view's ShowGlossary (read from the DB) is on.

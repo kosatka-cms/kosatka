@@ -143,6 +143,11 @@ type ViewDisplayDef struct {
 	// layer (views.GlossaryFieldType).
 	GlossaryFieldStorageID *int
 	PageSize               int
+	// SkipItems - the first SkipItems items of the result are left out
+	// (every page starts after them, the pager counts the rest): a lead
+	// story shown by one display and "the rest" by another, without
+	// repeats. 0 = none skipped.
+	SkipItems int
 	// HeaderText/FooterText - rich text rendered before/after the list.
 	// Part of the Settings bundle. Sanitized on save, rendered unescaped
 	// (trusted admin HTML).

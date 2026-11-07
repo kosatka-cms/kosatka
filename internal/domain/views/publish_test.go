@@ -26,6 +26,8 @@ type fakeViewRepo struct {
 
 	failCreateFilterAfter int // fail the Nth CreateFilter call (0 = never)
 	createFilterCalls     int
+
+	runs []entity.ViewRunParams // RunView's and RunCommentView's params, in order
 }
 
 func newFakeViewRepo() *fakeViewRepo {
@@ -274,11 +276,13 @@ func (r *fakeViewRepo) ViewFieldByID(context.Context, int) (*entity.ViewFieldDef
 func (r *fakeViewRepo) UpdateViewField(context.Context, entity.ViewFieldDef) (*entity.ViewFieldDef, error) {
 	return nil, errors.New("not implemented")
 }
-func (r *fakeViewRepo) RunView(context.Context, entity.ViewRunParams) (entity.Nodes, int, error) {
-	return nil, 0, errors.New("not implemented")
+func (r *fakeViewRepo) RunView(_ context.Context, params entity.ViewRunParams) (entity.Nodes, int, error) {
+	r.runs = append(r.runs, params)
+	return nil, 0, nil
 }
-func (r *fakeViewRepo) RunCommentView(context.Context, entity.ViewRunParams) (entity.Comments, int, error) {
-	return nil, 0, errors.New("not implemented")
+func (r *fakeViewRepo) RunCommentView(_ context.Context, params entity.ViewRunParams) (entity.Comments, int, error) {
+	r.runs = append(r.runs, params)
+	return nil, 0, nil
 }
 func (r *fakeViewRepo) GlossaryForView(context.Context, entity.ViewFilterDefs, []entity.ViewRunModuleFilter, map[int]entity.FieldStorageDef, *int, map[string]string) (entity.GlossaryData, error) {
 	return nil, errors.New("not implemented")
