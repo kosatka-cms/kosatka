@@ -10,7 +10,7 @@ favicon: /static/images/kosatka-icon.svg
 description: The engine's theme - lists in rows of glass with covers (a pinned item leads as a large card), a reading column, a light and a dark scheme in an accent colour of the site's.
 author: Kosatka
 license: MIT
-tags: [light, dark, cards, two-columns, responsive]
+tags: [dark, light, cards, responsive]
 screenshot: screenshot.jpg
 # default_region - where new blocks go.
 default_region: sidebar

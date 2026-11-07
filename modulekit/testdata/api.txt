@@ -697,6 +697,7 @@ package modulekit
 	type NodePageParts = internal/interfaces.NodePageParts
 		field Data any
 		field Links []internal/interfaces.NodeLink
+		field Comments bool
 	func modulekit.NodeRelPath(nodeType modulekit.ContentType, slug string) string
 	type NodeSettings = internal/interfaces.NodeSettings
 		field Module string
@@ -1280,6 +1281,7 @@ package modulekit/manifestkit
 		method InsertID(ctx context.Context, db internal/infrastructure/sqldialect.Execer, query string, args ...any) (int64, error)
 		method Random() string
 		method Rebind(query string) string
+		method UnixSeconds(expr string) string
 		method Upsert(table string, cols []string, conflict []string, update []string) string
 	const modulekit/manifestkit.DialectPostgres internal/infrastructure/sqldialect.Dialect
 	func modulekit/manifestkit.Driver(env modulekit/manifestkit.InstallEnv) entgo.io/ent/dialect.Driver

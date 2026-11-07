@@ -6,6 +6,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/migrations"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/sqldialect"
@@ -164,6 +165,41 @@ func TestMySQLCaseInsensitive(t *testing.T) {
 		var n int
 		if err := db.DB.QueryRow(`SELECT COUNT(*) FROM schema_migrations WHERE set_name = 'CORE'`).Scan(&n); err != nil || n == 0 {
 			t.Errorf("a case-insensitive lookup found %d rows: %v", n, err)
+		}
+	})
+}
+
+// TestLastApplied - the set's step applied last, with its name and when
+// (Unix seconds: right whatever the session's time zone); of the steps of
+// one second, the latest version, not the install step's record; none -
+// false.
+func TestLastApplied(t *testing.T) {
+	testdb.Each(t, func(t *testing.T, db testdb.DB) {
+		ctx := context.Background()
+		r := migrations.Runner{DB: db.DB, Dialect: db.Dialect}
+		if err := r.EnsureTable(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok, err := r.LastApplied(ctx, "lastset"); ok || err != nil {
+			t.Fatalf("nothing recorded: %v %v", ok, err)
+		}
+		for _, f := range []migrations.File{{Version: "20260101000000", Description: "baseline"}, {Version: migrations.InstallVersion, Description: "install"}, {Version: "20260201000000", Description: "data_step"}} {
+			if err := r.MarkApplied(ctx, "lastset", f); err != nil {
+				t.Fatal(err)
+			}
+		}
+		last, ok, err := r.LastApplied(ctx, "lastset")
+		if err != nil || !ok || last.Version != "20260201000000" || last.Description != "data_step" {
+			t.Fatalf("last = %+v %v %v", last, ok, err)
+		}
+		if d := time.Since(last.AppliedAt); d < -time.Minute || d > time.Minute {
+			t.Errorf("applied at %v, now %v", last.AppliedAt, time.Now())
+		}
+		if _, err := db.DB.ExecContext(ctx, db.Dialect.Rebind("UPDATE schema_migrations SET applied_at = ? WHERE set_name = ? AND version = ?"), time.Now().Add(time.Hour).UTC().Format("2006-01-02 15:04:05"), "lastset", migrations.InstallVersion); err != nil {
+			t.Fatal(err)
+		}
+		if last, _, _ := r.LastApplied(ctx, "lastset"); last.Version != migrations.InstallVersion {
+			t.Errorf("the one applied later: %+v", last)
 		}
 	})
 }

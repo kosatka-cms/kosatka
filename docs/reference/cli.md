@@ -99,6 +99,12 @@ is listed.
 `-baseline` is for a database that already has the schema but no record
 of it (for example one moved from another installation); run it once.
 
+A database whose recorded migrations the binary doesn't know, without
+its first one (the baseline) - set up by an engine whose migrations were
+squashed since - stops `migrate` with a message saying so, before
+anything runs. A database for trying the engine out is started again
+empty (`docker compose down -v` for [Docker](../getting-started/docker.md)).
+
 ## `app theme`
 
 Themes kept in their own git repositories. These commands need neither

@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 // RequirementSeverity - how a status check came out.
 type RequirementSeverity int
 
@@ -28,12 +30,16 @@ func (r Requirement) IsError() bool { return r.Severity == RequirementError }
 // IsWarning - whether the check found something to warn about.
 func (r Requirement) IsWarning() bool { return r.Severity == RequirementWarning }
 
-// StatusModule - a module on the status report: its state and the last
-// schema migration applied ("" - none).
+// StatusModule - a module on the status report: its state and the
+// database step of its set applied last (SchemaVersion "" - none).
 type StatusModule struct {
-	Name          string
-	Label         string
-	Enabled       bool
-	Installed     bool
+	Name      string
+	Label     string
+	Enabled   bool
+	Installed bool
+	// SchemaVersion, SchemaStep, SchemaUpdated - the module's database
+	// step applied last: its version, its name and when it was applied.
 	SchemaVersion string
+	SchemaStep    string
+	SchemaUpdated time.Time
 }

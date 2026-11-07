@@ -601,9 +601,10 @@ func TestInstallDemoAndServe(t *testing.T) {
 				t.Errorf("the first article has no term %q", want)
 			}
 		}
-		// The live search finds it: a new site searches its content types
-		// without setting them up.
-		_, found := s.get("/api/search?q=" + url.QueryEscape(first.Title[len(first.Title)/2:]))
+		// The live search finds it by the second half of its title's words:
+		// a new site searches its content types without setting them up.
+		words := strings.Fields(first.Title)
+		_, found := s.get("/api/search?q=" + url.QueryEscape(strings.Join(words[len(words)/2:], " ")))
 		var answer struct {
 			Results []struct{ Title, Type string } `json:"results"`
 		}

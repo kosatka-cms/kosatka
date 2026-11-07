@@ -86,7 +86,8 @@ type Step struct {
 // and its data steps are only recorded; so is one whose install failed
 // (installUnfinished): its pending schema files, the install step, the
 // marks. Otherwise the pending schema files and data steps run in
-// version order.
+// version order. A set whose recorded migrations are of another history
+// (an engine's before its files were squashed) is a *HistoryError.
 func (r Runner) Plan(ctx context.Context, set string) ([]Step, error) {
 	files, err := Files(r.Dialect, set)
 	if err != nil {
@@ -94,6 +95,9 @@ func (r Runner) Plan(ctx context.Context, set string) ([]Step, error) {
 	}
 	applied, err := r.Applied(ctx, set)
 	if err != nil {
+		return nil, err
+	}
+	if err := checkHistory(set, files, applied); err != nil {
 		return nil, err
 	}
 	var steps []Step
@@ -118,6 +122,55 @@ func (r Runner) Plan(ctx context.Context, set string) ([]Step, error) {
 	}
 	sort.SliceStable(steps, func(i, j int) bool { return steps[i].Version < steps[j].Version })
 	return steps, nil
+}
+
+// HistoryError - a set's migrations recorded in the database are of
+// another history than the binary's: versions it has neither as files
+// nor as steps (Unknown, sorted), and not its first file (Baseline) - the
+// database was set up by an engine whose files of the set were squashed
+// into a new baseline since. Running the binary's files on it would
+// create its tables again.
+type HistoryError struct {
+	Set      string
+	Unknown  []string
+	Baseline string
+}
+
+func (e *HistoryError) Error() string {
+	more := ""
+	if n := len(e.Unknown) - 1; n > 0 {
+		more = fmt.Sprintf(" and %d more", n)
+	}
+	return fmt.Sprintf("%s: the database's migrations are of another history: it has %s%s recorded, which this binary doesn't have, and not this binary's first one, %s - it was set up by an engine whose migrations were squashed since. "+
+		"A database for trying the engine out: start again with an empty one (docker compose down -v); a site's database has to be moved to this history first", e.Set, e.Unknown[0], more, e.Baseline)
+}
+
+// checkHistory - a *HistoryError when the set's recorded versions
+// (applied) include ones the binary doesn't know while its first file
+// isn't recorded. Unknown versions after a recorded first file are a newer
+// binary's (a site rolled back): no error.
+func checkHistory(set string, files []File, applied map[string]bool) error {
+	if len(files) == 0 || applied[files[0].Version] {
+		return nil
+	}
+	known := map[string]bool{InstallVersion: true}
+	for _, f := range files {
+		known[f.Version] = true
+	}
+	for _, u := range updates[set] {
+		known[u.Version] = true
+	}
+	var unknown []string
+	for v := range applied {
+		if !known[v] {
+			unknown = append(unknown, v)
+		}
+	}
+	if len(unknown) == 0 {
+		return nil
+	}
+	sort.Strings(unknown)
+	return &HistoryError{Set: set, Unknown: unknown, Baseline: files[0].Version + "_" + files[0].Description}
 }
 
 // changing - a schema statement's words that drop or change something;

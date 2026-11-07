@@ -25,6 +25,12 @@ or register.
 
 Either way, the comments' pager loads the next page in place.
 
+A module can show a comments service (Disqus, say) in place of the
+site's own comments for the content types it is set up for: then the
+item's page shows the service's thread, and these settings don't apply
+to it. The item's comment mode still does: with *hidden* nothing is
+shown.
+
 ## What happens to a new comment
 
 A new comment goes through the site's checks, in order; the first one

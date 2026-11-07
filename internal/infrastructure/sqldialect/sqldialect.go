@@ -110,6 +110,17 @@ func (d Dialect) Random() string {
 	return "RAND()"
 }
 
+// UnixSeconds - the expression of a timestamp column's moment as Unix
+// seconds, whatever the session's time zone: for a column the database
+// fills itself (DEFAULT CURRENT_TIMESTAMP), which a time.Time scan would
+// read in the session's zone.
+func (d Dialect) UnixSeconds(expr string) string {
+	if d == Postgres {
+		return "CAST(EXTRACT(EPOCH FROM " + expr + ") AS BIGINT)"
+	}
+	return "UNIX_TIMESTAMP(" + expr + ")"
+}
+
 // CurrentDate - today's date in the database's time zone.
 func (d Dialect) CurrentDate() string {
 	return "CURRENT_DATE"

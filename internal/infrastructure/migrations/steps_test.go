@@ -1,6 +1,9 @@
 package migrations
 
 import (
+	"errors"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/sqldialect"
@@ -87,5 +90,44 @@ func TestAdditivePrefix(t *testing.T) {
 	}
 	if run, stop := AdditivePrefix(nil); len(run) != 0 || stop != nil {
 		t.Errorf("none: run %+v, stop %+v", run, stop)
+	}
+}
+
+// TestCheckHistory - recorded versions the binary doesn't know, without
+// its first file recorded, are another history (a database set up before
+// the files were squashed): an error naming them and the first file; a
+// database with the first file and newer unknown versions (rolled back),
+// a fresh one, or one with known versions only is fine.
+func TestCheckHistory(t *testing.T) {
+	files := []File{{Version: "20261105193024", Description: "baseline"}, {Version: "20261106173341", Description: "mail_transport_settings"}}
+	saved := updates["testset"]
+	updates["testset"] = []Update{{Version: "20261106173400", Description: "data"}}
+	t.Cleanup(func() { updates["testset"] = saved })
+	for name, tc := range map[string]struct {
+		applied map[string]bool
+		unknown []string
+	}{
+		"fresh":                   {map[string]bool{}, nil},
+		"current":                 {map[string]bool{"20261105193024": true, InstallVersion: true, "20261106173400": true}, nil},
+		"a newer binary's":        {map[string]bool{"20261105193024": true, "20271201000000": true}, nil},
+		"only the install step":   {map[string]bool{InstallVersion: true}, nil},
+		"another history":         {map[string]bool{"20261102172620": true, "20261104154526": true, InstallVersion: true}, []string{"20261102172620", "20261104154526"}},
+		"another, later recorded": {map[string]bool{"20261102172620": true, "20261106173341": true}, []string{"20261102172620"}},
+	} {
+		err := checkHistory("testset", files, tc.applied)
+		var he *HistoryError
+		if tc.unknown == nil {
+			if err != nil {
+				t.Errorf("%s: %v", name, err)
+			}
+			continue
+		}
+		if !errors.As(err, &he) || !slices.Equal(he.Unknown, tc.unknown) || he.Baseline != "20261105193024_baseline" {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+		if msg := err.Error(); !strings.Contains(msg, "testset: the database's migrations are of another history: it has "+tc.unknown[0]) || !strings.Contains(msg, "20261105193024_baseline") {
+			t.Errorf("%s: %q", name, msg)
+		}
 	}
 }
