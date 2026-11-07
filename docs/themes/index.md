@@ -74,8 +74,10 @@ writing a theme.
 
 Other themes live in their own repositories and are installed with
 `app theme add` ([Distributing a theme](./distribute.md)) - among them
-Respawn, a light portal of news and reviews, and C64, the Commodore 64's
-screen; the themes catalog lists them.
+Respawn, a light portal of news and reviews, C64, the Commodore 64's
+screen, and Terminal, a technical blog in a terminal; the [themes
+catalog](https://github.com/kosatka-cms/themes) shows them all with
+their screenshots.
 
 ## Choosing a theme
 
