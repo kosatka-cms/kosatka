@@ -647,8 +647,12 @@ modulekit.AddMailTransport(modulekit.MailTransport{
 The Mail page offers it while the module is enabled, with its fields: a
 secret is never shown back, and an empty one keeps the saved value. The
 values are kept with the site's mail settings, sealed with its key
-(`SECRETS_KEY`). When every required field has its `Env` variable set,
-the transport is the server's and wins over the one saved in the admin.
+(`SECRETS_KEY`). When every required field has its `Env` variable set
+and the server's configuration has the sender address
+(`EMAIL_FROM_ADDRESS`), the transport is the server's and wins over the
+one saved in the admin. Without that address a field set in the
+environment shows on the Mail page as set there, and the environment's
+value is used once the admin chooses the transport.
 `New` builds the sender (`SendPlain(to, subject, body)`); the sends go
 through the site's mail service, so its switch, its log and its emails'
 texts apply. Uninstalling the module forgets its settings, and a site

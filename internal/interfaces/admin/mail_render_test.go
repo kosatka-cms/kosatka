@@ -19,7 +19,7 @@ func TestMailSettingsPageRender(t *testing.T) {
 	out := renderMailPage(t, "admin/config/mail.html", map[string]any{
 		"settings":   &saved,
 		"transport":  "testapi",
-		"transports": mailTransportSections(context.Background(), saved),
+		"transports": mailTransportSections(context.Background(), saved, nil),
 		"status":     service.MailStatus{Enabled: true, Source: service.MailSourceAdmin, Transport: "testapi", TransportTitle: "Test API", Missing: "gone", ModuleOff: true},
 	})
 	for _, want := range []string{
@@ -38,5 +38,33 @@ func TestMailSettingsPageRender(t *testing.T) {
 	}
 	if strings.Contains(out, "k_secret") {
 		t.Error("the saved secret is shown")
+	}
+}
+
+// TestMailSettingsPageRenderEnv - nothing saved: no way of sending
+// checked (not SMTP), and a setting the server's environment gives named
+// instead of its input.
+func TestMailSettingsPageRenderEnv(t *testing.T) {
+	useTestMailTransport(t)
+	saved := entity.MailSettings{Enabled: true}
+	envKey := func(transport, field string) bool { return transport == "testapi" && field == "key" }
+	out := renderMailPage(t, "admin/config/mail.html", map[string]any{
+		"settings":   &saved,
+		"transport":  "",
+		"transports": mailTransportSections(context.Background(), saved, envKey),
+		"status":     service.MailStatus{Enabled: true, Source: service.MailSourceNone},
+	})
+	for _, want := range []string{
+		`id="mail-transport-smtp" name="transport" value="smtp" >`,
+		`id="mail-transport-testapi" name="transport" value="testapi" >`,
+		"Set in the server configuration (KOSATKA_TEST_MAIL_KEY).",
+		`<input type="text" id="mail-ts.testapi.region"`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("no %s in %s", want, out)
+		}
+	}
+	if strings.Contains(out, `name="ts.testapi.key"`) {
+		t.Error("an input for the setting the environment gives")
 	}
 }

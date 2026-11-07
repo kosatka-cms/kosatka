@@ -2,8 +2,10 @@
      page's first tab (admin_mail_tabs): the settings as rows (sending,
      SMTP, the enabled modules' ways of sending - only the switch and the
      log while the server config sets the transport; saved keys never
-     shown), Save over the page and under
-     the form; then a test email. */}}
+     shown, a setting the server's environment gives named instead of an
+     input; no way of sending chosen while none is saved, unless the
+     environment sets one), Save over the page and under the form; then
+     a test email. */}}
 {{template "layout.html" .}}
 
 {{define "page_meta"}}
@@ -124,9 +126,11 @@
                 <div class="admin-setting-text">
                     <label for="mail-{{.Input}}" class="admin-setting-label">{{.Label}}</label>
                     {{if .Help}}<span class="admin-setting-help">{{.Help}}</span>{{end}}
-                    {{if .Secret}}<span class="admin-setting-help">{{t "Saved keys and passwords are never shown. Leave a field empty to keep it."}}</span>{{end}}
+                    {{if and .Secret (not .Env)}}<span class="admin-setting-help">{{t "Saved keys and passwords are never shown. Leave a field empty to keep it."}}</span>{{end}}
                 </div>
-                {{if .Secret}}
+                {{if .Env}}
+                <div class="admin-setting-control"><span class="admin-setting-help">{{t "Set in the server configuration (@variable)." "@variable" .Env}}</span></div>
+                {{else if .Secret}}
                 <div class="admin-setting-control"><input type="password" id="mail-{{.Input}}" name="{{.Input}}" class="form-control font-monospace" autocomplete="new-password" placeholder="{{if .Saved}}{{t "saved - leave empty to keep it"}}{{end}}"></div>
                 {{else}}
                 <div class="admin-setting-control"><input type="text" id="mail-{{.Input}}" name="{{.Input}}" class="form-control" value="{{.Value}}" autocomplete="off"></div>

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"strings"
 	"sync"
 	"time"
@@ -56,6 +57,9 @@ type MailService struct {
 	templates entity.MailTemplateRepository
 	// log - the mail log (SetLog); nil - none.
 	log entity.MailLogRepository
+	// env - the modules' ways of sending's settings the server's
+	// environment gives (SetTransportEnv): transport → setting → value.
+	env map[string]map[string]string
 
 	mu     sync.RWMutex
 	sender mailsender.EmailSender
@@ -147,7 +151,9 @@ func (s *MailService) apply(saved entity.MailSettings) {
 	// the server's owner set (and send the site's email elsewhere).
 	effective, source := s.configured, MailSourceConfig
 	if !mailConfigured(effective) {
-		effective, source = saved, MailSourceAdmin
+		// The admin's, its transport's settings the environment gives
+		// taken from there (a key without the config's sender address).
+		effective, source = s.withEnv(saved), MailSourceAdmin
 		if !mailConfigured(effective) {
 			source = MailSourceNone
 		}
@@ -173,6 +179,64 @@ func (s *MailService) apply(saved entity.MailSettings) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.sender, s.status, s.logKeepDays = sender, status, saved.LogKeepDays
+}
+
+// SetTransportEnv - the modules' ways of sending's settings the server's
+// environment gives (MailTransportEnv), set before Reload. They fill the
+// settings saved in the admin too - the environment's value wins - and
+// the Mail page shows them as the server's: a key in the environment
+// without the config's sender address (no server transport then) still
+// sends once the admin chooses its transport and a sender.
+func (s *MailService) SetTransportEnv(env map[string]map[string]string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.env = env
+}
+
+// EnvSetting - whether the server's environment sets the transport's
+// setting.
+func (s *MailService) EnvSetting(transport, field string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.env[transport][field] != ""
+}
+
+// EnvTransport - the first module's way of sending whose required
+// settings the environment all sets ("" - none): the Mail page's choice
+// while none is saved.
+func (s *MailService) EnvTransport() string {
+	s.mu.RLock()
+	env := s.env
+	s.mu.RUnlock()
+	for _, t := range MailTransports() {
+		if len(env[t.Name]) > 0 && mailTransportReady(t, env[t.Name]) {
+			return t.Name
+		}
+	}
+	return ""
+}
+
+// withEnv - m with the environment's values over its transports'
+// settings (a copy: m's maps aren't changed).
+func (s *MailService) withEnv(m entity.MailSettings) entity.MailSettings {
+	s.mu.RLock()
+	env := s.env
+	s.mu.RUnlock()
+	if len(env) == 0 {
+		return m
+	}
+	settings := make(map[string]map[string]string, len(m.TransportSettings)+len(env))
+	for name, values := range m.TransportSettings {
+		settings[name] = maps.Clone(values)
+	}
+	for name, values := range env {
+		if settings[name] == nil {
+			settings[name] = map[string]string{}
+		}
+		maps.Copy(settings[name], values)
+	}
+	m.TransportSettings = settings
+	return m
 }
 
 // Status - the settings in effect.

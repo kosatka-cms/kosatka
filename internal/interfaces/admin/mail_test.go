@@ -44,13 +44,13 @@ func postMail(repo *stubMailRepo, full bool, path string, form url.Values) *http
 
 // useTestMailTransport registers a module's way of sending for the test,
 // testapi (its module unknown to the engine: on): a required secret
-// "key" and an optional "region".
+// "key" (KOSATKA_TEST_MAIL_KEY) and an optional "region".
 func useTestMailTransport(t *testing.T) {
 	t.Helper()
 	service.RegisterMailTransport(service.MailTransport{
 		Name: "testapi", Module: "testapi_module", Title: "Test API",
 		Fields: []service.MailTransportField{
-			{Name: "key", Label: "API key", Secret: true, Required: true},
+			{Name: "key", Label: "API key", Secret: true, Required: true, Env: "KOSATKA_TEST_MAIL_KEY"},
 			{Name: "region", Label: "Region", Help: "Where the service is."},
 		},
 		New: func(map[string]string, string, time.Duration) (mailsender.EmailSender, error) {
@@ -94,9 +94,11 @@ func TestMailPageSave(t *testing.T) {
 	}
 }
 
-// TestMailSettingsFromForm - validation of the submitted settings; with
-// the transport in the server config only the switch and the log change;
-// a transport whose module is off isn't offered and keeps its settings.
+// TestMailSettingsFromForm - validation of the submitted settings; no
+// transport chosen keeps the saved one, or saves without one; a required
+// setting the environment gives is filled; with the transport in the
+// server config only the switch and the log change; a transport whose
+// module is off isn't offered and keeps its settings.
 func TestMailSettingsFromForm(t *testing.T) {
 	useTestMailTransport(t)
 	saved := entity.MailSettings{Enabled: true, Transport: "testapi", FromAddress: "a@example.com", TransportSettings: testapiSettings("k_saved", "")}
@@ -105,7 +107,8 @@ func TestMailSettingsFromForm(t *testing.T) {
 		form url.Values
 		code string
 	}{
-		{"no transport", url.Values{"from_address": {"a@example.com"}}, "transport"},
+		{"no transport: the saved one", url.Values{"from_address": {"a@example.com"}}, ""},
+		{"no transport, no sender", url.Values{}, "from"},
 		{"an unknown transport", url.Values{"transport": {"other"}, "from_address": {"a@example.com"}}, "transport"},
 		{"bad sender", url.Values{"transport": {"testapi"}, "from_address": {"not an address"}}, "from"},
 		{"no sender", url.Values{"transport": {"testapi"}}, "from"},
@@ -119,21 +122,40 @@ func TestMailSettingsFromForm(t *testing.T) {
 	for _, c := range cases {
 		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(c.form.Encode()))
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		if _, code := mailSettingsFromForm(r, saved, false); code != c.code {
+		if _, code := mailSettingsFromForm(r, saved, false, nil); code != c.code {
 			t.Errorf("%s: %q, want %q", c.name, code, c.code)
 		}
 	}
 
 	r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}}.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	if _, code := mailSettingsFromForm(r, entity.MailSettings{}, false); code != "required" {
+	if _, code := mailSettingsFromForm(r, entity.MailSettings{}, false, nil); code != "required" {
 		t.Errorf("without the required key: %q", code)
+	}
+	envKey := func(transport, field string) bool { return transport == "testapi" && field == "key" }
+	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"transport": {"testapi"}, "from_address": {"a@example.com"}}.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if next, code := mailSettingsFromForm(r, entity.MailSettings{}, false, envKey); code != "" || next.Transport != "testapi" || next.TransportSetting("testapi", "key") != "" {
+		t.Errorf("the key in the environment: %+v %q", next, code)
+	}
+
+	// Nothing saved, none chosen: the switch, the log and the sender save
+	// (SMTP isn't assumed); a bad sender still doesn't.
+	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"enabled": {"1"}, "log_keep_days": {"90"}}.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if next, code := mailSettingsFromForm(r, entity.MailSettings{}, false, nil); code != "" || next.Transport != "" || !next.Enabled || next.LogKeepDays != 90 {
+		t.Errorf("none chosen: %+v %q", next, code)
+	}
+	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{"from_address": {"not an address"}}.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if _, code := mailSettingsFromForm(r, entity.MailSettings{}, false, nil); code != "from" {
+		t.Errorf("none chosen, a bad sender: %q", code)
 	}
 
 	form := url.Values{"transport": {"smtp"}, "from_address": {"other@example.com"}, "ts.testapi.key": {"k_new"}, "log_keep_days": {"30"}}
 	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	next, code := mailSettingsFromForm(r, saved, true)
+	next, code := mailSettingsFromForm(r, saved, true, nil)
 	if code != "" || next.Enabled || next.LogKeepDays != 30 || next.Transport != saved.Transport || next.FromAddress != saved.FromAddress || next.TransportSetting("testapi", "key") != "k_saved" {
 		t.Errorf("with the config's transport: %+v %q, want the switch and the log only", next, code)
 	}
@@ -143,7 +165,7 @@ func TestMailSettingsFromForm(t *testing.T) {
 	form = url.Values{"transport": {"smtp"}, "from_address": {"a@example.com"}, "smtp_host": {"h"}, "smtp_port": {"587"}, "ts.testapi.key": {"k_new"}}
 	r = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	if next, code := mailSettingsFromForm(r, saved, false); code != "" || next.TransportSetting("testapi", "key") != "k_saved" {
+	if next, code := mailSettingsFromForm(r, saved, false, nil); code != "" || next.TransportSetting("testapi", "key") != "k_saved" {
 		t.Errorf("the module off: %+v %q, want its settings kept", next, code)
 	}
 	if saved.TransportSetting("testapi", "key") != "k_saved" {

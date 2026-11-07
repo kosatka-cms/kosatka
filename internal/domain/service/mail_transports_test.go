@@ -146,3 +146,62 @@ func TestMailServiceModuleTransport(t *testing.T) {
 		t.Errorf("a transport the binary lacks: %+v", st)
 	}
 }
+
+// TestMailServiceTransportEnv - a key in the environment without the
+// config's sender address: no server transport, the admin's choice of the
+// transport and a sender sends with the environment's key (it wins over a
+// saved one); the saved settings aren't changed; EnvTransport names the
+// transport the environment sets, EnvSetting its settings.
+func TestMailServiceTransportEnv(t *testing.T) {
+	built := useTestMailTransport(t)
+	ctx := context.Background()
+	env := MailTransportEnv(func(k string) string {
+		return map[string]string{"KOSATKA_TEST_MAIL_KEY": " k_env "}[k]
+	})
+	if env[testTransport]["key"] != "k_env" || len(env[testTransport]) != 1 {
+		t.Fatalf("MailTransportEnv: %v", env)
+	}
+
+	repo := &stubMailRepo{s: entity.MailSettings{Enabled: true}}
+	svc := NewMailService(repo, entity.MailSettings{}, slog.New(slog.NewTextHandler(io.Discard, nil)), time.Second)
+	if svc.EnvTransport() != "" {
+		t.Error("EnvTransport before SetTransportEnv")
+	}
+	svc.SetTransportEnv(env)
+	if err := svc.Reload(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if st := svc.Status(); st.Source != MailSourceNone {
+		t.Fatalf("nothing chosen: %+v", st)
+	}
+	if svc.EnvTransport() != testTransport || !svc.EnvSetting(testTransport, "key") || svc.EnvSetting(testTransport, "region") {
+		t.Errorf("EnvTransport %q, EnvSetting key %v region %v", svc.EnvTransport(), svc.EnvSetting(testTransport, "key"), svc.EnvSetting(testTransport, "region"))
+	}
+
+	repo.s = entity.MailSettings{Enabled: true, Transport: testTransport, FromAddress: "site@example.com",
+		TransportSettings: map[string]map[string]string{testTransport: {"key": "k_saved", "region": "eu"}}}
+	if err := svc.Reload(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if st := svc.Status(); st.Source != MailSourceAdmin || st.Transport != testTransport {
+		t.Fatalf("the admin's transport: %+v", st)
+	}
+	if err := svc.SendTest("a@example.com", "s", "b"); err != nil || len(*built) == 0 {
+		t.Fatalf("sent: %v", err)
+	}
+	got := (*built)[len(*built)-1].built.TransportSettings[testTransport]
+	if got["key"] != "k_env" || got["region"] != "eu" {
+		t.Errorf("the sender's settings: %v, want the environment's key and the saved region", got)
+	}
+	if repo.s.TransportSettings[testTransport]["key"] != "k_saved" {
+		t.Error("the saved settings changed")
+	}
+
+	repo.s.TransportSettings = nil
+	if err := svc.Reload(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if st := svc.Status(); st.Source != MailSourceAdmin {
+		t.Errorf("no key saved, the environment's: %+v", st)
+	}
+}

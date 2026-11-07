@@ -96,7 +96,9 @@ service's API whose module the binary has when that module's variables
 are set ([Resend](https://resend.com)'s module: `RESEND_API_KEY`) - the
 module's first. Either needs `from_address`. A transport set here wins
 over the one saved on the admin's Mail page, which then shows it but
-can't change it; its switch and log still apply. See
+can't change it; its switch and log still apply. A module's variables
+without `from_address` fill its settings on the Mail page instead: the
+transport is chosen and the sender set there. See
 [Email](../guides/mail.md#sending).
 
 | Key | Variable |

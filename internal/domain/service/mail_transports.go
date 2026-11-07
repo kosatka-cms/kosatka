@@ -44,8 +44,11 @@ type MailTransportField struct {
 	// Required - the transport sends only with it set.
 	Required bool
 	// Env - the environment variable setting it from the server's config:
-	// a transport whose required settings all are set so is the site's,
-	// and the admin can't change it (as the config's SMTP server).
+	// a transport whose required settings all are set so, with the
+	// config's sender address, is the site's, and the admin can't change
+	// it (as the config's SMTP server). Without that address the admin
+	// chooses the transport and the sender, and the environment's value
+	// is used (MailService.SetTransportEnv).
 	Env string
 }
 
@@ -169,6 +172,27 @@ func ConfiguredMailTransport(getenv func(string) string) (string, map[string]str
 		}
 	}
 	return "", nil, false
+}
+
+// MailTransportEnv - the settings the server's environment (getenv) gives
+// the modules' ways of sending (MailTransportField.Env): transport →
+// setting → value, the ones set only.
+func MailTransportEnv(getenv func(string) string) map[string]map[string]string {
+	out := map[string]map[string]string{}
+	for _, t := range MailTransports() {
+		for _, f := range t.Fields {
+			if f.Env == "" {
+				continue
+			}
+			if v := strings.TrimSpace(getenv(f.Env)); v != "" {
+				if out[t.Name] == nil {
+					out[t.Name] = map[string]string{}
+				}
+				out[t.Name][f.Name] = v
+			}
+		}
+	}
+	return out
 }
 
 // mailTransportReady - whether the module's transport t has its required

@@ -2267,6 +2267,7 @@
   {"source":"Set as cover","module":"galleries"},
   {"source":"Set as default"},
   {"source":"Set in the server configuration (<code>public_base_url</code> / <code>PUBLIC_BASE_URL</code>), which overrides this field. To set it here, remove it from the configuration."},
+  {"source":"Set in the server configuration (@variable)."},
   {"source":"Set in the server configuration (translations_catalog_url)."},
   {"source":"Set once when the field is created; not changed here"},
   {"source":"Set this image as the main content image?","module":"galleries"},
