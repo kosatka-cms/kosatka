@@ -6,9 +6,11 @@ web/static/modules/
 web/static/css/*.min.css
 # Vendored libraries (not minified here): Swiper's CSS, like its JS in
 # web/static/js; Bootstrap 5.3.5 (the JS's version) and its Bootswatch
-# Cosmo skin, served from the site rather than a CDN.
+# Cosmo skin; Tagify 4.39.0 (the content form's tag inputs) - served
+# from the site rather than a CDN.
 !web/static/css/swiper-bundle.min.css
 !web/static/css/bootstrap.min.css
+!web/static/css/tagify.min.css
 !web/static/css/bootswatch-cosmo.min.css
 themes/*/static/css/*.min.css
 themes/*/static/js/*.min.js
@@ -20,6 +22,7 @@ web/static/js/*.min.js
 !web/static/js/photoswipe.umd.min.js
 !web/static/js/photoswipe-lightbox.umd.min.js
 !web/static/js/swiper-bundle.min.js
+!web/static/js/tagify.min.js
 
 # Local build output (go build ./cmd/...) left in repo root
 /app

@@ -23,7 +23,6 @@
     <title>{{ .pageSEO.Title }}</title>
     <meta charset="utf-8" />
     {{template "csrf_head" .}}
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     {{if .pageSEO.Description }}
     <meta name="Description" content="{{ .pageSEO.Description }}">
     {{end}}
