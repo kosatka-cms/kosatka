@@ -110,6 +110,10 @@ const (
 	// ViewFieldBuiltinCommentCount - the node's published comment count
 	// (batched via CommentsService.CountByNodeIDs), rendered as a number.
 	ViewFieldBuiltinCommentCount ViewFieldBuiltinField = "comment_count"
+	// ViewFieldBuiltinReadingTime - the minutes reading the node takes
+	// (ReadingMinutesOf its type's fields), as text: "5 min read"; none
+	// without text to read.
+	ViewFieldBuiltinReadingTime ViewFieldBuiltinField = "reading_time"
 	// ViewFieldBuiltinAuthor - the node's author's name, linking their
 	// profile.
 	ViewFieldBuiltinAuthor ViewFieldBuiltinField = "author"

@@ -105,3 +105,33 @@ func TestErrorPageType(t *testing.T) {
 		t.Errorf("another node: %d %v", status, shown)
 	}
 }
+
+// countingComments - a CommentsService that counts the published
+// comments of node 1 only (only CountByNodeID is called).
+type countingComments struct{ service.CommentsService }
+
+func (countingComments) CountByNodeID(_ context.Context, nid int, status int8, _ bool) (int, error) {
+	if nid == 1 && status == entity.CommentPublished {
+		return 4, nil
+	}
+	return 0, nil
+}
+
+// TestNodeCommentCount - a content page has its comment count while the
+// core shows its comments: not when they are hidden or a module's are
+// shown in their place.
+func TestNodeCommentCount(t *testing.T) {
+	c := &DynamicContentController{commentsService: countingComments{}}
+	open := entity.Node{ID: 1, CommentMode: entity.CommentModeOpen}
+	if n, ok := c.nodeCommentCount(t.Context(), open, ""); !ok || n != 4 {
+		t.Errorf("open: %d %v, want 4 true", n, ok)
+	}
+	hidden := open
+	hidden.CommentMode = entity.CommentModeHidden
+	if _, ok := c.nodeCommentCount(t.Context(), hidden, ""); ok {
+		t.Error("hidden comments are counted")
+	}
+	if _, ok := c.nodeCommentCount(t.Context(), open, "othercomments"); ok {
+		t.Error("a module's comments in place of the core's are counted")
+	}
+}

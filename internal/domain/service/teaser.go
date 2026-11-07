@@ -177,7 +177,13 @@ func (t *teaserBatch) loadType(ctx context.Context, def entity.ContentTypeDef, i
 	if err := t.collectImages(ctx, images, ids); err != nil {
 		return err
 	}
-	return t.loadScalars(ctx, scalar, ids)
+	if err := t.loadScalars(ctx, scalar, ids); err != nil {
+		return err
+	}
+	t.each(ids, func(item *entity.TeaserItem) {
+		item.ReadingTime = entity.ReadingMinutesOf(fields, func(f entity.FieldInstanceDef) any { return item.Fields[f.MachineName] })
+	})
+	return nil
 }
 
 // loadTermIDs reads the term IDs of taxonomy field f of the nodes ids.

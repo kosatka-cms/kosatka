@@ -296,7 +296,9 @@ module removes them from every View.
 
 The *Fields* card lists what a row shows, in order (drag to reorder).
 Built-in fields: `Title`, `Content type`, `Creation date`,
-`Page views`, `Comments` (their number), `Author` (a link to the
+`Page views`, `Comments` (their number), `Reading time` ("5 min
+read": the item's long text fields shown on its page at 200 words a
+minute; nothing for an item without text), `Author` (a link to the
 profile) and `Link to content` (a "Read more" link; its text is the
 field's *Label*). Any field of the catalog can be added, except groups,
 files and blocks fields.

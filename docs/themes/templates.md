@@ -195,6 +195,7 @@ A teaser is a content item's card in the engine's term pages
 | `.Fields`, `.Labels`, `.Terms`, `.Images` | the values, labels, terms and images of the fields, by machine name |
 | `.DateFormats` | each date field's display format, for `fieldDate` |
 | `.CommentCount` | the number of comments |
+| `.ReadingTime` | the minutes reading the item takes, 0 when it has nothing to read (see below) |
 
 `themes/sand/templates/teaser/article.html`:
 
@@ -238,6 +239,18 @@ Data on a content page:
 | `.fieldTerms` | a taxonomy field's terms by machine name (each `.Name`, `.Slug`, `.HasPublicPage`) |
 | `.fieldImages` | an image field's `.File` and `.URI` (in the field's image style) by machine name, for fields shown on the page; a field with several images gives its first there and every one, in order, in `.All` (each with `.File` and `.URI`) |
 | `.altTitle` | the alternative title |
+| `.readingTime` | the minutes reading the item takes, 0 when it has nothing to read |
+| `.commentCount` | the number of published comments; absent while the page doesn't show the engine's comments (they are hidden, or a module shows its own in their place) |
+
+The reading time counts the item's long text fields shown on its page
+(more than one line: a text area, HTML, the editor) at 200 words a
+minute, a character of Chinese or Japanese at 500, rounded up to whole
+minutes. A meta line with both:
+
+```html
+{{with .readingTime}}<span>{{plural . "@count min read" "@count min read"}}</span>{{end}}
+{{with .commentCount}}<a href="#comments">{{plural . "@count comment" "@count comments"}}</a>{{end}}
+```
 
 In `node_sections` an image field is a `.dynamic-field-image` block; a
 picture taller than wide (a cover, a poster) also has

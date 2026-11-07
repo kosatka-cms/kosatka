@@ -25,6 +25,7 @@ const (
 	contentViewBuiltinCommentCountID = -6
 	contentViewBuiltinAuthorID       = -7
 	contentViewBuiltinLinkID         = -8
+	contentViewBuiltinReadingTimeID  = -9
 	// A module's field: moduleFieldIDBase minus its position among the
 	// View's fields.
 	moduleFieldIDBase = -1000
@@ -458,6 +459,9 @@ type listBatch struct {
 	contentTypeLabels map[string]string
 	commentCounts     map[int]int
 	altTitles         map[int]string
+	// readingTimes - node → its reading time as the list shows it ("5
+	// min read"), when the list has the reading time field.
+	readingTimes map[int]string
 
 	// batched - node → field → its value (FieldValuesForNodes).
 	batched map[int]map[int]any
@@ -490,6 +494,11 @@ func (b *listBatch) load(ctx context.Context, contentTypeRepo entity.ContentType
 	var err error
 	if b.termIDs, b.termsByID, err = viewRowTerms(ctx, contentTypeRepo, terms, nodes, taxonomyFields); err != nil {
 		return err
+	}
+	if slices.ContainsFunc(b.fields, func(f entity.FieldInstanceDef) bool { return f.ID == contentViewBuiltinReadingTimeID }) {
+		if b.readingTimes, err = readingTimes(ctx, contentTypeRepo, nodes); err != nil {
+			return err
+		}
 	}
 	if len(genericFields) > 0 && contentTypeRepo != nil && len(nodes) > 0 {
 		nodeIDs := make([]int, len(nodes))
@@ -661,10 +670,66 @@ var viewBuiltins = map[entity.ViewFieldBuiltinField]viewBuiltin{
 	// commentCounts nil - 0 for every node.
 	entity.ViewFieldBuiltinCommentCount: {id: contentViewBuiltinCommentCountID, fieldType: entity.FieldTypeNumber,
 		value: func(b *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return b.commentCounts[n.ID] }},
+	// readingTimes nil (the list doesn't show it) - none.
+	entity.ViewFieldBuiltinReadingTime: {id: contentViewBuiltinReadingTimeID, fieldType: entity.FieldTypeText,
+		value: func(b *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return b.readingTimes[n.ID] }},
 	entity.ViewFieldBuiltinAuthor: {id: contentViewBuiltinAuthorID, nodeLink: true,
 		value: func(_ *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return n.CreatedBy.Username }},
 	entity.ViewFieldBuiltinLink: {id: contentViewBuiltinLinkID, nodeLink: true,
 		value: func(_ *listBatch, _ entity.Node, lf entity.FieldInstanceDef) any { return lf.Label }},
+}
+
+// readingTimes - each node's reading time (entity.ReadingMinutesOf its
+// type's fields) in ctx's language, "" when it has nothing to read: the
+// fields' values a type at a time.
+func readingTimes(ctx context.Context, contentTypeRepo entity.ContentTypeRepository, nodes entity.Nodes) (map[int]string, error) {
+	if contentTypeRepo == nil || len(nodes) == 0 {
+		return nil, nil
+	}
+	types, err := contentTypeRepo.ContentTypes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	idsByType := map[string][]int{}
+	for _, n := range nodes {
+		idsByType[string(n.Type)] = append(idsByType[string(n.Type)], n.ID)
+	}
+	out := make(map[int]string, len(nodes))
+	for _, ct := range types {
+		ids := idsByType[ct.MachineName]
+		if len(ids) == 0 {
+			continue
+		}
+		fields, err := contentTypeRepo.FieldsByContentTypeID(ctx, ct.ID)
+		if err != nil {
+			return nil, err
+		}
+		var read entity.FieldInstanceDefs
+		for _, f := range fields {
+			if f.ReadsAsText() {
+				read = append(read, f)
+			}
+		}
+		if len(read) == 0 {
+			continue
+		}
+		values, err := contentTypeRepo.FieldValuesForNodes(ctx, ids, read)
+		if err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			if minutes := entity.ReadingMinutesOf(read, func(f entity.FieldInstanceDef) any { return values[id][f.ID] }); minutes > 0 {
+				out[id] = ReadingTimeText(ctx, minutes)
+			}
+		}
+	}
+	return out, nil
+}
+
+// ReadingTimeText - minutes of reading as the site shows them: "5 min
+// read" in ctx's language.
+func ReadingTimeText(ctx context.Context, minutes int) string {
+	return i18n.Plural(ctx, minutes, "@count min read", "@count min read")
 }
 
 // viewBuiltinByID - viewBuiltins by their sentinel IDs.

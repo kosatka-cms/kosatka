@@ -503,6 +503,7 @@ package modulekit
 		method Pattern() string
 		method PatternMessage() string
 		method PrivateFiles() bool
+		method ReadsAsText() bool
 		method RichText() bool
 		method RoundNumber(v float64) float64
 		method Symmetric() bool
@@ -984,6 +985,7 @@ package modulekit
 		field Labels map[string]string
 		field Terms map[string]internal/domain/entity.TaxonomyTerms
 		field CommentCount int
+		field ReadingTime int
 		field Images map[string]internal/domain/entity.File
 		field DefaultImages map[string]internal/domain/entity.File
 		field AltTitle string

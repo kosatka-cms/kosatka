@@ -88,7 +88,7 @@ func TestTeaserBuilderBuild(t *testing.T) {
 			},
 			21: {
 				{ID: 6, FieldStorageID: 106, MachineName: "content_short", Label: "Teaser", FieldType: entity.FieldTypeText, RendersInBody: true},
-				{ID: 5, FieldStorageID: 105, MachineName: "content", Label: "Text", FieldType: entity.FieldTypeText, RendersInBody: true, ShowOnDetail: true},
+				{ID: 5, FieldStorageID: 105, MachineName: "content", Label: "Text", FieldType: entity.FieldTypeText, RendersInBody: true, ShowOnDetail: true, WidgetConfig: map[string]any{"widget": "wysiwyg"}},
 				{ID: 7, FieldStorageID: 107, MachineName: "tags", Label: "Tags", FieldType: entity.FieldTypeTaxonomy, Config: map[string]any{"multiple": true, "vocabulary_id": 3}},
 			},
 		},
@@ -147,6 +147,11 @@ func TestTeaserBuilderBuild(t *testing.T) {
 	}
 	if news.CommentCount != 4 || news.Text("content") != "<p>Text</p>" || news.Body() != "<p>Text</p>" {
 		t.Fatalf("news item = %+v", news)
+	}
+	// The reading time - of the long text shown on the page; a one-line
+	// title isn't read.
+	if news.ReadingTime != 1 || video.ReadingTime != 0 {
+		t.Fatalf("reading times = %d, %d, want 0, 1", video.ReadingTime, news.ReadingTime)
 	}
 }
 
