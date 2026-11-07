@@ -18,6 +18,9 @@ body.admin-shell {
     --admin-accent-soft: #e6f4f6;
     --admin-link: #0b6b7d;
     --bs-body-font-family: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Bootstrap's own font (tooltips, popovers): Cosmo's Source Sans Pro
+       isn't loaded (bootswatch-cosmo.min.css). */
+    --bs-font-sans-serif: var(--bs-body-font-family);
     --bs-body-color: var(--admin-ink);
     --bs-primary: #0e7490;
     --bs-primary-rgb: 14, 116, 144;

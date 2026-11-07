@@ -1,6 +1,7 @@
 {{/* The kosatka theme's hooks (see the engine's partials/theme_head.html):
-     theme_framework - Bootstrap 5.3 and the theme's fonts (Space Grotesk
-     for headings, Inter for text, JetBrains Mono for figures), and the
+     theme_framework - Bootstrap 5.3 and the theme's fonts (css/fonts.css,
+     the files in static/fonts: Space Grotesk for headings, Inter for
+     text, JetBrains Mono for figures), and the
      colour scheme set before the page paints: what the visitor chose
      with the header's switch ([data-theme-toggle], kept in localStorage),
      else the theme's "scheme" setting (light, dark, or the device's);
@@ -9,9 +10,7 @@
 {{define "theme_framework"}}
     <script>(function(){var k="kosatka-scheme",f={{themeSetting "scheme"}},d=document.documentElement,s=null;function a(v){d.setAttribute("data-bs-theme",v)}try{s=localStorage.getItem(k)}catch(e){}if(s!=="dark"&&s!=="light"){s=f==="auto"?(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):f}a(s==="dark"?"dark":"light");document.addEventListener("click",function(e){if(!e.target.closest("[data-theme-toggle]"))return;var v=d.getAttribute("data-bs-theme")==="dark"?"light":"dark";a(v);try{localStorage.setItem(k,v)}catch(e){}})})();</script>
     <link rel="stylesheet" href="{{ staticCSS "bootstrap" }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="{{ themeCSS "fonts" }}">
 {{end}}
 {{define "theme_head"}}
     <link rel="stylesheet" href="{{ staticCSS "base" }}">
@@ -20,4 +19,4 @@
 {{/* The editors' text as the page's: Bootstrap, the fonts, base.css and
      kosatka.css, then a subtheme's stylesheets (TinyMCE's content_css
      takes a comma-separated list). */}}
-{{define "theme_editor_css"}}{{ staticCSS "bootstrap" }},https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap,{{ staticCSS "base" }},{{ themeCSS "kosatka" }}{{range themeStylesheets}},{{.}}{{end}}{{end}}
+{{define "theme_editor_css"}}{{ staticCSS "bootstrap" }},{{ themeCSS "fonts" }},{{ staticCSS "base" }},{{ themeCSS "kosatka" }}{{range themeStylesheets}},{{.}}{{end}}{{end}}
