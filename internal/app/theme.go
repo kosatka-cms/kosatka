@@ -15,6 +15,8 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/themes"
 	"github.com/kosatka-cms/kosatka/internal/paths"
 	"github.com/kosatka-cms/kosatka/internal/themeinstall"
+	"github.com/kosatka-cms/kosatka/pkg/i18n"
+	"github.com/kosatka-cms/kosatka/translations"
 )
 
 // themeUsage - "app theme" without a known command.
@@ -24,6 +26,7 @@ const themeUsage = `usage:
   app theme update <name>[@v1.2.0]            move an installed theme to a release (its newest by default)
   app theme remove <name>                     delete an installed theme
   app theme verify                            check the installed themes are what themes/themes.lock says
+  app theme check [dir]                       check a theme before its release (default: the current directory)
   app theme search [words] [-catalog url]     the themes' catalog (default: $THEMES_CATALOG_URL)
   app theme index -list themes.txt -out index.json
                                               build the catalog from a list of the themes' repositories
@@ -149,6 +152,16 @@ func themeCommand(args []string, stdout, stderr io.Writer) int {
 		}
 		_, _ = fmt.Fprintf(stdout, "%s: %d theme(s), %d left out\n", *out, len(catalog.Themes), len(failed))
 		return 0
+	case "check":
+		if err := fs.Parse(rest); err != nil || fs.NArg() > 1 {
+			_, _ = fmt.Fprintln(stderr, themeUsage)
+			return 2
+		}
+		dir := "."
+		if fs.NArg() == 1 {
+			dir = fs.Arg(0)
+		}
+		return themeCheck(ctx, in, dir, stdout, stderr)
 	case "verify":
 		if err := fs.Parse(rest); err != nil {
 			return 2
@@ -169,6 +182,33 @@ func themeCommand(args []string, stdout, stderr io.Writer) int {
 	}
 	_, _ = fmt.Fprintln(stderr, themeUsage)
 	return 2
+}
+
+// themeCheck prints what Installer.Check finds in the theme in dir, the
+// problems' and warnings' count; 1 when there is a problem.
+func themeCheck(ctx context.Context, in themeinstall.Installer, dir string, stdout, stderr io.Writer) int {
+	engine, err := i18n.ParseSources(translations.Sources)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "theme:", err)
+		return 1
+	}
+	findings, err := in.Check(ctx, dir, engine)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "theme:", err)
+		return 1
+	}
+	problems := 0
+	for _, f := range findings {
+		if f.Problem {
+			problems++
+		}
+		_, _ = fmt.Fprintln(stdout, f)
+	}
+	_, _ = fmt.Fprintf(stdout, "%d problem(s), %d warning(s)\n", problems, len(findings)-problems)
+	if problems > 0 {
+		return 1
+	}
+	return 0
 }
 
 // themeList prints every theme: its directory, name, and for an

@@ -118,6 +118,7 @@ Installed versions and checksums are kept in `themes/themes.lock`.
 | `app theme update <name>[@v1.2.0]` | move an installed theme to a release (its newest by default) |
 | `app theme remove <name>` | delete an installed theme |
 | `app theme verify` | check the installed themes are what `themes/themes.lock` says |
+| `app theme check [dir]` | check a theme before its release (by default the current directory): its manifest and the files it names, its own files its templates and stylesheets refer to, resources from other servers, each language's catalog against the theme's strings, its `version` against its repository's latest tag. Prints problems and warnings; exits with 1 when there is a problem. See [Distributing a theme](../themes/distribute.md#checking-a-theme) |
 | `app theme search [words] [-catalog <url>]` | search the themes' catalog (by default `$THEMES_CATALOG_URL`) |
 | `app theme index -list themes.txt -out index.json` | build a catalog from a list of themes' repositories, one a line. With `$GITHUB_TOKEN` it reads the repositories' stars without the anonymous rate limit |
 

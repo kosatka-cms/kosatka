@@ -249,13 +249,13 @@ its own strings and reuses the engine's (*Edit*, *Save*…); it can also
 replace an engine's or a module's translation by putting the same key in
 its catalog.
 
-No command lists a theme's untranslated strings: a theme installed
-from its repository makes its strings known with its catalogs. A string
-its templates use that none of its catalogs has is shown in English and
-listed nowhere, so add each new string to every language's catalog at
-once. On a site with the theme active, *Interface translations* →
-*Strings* (*Show*: *Untranslated*) lists the theme's strings a
-language's catalog lacks while another of its catalogs has them.
+`app theme check` lists the theme's strings each language's catalog
+lacks, and the translations that can't stand for their source (see
+[Checking a theme](./distribute.md#checking-a-theme)): run it before a
+release. A string missing from a catalog is shown in English. On a site
+with the theme active, *Interface translations* → *Strings* (*Show*:
+*Untranslated*) also lists the theme's strings a language's catalog
+lacks while another of its catalogs has them.
 
 The catalogs are read at startup and when the theme changes: restart
 the server after editing them.

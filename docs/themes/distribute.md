@@ -62,6 +62,7 @@ app theme verify             # the files are what themes.lock says
 | `update <name>[@vX.Y.Z]` | moves an installed theme to a release, its newest by default |
 | `remove <name>` | deletes an installed theme and its entry in the lock |
 | `verify` | checks that each installed theme is in place and unchanged |
+| `check [dir]` | checks a theme before its release (see [below](#checking-a-theme)) |
 | `search [words] [-catalog <url>]` | searches the [catalog](#the-themes-catalog) |
 | `index -list <file> -out <file>` | builds a catalog |
 
@@ -174,9 +175,48 @@ a repository address that isn't `https://`, `ssh://` or `git@…`, a tag
 that isn't `vX.Y.Z`) isn't shown; a homepage or screenshot that isn't
 `https://` is dropped, long texts are cut short.
 
+## Checking a theme
+
+`app theme check` checks a theme's directory (by default the current
+one) before a release. It needs neither the config nor the project;
+give it the theme's repository:
+
+```bash
+cd kosatka-theme-sand && app theme check
+app theme check ~/src/kosatka-theme-sand
+```
+
+```text
+problem: templates/header.html:4: loads https://fonts.googleapis.com/css2?family=… from fonts.googleapis.com: the themes catalog takes no third-party resources - ship the file with the theme
+problem: templates/footer.html:12: "Made of sand": not in translations/ru.json
+warning: theme.yaml:20: version 1.2.0 is the release v1.2.0, with changes after it: raise it for the next release
+2 problem(s), 1 warning(s)
+```
+
+| It checks | A problem | A warning |
+|---|---|---|
+| the manifest | it doesn't load (the [checks](./manifest.md#checks) of installing); the screenshot or a stylesheet it names isn't in `static/` | no `description`, `author`, `license`, `tags`, `screenshot`, `version` or `min_version`; a `min_version` newer than this engine; no `README.md` |
+| the theme's files | a `/static/themes/<this theme>/…` path, a `themeCSS`/`themeJS` name or a stylesheet's relative `url(…)` with no file behind it | a path into another theme's files (not the base theme's) |
+| other servers | a template, stylesheet or script loading a script, a stylesheet, a font, a picture or a frame from another server (a CDN, web fonts) | |
+| the catalogs | a string of the theme a language's catalog lacks; a translation that drops a placeholder or adds HTML; a plural string without the language's forms; a catalog that doesn't parse | a translation of a string the theme doesn't use (one of the engine's it rewords is fine) |
+| the release | `version` older than the repository's latest release tag | no release yet; `version` newer than the latest tag (not tagged yet); `version` the latest tag's with commits or changes after it |
+
+The strings are those of the templates, scripts and manifest (as
+[Translations](./assets-and-translations.md#translations) lists them),
+except the engine's and the modules' own: their catalogs translate
+them. `translations/en.json`, if any, isn't checked. The release is
+compared only when the directory is the root of a git repository: a
+theme kept in a site's repository has no tags of its own. The minified
+files and the hidden directories are skipped.
+
+It exits with 1 when there is a problem, so a release script or CI can
+run it.
+
 ## Testing a theme
 
 Before a release:
+
+- **`app theme check`** passes (see [above](#checking-a-theme)).
 
 - **The manifest loads.** The theme is on **Appearance** and in
   `app theme list`; a theme with an error in `theme.yaml` isn't, and both
@@ -188,10 +228,8 @@ Before a release:
 - **The templates**: with [template debugging](./templates.md#template-debugging)
   on, check that the theme's files are the ones used.
 - **The strings**: every string the templates, scripts and manifest
-  translate is in each language's catalog (see
-  [Translations](./assets-and-translations.md#translations)); on a site,
-  *Interface translations* → *Strings* lists the ones a language's
-  catalog lacks.
+  translate is in each language's catalog (`app theme check` lists the
+  missing ones; on a site, *Interface translations* → *Strings* too).
 - **Installing**: a local clone with tags installs as a repository does:
   `app theme add file:///path/to/kosatka-theme-sand@v1.2.0`.
 

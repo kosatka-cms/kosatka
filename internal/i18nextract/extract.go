@@ -219,50 +219,72 @@ func extractWeb(root string) ([]Message, error) {
 			}
 		}
 	}
+	for _, dir := range dirs {
+		if err := scanWebDir(dir.path, dir.ext, dir.kind, dir.theme, &out); err != nil {
+			return nil, err
+		}
+	}
 	// The themes (themes/<theme>/): their manifest, templates and scripts.
 	if themes, err := os.ReadDir(filepath.Join(root, "themes")); err == nil {
 		for _, th := range themes {
 			if !th.IsDir() {
 				continue
 			}
-			dir := filepath.Join(root, "themes", th.Name())
-			if manifest := filepath.Join(dir, "theme.yaml"); fileExists(manifest) {
-				if err := scan(manifest, th.Name(), kindManifest, &out); err != nil {
-					return nil, err
-				}
-			}
-			dirs = append(dirs, webDir{filepath.Join(dir, "templates"), ".html", kindTemplate, th.Name()}, webDir{filepath.Join(dir, "static"), ".js", kindJS, th.Name()})
-		}
-	}
-	for _, dir := range dirs {
-		if _, err := os.Stat(dir.path); err != nil {
-			continue
-		}
-		err := filepath.WalkDir(dir.path, func(p string, d fs.DirEntry, err error) error {
+			msgs, err := ExtractTheme(filepath.Join(root, "themes", th.Name()), th.Name())
 			if err != nil {
-				return err
+				return nil, err
 			}
-			if d.IsDir() {
-				switch d.Name() {
-				case "tinymce", "vendor", "lib":
-					return filepath.SkipDir
-				}
-				return nil
-			}
-			kind := dir.kind
-			switch {
-			case dir.kind == kindTemplate && d.Name() == "theme.yaml":
-				kind = kindManifest
-			case filepath.Ext(p) != dir.ext || strings.HasSuffix(p, ".min.js"):
-				return nil
-			}
-			return scan(p, dir.theme, kind, &out)
-		})
-		if err != nil {
-			return nil, err
+			out = append(out, msgs...)
 		}
 	}
 	return out, nil
+}
+
+// ExtractTheme - the strings of the theme in dir, tagged with name: its
+// manifest's (theme.yaml), its templates' and its scripts'.
+func ExtractTheme(dir, name string) ([]Message, error) {
+	var out []Message
+	if manifest := filepath.Join(dir, "theme.yaml"); fileExists(manifest) {
+		if err := scan(manifest, name, kindManifest, &out); err != nil {
+			return nil, err
+		}
+	}
+	if err := scanWebDir(filepath.Join(dir, "templates"), ".html", kindTemplate, name, &out); err != nil {
+		return nil, err
+	}
+	if err := scanWebDir(filepath.Join(dir, "static"), ".js", kindJS, name, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// scanWebDir scans the files with ext under path (a missing directory is
+// skipped; minified files and bundled libraries - tinymce, vendor, lib -
+// too); a theme.yaml among templates is a manifest.
+func scanWebDir(path, ext string, kind fileKind, theme string, out *[]Message) error {
+	if _, err := os.Stat(path); err != nil {
+		return nil
+	}
+	return filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			switch d.Name() {
+			case "tinymce", "vendor", "lib":
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		k := kind
+		switch {
+		case kind == kindTemplate && d.Name() == "theme.yaml":
+			k = kindManifest
+		case filepath.Ext(p) != ext || strings.HasSuffix(p, ".min.js"):
+			return nil
+		}
+		return scan(p, theme, k, out)
+	})
 }
 
 // extractAssets scans the modules' embedded templates and scripts as
