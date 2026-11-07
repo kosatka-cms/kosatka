@@ -90,6 +90,7 @@ documentation in its README:
 
 | Module | Name | What it does |
 |---|---|---|
+| [Disqus](https://github.com/kosatka-cms/kosatka-module-disqus) | `disqus` | Comments from [Disqus](https://disqus.com) in place of the site's own, on the content types chosen in its settings |
 | [Forum](https://github.com/kosatka-cms/kosatka-module-forum) | `forum` | Forum sections and topics under `/forum`, its settings page and the *Forum* topic content type |
 | [Quotes](https://github.com/kosatka-cms/kosatka-module-quotes) | `quotes` | Quotes and their authors: the `/quotes` pages and a *Random quote* block |
 | [Editorial workflow](https://github.com/kosatka-cms/kosatka-module-workflow) | `workflow` | States of content (draft, in review, approved, published, archived or your own) and the transitions between them by role, with comments; the editorial queue (**Content → Editorial**) |

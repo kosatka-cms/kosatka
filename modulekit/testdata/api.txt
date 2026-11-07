@@ -697,6 +697,7 @@ package modulekit
 	type NodePageParts = internal/interfaces.NodePageParts
 		field Data any
 		field Links []internal/interfaces.NodeLink
+		field Comments bool
 	func modulekit.NodeRelPath(nodeType modulekit.ContentType, slug string) string
 	type NodeSettings = internal/interfaces.NodeSettings
 		field Module string

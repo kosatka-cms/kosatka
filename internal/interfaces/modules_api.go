@@ -154,10 +154,15 @@ type NodeLink struct {
 // templates read as .moduleNode.<module>: "node_links_<module>" (under
 // the node, before Links), "node_actions_<module>" (next to Edit) and its
 // plugin blocks (a block on the page, placed in a theme region; see
-// entity.ModulePluginBlock.Region).
+// entity.ModulePluginBlock.Region). Comments - the module shows the
+// node's comments in place of the core's (a comments service): its
+// "comments_<module>" with the page's data where the core's comments
+// would be; the node's comment mode still applies (hidden - none). The
+// first enabled module saying so wins.
 type NodePageParts struct {
-	Data  any
-	Links []NodeLink
+	Data     any
+	Links    []NodeLink
+	Comments bool
 }
 
 // nodePageHook - a module's part of node pages.
@@ -178,26 +183,36 @@ func AddNodePage(module string, fn func(ctx context.Context, node entity.Node) N
 // their "node_actions_<module>" and other templates read), for a module's
 // own page of its content type (a poll, a form).
 func ModuleNodeData(ctx context.Context, node entity.Node) map[string]any {
-	data, _ := moduleNodePage(ctx, node)
-	return data
+	return moduleNodePage(ctx, node).data
 }
 
-// moduleNodePage - every enabled module's part of the node page: the data
-// of their templates by module and their links.
-func moduleNodePage(ctx context.Context, node entity.Node) (map[string]any, []NodeLink) {
-	data := map[string]any{}
-	var links []NodeLink
+// moduleNodeParts - the enabled modules' parts of a node page.
+type moduleNodeParts struct {
+	// data - their templates' data by module (.moduleNode).
+	data  map[string]any
+	links []NodeLink
+	// comments - the module showing the node's comments in place of the
+	// core's (NodePageParts.Comments); "" - the core's.
+	comments string
+}
+
+// moduleNodePage - every enabled module's part of the node page.
+func moduleNodePage(ctx context.Context, node entity.Node) moduleNodeParts {
+	parts := moduleNodeParts{data: map[string]any{}}
 	for _, h := range nodePageHooks {
 		if !service.ModuleEnabled(h.module) {
 			continue
 		}
 		p := h.fn(ctx, node)
 		if p.Data != nil {
-			data[h.module] = p.Data
+			parts.data[h.module] = p.Data
 		}
-		links = append(links, p.Links...)
+		parts.links = append(parts.links, p.Links...)
+		if p.Comments && parts.comments == "" {
+			parts.comments = h.module
+		}
 	}
-	return data, links
+	return parts
 }
 
 // termPageHook - a module's part of term pages.

@@ -15,6 +15,10 @@
 {{end}}
 
 {{define "comments-placeholder"}}
+{{/* .commentsModule - a module showing the node's comments in place of
+     the core's (a comments service, NodePageParts.Comments): its
+     "comments_<module>" with the page's data. */}}
+{{if .commentsModule}}{{renderOptional "comments" .commentsModule .}}{{else}}
 {{/* .item.Node.CommentMode: "closed" shows existing comments read-only
      with a notice and no add form; "hidden" never renders this template
      (see dynamic/page.html); "open" (or empty) shows the add-comment UI.
@@ -115,6 +119,7 @@
 <div class="auth-notice-bottom">
     <p>{{if registrationOpen}}{{t "<a href=\":login\">Log in</a> or <a href=\":register\">register</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL)) ":register" (printf "/user/register?destination=%s" (urlquery .item.Node.URL))}}{{else}}{{t "<a href=\":login\">Log in</a> to post comments" ":login" (printf "/login?destination=%s" (urlquery .item.Node.URL))}}{{end}}</p>
 </div>
+{{end}}
 {{end}}
 {{end}}
 {{end}}

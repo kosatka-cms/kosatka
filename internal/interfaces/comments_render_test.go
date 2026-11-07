@@ -14,8 +14,9 @@ import (
 // TestCommentsInPage - with the comments in the page's data
 // (commentsList: the comment settings' "with the page") the section shows
 // them, marked loaded, without the loading skeleton; without them the
-// skeleton waits for ajax; a type hiding empty comments shows nothing
-// while the page has none.
+// skeleton waits for ajax; a module showing the comments (commentsModule)
+// replaces the section; a type hiding empty comments shows nothing while
+// the page has none.
 func TestCommentsInPage(t *testing.T) {
 	root, _ := filepath.Abs(filepath.Join("..", ".."))
 	t.Chdir(root)
@@ -48,6 +49,12 @@ func TestCommentsInPage(t *testing.T) {
 	out = render(map[string]any{"item": item})
 	if !strings.Contains(out, "comments-loading") || strings.Contains(out, "data-loaded") {
 		t.Errorf("by ajax: %s", out)
+	}
+
+	// A module's comments in place of the core's: its comments_<module>
+	// (none here: an unknown module), never the core's section.
+	if out := render(map[string]any{"item": item, "commentsModule": "example", "commentsList": list(entity.Comments{comment})}); strings.Contains(out, `id="comments"`) || strings.Contains(out, "Fair winds") {
+		t.Errorf("a module's comments: the core's shown: %s", out)
 	}
 
 	hiding := &entity.ContentTypeDef{MachineName: "article", HideEmptyComments: true}

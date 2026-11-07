@@ -43,7 +43,7 @@ func TestModuleNodeHooks(t *testing.T) {
 	var calls []string
 	AddNodePage("example", func(context.Context, entity.Node) NodePageParts {
 		calls = append(calls, "page")
-		return NodePageParts{Data: 1, Links: []NodeLink{{URL: "/q"}}}
+		return NodePageParts{Data: 1, Links: []NodeLink{{URL: "/q"}}, Comments: true}
 	})
 	AddNodeSettings(NodeSettings{Module: "example",
 		Load: func(context.Context, string, *entity.Node, url.Values) (any, error) {
@@ -89,9 +89,12 @@ func TestModuleNodeHooks(t *testing.T) {
 	ctx := context.Background()
 	r := httptest.NewRequest(http.MethodPost, "/", nil)
 	run := func() {
-		data, links := moduleNodePage(ctx, entity.Node{ID: 1})
-		if service.ModuleEnabled("example") && (data["example"] != 1 || len(links) != 1) {
-			t.Errorf("node page: %v %v", data, links)
+		parts := moduleNodePage(ctx, entity.Node{ID: 1})
+		if service.ModuleEnabled("example") && (parts.data["example"] != 1 || len(parts.links) != 1 || parts.comments != "example") {
+			t.Errorf("node page: %+v", parts)
+		}
+		if !service.ModuleEnabled("example") && parts.comments != "" {
+			t.Errorf("the module off, its comments: %+v", parts)
 		}
 		if got := c.loadNodeSettings(ctx, "article", nil, nil); service.ModuleEnabled("example") && got["example"] != 2 {
 			t.Errorf("node settings: %v", got)

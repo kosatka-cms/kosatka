@@ -207,8 +207,9 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 	}
 
 	// The modules' parts of this node's page (AddNodePage): their
-	// templates' data, links (e.g. its quotes) and attached blocks.
-	moduleNode, nodeLinks := moduleNodePage(ctx, dc.Node)
+	// templates' data, links (e.g. its quotes) and attached blocks, and
+	// a module showing its comments in place of the core's.
+	moduleParts := moduleNodePage(ctx, dc.Node)
 
 	// displayFields: fields in DisplayOrder (the edit form uses SortOrder).
 	// The fields' labels in the page's language.
@@ -263,7 +264,7 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 		"workflowManaged":  NodeWorkflowFor(ctx, string(dc.Node.Type)) != nil,
 		"canViewRevisions": canViewRevisions,
 		"canClone":         canClone,
-		"moduleNode":       moduleNode,
+		"moduleNode":       moduleParts.data,
 	})
 	// A node configured as the 404/403 page reads as that page, not as
 	// content: see errorPageType.
@@ -271,8 +272,13 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 		data["contentType"] = shown
 		data["errorPage"] = status
 	}
-	if len(nodeLinks) > 0 {
-		data["moduleNodeLinks"] = nodeLinks
+	if len(moduleParts.links) > 0 {
+		data["moduleNodeLinks"] = moduleParts.links
+	}
+	// commentsModule - the module whose "comments_<module>" is shown in
+	// place of the core's comments (comments.html).
+	if moduleParts.comments != "" {
+		data["commentsModule"] = moduleParts.comments
 	}
 	// Contextual View blocks (e.g. "more by this author"); which types show
 	// them is configured via block placements.
@@ -309,7 +315,9 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 	trailNode.ContentType = *def
 	c.setNodeTrail(ctx, data, trailNode, trailTitle)
 	c.SetViewTrackNID(data, dc.Node)
-	c.attachComments(ctx, r, data, &dc.Node, user)
+	if moduleParts.comments == "" {
+		c.attachComments(ctx, r, data, &dc.Node, user)
+	}
 
 	c.RenderOrFail(w, r, "dynamic/page.html", data)
 }
