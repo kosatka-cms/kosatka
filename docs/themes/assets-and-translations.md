@@ -45,7 +45,7 @@ engine's file and must define all three:
 
 | Hook | What |
 |---|---|
-| `theme_framework` | the Bootstrap 5 build and its fonts. The engine ships Bootstrap 5.3 (`staticCSS "bootstrap"`) and the Bootswatch *Cosmo* skin (`staticCSS "bootswatch-cosmo"`) at the version of its JavaScript; a theme can link a build of its own from its `static/` instead. A script that sets the colour scheme before the page paints goes here too |
+| `theme_framework` | the Bootstrap 5 build and its fonts. The engine ships Bootstrap 5.3 (`staticCSS "bootstrap"`) and the Bootswatch *Cosmo* skin (`staticCSS "bootswatch-cosmo"`) at the version of its JavaScript, without the skin's font (a theme on it links Source Sans Pro, or another font, itself: see [Fonts](#fonts)); a theme can link a build of its own from its `static/` instead. A script that sets the colour scheme before the page paints goes here too |
 | `theme_head` | the theme's stylesheets. `base.css` is the engine's neutral styling of its markup (header, footer, cards, lists); keep it and add to it, or leave it out and style everything yourself |
 | `theme_editor_css` | the stylesheet URLs, comma-separated, that the text editors use, so text being edited looks as on the page |
 
@@ -128,6 +128,25 @@ themes add them to `theme_editor_css` too
   field's (white by default), not the page's.
 - Don't write `<style>` in templates; colours the administrator can
   change are [settings](./manifest.md#settings) with `css_var`.
+
+### Fonts
+
+Serve a theme's fonts from its `static/`, not from a font service: the
+pages then make no requests to other servers (the
+[themes catalog](https://github.com/kosatka-cms/themes) doesn't take a
+theme that does). Put the font files (`woff2`) in `static/fonts/` with
+their license, their `@font-face` rules in a stylesheet of their own,
+`css/fonts.css`, with URLs relative to it
+(`url(../fonts/inter/inter-latin.woff2)`), and link it in
+`theme_framework` and in `theme_editor_css`:
+
+```html
+<link rel="stylesheet" href="{{ themeCSS "fonts" }}">
+```
+
+A file per script, each with its `unicode-range` (Latin, Cyrillic…),
+lets a page load only the ones its text needs. The Kosatka theme does
+so.
 
 ### Minified files
 
@@ -230,16 +249,13 @@ its own strings and reuses the engine's (*Edit*, *Save*…); it can also
 replace an engine's or a module's translation by putting the same key in
 its catalog.
 
-To find the theme's strings that have no translation yet, run from the
-project's directory:
-
-```bash
-go run ./cmd/i18n-extract -lang ru
-```
-
-It lists every untranslated string of the engine, the modules and the
-themes, marked `[theme sand]` for yours. A subtheme's string its base
-theme translates counts as translated, as on the site.
+No command lists a theme's untranslated strings: a theme installed
+from its repository makes its strings known with its catalogs. A string
+its templates use that none of its catalogs has is shown in English and
+listed nowhere, so add each new string to every language's catalog at
+once. On a site with the theme active, *Interface translations* →
+*Strings* (*Show*: *Untranslated*) lists the theme's strings a
+language's catalog lacks while another of its catalogs has them.
 
 The catalogs are read at startup and when the theme changes: restart
 the server after editing them.

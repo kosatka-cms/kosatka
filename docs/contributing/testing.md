@@ -120,8 +120,10 @@ message says what to fix.
 | Index names | `TestIndexNamesUniqueAcrossTables`, `internal/infrastructure/ent/schema/index_names_test.go` | An explicit index name is used once: PostgreSQL scopes index names to the schema |
 | Field types handled | `TestFieldTypesSnapshot` (`entity`), `TestFieldTypesHaveValueTables` and `TestFieldValuesForNodes` (`ent/database`), `TestFieldTypesDecidedInViews` (`views`), `TestFieldTypesInRevisions` (`service`), `TestFieldTypesChecked` (`form`), `TestFieldTypesInForm`, `TestFieldTypesOnPage` (`interfaces`), `TestFieldTypesHaveSettings` (`admin`) | Every field type of `entity.FieldTypes` is described in each layer's table (`entity` - `fieldTypeDefs`, Views - `viewFieldTypes`, the history - `revisionFieldTypes`, the form - `formFieldTypes` and `form.fieldChecks`, the page - `pageFieldTypes`, the field's settings - `adminFieldTypes`), is kept by a revision, has its storage (`registerFieldStorage`) and is written and read back, is decided for Views (filtered, shown - or a reasoned exception), has its input and value in the content form and shows on the content page. A new field type goes into `entity.FieldTypes`; these tests then name every place still to handle it |
 
-`go run ./cmd/i18n-extract -lang <lang>` lists the strings still
-missing a translation into a language.
+The translations themselves are in the translations repository
+(`kosatka-cms/translations`), checked there against this list:
+`app translations index -src . -out dist -complete <lang>` lists the
+strings a language still misses.
 
 ## File names: the platform suffix
 

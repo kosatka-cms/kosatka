@@ -456,7 +456,8 @@ Notes:
 1. Sign in at `https://www.example.com/login` with the administrator's
    password and change it.
 2. Open **Reports → Status report** (`/admin/reports/status`). It shows
-   the binary's release, commit and Go version, the database and its
+   the binary's release, commit and Go version (a site's own binary:
+   the engine's release and the site's commit), the database and its
    version, the theme and the modules, and checks: pending migrations,
    modules installed in the database that the binary doesn't have, that
    the public files directory (or bucket) is writable, that the site

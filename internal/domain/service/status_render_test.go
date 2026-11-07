@@ -11,8 +11,9 @@ import (
 )
 
 // TestStatusReportPageRender - the status report's checks (errors first,
-// HTML descriptions), the engine and the modules; the admin layout's bar
-// links to it while checks warn.
+// HTML descriptions), the engine (a site's own binary: the release's
+// page, the site's build) and the modules; the admin layout's bar links
+// to it while checks warn.
 func TestStatusReportPageRender(t *testing.T) {
 	zzChdirToProjectRoot(t)
 	svc := &DefaultTemplateService{cache: map[string]*template.Template{}}
@@ -43,6 +44,24 @@ func TestStatusReportPageRender(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("status report lacks %q", want)
 		}
+	}
+
+	// A site's own binary on an engine release: the release's page for
+	// its commit, no commit time; the site's module and commit.
+	data["build"] = buildinfo.Info{Version: "v0.1.2", GoVersion: "go1.26",
+		Site: buildinfo.Site{Module: "example.com/site", Commit: "fedcba9876543210", Time: time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)}}
+	buf.Reset()
+	if err := set.ExecuteTemplate(&buf, "content", data); err != nil {
+		t.Fatal(err)
+	}
+	out = buf.String()
+	for _, want := range []string{`href="https://github.com/kosatka-cms/kosatka/releases/tag/v0.1.2"`, "<code>example.com/site</code>", `title="fedcba9876543210">fedcba98</code>`, "07.11.2026"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("a site's binary: no %q", want)
+		}
+	}
+	if strings.Count(out, "Commit time") != 1 {
+		t.Error("a release's commit time shown (unknown)")
 	}
 
 	files, err = svc.pageFilesToParse("admin/reports/status.html", []string{"admin", "reports", "status.html"})

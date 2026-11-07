@@ -125,6 +125,7 @@ func newMailService(cfg *config.Config, drv *sql.Driver, baseLogger *slog.Logger
 	mailService := service.NewMailService(database.NewMailSettingsRepository(drv.DB()), configured, baseLogger, config.Seconds(cfg.Timeouts.HTTPRequest))
 	mailService.SetTemplates(database.NewMailTemplateRepository(drv.DB()))
 	mailService.SetLog(database.NewMailLogRepository(drv.DB()))
+	mailService.SetTransportEnv(service.MailTransportEnv(os.Getenv))
 	if err := mailService.Reload(context.Background()); err != nil {
 		baseLogger.Error("error loading the mail settings", "error", err)
 	}

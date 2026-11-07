@@ -6,8 +6,6 @@
     <meta charset="utf-8" />
     {{template "csrf_head" .}}
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     {{if .pageSEO.Description }}
     <meta name="Description" content="{{ .pageSEO.Description }}">
     {{end}}
@@ -29,7 +27,7 @@
     {{end}}
 
     {{template "site_icon"}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="{{ staticCSS "admin-fonts" }}">
     <link rel="stylesheet" href="{{ staticCSS "bootswatch-cosmo" }}">
     <link rel="stylesheet" href="{{ staticCSS "menu" }}">
     {{ moduleStyles }}

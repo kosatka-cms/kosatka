@@ -17,10 +17,16 @@ keys.
 The first tab sets how email leaves the site: the switch that turns all
 of it off, the transport - an SMTP server, or a mail service's API that
 a module adds - and the sender's address. Saved keys and passwords are
-never shown again; leave a field empty to keep the saved one. When the
-server's [configuration](../reference/configuration.md#e-mail-email)
-sets a transport, it is the one in use: the page names it and offers
-only the switch and the log.
+never shown again; leave a field empty to keep the saved one. Until a
+transport is saved none is chosen, and the switch, the log and the
+sender save without one. When the server's
+[configuration](../reference/configuration.md#e-mail-email) sets a
+transport, it is the one in use: the page names it and offers only the
+switch and the log. A setting the server's environment gives without
+the configuration's sender address (`RESEND_API_KEY` alone, say) doesn't
+make the transport the server's: the page shows the setting as set in
+the server configuration, offers its transport chosen, and uses the
+environment's value once the transport and a sender are saved here.
 
 The engine sends through SMTP itself; almost every mail service also
 takes mail over SMTP. Its API is a module's:

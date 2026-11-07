@@ -60,7 +60,7 @@ start again on an empty database.
 | `-site-name` | the site's name (required) |
 | `-admin-name` | the administrator's username (required) |
 | `-admin-email` | the administrator's e-mail, also the site's (required) |
-| `-language` | the site's language and that of the starter content: `en` (the default), a language built in (`ru`), or one of the translations catalog - downloaded first, as `app translations add` does, and refused before anything is installed when the catalog hasn't it |
+| `-language` | the site's language and that of the starter content: `en` (the default, the only one built in) or one of the translations catalog - downloaded first, as `app translations add` does, and refused before anything is installed when the catalog hasn't it |
 | `-translations` | the translations catalog a `-language` that isn't built in comes from (an `index.json`'s address or file); by default the config's `translations_catalog_url` |
 | `-demo` | add the demo content: articles with covers, sections, tags, comments from demo users, sidebar blocks, an *About* page in the menu, a footer menu, and the installed modules' own demo content |
 | `-demo-set` | the demo content of another demo set (implies `-demo`): `blog` (the one above) or a set of `internal/app/demoset/sets`. A set is in the languages it has files for; another `-language` is refused. See [Demo sets](../contributing/demo-sets.md) |
@@ -261,8 +261,11 @@ nothing else of the calling environment but `PATH`, `HOME`, `TMPDIR`,
 
 The repository has a few more binaries:
 
-- `go run ./cmd/i18n-extract -lang ru` - lists the interface strings of
-  the code that the language's catalogs don't translate yet.
+- `go run ./cmd/i18n-extract -sources` - writes the list of the code's
+  interface strings (`translations/sources/strings.json`, built into the
+  binary); for those who change the engine's strings. A language's
+  missing strings are listed by [`app translations
+  index`](#app-translations) in the translations repository.
 - `./scripts/migrations_gen.sh <name>` (`cmd/migrations-gen`) - writes
   the database migrations from the ent schemas; for those who change the
   engine (see [the database](../contributing/database.md)).

@@ -187,8 +187,11 @@ Before a release:
   to see every region framed with its name.
 - **The templates**: with [template debugging](./templates.md#template-debugging)
   on, check that the theme's files are the ones used.
-- **The strings**: `go run ./cmd/i18n-extract -lang <lang>` lists the
-  theme's untranslated strings.
+- **The strings**: every string the templates, scripts and manifest
+  translate is in each language's catalog (see
+  [Translations](./assets-and-translations.md#translations)); on a site,
+  *Interface translations* → *Strings* lists the ones a language's
+  catalog lacks.
 - **Installing**: a local clone with tags installs as a repository does:
   `app theme add file:///path/to/kosatka-theme-sand@v1.2.0`.
 

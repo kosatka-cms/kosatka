@@ -49,7 +49,7 @@ func (c *Controller) MailPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost {
-		next, code := mailSettingsFromForm(r, *saved, c.mailService.Status().Source == service.MailSourceConfig)
+		next, code := mailSettingsFromForm(r, *saved, c.mailService.Status().Source == service.MailSourceConfig, c.mailService.EnvSetting)
 		if code != "" {
 			http.Redirect(w, r, "/admin/config/mail?error="+code, http.StatusSeeOther)
 			return
@@ -76,12 +76,14 @@ func (c *Controller) renderMailPage(w http.ResponseWriter, r *http.Request, user
 	data["pageSEO"] = entity.PageSEO{Title: i18n.T(ctx, "@title - Admin panel", "@title", title)}
 	data["settings"] = saved
 	data["smtpPasswordSaved"] = saved.SMTPPassword != ""
+	// None saved: the transport the server's environment sets, else no
+	// choice (SMTP isn't assumed: the switch and the log save without one).
 	transport := saved.Transport
 	if transport == "" {
-		transport = entity.MailTransportSMTP
+		transport = c.mailService.EnvTransport()
 	}
 	data["transport"] = transport
-	data["transports"] = mailTransportSections(ctx, *saved)
+	data["transports"] = mailTransportSections(ctx, *saved, c.mailService.EnvSetting)
 	data["logKeepOptions"] = settingOptions(mailLogKeepChoices, saved.LogKeepDays, func(v int) string {
 		if v == 0 {
 			return i18n.T(ctx, "don't keep a log")
@@ -105,8 +107,11 @@ var mailLogKeepChoices = []int{7, 30, 90, 365, 0}
 
 // mailSettingsFromForm - the settings the form submits on top of the saved
 // ones, or the error code for the page; fromConfig - the server config
-// sets the transport: the form changes the switch and the log only.
-func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig bool) (entity.MailSettings, string) {
+// sets the transport: the form changes the switch and the log only;
+// envSet - whether the server's environment sets a transport's setting
+// (a required one is then filled). No transport chosen keeps the saved
+// one, or none: the switch, the log and the sender save without one.
+func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig bool, envSet func(transport, field string) bool) (entity.MailSettings, string) {
 	next := saved
 	next.Enabled = r.FormValue("enabled") == "1"
 	if r.Form.Has("log_keep_days") {
@@ -123,8 +128,10 @@ func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig
 		// Back to the server config's settings (the log's as chosen).
 		return entity.MailSettings{Enabled: next.Enabled, LogKeepDays: next.LogKeepDays}, ""
 	}
-	next.Transport = r.FormValue("transport")
-	if _, ok := availableMailTransport(next.Transport); !ok && next.Transport != entity.MailTransportSMTP {
+	if t := r.FormValue("transport"); t != "" {
+		next.Transport = t
+	}
+	if _, ok := availableMailTransport(next.Transport); !ok && next.Transport != entity.MailTransportSMTP && next.Transport != "" {
 		return saved, "transport"
 	}
 	next.FromAddress = strings.TrimSpace(r.FormValue("from_address"))
@@ -148,15 +155,19 @@ func mailSettingsFromForm(r *http.Request, saved entity.MailSettings, fromConfig
 	if pw := r.FormValue("smtp_password"); pw != "" {
 		next.SMTPPassword = pw
 	}
-	if next.FromAddress == "" {
+	switch {
+	case next.Transport == "":
+		return next, ""
+	case next.FromAddress == "":
 		return saved, "from"
-	}
-	if next.Transport == entity.MailTransportSMTP {
+	case next.Transport == entity.MailTransportSMTP:
 		if next.SMTPHost == "" || next.SMTPPort == 0 {
 			return saved, "smtp"
 		}
-	} else if t, _ := availableMailTransport(next.Transport); !mailTransportFilled(t, next.TransportSettings[t.Name]) {
-		return saved, "required"
+	default:
+		if t, _ := availableMailTransport(next.Transport); !mailTransportFilled(t, next.TransportSettings[t.Name], envSet) {
+			return saved, "required"
+		}
 	}
 	return next, ""
 }
@@ -169,6 +180,9 @@ type mailTransportField struct {
 	Secret, Required   bool
 	Value              string
 	Saved              bool
+	// Env - the environment variable that sets it on this server: the
+	// page shows that instead of an input.
+	Env string
 }
 
 // mailTransportSection - a module's way of sending on the Mail page.
@@ -206,8 +220,9 @@ func mailTransportInput(transport, field string) string {
 }
 
 // mailTransportSections - the Mail page's sections of the available
-// modules' ways of sending, with the saved settings (no secret shown).
-func mailTransportSections(ctx context.Context, saved entity.MailSettings) []mailTransportSection {
+// modules' ways of sending, with the saved settings (no secret shown);
+// envSet - whether the server's environment sets a setting.
+func mailTransportSections(ctx context.Context, saved entity.MailSettings, envSet func(transport, field string) bool) []mailTransportSection {
 	var out []mailTransportSection
 	for _, t := range availableMailTransports() {
 		sec := mailTransportSection{Name: t.Name, Title: t.Title}
@@ -222,6 +237,9 @@ func mailTransportSections(ctx context.Context, saved entity.MailSettings) []mai
 			}
 			if !f.Secret {
 				field.Value = value
+			}
+			if f.Env != "" && envSet != nil && envSet(t.Name, f.Name) {
+				field.Env = f.Env
 			}
 			sec.Fields = append(sec.Fields, field)
 		}
@@ -259,14 +277,15 @@ func mailTransportSettingsFromForm(r *http.Request, saved map[string]map[string]
 	return out
 }
 
-// mailTransportFilled - whether the transport's required settings are
-// in values.
-func mailTransportFilled(t service.MailTransport, values map[string]string) bool {
+// mailTransportFilled - whether a module's way of sending has its
+// required settings: in values, or set by the server's environment
+// (envSet).
+func mailTransportFilled(t service.MailTransport, values map[string]string, envSet func(transport, field string) bool) bool {
 	if t.Name == "" {
 		return false
 	}
 	for _, f := range t.Fields {
-		if f.Required && strings.TrimSpace(values[f.Name]) == "" {
+		if f.Required && strings.TrimSpace(values[f.Name]) == "" && (envSet == nil || !envSet(t.Name, f.Name)) {
 			return false
 		}
 	}
