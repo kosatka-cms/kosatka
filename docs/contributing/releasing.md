@@ -19,7 +19,11 @@ The binary reports its version on the status report
 between releases by `scripts/build_linux_release.sh` or the
 `Dockerfile`, the last tag with the distance from it
 (`v0.3.0-5-g1a2b3c4d`). A plain `go build` has none: "not a release
-build".
+build". A site's own binary (its `main` calls `kosatka.Main()`) has the
+engine as a dependency: the report shows the engine's version from it -
+a release with a link to its page (the commit is the tag's), or a
+commit's pseudo-version as that commit and its time - and, in a *Site*
+section, the site's module and the commit it was built from.
 
 ## Making a release
 

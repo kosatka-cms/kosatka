@@ -3349,6 +3349,7 @@
   {"source":"the image's focal point (or the center)"},
   {"source":"the latest - @date","module":"complaints"},
   {"source":"the original:","module":"languages"},
+  {"source":"the release's commit"},
   {"source":"the selected text is too short or too long","module":"error_reports"},
   {"source":"the site's language"},
   {"source":"the source strings"},

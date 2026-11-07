@@ -39,8 +39,10 @@
         <table class="table admin-table">
             <tbody>
                 <tr><th style="width:30%;">{{t "Version"}}</th><td>{{if .build.Version}}{{.build.Version}}{{else}}<span class="admin-table-muted">{{t "not a release build"}}</span>{{end}}</td></tr>
-                <tr><th>{{t "Commit"}}</th><td>{{if .build.Commit}}<code title="{{.build.Commit}}">{{.build.ShortCommit}}</code>{{if .build.Modified}} <span class="admin-pill admin-pill--warn">{{t "with uncommitted changes"}}</span>{{end}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
-                <tr><th>{{t "Commit time"}}</th><td>{{with date .build.Time "datetime"}}{{.}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+                {{/* A release the site's binary takes as a dependency has its
+                     tag only: its page shows the commit. */}}
+                <tr><th>{{t "Commit"}}</th><td>{{if .build.Commit}}<code title="{{.build.Commit}}">{{.build.ShortCommit}}</code>{{if .build.Modified}} <span class="admin-pill admin-pill--warn">{{t "with uncommitted changes"}}</span>{{end}}{{else if .build.ReleaseURL}}<a href="{{.build.ReleaseURL}}" target="_blank" rel="noopener">{{t "the release's commit"}}</a>{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+                {{if or (not .build.Time.IsZero) (not .build.ReleaseURL)}}<tr><th>{{t "Commit time"}}</th><td>{{with date .build.Time "datetime"}}{{.}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>{{end}}
                 <tr><th>Go</th><td>{{.build.GoVersion}}</td></tr>
                 <tr><th>{{t "Database"}}</th><td>{{.dbDriver}} {{.dbVersion}}</td></tr>
                 <tr><th>{{t "Theme"}}</th><td>{{if .theme}}{{.theme}}{{else}}<span class="admin-table-muted">{{t "the engine's templates"}}</span>{{end}}</td></tr>
@@ -48,6 +50,23 @@
         </table>
     </div>
 </section>
+
+{{/* The site's own binary (kosatka.Main with modules from outside the
+     engine): its module and the commit it was built from. */}}
+{{with .build.Site}}{{if .Module}}
+<section class="admin-settings-group">
+    <h2 class="admin-settings-title">{{t "Site"}}</h2>
+    <div class="admin-table-card">
+        <table class="table admin-table">
+            <tbody>
+                <tr><th style="width:30%;">{{t "Module"}}</th><td><code>{{.Module}}</code></td></tr>
+                <tr><th>{{t "Commit"}}</th><td>{{if .Commit}}<code title="{{.Commit}}">{{.ShortCommit}}</code>{{if .Modified}} <span class="admin-pill admin-pill--warn">{{t "with uncommitted changes"}}</span>{{end}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+                <tr><th>{{t "Commit time"}}</th><td>{{with date .Time "datetime"}}{{.}}{{else}}<span class="admin-table-muted">{{t "unknown"}}</span>{{end}}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{{end}}{{end}}
 
 <section class="admin-settings-group">
     <h2 class="admin-settings-title">{{t "Modules"}}</h2>
