@@ -217,14 +217,21 @@ View's field labels and the exposed filters' labels per language.
 
 ## Adding a language (for translators)
 
-A catalog is a JSON file named after the language code, such as
-`de.json`:
+Only English is in the engine's code. The other languages of the
+engine, its standard modules and the Kosatka theme are translated in the
+translations repository,
+[`kosatka-cms/translations`](https://github.com/kosatka-cms/translations),
+a catalog per component; a module or a theme from its own repository
+keeps its catalogs itself:
 
 | Whose strings | Where |
 |---|---|
-| The engine's | `translations/<code>.json` |
-| A module's | `internal/modules/<module>/translations/<code>.json` |
-| A theme's | `themes/<theme>/translations/<code>.json` |
+| The engine's | `<code>/engine.json` in the translations repository |
+| A standard module's | `<code>/<module>.json` there (`de/polls.json`) |
+| The Kosatka theme's | `<code>/theme-kosatka.json` there |
+| A module's or a theme's from its own repository | `translations/<code>.json` in its repository |
+
+A catalog is a JSON file:
 
 ```json
 {
@@ -243,16 +250,20 @@ The key is the English string as the code has it; placeholders such as
 category the language uses, in the order zero, one, two, few, many,
 other (English and German have two, Russian three, Japanese one).
 
-To see what is still untranslated:
+A new language in the translations repository starts with
+`<code>/language.yaml` (its version, and `draft: true` until someone
+reviews it). To see what is still untranslated, build the catalog there
+with the engine's binary:
 
 ```bash
-go run ./cmd/i18n-extract -lang de
+app translations index -src . -out dist -complete de
 ```
 
-It lists the strings of the engine, the modules and the themes that the
-language's catalogs don't cover yet. The engine's and the modules'
-catalogs are built into the binary, so they take effect after a rebuild;
-a theme's are read from its directory when the site starts or switches
-to the theme. Once a catalog exists, the language appears in *Interface
-language*. A language that isn't built in is better published in a
-[translations catalog](#a-translations-catalog), for sites to download.
+It checks each string against the engine's (placeholders, tags, a
+string the code no longer has) and lists the strings `de` still misses.
+Merged, the language is published in the Kosatka
+[translations catalog](#a-translations-catalog), and sites download it.
+A theme's and a module's catalogs from their own repositories are read
+from their directories when the site starts or switches to the theme;
+*Interface translations* → *Strings* (*Show*: *Untranslated*) lists the
+ones a language's catalog lacks.
