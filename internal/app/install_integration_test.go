@@ -403,6 +403,8 @@ func TestInstallDemoSet(t *testing.T) {
 			"the form's block":      {1, `SELECT COUNT(*) FROM block_placements WHERE region = ? AND plugin_id = ? AND title = ?`, []any{"sidebar", "webform", "Write to us"}},
 			"a question's filling":  {1, `SELECT COUNT(*) FROM webform_elements WHERE machine_name = ? AND prefill_param = ?`, []any{"topic", "topic"}},
 			"the set's own picture": {1, `SELECT COUNT(*) FROM files WHERE uri LIKE ? AND mime_type = ? AND width = ? AND height = ? AND alt = ?`, []any{"public://%/demo/river-cover-0.png", "image/png", 8, 6, "The river at dusk"}},
+			"a gallery's pictures":  {2, `SELECT COUNT(*) FROM gallery_items gi JOIN galleries g ON g.id = gi.gallery_id WHERE g.title = ?`, []any{"Photos"}},
+			"its own one":           {1, `SELECT COUNT(*) FROM files WHERE uri LIKE ? AND mime_type = ? AND alt = ?`, []any{"public://galleries/%/demo-2.png", "image/png", "The river"}},
 		} {
 			if got := count(c.query, c.args...); got != c.n {
 				t.Errorf("%s: %d, want %d", what, got, c.n)

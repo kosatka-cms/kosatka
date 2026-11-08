@@ -60,6 +60,9 @@ type Env struct {
 	Data []byte
 	// Nodes - a demo set's nodes by key, the ones its Data may name.
 	Nodes map[string]int
+	// Files - a demo set's directory (a theme's demo/): the pictures of
+	// its own its Data names ({file: …}); nil - none.
+	Files fs.FS
 }
 
 // Step - a set's demo step.

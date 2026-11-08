@@ -1231,6 +1231,7 @@ package modulekit/demokit
 		field Weight int
 		field Visibility internal/domain/entity.BlockVisibilityScope
 	func modulekit/demokit.Register(set string, run modulekit/demokit.Step)
+	func modulekit/demokit.SetPicture(ctx context.Context, env modulekit/demokit.Env, rel string, file string, alt string, at time.Time) (int, error)
 	type Step func(ctx context.Context, env modulekit/demokit.Env) error
 	func modulekit/demokit.Term(ctx context.Context, env modulekit/demokit.Env, vid int, name string, description string, path string, parent *int, weight int) (int, error)
 	type ViewBlock = internal/infrastructure/demo.ViewBlock

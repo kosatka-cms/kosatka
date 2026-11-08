@@ -133,9 +133,9 @@ func TestDate(t *testing.T) {
 	}
 }
 
-// TestSetPictures - an image field's {file: …}: a path inside the set's
-// directory in a picture's format; Load wants the file there and an
-// image; Pictures lists them.
+// TestSetPictures - an image field's {file: …} and a module's content's:
+// a path inside the set's directory in a picture's format; Load wants
+// the file there and an image; Pictures lists them.
 func TestSetPictures(t *testing.T) {
 	for _, bad := range []string{"../out.jpg", "/abs.png", "notes.txt", "images/x.gif"} {
 		_, err := Parse([]byte("nodes: [{key: a, type: page, title: A, fields: {field_image: {file: " + bad + "}}}]\n"))
@@ -149,7 +149,10 @@ func TestSetPictures(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got := s.Pictures(); !slices.Equal(got, []string{"images/river.png"}) {
-		t.Errorf("pictures: %v", got)
+		t.Errorf("pictures (a node's and a gallery's, once): %v", got)
+	}
+	if _, err := Parse([]byte("modules: {galleries: {pictures: [{title: T, file: ../x.jpg}]}}\n")); err == nil || !strings.Contains(err.Error(), "modules: galleries: picture") {
+		t.Errorf("a module's picture outside the set: %v", err)
 	}
 	missing := fstest.MapFS{"images/river.png": {Data: []byte("not a picture")}}
 	if errs := s.CheckPictures(missing); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not an image") {

@@ -184,3 +184,7 @@ modules:
       - {name: name, type: text, label: Name, required: true}
       - {name: topic, type: select, label: Topic, options: [Gardens, Rivers], prefill: topic}
     block: {region: sidebar, title: Write to us, weight: 50}
+  galleries:
+    node: garden
+    title: Photos
+    pictures: [The gate, {title: The river, file: images/river.png}]

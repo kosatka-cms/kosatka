@@ -919,7 +919,7 @@ func (a *applier) modules(ctx context.Context) error {
 		return nil
 	}
 	env := demo.Env{Client: a.Client, Lang: a.Lang, CreatedBy: a.CreatedBy, Users: a.users, Nodes: a.nodes,
-		Theme: entity.ThemeKey(a.Theme), Now: a.Now, Dialect: a.Dialect}
+		Theme: entity.ThemeKey(a.Theme), Now: a.Now, Dialect: a.Dialect, Files: a.set.files}
 	var err error
 	if env.MainMenu, err = a.menuID(ctx, a.set.Site.MainMenu); err != nil {
 		return err

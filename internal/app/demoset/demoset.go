@@ -535,6 +535,13 @@ func (s *Set) check() error {
 			}
 		}
 	}
+	for _, name := range slices.Sorted(maps.Keys(s.Modules)) {
+		moduleFiles(s.Modules[name], func(f string) {
+			if err := checkPictureName(f); err != nil {
+				errs = append(errs, fmt.Errorf("modules: %s: %w", name, err))
+			}
+		})
+	}
 	for _, v := range s.Views {
 		kinds["view"].add(v.Name)
 		for _, f := range v.Fields {

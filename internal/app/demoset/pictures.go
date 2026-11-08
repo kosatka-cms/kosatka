@@ -6,6 +6,7 @@ import (
 	_ "image/jpeg" // the formats a set's own picture may be in
 	_ "image/png"
 	"io/fs"
+	"maps"
 	"path"
 	"slices"
 	"strings"
@@ -53,20 +54,48 @@ func fieldItems(v any) []any {
 	return []any{v}
 }
 
-// Pictures - the set's own pictures its nodes name, sorted, each once.
+// Pictures - the set's own pictures its nodes and its modules' content
+// name ({file: …} anywhere in it: a gallery's pictures), sorted, each
+// once.
 func (s *Set) Pictures() []string {
 	var out []string
+	add := func(f string) {
+		if !slices.Contains(out, f) {
+			out = append(out, f)
+		}
+	}
 	for _, n := range s.Nodes {
 		for _, v := range n.Fields {
 			for _, item := range fieldItems(v) {
-				if f, _ := pictureFile(item); f != "" && !slices.Contains(out, f) {
-					out = append(out, f)
+				if f, _ := pictureFile(item); f != "" {
+					add(f)
 				}
 			}
 		}
 	}
+	for _, v := range s.Modules {
+		moduleFiles(v, add)
+	}
 	slices.Sort(out)
 	return out
+}
+
+// moduleFiles calls found with every file a module's content names: the
+// "file" of each mapping in it.
+func moduleFiles(v any, found func(string)) {
+	switch v := v.(type) {
+	case map[string]any:
+		if f, ok := v["file"].(string); ok && f != "" {
+			found(f)
+		}
+		for _, k := range slices.Sorted(maps.Keys(v)) {
+			moduleFiles(v[k], found)
+		}
+	case []any:
+		for _, item := range v {
+			moduleFiles(item, found)
+		}
+	}
 }
 
 // CheckPictures - what is wrong with the set's own pictures in fsys (the

@@ -133,7 +133,7 @@ modules:
   galleries:
     node: review_outer_wilds   # the gallery goes on this node
     title: The solar system
-    pictures: [The campfire, The observatory]
+    pictures: [The campfire, {title: The observatory, file: images/observatory.jpg}]   # drawn, or the set's own
   forms:
     title: Request
     elements:

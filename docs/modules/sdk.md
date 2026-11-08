@@ -580,6 +580,11 @@ helpers, in the install's transaction.
 - `demokit.CreateNode`, `demokit.CreateComments`, `demokit.ImageFile` -
   a demo content item of the module's type, its comments, a drawn
   picture.
+- `demokit.SetPicture(ctx, env, rel, file, alt, at)` - a picture of the
+  demo set's own, named in the module's content as `{file: …}` (a path in
+  the set's directory, a theme's `demo/`): stored at `rel` with its file
+  row. The set's check finds every `file` in the modules' content, so a
+  module names its pictures that way.
 - `demokit.Vocabulary`, `demokit.Term`, `demokit.IndexTerm` - a
   vocabulary, a term, an item filed under a term.
 - `demokit.PlacePlugin(ctx, env, id, config, demokit.Placement{…})`,
