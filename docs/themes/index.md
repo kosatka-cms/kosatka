@@ -124,3 +124,5 @@ change them.
   scripts, icons, the theme's strings.
 - [Distributing a theme](./distribute.md) - a theme in its own
   repository, releases, the themes catalog, testing.
+- [A theme's demo site](./demo-site.md) - the site of the screenshot,
+  installed with one command.

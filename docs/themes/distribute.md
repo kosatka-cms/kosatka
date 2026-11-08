@@ -220,8 +220,8 @@ Before a release:
 - **`app theme check`** passes (see [above](#checking-a-theme)).
 
 - **A demo site** (optional): `demo/<lang>.yaml` - the theme's own
-  demo set, installed with `app install -demo-set <theme>` (see [Demo
-  sets](../contributing/demo-sets.md)): a site that looks like the
+  demo set, installed with `app install -demo-set <theme>` (see [A
+  theme's demo site](./demo-site.md)): a site that looks like the
   screenshot in one command.
 - **The manifest loads.** The theme is on **Appearance** and in
   `app theme list`; a theme with an error in `theme.yaml` isn't, and both
