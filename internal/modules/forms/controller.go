@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"errors"
@@ -327,7 +328,7 @@ func (c *WebformController) formData(ctx context.Context, data map[string]any, w
 
 // Embed handles GET /node/{id}/form/embed: the form alone (webform_form,
 // no page around it) for the "Form" block, which loads it into any page;
-// submitting goes to the form's own page. Not cached: what it shows
+// forms.js sends it and shows the answer in its place (Submit). Not cached: what it shows
 // depends on the visitor.
 func (c *WebformController) Embed(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -346,17 +347,46 @@ func (c *WebformController) Embed(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	c.renderFragment(w, r, wf, user, nil, nil, "webform_form", http.StatusOK)
+}
+
+// renderFragment writes the form's part define (webform_form - the form
+// with values and errs; webform_sent - the confirmation) alone, with
+// status: the "Form" block's content and forms.js's answers.
+func (c *WebformController) renderFragment(w http.ResponseWriter, r *http.Request, wf *Webform, user *modulekit.User, values map[int][]string, errs map[int]string, define string, status int) {
+	ctx := r.Context()
 	data := map[string]any{
 		modulekit.RequestLocationKey: sitetime.FromContext(ctx),
 		modulekit.RequestLanguageKey: i18n.FromContext(ctx),
 		modulekit.RequestThemeKey:    modulekit.RequestTheme(ctx),
 	}
-	c.formData(ctx, data, wf, user, nil, nil)
+	c.formData(ctx, data, wf, user, values, errs)
+	var buf bytes.Buffer
+	if err := c.TemplateService().RenderNamed(&buf, define, data, "webform/detail.html"); err != nil {
+		c.LogFailure(err, "render a form's part", "nodeID", wf.Node.ID, "define", define)
+		httputil.InternalServerError(w)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
-	if err := c.TemplateService().RenderNamed(w, "webform_form", data, "webform/detail.html"); err != nil {
-		c.LogFailure(err, "render form embed", "nodeID", nid)
+	w.WriteHeader(status)
+	_, _ = w.Write(buf.Bytes())
+}
+
+// sentByScript - a submission forms.js sends (X-Requested-With): answered
+// with the form's part, not a page.
+func sentByScript(r *http.Request) bool {
+	return r.Header.Get("X-Requested-With") == "XMLHttpRequest"
+}
+
+// showAgain shows the form again with what was entered and errs: its page,
+// or, to forms.js, the form alone (422 Unprocessable Content).
+func (c *WebformController) showAgain(w http.ResponseWriter, r *http.Request, wf *Webform, user *modulekit.User, values map[int][]string, errs map[int]string) {
+	if sentByScript(r) {
+		c.renderFragment(w, r, wf, user, values, errs, "webform_form", http.StatusUnprocessableEntity)
+		return
 	}
+	c.renderDetail(w, r, wf, user, values, errs, false)
 }
 
 func (c *WebformController) renderDetail(w http.ResponseWriter, r *http.Request, wf *Webform, user *modulekit.User, values map[int][]string, errs map[int]string, sent bool) {
@@ -391,7 +421,9 @@ func (c *WebformController) renderDetail(w http.ResponseWriter, r *http.Request,
 // Submit handles POST /node/{id}/form: the values (element_<id>, several
 // for checkboxes) are checked and stored, then the page shows the
 // confirmation; a field error or a failed CAPTCHA shows the form again
-// with what was entered.
+// with what was entered. To forms.js (sentByScript) - the form's part in
+// place of the page: the form again (422) or the confirmation; with a
+// page after sending, its address in X-Webform-Redirect.
 func (c *WebformController) Submit(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -408,13 +440,15 @@ func (c *WebformController) Submit(w http.ResponseWriter, r *http.Request) {
 	if !c.RequireVisibleOrModerator(w, r, &wf.Node, user) {
 		return
 	}
-	if wf.HasFileElement() {
+	// By what was sent, not by the form: a multipart body (a form with a
+	// file, or a script's FormData) is read as one.
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		err = r.ParseMultipartForm(32 << 20)
 	} else {
 		err = r.ParseForm()
 	}
 	if err != nil {
-		c.renderDetail(w, r, wf, user, nil, map[int]string{0: i18n.N("The form could not be read: is a file too large?")}, false)
+		c.showAgain(w, r, wf, user, nil, map[int]string{0: i18n.N("The form could not be read: is a file too large?")})
 		return
 	}
 	values := map[int][]string{}
@@ -433,13 +467,13 @@ func (c *WebformController) Submit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if modulekit.CheckBotTrap(r) != nil {
-		c.renderDetail(w, r, wf, user, values, map[int]string{0: i18n.N("The form was sent too quickly, or looks sent by a program. Wait a few seconds and send it again.")}, false)
+		c.showAgain(w, r, wf, user, values, map[int]string{0: i18n.N("The form was sent too quickly, or looks sent by a program. Wait a few seconds and send it again.")})
 		return
 	}
 	if modulekit.Captcha() != nil {
 		ok, err := modulekit.Captcha().Verify(ctx, manifest.CaptchaForm, r.FormValue("g-recaptcha-response"), httputil.ClientIP(r))
 		if err != nil || !ok {
-			c.renderDetail(w, r, wf, user, values, map[int]string{0: i18n.N("Confirm that you are not a robot.")}, false)
+			c.showAgain(w, r, wf, user, values, map[int]string{0: i18n.N("Confirm that you are not a robot.")})
 			return
 		}
 	}
@@ -452,14 +486,23 @@ func (c *WebformController) Submit(w http.ResponseWriter, r *http.Request) {
 	var refusal *i18n.Error
 	switch {
 	case errors.As(err, &refusal):
-		c.renderDetail(w, r, wf, user, values, map[int]string{0: refusal.Source}, false)
+		c.showAgain(w, r, wf, user, values, map[int]string{0: refusal.Source})
 		return
 	case err != nil:
 		c.LogFailure(err, "submit form", "nodeID", wf.Node.ID)
 		httputil.InternalServerError(w)
 		return
 	case len(errs) > 0:
-		c.renderDetail(w, r, wf, user, values, errs, false)
+		c.showAgain(w, r, wf, user, values, errs)
+		return
+	}
+	if sentByScript(r) {
+		if wf.ConfirmationURL != "" {
+			w.Header().Set("X-Webform-Redirect", wf.ConfirmationURL)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		c.renderFragment(w, r, wf, user, nil, nil, "webform_sent", http.StatusOK)
 		return
 	}
 	if wf.ConfirmationURL != "" {

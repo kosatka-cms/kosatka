@@ -6,3 +6,9 @@
 :where(.webform-description) {
     margin-bottom: 1rem;
 }
+
+/* The answer to a form sent in place (forms.js) takes the focus, for
+   screen readers: a message, not a control - no focus ring. */
+:where(.webform-confirmation, .webform-error):focus {
+    outline: none;
+}

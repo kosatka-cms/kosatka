@@ -19,7 +19,7 @@
         {{template "node_actions" .}}
 
         {{if .sent}}
-        <div class="alert alert-success webform-confirmation">{{if $wf.Confirmation}}<div class="webform-text">{{$wf.Confirmation}}</div>{{else}}{{t "Thank you, the form has been sent."}}{{end}}</div>
+        {{template "webform_sent" .}}
         <p><a href="{{$wf.Node.URL}}">{{t "Send once more"}}</a></p>
         {{else}}
         {{with $wf.Description}}<div class="webform-text webform-description">{{.}}</div>{{end}}
@@ -35,16 +35,30 @@
 {{end}}
 
 
+{{/* webform_sent - the confirmation after a submission: the form's
+     text, else the engine's. In data-webform-body, as webform_form: on the
+     form's page, and in place of the form when forms.js sends it
+     (WebformController.Submit renders it alone). Takes .webform. */}}
+{{define "webform_sent"}}
+{{$wf := .webform}}
+<div class="webform-body" data-webform-body>
+    <div class="alert alert-success webform-confirmation" role="status" tabindex="-1">{{if $wf.Confirmation}}<div class="webform-text">{{$wf.Confirmation}}</div>{{else}}{{t "Thank you, the form has been sent."}}{{end}}</div>
+</div>
+{{end}}
+
 {{/* webform_form - the form itself (or why it takes nothing now), for the
      form's page and for the "Form" block (WebformController.Embed renders
-     it alone). Takes the page's data: .webform, .values, .fieldErrors,
-     .unavailable, .loginRequired, .recaptcha_site_key. */}}
+     it alone), in data-webform-body: what forms.js replaces with the
+     answer to its submission (the form again with the errors, or
+     webform_sent). Takes the page's data: .webform, .values,
+     .fieldErrors, .unavailable, .loginRequired, .recaptcha_site_key. */}}
 {{define "webform_form"}}
 {{$wf := .webform}}
+<div class="webform-body" data-webform-body>
 {{if .unavailable}}
 <div class="alert alert-secondary webform-unavailable">{{t .unavailable}}{{if .loginRequired}} <a href="/login?destination={{$wf.Node.URL}}">{{t "Log in"}}</a>{{end}}</div>
 {{else}}
-{{with index .fieldErrors 0}}<div class="alert alert-danger">{{t .}}</div>{{end}}
+{{with index .fieldErrors 0}}<div class="alert alert-danger webform-error" role="alert" tabindex="-1">{{t .}}</div>{{end}}
 <form method="POST" action="/node/{{$wf.Node.ID}}/form" class="webform-form" novalidate{{if $wf.HasFileElement}} enctype="multipart/form-data"{{end}}>
     {{botTrap}}
     {{/* webform_source - the page the form is sent from: forms.js puts the
@@ -103,4 +117,5 @@
     <button type="submit" class="btn btn-primary">{{if $wf.SubmitLabel}}{{$wf.SubmitLabel}}{{else}}{{t "Send"}}{{end}}</button>
 </form>
 {{end}}
+</div>
 {{end}}

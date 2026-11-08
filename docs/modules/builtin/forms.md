@@ -204,8 +204,15 @@ The block shows only the questions and the button: the form's title and
 *Text above the form* are not in it, so give the block a title if it
 needs one. The form is loaded into the page by JavaScript, so a cached
 page still shows each visitor what applies to them (logged in, already
-sent, closed). After sending, the visitor lands on the form's own page,
-with its message or its *Page after sending*.
+sent, closed).
+
+A form is sent without leaving the page - in a block, embedded in a text
+or on its own page: the visitor stays where they are, the errors appear
+by the questions with what they typed kept, and after sending the form
+gives way to its message. A form with a *Page after sending* goes to that
+page. Without JavaScript (or should sending fail) the form is sent the
+usual way: the visitor lands on the form's own page, with the errors or
+its message.
 
 A text can show a form the same way, a contact form inside a page, say,
 with the tag `[[form:<id>]]`, the form's content ID ([Embeds](../../guides/embeds.md)).

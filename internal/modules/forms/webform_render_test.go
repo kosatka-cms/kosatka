@@ -51,6 +51,8 @@ func TestWebformDetailTemplate(t *testing.T) {
 		`action="/node/9/form"`, `name="element_1" value="Ann"`, `type="email" id="element_2"`,
 		`type="radio" id="element_3_0" name="element_3" value="Ads"`,
 		`name="element_4" value="Games" checked`, "Enter a valid e-mail address.", "Confirm that you are not a robot.", "Write to us",
+		// What forms.js replaces with its answer, the error to focus.
+		`<div class="webform-body" data-webform-body>`, `class="alert alert-danger webform-error" role="alert" tabindex="-1"`,
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("form: no %q", want)
@@ -71,7 +73,8 @@ func TestWebformDetailTemplate(t *testing.T) {
 	if out := testkit.RenderPageContent(t, "webform/detail.html", data(nil)); strings.Contains(out, "node-actions") {
 		t.Error("actions for a visitor")
 	}
-	if out := testkit.RenderPageContent(t, "webform/detail.html", data(map[string]any{"sent": true})); !strings.Contains(out, "Thank you, the form has been sent.") || strings.Contains(out, "<form") {
+	if out := testkit.RenderPageContent(t, "webform/detail.html", data(map[string]any{"sent": true})); !strings.Contains(out, "Thank you, the form has been sent.") || strings.Contains(out, "<form") ||
+		!strings.Contains(out, `class="alert alert-success webform-confirmation" role="status" tabindex="-1"`) {
 		t.Errorf("sent: %s", out)
 	}
 	if out := testkit.RenderPageContent(t, "webform/detail.html", data(map[string]any{"unavailable": "The form is closed."})); !strings.Contains(out, "The form is closed.") || strings.Contains(out, "<form") {
