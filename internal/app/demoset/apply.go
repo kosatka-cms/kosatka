@@ -911,6 +911,11 @@ func (a *applier) modules(ctx context.Context) error {
 	}
 	for _, name := range slices.Sorted(maps.Keys(a.set.Modules)) {
 		if !demo.Has(name) {
+			// A theme's set may name a module of its own repository the
+			// site isn't built with (install said so).
+			if a.set.FromTheme {
+				continue
+			}
 			return fmt.Errorf("%s: no module with a demo step", name)
 		}
 		if !a.Installed[name] {

@@ -101,7 +101,9 @@ What a demo site usually has:
   (`/static/themes/<theme>/images/…`).
 - **The modules' content** under `modules`: a form with its block in a
   region, a gallery on a content item, a poll. The modules a demo site
-  has content for are installed with it.
+  has content for are installed with it. A module of its own repository
+  (a forum, say) is there only on a site built with it: on another, the
+  install says so and leaves its part out.
 
 ## Installing and checking it
 

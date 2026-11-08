@@ -65,6 +65,23 @@ type Set struct {
 	// format of the module's demo/<lang>.json; a module the site doesn't
 	// have is skipped.
 	Modules map[string]any `yaml:"modules"`
+	// FromTheme - a theme's own set (<theme>/demo/<lang>.yaml): a site
+	// built without a module it has content for (a module of its own
+	// repository) installs without that content (Absent).
+	FromTheme bool `yaml:"-"`
+}
+
+// Absent - the modules the set has content for that this build hasn't
+// (has - whether it has one), sorted: for a theme's own set they are
+// skipped, for the engine's an error.
+func (s *Set) Absent(has func(string) bool) []string {
+	var out []string
+	for _, name := range slices.Sorted(maps.Keys(s.Modules)) {
+		if !has(name) {
+			out = append(out, name)
+		}
+	}
+	return out
 }
 
 // Site - the site's theme (its directory; "" - the starter's), slogan,
@@ -375,8 +392,11 @@ func Load(name, lang string) (*Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, err)
 	}
-	if fromTheme && s.Site.Theme == "" {
-		s.Site.Theme = name
+	if fromTheme {
+		s.FromTheme = true
+		if s.Site.Theme == "" {
+			s.Site.Theme = name
+		}
 	}
 	return s, nil
 }

@@ -152,7 +152,10 @@ title of its link in the footer menu (none - no link).
 Without `-modules`, `app install` installs the standard modules and the
 ones the set has content for; with `-modules`, only those listed (and
 the modules they require), and the set's content for a module the site
-doesn't have is skipped. A module's links go in the menus the `site`
+doesn't have is skipped. A module the site isn't built with at all is
+an error in the engine's set (a misspelt name, say) and skipped in a
+theme's (a module of its own repository, which only some sites have),
+with a line in the install's output. A module's links go in the menus the `site`
 section names (none - no link).
 
 `TestSetsLoad` loads every set in every language: an unknown key, a name

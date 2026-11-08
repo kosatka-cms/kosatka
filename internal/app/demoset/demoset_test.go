@@ -122,9 +122,10 @@ func TestDate(t *testing.T) {
 }
 
 // TestThemeSet - a theme's own demo set (<theme>/demo/<lang>.yaml): listed
-// by the theme's name, put in that theme unless it names one; an
-// embedded set of the same name hides it; Regions - where its blocks and
-// menus go.
+// by the theme's name, put in that theme unless it names one, marked as
+// a theme's (its absent modules skipped on install - Absent lists them);
+// an embedded set of the same name hides it; Regions - where its blocks
+// and menus go.
 func TestThemeSet(t *testing.T) {
 	defer UseSets(os.DirFS("testdata"))()
 	themesDir := t.TempDir()
@@ -143,13 +144,14 @@ func TestThemeSet(t *testing.T) {
 	write("sand/theme.yaml", "name: Sand\n")
 	write("sand/demo/en.yaml", "blocks:\n  - {region: hero, body: <p>Hi</p>}\n  - {region: sidebar, body: <p>Side</p>}\nmenus:\n  - {name: m, label: M, region: hero}\n")
 	write("sand/demo/de.yaml", "site: {theme: other}\n")
+	write("sand/demo/es.yaml", "modules:\n  forms: {title: Hola}\n  forum: {topics: []}\n")
 	write("plain/theme.yaml", "name: Plain\n")
 	write("fixture/demo/en.yaml", "whatever: 1\n")
 
 	if got := Names(); !slices.Equal(got, []string{"fixture", "sand"}) {
 		t.Fatalf("names: %v", got)
 	}
-	if got := Languages("sand"); !slices.Equal(got, []string{"de", "en"}) {
+	if got := Languages("sand"); !slices.Equal(got, []string{"de", "en", "es"}) {
 		t.Errorf("languages: %v", got)
 	}
 	en, err := Load("sand", "en")
@@ -165,8 +167,21 @@ func TestThemeSet(t *testing.T) {
 	if de, err := Load("sand", "de"); err != nil || de.Site.Theme != "other" {
 		t.Errorf("a set naming its theme: %+v %v", de, err)
 	}
-	if _, err := Load("fixture", "en"); err != nil {
+	if !en.FromTheme {
+		t.Error("a theme's set isn't marked as one")
+	}
+	es, err := Load("sand", "es")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := es.Absent(func(m string) bool { return m == "forms" }); !slices.Equal(got, []string{"forum"}) {
+		t.Errorf("absent modules: %v, want [forum]", got)
+	}
+	fixture, err := Load("fixture", "en")
+	if err != nil {
 		t.Errorf("the embedded fixture, not the theme's broken one: %v", err)
+	} else if fixture.FromTheme {
+		t.Error("an engine's set marked as a theme's")
 	}
 	if _, err := Load("plain", "en"); err == nil {
 		t.Error("a theme without a demo set loads")
