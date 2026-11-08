@@ -67,7 +67,8 @@
   or [write your own](https://kosatka-cms.github.io/kosatka/modules/write-a-module/) in Go.
 - **[Themes](https://kosatka-cms.github.io/kosatka/themes/)** - change the look with the
   bundled theme, one from the
-  [themes catalog](https://kosatka-cms.github.io/kosatka/themes/distribute/#the-themes-catalog), or
+  [themes catalog](https://github.com/kosatka-cms/themes) (all of them with
+  their screenshots), or
   [create your own](https://kosatka-cms.github.io/kosatka/themes/create-a-theme/).
 
 ## Running
