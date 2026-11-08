@@ -406,3 +406,20 @@ func TestSanitizeEditor(t *testing.T) {
 		}
 	}
 }
+
+// TestWithoutCode - the code blocks out of a text (any case, with
+// attributes, several), the text around them kept; a text without code or
+// all code stays as it is.
+func TestWithoutCode(t *testing.T) {
+	for _, tc := range []struct{ in, want string }{
+		{`<p>Run:</p><pre><code class="language-go">x := 1</code></pre><p>done</p>`, `<p>Run:</p> <p>done</p>`},
+		{"<p>a</p><PRE data-lang=\"sql\">SELECT 1\n</PRE><p>b</p><pre>c</pre>", "<p>a</p> <p>b</p> "},
+		{`<p>No code</p>`, `<p>No code</p>`},
+		{`<pre>only code</pre>`, `<pre>only code</pre>`},
+		{`<p>a preformatted <pretty> word</p>`, `<p>a preformatted <pretty> word</p>`},
+	} {
+		if got := WithoutCode(tc.in); got != tc.want {
+			t.Errorf("WithoutCode(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

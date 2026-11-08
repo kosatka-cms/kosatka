@@ -107,6 +107,24 @@ func StripToLines(s string) []string {
 	return lines
 }
 
+// WithoutCode - HTML s without its code blocks (<pre> to its </pre>, any
+// case): a preview of a text (an excerpt, a teaser's text, a description)
+// is its prose - code run into one line reads as noise. A text that is all
+// code stays as it is. The result is s's own HTML, as safe as s was.
+func WithoutCode(s string) string {
+	if !strings.Contains(strings.ToLower(s), "<pre") {
+		return s
+	}
+	rest := preBlockRe.ReplaceAllString(s, " ")
+	if StripToText(rest) == "" {
+		return s
+	}
+	return rest
+}
+
+// preBlockRe - a code block, <pre> to its </pre> (WithoutCode).
+var preBlockRe = regexp.MustCompile(`(?is)<pre\b[^>]*>.*?</pre\s*>`)
+
 // blockTagRe - an opening or closing block tag, or <br>.
 var blockTagRe = regexp.MustCompile(`(?i)<(?:br|/?(?:p|div|h[1-6]|li|ul|ol|dl|dt|dd|pre|blockquote|table|tr|td|th|section|article|header|footer|figure|figcaption|hr))\b[^>]*>`)
 

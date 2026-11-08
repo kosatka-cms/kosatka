@@ -319,7 +319,7 @@ field with times or periods shows them as on the content page.
 | *Tag format* | taxonomy fields: `plain` (names), `linked` (links), `badges`; a term of a vocabulary without public term pages is never a link |
 | *Link* | *To the content*, or *To the original image* for an image; not for taxonomy and link fields, which are links themselves |
 | *Custom CSS class* | a class on the field's wrapper |
-| *Trim text (characters)* | strips the HTML and cuts the text at a word boundary, with "…" |
+| *Trim text (characters)* | strips the HTML, leaves out the code blocks (`<pre>`) and cuts the text at a word boundary, with "…" |
 | *Rewrite HTML* | your markup around the value: `{{value}}` is the value, `{{field:<key>}}` another field of the row |
 | *Exclude from display* | the field isn't shown itself but is available as a token |
 | *Hide in the compact "rest" list* | see *Show the first N in full* below |

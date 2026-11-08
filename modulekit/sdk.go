@@ -249,7 +249,8 @@ func StyledPicture(f File, styleName string) Picture { return imageurl.StyledPic
 // OriginalPicture - the image itself, for the template function img.
 func OriginalPicture(f File) Picture { return imageurl.OriginalPicture(f) }
 
-// PlainPreview - the start of s as plain text, at most limit characters.
+// PlainPreview - the start of s as plain text, its code blocks left out,
+// at most limit characters.
 func PlainPreview(s string, limit int) string { return service.GetPlainPreview(s, limit) }
 
 // PublicBaseURL - the site's address for the request (absolute links).
