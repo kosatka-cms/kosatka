@@ -74,9 +74,13 @@ sending* that isn't a path on the site, and lists what to fix.
 
 ## Question types
 
-Each question has its text (*Question*), an optional *Hint under the
-question* and a *Required* checkbox. Some types have settings of their
-own, shown when you choose the type.
+Each question has its text (*Question*), its type and a *Required*
+checkbox; the arrows move it up or down, the cross deletes it. Some
+types have settings of their own, shown when you choose the type. The
+rarer settings are under **More**: an optional *Hint under the
+question*, [Show only if](#show-a-question-only-sometimes) and [Fill
+from the address parameter](#fill-a-question-from-the-address). *More*
+opens by itself on a question where one of them is set.
 
 | Type | The visitor sees | Settings and checks |
 |---|---|---|
@@ -98,7 +102,8 @@ visitor entered and a message under the question.
 
 ### Show a question only sometimes
 
-From the second question on, a question has **Show only if**: choose an
+From the second question on, a question has **Show only if** (under
+*More*): choose an
 earlier question and, in *has the answer*, the answer that shows this
 one (for a choice question, the option's text exactly). Leave *has the
 answer* empty to show the question once the earlier one has any answer.
@@ -116,7 +121,7 @@ condition is dropped.
 
 A question (not a file, not a consent) can take its answer from the
 address the form is opened with: type a parameter's name in **Fill from
-the address parameter**, say `product`. Then a link to the form with
+the address parameter** (under *More*), say `product`. Then a link to the form with
 `?product=Tank RVS-200` opens it with the question answered. The visitor
 can still change the answer, and the server checks it as any other.
 

@@ -97,22 +97,30 @@ func TestWebformDetailTemplate(t *testing.T) {
 }
 
 // TestWebformEditorTemplate - every element is a row keyed by its ID with
-// its fields; the new-row template has the placeholder key.
+// its fields; the new-row template has the placeholder key. A row's
+// "More" is open when one of its settings is set or it has an error; the
+// page attaches the module (its stylesheet).
 func TestWebformEditorTemplate(t *testing.T) {
 	testkit.UseEngineRoot(t)
 	wf := &Webform{Node: modulekit.Node{ID: 9, Slug: "form/contact"}, Elements: testWebformElements()}
+	form := WebformFormFromEntity(wf, time.UTC)
+	form.Elements[1].Prefill = "email"
 	out := testkit.RenderPageContent(t, "node/edit_webform.html", map[string]any{
-		"webform": wf, "editNode": wf, "form": WebformFormFromEntity(wf, time.UTC), "elementTypes": WebformElementTypes,
+		"webform": wf, "editNode": wf, "form": form, "elementTypes": WebformElementTypes,
 		"errors":              map[string]string{"element_3": "Enter the options, one per line."},
 		"canEditNodeSettings": true,
 	})
 	if !strings.Contains(out, `name="created_by"`) || strings.Contains(out, "galleries_enabled") {
 		t.Error("a form's node settings: authoring yes, galleries no")
 	}
+	if all, open := strings.Count(out, `<details class="webform-element-more"`), strings.Count(out, `<details class="webform-element-more" open>`); all != 5 || open != 2 {
+		t.Errorf("More: %d, open %d; want 5 (4 rows and the template), 2 open (a setting, an error)", all, open)
+	}
 	for _, want := range []string{
+		`<!--kosatka:attach forms-->`,
 		`action="/node/9/edit"`, `name="element_row" value="1"`, `name="element_label_1" value="Name"`,
 		`id="element_required_1" name="element_required_1" value="1" checked`, `<option value="radios" selected>One of the options</option>`,
-		"Ads\nErrors", "Enter the options, one per line.", `name="element_row" value="__KEY__"`,
+		"Ads\nErrors", "Enter the options, one per line.", `name="element_row" value="__KEY__"`, `name="element_prefill_2" value="email"`,
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("editor: no %q", want)
