@@ -242,3 +242,4 @@ change them:
 - Build on an existing theme instead of starting from the engine:
   [Subthemes](./manifest.md#subthemes).
 - Publish it: [Distributing a theme](./distribute.md).
+- Give it a demo site, installed with one command: [A theme's demo site](./demo-site.md).

@@ -17,7 +17,8 @@ language, `<lang>.yaml`, holding everything in that language: labels,
 titles and texts. A site is installed in a language the set has.
 
 A theme may bring a demo site of its own: `demo/<lang>.yaml` in the
-theme's directory, in the same format. `-demo-set <theme>` (the theme's
+theme's directory, in the same format (for theme authors: [A theme's
+demo site](../themes/demo-site.md)). `-demo-set <theme>` (the theme's
 directory name) installs it and puts the site in that theme, unless the
 set's `site.theme` names another; an engine's set of the same name comes
 first. Its blocks go in the theme's own regions too, and its texts may
