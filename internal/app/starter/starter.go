@@ -57,8 +57,8 @@ type FieldStorage struct {
 
 // ContentType - a content type with its fields (entity.ContentTypeDef):
 // the default comment mode, whether the author and date are shown,
-// whether a new item is promoted to the front page and whether the type
-// keeps the history of changes.
+// whether a new item is promoted to the front page, whether the type
+// keeps the history of changes and whether its form previews.
 type ContentType struct {
 	Name          string             `yaml:"name"`
 	Label         string             `yaml:"label"`
@@ -67,8 +67,14 @@ type ContentType struct {
 	ShowSubmitted bool               `yaml:"show_submitted"`
 	Promote       bool               `yaml:"promote"`
 	Revisions     bool               `yaml:"revisions"`
-	Fields        []Field            `yaml:"fields"`
+	// Preview - the form's Preview (entity.ContentTypeDef.NoPreview); on
+	// unless false.
+	Preview *bool   `yaml:"preview"`
+	Fields  []Field `yaml:"fields"`
 }
+
+// NoPreview - the type's form without Preview: "preview: false".
+func (t ContentType) NoPreview() bool { return t.Preview != nil && !*t.Preview }
 
 // Field - a field storage on a content type (entity.FieldInstanceDef):
 // the widget, the text formats it allows (by machine name), where it is

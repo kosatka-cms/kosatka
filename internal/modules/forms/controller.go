@@ -56,6 +56,12 @@ func (c *WebformController) editorData(r *http.Request, f *WebformForm, existing
 		data["title"] = i18n.T(ctx, "Create form")
 		c.SetCreateFormTrail(data, i18n.T(ctx, "Create form"))
 	}
+	// The editor's Preview button (FormPreview).
+	nodeID := 0
+	if existing != nil {
+		nodeID = existing.Node.ID
+	}
+	data["formPreviewURL"] = modulekit.FormPreviewPath(string(manifest.ContentType), nodeID)
 	c.ApplyEditorPageSEOFromTitle(data, r)
 	return data
 }

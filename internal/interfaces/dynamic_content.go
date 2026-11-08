@@ -190,11 +190,24 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	}
-	canEdit, canDelete := c.EditDeletePermissions(ctx, &dc.Node, user)
-	// The node's history: a type keeping one, for who may see it.
-	canViewRevisions := canEdit && def.Revisions && c.MayViewRevisions(ctx, &dc.Node, user)
-	// A copy (Clone): who may edit it and create its type's content.
-	canClone := canEdit && user != nil && !def.Embedded && c.authService.CanCreateNode(ctx, dc.Node.Type, user)
+	c.renderItem(w, r, def, fields, dc, user, nil)
+}
+
+// renderItem renders the page of the content item dc
+// (web/templates/dynamic/page.html) for user. preview - the item as its
+// form would save it (FormPreview), nil - as saved: a preview has no
+// actions, no comments and no view counted, and its strip over the page
+// (UnsavedPreview).
+func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Request, def *entity.ContentTypeDef, fields entity.FieldInstanceDefs, dc *entity.DynamicContent, user *entity.User, preview *UnsavedPreview) {
+	ctx := r.Context()
+	var canEdit, canDelete, canViewRevisions, canClone bool
+	if preview == nil {
+		canEdit, canDelete = c.EditDeletePermissions(ctx, &dc.Node, user)
+		// The node's history: a type keeping one, for who may see it.
+		canViewRevisions = canEdit && def.Revisions && c.MayViewRevisions(ctx, &dc.Node, user)
+		// A copy (Clone): who may edit it and create its type's content.
+		canClone = canEdit && user != nil && !def.Embedded && c.authService.CanCreateNode(ctx, dc.Node.Type, user)
+	}
 
 	// Title and description from SEOService templates, over the built-in
 	// fallback.
@@ -321,6 +334,11 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 	trailNode := *dc
 	trailNode.ContentType = *def
 	c.setNodeTrail(ctx, data, trailNode, trailTitle)
+	if preview != nil {
+		data["unsavedPreview"] = preview
+		c.RenderOrFail(w, r, "dynamic/page.html", data)
+		return
+	}
 	c.SetViewTrackNID(data, dc.Node)
 	if moduleParts.comments == "" {
 		c.attachComments(ctx, r, data, &dc.Node, user)

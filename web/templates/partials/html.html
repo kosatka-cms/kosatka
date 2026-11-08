@@ -122,6 +122,25 @@
     </div>
 </div>
 {{end}}
+{{with .unsavedPreview}}{{template "unsaved_preview" .}}{{end}}
+{{end}}
+
+{{/* unsaved_preview - the strip over a content item's page previewed from
+     its form (interfaces.UnsavedPreview: .Errors - what saving would
+     refuse, .FilesLeft - files chosen and not shown); its Close closes
+     the tab the form opened (20-page.js). */}}
+{{define "unsaved_preview"}}
+<div class="unsaved-preview" role="status">
+    <div class="container unsaved-preview-inner">
+        <div class="unsaved-preview-text">
+            <strong>{{t "Preview - not saved."}}</strong>
+            {{t "The page as it will look once the form is saved. The form stays in its tab."}}
+            {{if .FilesLeft}}<div>{{t "The files chosen in the form show once it is saved."}}</div>{{end}}
+            {{with .Errors}}<div class="unsaved-preview-errors">{{t "Saving would be refused:"}}<ul>{{range .}}<li>{{.}}</li>{{end}}</ul></div>{{end}}
+        </div>
+        <button type="button" class="btn btn-sm btn-light unsaved-preview-close" data-preview-close>{{t "Close"}}</button>
+    </div>
+</div>
 {{end}}
 
 {{/* site_icon - the pages' icon (siteIcon: the site's, uploaded on Site

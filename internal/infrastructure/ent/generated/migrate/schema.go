@@ -344,6 +344,7 @@ var (
 		{Name: "show_view_count", Type: field.TypeBool, Default: false},
 		{Name: "revisions", Type: field.TypeBool, Default: false},
 		{Name: "revisions_keep", Type: field.TypeInt, Default: 50, SchemaType: map[string]string{"mysql": "int"}},
+		{Name: "no_preview", Type: field.TypeBool, Default: false},
 		{Name: "embedded", Type: field.TypeBool, Default: false},
 		{Name: "view_roles", Type: field.TypeString, Size: 1024, Default: ""},
 		{Name: "created_by", Type: field.TypeInt, SchemaType: map[string]string{"mysql": "int unsigned"}},

@@ -9030,6 +9030,7 @@ type ContentTypeDefMutation struct {
 	revisions            *bool
 	revisions_keep       *int
 	addrevisions_keep    *int
+	no_preview           *bool
 	embedded             *bool
 	view_roles           *string
 	created_by           *int
@@ -9811,6 +9812,42 @@ func (m *ContentTypeDefMutation) ResetRevisionsKeep() {
 	m.addrevisions_keep = nil
 }
 
+// SetNoPreview sets the "no_preview" field.
+func (m *ContentTypeDefMutation) SetNoPreview(b bool) {
+	m.no_preview = &b
+}
+
+// NoPreview returns the value of the "no_preview" field in the mutation.
+func (m *ContentTypeDefMutation) NoPreview() (r bool, exists bool) {
+	v := m.no_preview
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNoPreview returns the old "no_preview" field's value of the ContentTypeDef entity.
+// If the ContentTypeDef object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContentTypeDefMutation) OldNoPreview(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNoPreview is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNoPreview requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNoPreview: %w", err)
+	}
+	return oldValue.NoPreview, nil
+}
+
+// ResetNoPreview resets all changes to the "no_preview" field.
+func (m *ContentTypeDefMutation) ResetNoPreview() {
+	m.no_preview = nil
+}
+
 // SetEmbedded sets the "embedded" field.
 func (m *ContentTypeDefMutation) SetEmbedded(b bool) {
 	m.embedded = &b
@@ -10045,7 +10082,7 @@ func (m *ContentTypeDefMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ContentTypeDefMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 23)
 	if m.machine_name != nil {
 		fields = append(fields, contenttypedef.FieldMachineName)
 	}
@@ -10096,6 +10133,9 @@ func (m *ContentTypeDefMutation) Fields() []string {
 	}
 	if m.revisions_keep != nil {
 		fields = append(fields, contenttypedef.FieldRevisionsKeep)
+	}
+	if m.no_preview != nil {
+		fields = append(fields, contenttypedef.FieldNoPreview)
 	}
 	if m.embedded != nil {
 		fields = append(fields, contenttypedef.FieldEmbedded)
@@ -10154,6 +10194,8 @@ func (m *ContentTypeDefMutation) Field(name string) (ent.Value, bool) {
 		return m.Revisions()
 	case contenttypedef.FieldRevisionsKeep:
 		return m.RevisionsKeep()
+	case contenttypedef.FieldNoPreview:
+		return m.NoPreview()
 	case contenttypedef.FieldEmbedded:
 		return m.Embedded()
 	case contenttypedef.FieldViewRoles:
@@ -10207,6 +10249,8 @@ func (m *ContentTypeDefMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldRevisions(ctx)
 	case contenttypedef.FieldRevisionsKeep:
 		return m.OldRevisionsKeep(ctx)
+	case contenttypedef.FieldNoPreview:
+		return m.OldNoPreview(ctx)
 	case contenttypedef.FieldEmbedded:
 		return m.OldEmbedded(ctx)
 	case contenttypedef.FieldViewRoles:
@@ -10344,6 +10388,13 @@ func (m *ContentTypeDefMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRevisionsKeep(v)
+		return nil
+	case contenttypedef.FieldNoPreview:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNoPreview(v)
 		return nil
 	case contenttypedef.FieldEmbedded:
 		v, ok := value.(bool)
@@ -10527,6 +10578,9 @@ func (m *ContentTypeDefMutation) ResetField(name string) error {
 		return nil
 	case contenttypedef.FieldRevisionsKeep:
 		m.ResetRevisionsKeep()
+		return nil
+	case contenttypedef.FieldNoPreview:
+		m.ResetNoPreview()
 		return nil
 	case contenttypedef.FieldEmbedded:
 		m.ResetEmbedded()

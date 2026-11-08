@@ -75,9 +75,28 @@ func TestNodeEditLayout(t *testing.T) {
 		t.Errorf("the fields out of order or the field after the group not on a new card:\n%s", out)
 	}
 
+	if strings.Contains(out, "node-edit-preview") {
+		t.Error("a Preview button without formPreviewURL")
+	}
+
 	data["canEditNodeSettings"] = false
+	data["formPreviewURL"] = FormPreviewPath("article", 9)
 	out = renderNodeEdit(t, data)
 	if strings.Contains(out, "node-settings") || strings.Contains(out, "node-edit-publishing") || !strings.Contains(out, "node-edit-save") {
 		t.Errorf("without the right to the settings: only the save card:\n%s", out)
+	}
+	if !strings.Contains(out, `class="btn btn-outline-secondary node-edit-preview" formaction="/node/9/edit/preview" formtarget="_blank" formnovalidate>Preview`) {
+		t.Errorf("no Preview button sending the form to its preview in a new tab:\n%s", out)
+	}
+}
+
+// TestFormPreviewPath - a new item's form previews at its type's create
+// address, an item's at its edit address.
+func TestFormPreviewPath(t *testing.T) {
+	if got := FormPreviewPath("article", 0); got != "/create/article/preview" {
+		t.Errorf("new: %s", got)
+	}
+	if got := FormPreviewPath("article", 9); got != "/node/9/edit/preview" {
+		t.Errorf("edit: %s", got)
 	}
 }

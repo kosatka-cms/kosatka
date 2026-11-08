@@ -155,8 +155,14 @@ type ContentType struct {
 	ShowViewCount bool               `yaml:"show_view_count"`
 	Promote       bool               `yaml:"promote"`
 	Revisions     bool               `yaml:"revisions"`
-	Fields        []Field            `yaml:"fields"`
+	// Preview - the form's Preview (entity.ContentTypeDef.NoPreview); on
+	// unless false.
+	Preview *bool   `yaml:"preview"`
+	Fields  []Field `yaml:"fields"`
 }
+
+// NoPreview - the type's form without Preview: "preview: false".
+func (t ContentType) NoPreview() bool { return t.Preview != nil && !*t.Preview }
 
 // Field - a field storage (the set's or the starter's) on a content
 // type; Widget - its form control (entity.FieldWidget), DateFormat - a

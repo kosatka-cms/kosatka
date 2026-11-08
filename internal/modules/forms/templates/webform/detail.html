@@ -2,7 +2,8 @@
      its text and elements posted to /node/{id}/form as element_<id>; after
      a submission (.sent) the confirmation instead. .values/.fieldErrors -
      what was entered and the errors (by element ID; 0 - the form's), when
-     shown again. */}}
+     shown again. .unsavedPreview - the form previewed from its editor
+     (FormPreview): sending off, no comments. */}}
 {{template "layout.html" .}}
 
 {{define "title"}}{{end}}
@@ -29,7 +30,7 @@
     </article>
 </div>
 
-{{if ne (print .item.Node.CommentMode) "hidden"}}
+{{if and (ne (print .item.Node.CommentMode) "hidden") (not .unsavedPreview)}}
 <div class="clearfix">{{template "comments-placeholder" .}}</div>
 {{end}}
 {{end}}
@@ -114,7 +115,8 @@
     {{end}}
     {{if .recaptcha_site_key}}<script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <div class="g-recaptcha mb-3" data-sitekey="{{.recaptcha_site_key}}"></div>{{end}}
-    <button type="submit" class="btn btn-primary">{{if $wf.SubmitLabel}}{{$wf.SubmitLabel}}{{else}}{{t "Send"}}{{end}}</button>
+    <button type="submit" class="btn btn-primary"{{if .unsavedPreview}} disabled{{end}}>{{if $wf.SubmitLabel}}{{$wf.SubmitLabel}}{{else}}{{t "Send"}}{{end}}</button>
+    {{if .unsavedPreview}}<div class="form-text">{{t "Sending is off in the preview."}}</div>{{end}}
 </form>
 {{end}}
 </div>

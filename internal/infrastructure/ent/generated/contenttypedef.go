@@ -51,6 +51,8 @@ type ContentTypeDef struct {
 	Revisions bool `json:"revisions,omitempty"`
 	// RevisionsKeep holds the value of the "revisions_keep" field.
 	RevisionsKeep int `json:"revisions_keep,omitempty"`
+	// NoPreview holds the value of the "no_preview" field.
+	NoPreview bool `json:"no_preview,omitempty"`
 	// Embedded holds the value of the "embedded" field.
 	Embedded bool `json:"embedded,omitempty"`
 	// ViewRoles holds the value of the "view_roles" field.
@@ -69,7 +71,7 @@ func (*ContentTypeDef) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case contenttypedef.FieldDefaultPromote, contenttypedef.FieldDefaultSticky, contenttypedef.FieldHideEmptyComments, contenttypedef.FieldShowSubmitted, contenttypedef.FieldShowViewCount, contenttypedef.FieldRevisions, contenttypedef.FieldEmbedded:
+		case contenttypedef.FieldDefaultPromote, contenttypedef.FieldDefaultSticky, contenttypedef.FieldHideEmptyComments, contenttypedef.FieldShowSubmitted, contenttypedef.FieldShowViewCount, contenttypedef.FieldRevisions, contenttypedef.FieldNoPreview, contenttypedef.FieldEmbedded:
 			values[i] = new(sql.NullBool)
 		case contenttypedef.FieldID, contenttypedef.FieldStatus, contenttypedef.FieldRevisionsKeep, contenttypedef.FieldCreatedBy:
 			values[i] = new(sql.NullInt64)
@@ -200,6 +202,12 @@ func (_m *ContentTypeDef) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.RevisionsKeep = int(value.Int64)
 			}
+		case contenttypedef.FieldNoPreview:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field no_preview", values[i])
+			} else if value.Valid {
+				_m.NoPreview = value.Bool
+			}
 		case contenttypedef.FieldEmbedded:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field embedded", values[i])
@@ -316,6 +324,9 @@ func (_m *ContentTypeDef) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("revisions_keep=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RevisionsKeep))
+	builder.WriteString(", ")
+	builder.WriteString("no_preview=")
+	builder.WriteString(fmt.Sprintf("%v", _m.NoPreview))
 	builder.WriteString(", ")
 	builder.WriteString("embedded=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Embedded))

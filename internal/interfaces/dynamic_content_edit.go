@@ -488,6 +488,9 @@ func (c *DynamicContentController) renderContentForm(w http.ResponseWriter, r *h
 			nodeID = node.ID
 		}
 		data["autosaveKey"] = draftKey(user.ID, cf.def.MachineName, nodeID)
+		if !cf.def.NoPreview {
+			data["formPreviewURL"] = FormPreviewPath(cf.def.MachineName, nodeID)
+		}
 	}
 	// A workflow's type: its part of the form (node_workflow_<module>).
 	if wf := NodeWorkflowFor(ctx, cf.def.MachineName); wf != nil {

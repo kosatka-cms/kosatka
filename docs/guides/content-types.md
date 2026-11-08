@@ -73,6 +73,7 @@ switches on, the choices made), and *Expand all* opens them all.
 | Redirect to the address from field | A text field of the type. If a content item has a site path (`/…`) or an `http(s)` address in it, its page isn't shown and redirects there instead; an empty value gives a normal page. Useful for slides or teasers that link elsewhere. All content of such a type is left out of the sitemap, the field filled or not. |
 | Display author and dates | Shows the author and dates on the page. |
 | Display view count | Shows the view counter next to the author and dates. A visitor's address counts once in 30 minutes for a content item. |
+| Preview before saving | The content form's *Preview*: the item's page as it will look once saved, in a new tab (see [Preview before saving](#preview-before-saving)). On by default; turn it off for a type whose page shows nothing the form doesn't. |
 
 **New content**
 
@@ -619,6 +620,28 @@ ended - keeps them, and the form offers them again. They are kept in
 that browser only, for each user: another browser or device
 doesn't have them. The fields the form has are restored - texts, the
 visual editors' text, choices; files to upload aren't kept.
+
+## Preview before saving
+
+*Preview* under *Save* in a content item's form opens, in a new tab, the
+item's page as it will look once the form is saved: the theme, the
+fields, the blocks - from what is typed now, nothing saved. The form
+stays as it was in its own tab: change something and preview again, then
+save. Under the site's header the page has a strip, *Preview - not
+saved*, with *Close* for the tab.
+
+- What saving would refuse (an empty required field, a taken address)
+  is listed in the strip, so the form can be put right before *Save*.
+- Files chosen in the form for upload aren't stored by a preview: the
+  page shows the item's saved files and the strip says the chosen ones
+  show once saved. Files picked from the media library show.
+- The preview has no comments and counts no view; it is kept by no
+  cache and asks search engines not to index it.
+- It works for new items and for saved ones; a published item stays as
+  it is on the site until *Save*. The modules' types preview where their
+  module supports it.
+- A type has it unless *Preview before saving* is off in its settings
+  (*Content page*): then its form has no *Preview*.
 
 ## Preview links
 

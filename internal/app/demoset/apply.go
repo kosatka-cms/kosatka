@@ -224,6 +224,7 @@ func (a *applier) contentTypes(ctx context.Context) error {
 			SetShowSubmitted(t.ShowSubmitted).
 			SetShowViewCount(t.ShowViewCount).
 			SetRevisions(t.Revisions).
+			SetNoPreview(t.NoPreview()).
 			SetCreatedBy(a.CreatedBy).
 			SetCreatedAt(a.Now).
 			SetUpdatedAt(a.Now).

@@ -214,3 +214,62 @@ func TestFormSentByScript(t *testing.T) {
 		}
 	})
 }
+
+// TestFormPreviewOfForms - a form previewed from its editor: a new form's
+// questions and an edited one's (a new question with a condition on a
+// saved one) on the form's page, sending off, what saving would refuse in
+// the strip; nothing saved.
+func TestFormPreviewOfForms(t *testing.T) {
+	testdb.Each(t, func(t *testing.T, db testdb.DB) {
+		s := installSite(t, db, nil)
+		s.signIn()
+		if _, page := s.get("/create/form"); !strings.Contains(page, `formaction="/create/form/preview"`) {
+			t.Fatal("no Preview button on /create/form")
+		}
+		code, _, page := s.postRead("/create/form/preview", url.Values{
+			"csrf_token": {s.csrf("/create/form")}, "title": {"Survey"}, "status": {"1"},
+			"element_row": {"new1"}, "element_type_new1": {"text"}, "element_label_new1": {"Your city"},
+		})
+		if code != http.StatusOK || !strings.Contains(page, `class="unsaved-preview"`) || !strings.Contains(page, "Your city") ||
+			!strings.Contains(page, "Sending is off in the preview.") || !strings.Contains(page, ` disabled>Send</button>`) {
+			t.Errorf("a new form's preview: %d", code)
+		}
+		var forms int
+		if err := db.DB.QueryRow("SELECT COUNT(*) FROM nodes WHERE type = 'form'").Scan(&forms); err != nil || forms != 0 {
+			t.Fatalf("forms after a preview: %d, %v", forms, err)
+		}
+		if _, _, page := s.postRead("/create/form/preview", url.Values{"csrf_token": {s.csrf("/create/form")}, "title": {""}}); !strings.Contains(page, "Saving would be refused:") {
+			t.Error("a form saving would refuse: no errors in the strip")
+		}
+
+		if resp := s.post("/create/form", url.Values{
+			"csrf_token": {s.csrf("/create/form")}, "title": {"Request"}, "status": {"1"}, "comment_mode": {"hidden"},
+			"element_row": {"new1"}, "element_type_new1": {"radios"}, "element_label_new1": {"Topic"}, "element_options_new1": {"Ads\nErrors"},
+		}); resp.StatusCode != http.StatusSeeOther {
+			t.Fatalf("create form: %d", resp.StatusCode)
+		}
+		var nid, topicID string
+		if err := db.DB.QueryRow("SELECT id FROM nodes WHERE type = 'form'").Scan(&nid); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.DB.QueryRow("SELECT id FROM webform_elements WHERE label = 'Topic'").Scan(&topicID); err != nil {
+			t.Fatal(err)
+		}
+		edit := "/node/" + nid + "/edit"
+		if _, page := s.get(edit); !strings.Contains(page, `formaction="/node/`+nid+`/edit/preview"`) {
+			t.Fatal("no Preview button on the form's editor")
+		}
+		_, _, page = s.postRead(edit+"/preview", url.Values{
+			"csrf_token": {s.csrf(edit)}, "title": {"Request"}, "status": {"1"},
+			"element_row": {topicID, "new1"}, "element_type_" + topicID: {"radios"}, "element_label_" + topicID: {"Topic"}, "element_options_" + topicID: {"Ads\nErrors"},
+			"element_type_new1": {"text"}, "element_label_new1": {"Budget"}, "element_if_new1": {topicID}, "element_ifvalue_new1": {"Ads"},
+		})
+		if !strings.Contains(page, "Budget") || !strings.Contains(page, `data-visible-if="element_`+topicID+`" data-visible-value="Ads"`) {
+			t.Error("the new question with its condition isn't on the preview")
+		}
+		var questions int
+		if err := db.DB.QueryRow("SELECT COUNT(*) FROM webform_elements").Scan(&questions); err != nil || questions != 1 {
+			t.Errorf("questions after a preview: %d, %v", questions, err)
+		}
+	})
+}

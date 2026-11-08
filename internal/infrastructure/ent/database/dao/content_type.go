@@ -31,6 +31,7 @@ func ToContentTypeDefEntity(v *generated.ContentTypeDef) entity.ContentTypeDef {
 		ShowViewCount:      v.ShowViewCount,
 		Revisions:          v.Revisions,
 		RevisionsKeep:      v.RevisionsKeep,
+		NoPreview:          v.NoPreview,
 		Embedded:           v.Embedded,
 		ViewRoles:          splitViewRoles(v.ViewRoles),
 		CreatedBy:          v.CreatedBy,

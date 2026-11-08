@@ -72,6 +72,14 @@ save a question without its text or type, a choice question without
 options, an invalid address in *Notify of submissions*, or a *Page after
 sending* that isn't a path on the site, and lists what to fix.
 
+*Preview* under *Create* / *Save* opens the form in a new tab as
+visitors will see it, before saving: the questions in order, the hints,
+the required marks, *Show only if* and *Fill from the address
+parameter* working. Its send button is off; nothing is saved, and the
+editor stays as it was in its own tab. What saving would refuse is
+listed over the page (see [Preview before
+saving](../../guides/content-types.md#preview-before-saving)).
+
 ## Question types
 
 Each question has its text (*Question*), its type and a *Required*

@@ -242,6 +242,20 @@ func (_c *ContentTypeDefCreate) SetNillableRevisionsKeep(v *int) *ContentTypeDef
 	return _c
 }
 
+// SetNoPreview sets the "no_preview" field.
+func (_c *ContentTypeDefCreate) SetNoPreview(v bool) *ContentTypeDefCreate {
+	_c.mutation.SetNoPreview(v)
+	return _c
+}
+
+// SetNillableNoPreview sets the "no_preview" field if the given value is not nil.
+func (_c *ContentTypeDefCreate) SetNillableNoPreview(v *bool) *ContentTypeDefCreate {
+	if v != nil {
+		_c.SetNoPreview(*v)
+	}
+	return _c
+}
+
 // SetEmbedded sets the "embedded" field.
 func (_c *ContentTypeDefCreate) SetEmbedded(v bool) *ContentTypeDefCreate {
 	_c.mutation.SetEmbedded(v)
@@ -385,6 +399,10 @@ func (_c *ContentTypeDefCreate) defaults() {
 		v := contenttypedef.DefaultRevisionsKeep
 		_c.mutation.SetRevisionsKeep(v)
 	}
+	if _, ok := _c.mutation.NoPreview(); !ok {
+		v := contenttypedef.DefaultNoPreview
+		_c.mutation.SetNoPreview(v)
+	}
 	if _, ok := _c.mutation.Embedded(); !ok {
 		v := contenttypedef.DefaultEmbedded
 		_c.mutation.SetEmbedded(v)
@@ -489,6 +507,9 @@ func (_c *ContentTypeDefCreate) check() error {
 	}
 	if _, ok := _c.mutation.RevisionsKeep(); !ok {
 		return &ValidationError{Name: "revisions_keep", err: errors.New(`generated: missing required field "ContentTypeDef.revisions_keep"`)}
+	}
+	if _, ok := _c.mutation.NoPreview(); !ok {
+		return &ValidationError{Name: "no_preview", err: errors.New(`generated: missing required field "ContentTypeDef.no_preview"`)}
 	}
 	if _, ok := _c.mutation.Embedded(); !ok {
 		return &ValidationError{Name: "embedded", err: errors.New(`generated: missing required field "ContentTypeDef.embedded"`)}
@@ -609,6 +630,10 @@ func (_c *ContentTypeDefCreate) createSpec() (*ContentTypeDef, *sqlgraph.CreateS
 	if value, ok := _c.mutation.RevisionsKeep(); ok {
 		_spec.SetField(contenttypedef.FieldRevisionsKeep, field.TypeInt, value)
 		_node.RevisionsKeep = value
+	}
+	if value, ok := _c.mutation.NoPreview(); ok {
+		_spec.SetField(contenttypedef.FieldNoPreview, field.TypeBool, value)
+		_node.NoPreview = value
 	}
 	if value, ok := _c.mutation.Embedded(); ok {
 		_spec.SetField(contenttypedef.FieldEmbedded, field.TypeBool, value)

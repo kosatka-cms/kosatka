@@ -308,3 +308,25 @@ func TestWebformPrefillAndSource(t *testing.T) {
 		t.Errorf("submissions: %s", list)
 	}
 }
+
+// TestWebformPreviewTemplate - a form previewed (FormPreview): sending
+// off, with its note; the editor's Preview button with formPreviewURL.
+func TestWebformPreviewTemplate(t *testing.T) {
+	testkit.UseEngineRoot(t)
+	wf := &Webform{Node: modulekit.Node{ID: 9, Slug: "form/contact", Status: 1, CommentMode: modulekit.CommentModeOpen}, Elements: testWebformElements()}
+	out := testkit.RenderPageContent(t, "webform/detail.html", map[string]any{"webform": wf, "item": wf, "values": testWebformValues{}, "fieldErrors": map[int]string{},
+		"unsavedPreview": &modulekit.UnsavedPreview{}})
+	if !strings.Contains(out, `class="btn btn-primary" disabled>Send</button>`) || !strings.Contains(out, "Sending is off in the preview.") {
+		t.Errorf("sending on in the preview:\n%s", out)
+	}
+	if strings.Contains(out, "comments") {
+		t.Error("comments in the preview")
+	}
+	out = testkit.RenderPageContent(t, "node/edit_webform.html", map[string]any{
+		"webform": wf, "editNode": wf, "form": WebformFormFromEntity(wf, time.UTC), "elementTypes": WebformElementTypes,
+		"errors": map[string]string{}, "formPreviewURL": modulekit.FormPreviewPath("form", 9),
+	})
+	if !strings.Contains(out, `formaction="/node/9/edit/preview" formtarget="_blank"`) {
+		t.Error("no Preview button on the editor")
+	}
+}

@@ -67,6 +67,12 @@ type (
 	// NodeTypeController - the pages of a module's content type
 	// (Parts.NodeTypes).
 	NodeTypeController = interfaces.NodeTypeController
+	// NodeFormPreviewer - a module's content type whose form previews its
+	// item unsaved (FormPreviewPath; without it - no Preview button).
+	NodeFormPreviewer = interfaces.NodeFormPreviewer
+	// UnsavedPreview - the strip over a previewed item's page: the page's
+	// data "unsavedPreview".
+	UnsavedPreview = interfaces.UnsavedPreview
 	// NodeMetaFields - a material form's title and description fields.
 	NodeMetaFields = form.NodeMetaFields
 	// Nodes - materials.
@@ -397,6 +403,13 @@ func ModuleNodeTypePathPrefix(nodeType string) string {
 
 // CommentsPerPage - the comments a material's page shows at a time.
 func CommentsPerPage() int { return entity.CommentsPerPage }
+
+// FormPreviewPath - where the form of a new item of contentType (nodeID
+// 0) or of the item nodeID sends its preview: the content form's
+// "formPreviewURL" (its Preview button).
+func FormPreviewPath(contentType string, nodeID int) string {
+	return interfaces.FormPreviewPath(contentType, nodeID)
+}
 
 // NodeTypesByLabel - the node types of labels
 // (ContentTypeService.NodeTypeLabels) sorted by label.

@@ -376,8 +376,7 @@ func (s *WebformService) Create(ctx context.Context, w Webform) (int, error) {
 		}
 		w.Node.Slug = generated
 	}
-	assignWebformMachineNames(w.Elements)
-	resolveWebformConditions(w.Elements)
+	prepareWebformElements(w.Elements, nil)
 	id, err := s.repo.Create(ctx, w)
 	if err != nil {
 		return 0, err
@@ -398,17 +397,7 @@ func (s *WebformService) Update(ctx context.Context, w Webform) error {
 	if err != nil {
 		return err
 	}
-	names := map[int]string{}
-	for _, e := range existing.Elements {
-		names[e.ID] = e.MachineName
-	}
-	for i := range w.Elements {
-		if w.Elements[i].ID > 0 {
-			w.Elements[i].MachineName = names[w.Elements[i].ID]
-		}
-	}
-	assignWebformMachineNames(w.Elements)
-	resolveWebformConditions(w.Elements)
+	prepareWebformElements(w.Elements, existing.Elements)
 	if err := s.repo.Update(ctx, w); err != nil {
 		return err
 	}
@@ -430,6 +419,24 @@ func (s *WebformService) Update(ctx context.Context, w Webform) error {
 		}
 	}
 	return nil
+}
+
+// prepareWebformElements readies the editor's elements for storing: the
+// saved ones (by ID, among saved) keep their machine names, the new ones
+// get theirs (assignWebformMachineNames), the conditions' references
+// become names (resolveWebformConditions).
+func prepareWebformElements(elements, saved WebformElements) {
+	names := map[int]string{}
+	for _, e := range saved {
+		names[e.ID] = e.MachineName
+	}
+	for i := range elements {
+		if elements[i].ID > 0 {
+			elements[i].MachineName = names[elements[i].ID]
+		}
+	}
+	assignWebformMachineNames(elements)
+	resolveWebformConditions(elements)
 }
 
 // resolveWebformConditions turns the editor's references (VisibleIfRef:

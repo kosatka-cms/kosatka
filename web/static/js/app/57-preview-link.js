@@ -58,3 +58,13 @@ Kosatka.behaviors.previewLink = {
         });
     }
 };
+
+// The strip over a form's preview (html.html's unsaved_preview): Close
+// closes the tab the form's Preview button opened. A tab the browser
+// keeps (one navigated further) stays; the strip says the form is in its
+// own tab.
+document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-preview-close]')) {
+        window.close();
+    }
+});

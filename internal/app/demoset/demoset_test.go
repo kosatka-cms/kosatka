@@ -84,6 +84,17 @@ func TestTermScalarOrMapping(t *testing.T) {
 	}
 }
 
+// TestTypePreview - a type's form previews unless "preview: false".
+func TestTypePreview(t *testing.T) {
+	s, err := Parse([]byte("content_types: [{name: a, label: A, comments: open}, {name: b, label: B, comments: open, preview: false}, {name: c, label: C, comments: open, preview: true}]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := []bool{s.ContentTypes[0].NoPreview(), s.ContentTypes[1].NoPreview(), s.ContentTypes[2].NoPreview()}; !slices.Equal(got, []bool{false, true, false}) {
+		t.Errorf("NoPreview: %v", got)
+	}
+}
+
 // TestParseAgo - days, hours and minutes before the install.
 func TestParseAgo(t *testing.T) {
 	for in, want := range map[string]string{"": "0s", "3d": "72h0m0s", "2d5h": "53h0m0s", "45m": "45m0s"} {

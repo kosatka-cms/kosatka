@@ -136,6 +136,15 @@
                     <input type="checkbox" role="switch" id="show_view_count" name="show_view_count" value="1" class="form-check-input" {{if .contentType.ShowViewCount}}checked{{end}}>
                 </div>
             </div>
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="preview" class="admin-setting-label">{{t "Preview before saving"}}</label>
+                    <span class="admin-setting-help">{{t "The content form's Preview opens the item's page as it will look once saved, in a new tab."}}</span>
+                </div>
+                <div class="admin-setting-control admin-setting-control--switch form-check form-switch">
+                    <input type="checkbox" role="switch" id="preview" name="preview" value="1" class="form-check-input" {{if not .contentType.NoPreview}}checked{{end}}>
+                </div>
+            </div>
         </div>
     </details>
 

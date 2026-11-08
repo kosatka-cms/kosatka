@@ -356,9 +356,12 @@ func RegisterNodeRoutes(
 
 	r.Handle("GET /create/{type}", authRequired(nodeCreateAccess(http.HandlerFunc(nodeDispatcher.CreateForm))))
 	r.Handle("POST /create/{type}", authRequired(nodeCreateAccess(http.HandlerFunc(nodeDispatcher.Create))))
+	// The form previewed (its Preview button): who may submit it.
+	r.Handle("POST /create/{type}/preview", authRequired(nodeCreateAccess(http.HandlerFunc(nodeDispatcher.CreatePreview))))
 
 	r.Handle("GET /node/{id}/edit", authRequired(nodeEditAccessByID(http.HandlerFunc(nodeDispatcher.Edit))))
 	r.Handle("POST /node/{id}/edit", authRequired(nodeEditAccessByID(http.HandlerFunc(nodeDispatcher.Save))))
+	r.Handle("POST /node/{id}/edit/preview", authRequired(nodeEditAccessByID(http.HandlerFunc(nodeDispatcher.EditPreview))))
 
 	r.Handle("GET /node/{id}/delete", authRequired(nodeDeleteAccessByID(http.HandlerFunc(nodeController.DeleteConfirm))))
 	r.Handle("POST /node/{id}/delete", authRequired(nodeDeleteAccessByID(http.HandlerFunc(nodeDispatcher.Delete))))

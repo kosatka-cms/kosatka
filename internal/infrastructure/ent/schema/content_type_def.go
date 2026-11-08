@@ -56,6 +56,9 @@ func (ContentTypeDef) Fields() []ent.Field {
 		// RevisionsKeep.
 		field.Bool("revisions").Default(false),
 		field.Int("revisions_keep").SchemaType(mysqlType("int")).Default(50),
+		// no_preview - entity.ContentTypeDef.NoPreview: the type's form
+		// without Preview (on unless turned off).
+		field.Bool("no_preview").Default(false),
 		// embedded - entity.ContentTypeDef.Embedded: a field set, its
 		// nodes items of blocks fields. Set on creating, never changed.
 		field.Bool("embedded").Default(false),
