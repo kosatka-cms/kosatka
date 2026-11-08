@@ -61,6 +61,11 @@ type ContentTypeDef struct {
 	// RevisionsKeep - how many of a node's revisions are kept, the oldest
 	// pruned beyond; 0 - all.
 	RevisionsKeep int
+	// NoPreview - the type's content form has no Preview (its item's page
+	// unsaved, interfaces.FormPreviewPath): off where the page tells
+	// nothing the form doesn't. Stored the other way round, so a type is
+	// previewed unless turned off.
+	NoPreview bool
 	// Embedded - a field set: its nodes are items of the blocks fields
 	// (FieldTypeBlocks) of other content, not content of their own -
 	// no page, address, lists, search or permissions; ContentTypes leaves

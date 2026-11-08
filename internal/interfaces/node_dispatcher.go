@@ -20,6 +20,15 @@ type NodeTypeController interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
+// NodeFormPreviewer - a module's content type (its NodeTypeController)
+// whose form previews its item unsaved: FormPreview handles POST
+// /create/{type}/preview and /node/{id}/edit/preview (the form's Preview
+// button, FormPreviewPath; r.PathValue("id") empty on create). A type
+// without it has no preview (404).
+type NodeFormPreviewer interface {
+	FormPreview(w http.ResponseWriter, r *http.Request)
+}
+
 // NodeDispatcher serves a node's pages and forms: by the controller its
 // module registered for its type (RegisterType), else by the
 // DynamicContentController.
@@ -90,6 +99,29 @@ func (nd *NodeDispatcher) Edit(w http.ResponseWriter, r *http.Request) {
 // Save - POST /node/{id}/edit: the node's edit form submitted.
 func (nd *NodeDispatcher) Save(w http.ResponseWriter, r *http.Request) {
 	nd.dispatch(w, r, NodeTypeController.Save, nd.dynamicCtrl.Save)
+}
+
+// CreatePreview - POST /create/{type}/preview: the new node's form
+// previewed, unsaved (DynamicContentController.CreatePreview; a module's
+// type - its NodeFormPreviewer).
+func (nd *NodeDispatcher) CreatePreview(w http.ResponseWriter, r *http.Request) {
+	nd.dispatch(w, r, nd.modulePreview, nd.dynamicCtrl.CreatePreview)
+}
+
+// EditPreview - POST /node/{id}/edit/preview: the node's edit form
+// previewed, unsaved (as CreatePreview).
+func (nd *NodeDispatcher) EditPreview(w http.ResponseWriter, r *http.Request) {
+	nd.dispatch(w, r, nd.modulePreview, nd.dynamicCtrl.EditPreview)
+}
+
+// modulePreview - a module's type's preview: its NodeFormPreviewer, not
+// found without one.
+func (nd *NodeDispatcher) modulePreview(c NodeTypeController, w http.ResponseWriter, r *http.Request) {
+	if p, ok := c.(NodeFormPreviewer); ok {
+		p.FormPreview(w, r)
+		return
+	}
+	nd.dynamicCtrl.RenderNotFound(w, r)
 }
 
 // Delete - POST /node/{id}/delete: the node deleted.

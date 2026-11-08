@@ -390,8 +390,8 @@ func (c *checker) translations(engine []i18n.Source) error {
 }
 
 // demo checks the theme's own demo sets (demo/<lang>.yaml, app install
-// -demo-set <theme>): each loads as the engine's sets do, its blocks and
-// menus in the theme's regions (a subtheme's, without regions of its
+// -demo-set <theme>): each loads as the engine's sets do, its own
+// pictures in demo/, its blocks and menus in the theme's regions (a subtheme's, without regions of its
 // own, are its base's: not checked).
 func (c *checker) demo(info entity.ThemeInfo, manifestOK bool) error {
 	sets, err := filepath.Glob(filepath.Join(c.dir, "demo", "*.yaml"))
@@ -409,6 +409,10 @@ func (c *checker) demo(info entity.ThemeInfo, manifestOK bool) error {
 		if err != nil {
 			c.problem(rel, 0, "%v", err)
 			continue
+		}
+		// Its own pictures (an image field's {file: …}): in demo/, images.
+		for _, err := range set.CheckPictures(os.DirFS(filepath.Join(c.dir, "demo"))) {
+			c.problem(rel, 0, "%v", err)
 		}
 		if !manifestOK || len(info.Regions) == 0 {
 			continue

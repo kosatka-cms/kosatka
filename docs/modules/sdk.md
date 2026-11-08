@@ -182,6 +182,19 @@ Every field of `modulekit.Parts` is optional:
 | `Requirements` | Its lines on the status report, checked while it is on |
 | `UserContent` | Its content of a user that *Delete the account and all its content* (People) also counts and deletes, before the account: `modulekit.UserContent{Label, Count, Delete}`. `Label` names the count on the confirmation, a translation source with `@count` (`"private messages: @count"`). Nothing is asked of a module never installed |
 
+A content type's controller that also implements
+`modulekit.NodeFormPreviewer` (`FormPreview(w, r)`) previews its form:
+the form's *Preview* button posts the form to `POST
+/create/{type}/preview` or `/node/{id}/edit/preview`
+(`modulekit.FormPreviewPath(type, id)`; `r.PathValue("id")` is empty on
+create), in a new tab, and `FormPreview` renders the item as it would be
+saved, saving nothing. The module's edit page shows the button when its
+data has `"formPreviewURL"` (that path); the preview page shows the
+strip over it when its data has `"unsavedPreview"` (a
+`*modulekit.UnsavedPreview`: `Errors` - what saving would refuse,
+`FilesLeft` - files were chosen and not shown). A type without
+`FormPreview` has no preview: those addresses answer 404.
+
 `Requirements` is a `modulekit.StatusCheck`: `func(ctx) []modulekit.Requirement`.
 A `Requirement` has a `Title` (what was checked), a `Value` (what was
 found), a `Description` (HTML: what to do, when not OK) - all translated
@@ -567,6 +580,11 @@ helpers, in the install's transaction.
 - `demokit.CreateNode`, `demokit.CreateComments`, `demokit.ImageFile` -
   a demo content item of the module's type, its comments, a drawn
   picture.
+- `demokit.SetPicture(ctx, env, rel, file, alt, at)` - a picture of the
+  demo set's own, named in the module's content as `{file: …}` (a path in
+  the set's directory, a theme's `demo/`): stored at `rel` with its file
+  row. The set's check finds every `file` in the modules' content, so a
+  module names its pictures that way.
 - `demokit.Vocabulary`, `demokit.Term`, `demokit.IndexTerm` - a
   vocabulary, a term, an item filed under a term.
 - `demokit.PlacePlugin(ctx, env, id, config, demokit.Placement{…})`,

@@ -72,11 +72,23 @@ save a question without its text or type, a choice question without
 options, an invalid address in *Notify of submissions*, or a *Page after
 sending* that isn't a path on the site, and lists what to fix.
 
+*Preview* under *Create* / *Save* opens the form in a new tab as
+visitors will see it, before saving: the questions in order, the hints,
+the required marks, *Show only if* and *Fill from the address
+parameter* working. Its send button is off; nothing is saved, and the
+editor stays as it was in its own tab. What saving would refuse is
+listed over the page (see [Preview before
+saving](../../guides/content-types.md#preview-before-saving)).
+
 ## Question types
 
-Each question has its text (*Question*), an optional *Hint under the
-question* and a *Required* checkbox. Some types have settings of their
-own, shown when you choose the type.
+Each question has its text (*Question*), its type and a *Required*
+checkbox; the arrows move it up or down, the cross deletes it. Some
+types have settings of their own, shown when you choose the type. The
+rarer settings are under **More**: an optional *Hint under the
+question*, [Show only if](#show-a-question-only-sometimes) and [Fill
+from the address parameter](#fill-a-question-from-the-address). *More*
+opens by itself on a question where one of them is set.
 
 | Type | The visitor sees | Settings and checks |
 |---|---|---|
@@ -98,7 +110,8 @@ visitor entered and a message under the question.
 
 ### Show a question only sometimes
 
-From the second question on, a question has **Show only if**: choose an
+From the second question on, a question has **Show only if** (under
+*More*): choose an
 earlier question and, in *has the answer*, the answer that shows this
 one (for a choice question, the option's text exactly). Leave *has the
 answer* empty to show the question once the earlier one has any answer.
@@ -116,7 +129,7 @@ condition is dropped.
 
 A question (not a file, not a consent) can take its answer from the
 address the form is opened with: type a parameter's name in **Fill from
-the address parameter**, say `product`. Then a link to the form with
+the address parameter** (under *More*), say `product`. Then a link to the form with
 `?product=Tank RVS-200` opens it with the question answered. The visitor
 can still change the answer, and the server checks it as any other.
 
@@ -204,8 +217,15 @@ The block shows only the questions and the button: the form's title and
 *Text above the form* are not in it, so give the block a title if it
 needs one. The form is loaded into the page by JavaScript, so a cached
 page still shows each visitor what applies to them (logged in, already
-sent, closed). After sending, the visitor lands on the form's own page,
-with its message or its *Page after sending*.
+sent, closed).
+
+A form is sent without leaving the page - in a block, embedded in a text
+or on its own page: the visitor stays where they are, the errors appear
+by the questions with what they typed kept, and after sending the form
+gives way to its message. A form with a *Page after sending* goes to that
+page. Without JavaScript (or should sending fail) the form is sent the
+usual way: the visitor lands on the form's own page, with the errors or
+its message.
 
 A text can show a form the same way, a contact form inside a page, say,
 with the tag `[[form:<id>]]`, the form's content ID ([Embeds](../../guides/embeds.md)).

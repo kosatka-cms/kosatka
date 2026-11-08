@@ -329,3 +329,21 @@ func TestWebformActions(t *testing.T) {
 		t.Errorf("object: %+v", o)
 	}
 }
+
+// TestPreviewElements - a previewed form's elements: a saved one keeps
+// its machine name, a new one is named and numbered after every other,
+// a condition on it resolves to its name.
+func TestPreviewElements(t *testing.T) {
+	saved := WebformElements{{ID: 4, MachineName: "topic", Label: "Topic"}, {ID: 7, MachineName: "gone", Label: "Gone"}}
+	elements := WebformElements{{ID: 4, Label: "Topic"}, {Label: "Budget", VisibleIfRef: 1, VisibleIfValue: "Ads"}, {Label: "Note", VisibleIfRef: 2}}
+	previewElements(elements, saved)
+	if elements[0].MachineName != "topic" || elements[0].ID != 4 {
+		t.Errorf("the saved one: %+v", elements[0])
+	}
+	if elements[1].ID != 8 || elements[2].ID != 9 || elements[1].MachineName != "budget" {
+		t.Errorf("the new ones: %+v %+v", elements[1], elements[2])
+	}
+	if elements[1].VisibleIfElement != "topic" || elements[2].VisibleIfElement != "budget" {
+		t.Errorf("the conditions: %q, %q", elements[1].VisibleIfElement, elements[2].VisibleIfElement)
+	}
+}

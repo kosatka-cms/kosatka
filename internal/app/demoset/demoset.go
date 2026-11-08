@@ -65,6 +65,26 @@ type Set struct {
 	// format of the module's demo/<lang>.json; a module the site doesn't
 	// have is skipped.
 	Modules map[string]any `yaml:"modules"`
+	// FromTheme - a theme's own set (<theme>/demo/<lang>.yaml): a site
+	// built without a module it has content for (a module of its own
+	// repository) installs without that content (Absent).
+	FromTheme bool `yaml:"-"`
+	// files - the set's directory (Load): its own pictures (Pictures);
+	// nil - a set parsed alone.
+	files fs.FS
+}
+
+// Absent - the modules the set has content for that this build hasn't
+// (has - whether it has one), sorted: for a theme's own set they are
+// skipped, for the engine's an error.
+func (s *Set) Absent(has func(string) bool) []string {
+	var out []string
+	for _, name := range slices.Sorted(maps.Keys(s.Modules)) {
+		if !has(name) {
+			out = append(out, name)
+		}
+	}
+	return out
 }
 
 // Site - the site's theme (its directory; "" - the starter's), slogan,
@@ -138,8 +158,14 @@ type ContentType struct {
 	ShowViewCount bool               `yaml:"show_view_count"`
 	Promote       bool               `yaml:"promote"`
 	Revisions     bool               `yaml:"revisions"`
-	Fields        []Field            `yaml:"fields"`
+	// Preview - the form's Preview (entity.ContentTypeDef.NoPreview); on
+	// unless false.
+	Preview *bool   `yaml:"preview"`
+	Fields  []Field `yaml:"fields"`
 }
+
+// NoPreview - the type's form without Preview: "preview: false".
+func (t ContentType) NoPreview() bool { return t.Preview != nil && !*t.Preview }
 
 // Field - a field storage (the set's or the starter's) on a content
 // type; Widget - its form control (entity.FieldWidget), DateFormat - a
@@ -360,8 +386,9 @@ func Languages(name string) []string {
 	return out
 }
 
-// Load reads set name in lang and checks it. A theme's own set without a
-// theme of its own (site.theme) puts the site in that theme.
+// Load reads set name in lang and checks it, its own pictures too
+// (CheckPictures). A theme's own set without a theme of its own
+// (site.theme) puts the site in that theme.
 func Load(name, lang string) (*Set, error) {
 	fsys, dir, fromTheme, ok := source(name)
 	if !ok {
@@ -375,8 +402,17 @@ func Load(name, lang string) (*Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, err)
 	}
-	if fromTheme && s.Site.Theme == "" {
-		s.Site.Theme = name
+	if s.files, err = fs.Sub(fsys, dir); err != nil {
+		return nil, fmt.Errorf("demo set %s: %w", name, err)
+	}
+	if errs := s.CheckPictures(s.files); len(errs) > 0 {
+		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, errors.Join(errs...))
+	}
+	if fromTheme {
+		s.FromTheme = true
+		if s.Site.Theme == "" {
+			s.Site.Theme = name
+		}
 	}
 	return s, nil
 }
@@ -489,6 +525,22 @@ func (s *Set) check() error {
 			errs = append(errs, fmt.Errorf("node %q: %w", n.Key, err))
 		}
 		errs = append(errs, checkComments(n.Key, n.Replies, kinds["user"].seen)...)
+		for _, name := range slices.Sorted(maps.Keys(n.Fields)) {
+			for _, item := range fieldItems(n.Fields[name]) {
+				if f, _ := pictureFile(item); f != "" {
+					if err := checkPictureName(f); err != nil {
+						errs = append(errs, fmt.Errorf("node %q: %s: %w", n.Key, name, err))
+					}
+				}
+			}
+		}
+	}
+	for _, name := range slices.Sorted(maps.Keys(s.Modules)) {
+		moduleFiles(s.Modules[name], func(f string) {
+			if err := checkPictureName(f); err != nil {
+				errs = append(errs, fmt.Errorf("modules: %s: %w", name, err))
+			}
+		})
 	}
 	for _, v := range s.Views {
 		kinds["view"].add(v.Name)

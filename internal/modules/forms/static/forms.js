@@ -1,5 +1,6 @@
 // Forms module (entity.ModuleForms), loaded after app.js on the pages
-// that attach it ({{attach}}: its forms, the "Form" block).
+// that attach it ({{attach}}: its forms, the "Form" block). Its forms are
+// sent in place (webformSend).
 
 // ===== Conditions =====
 // An element with data-visible-if="element_<id>" is shown only when that
@@ -161,36 +162,38 @@ document.addEventListener('change', function (e) {
 // A block placed with a form (blocks/webform.html) is an empty
 // [data-webform-embed] element: its form is loaded from the module
 // (/node/<id>/form/embed), so a cached page still shows each visitor what
-// they may send. Submitting goes to the form's own page.
+// they may send. It is sent in place (webformSend, below).
 Kosatka.behaviors.webformBlocks = {
     attach: function (context) {
         Kosatka.once('webform-embed', '[data-webform-embed]', context).forEach(loadWebformBlock);
     }
 };
 
-function loadWebformBlock(block) {
-    // Scripts inserted as HTML don't run: the reCAPTCHA script is added
-    // anew (it renders the widgets present when it loads) or, once loaded,
-    // asked to render the new widget.
-    function startCaptcha(root) {
-        var widget = root.querySelector('.g-recaptcha');
-        if (!widget) {
-            return;
-        }
-        if (window.grecaptcha && window.grecaptcha.render) {
-            window.grecaptcha.render(widget);
-            return;
-        }
-        var old = root.querySelector('script[src*="recaptcha"]');
-        if (old && !document.querySelector('script[data-webform-captcha]')) {
-            var s = document.createElement('script');
-            s.src = old.src;
-            s.async = true;
-            s.defer = true;
-            s.setAttribute('data-webform-captcha', '1');
-            document.head.appendChild(s);
-        }
+// webformStartCaptcha - the reCAPTCHA widget of a form put in the page as
+// HTML (whose scripts don't run): the reCAPTCHA script is added anew (it
+// renders the widgets present when it loads) or, once loaded, asked to
+// render the new widget.
+function webformStartCaptcha(root) {
+    var widget = root.querySelector('.g-recaptcha');
+    if (!widget) {
+        return;
     }
+    if (window.grecaptcha && window.grecaptcha.render) {
+        window.grecaptcha.render(widget);
+        return;
+    }
+    var old = root.querySelector('script[src*="recaptcha"]');
+    if (old && !document.querySelector('script[data-webform-captcha]')) {
+        var s = document.createElement('script');
+        s.src = old.src;
+        s.async = true;
+        s.defer = true;
+        s.setAttribute('data-webform-captcha', '1');
+        document.head.appendChild(s);
+    }
+}
+
+function loadWebformBlock(block) {
     fetch(block.getAttribute('data-webform-embed'), { credentials: 'same-origin' })
         .then(function (resp) {
             if (!resp.ok) {
@@ -200,12 +203,91 @@ function loadWebformBlock(block) {
         })
         .then(function (html) {
             block.innerHTML = html;
-            startCaptcha(block);
+            webformStartCaptcha(block);
             Kosatka.attachBehaviors(block);
         })
         .catch(function () {
             block.remove();
         });
+}
+
+// ===== Sending in place =====
+// A form is sent without leaving the page - its own, a block's or an
+// embedded one: the answer (WebformController.Submit, to X-Requested-With)
+// replaces the form's [data-webform-body] - the form again with the
+// errors (422), or the confirmation; X-Webform-Redirect - the form's page
+// after sending, gone to. The button is off while it is sent; then the
+// focus goes to the confirmation or to the first error. Anything else (no
+// network, a refusal) sends the form the usual way, so it is never lost.
+Kosatka.behaviors.webformSend = {
+    attach: function (context) {
+        Kosatka.once('webform-send', 'form.webform-form', context).forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                webformSend(form, e);
+            });
+        });
+    }
+};
+
+function webformSend(form, e) {
+    if (form.hasAttribute('data-webform-plain') || !window.fetch || !window.FormData) {
+        return;
+    }
+    e.preventDefault();
+    if (form.hasAttribute('data-webform-sending')) {
+        return;
+    }
+    var body = form.closest('[data-webform-body]');
+    var button = form.querySelector('[type="submit"]');
+    form.setAttribute('data-webform-sending', '1');
+    form.setAttribute('aria-busy', 'true');
+    if (button) {
+        button.disabled = true;
+    }
+    function plain() {
+        form.setAttribute('data-webform-plain', '1');
+        HTMLFormElement.prototype.submit.call(form);
+    }
+    // A form without a file goes as the browser sends it without a
+    // script (urlencoded); one with a file - multipart.
+    var data = new FormData(form);
+    fetch(form.action, {
+        method: 'POST',
+        body: form.enctype === 'multipart/form-data' ? data : new URLSearchParams(data),
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(function (resp) {
+            var go = resp.headers.get('X-Webform-Redirect');
+            if (resp.ok && go) {
+                window.location.assign(go);
+                return null;
+            }
+            if (!body || (!resp.ok && resp.status !== 422)) {
+                throw new Error('HTTP ' + resp.status);
+            }
+            return resp.text();
+        })
+        .then(function (html) {
+            if (html === null) {
+                return;
+            }
+            var holder = document.createElement('div');
+            holder.innerHTML = html;
+            var answer = holder.querySelector('[data-webform-body]');
+            if (!answer) {
+                throw new Error('no form in the answer');
+            }
+            body.replaceWith(answer);
+            webformStartCaptcha(answer);
+            Kosatka.attachBehaviors(answer);
+            var target = answer.querySelector('.webform-confirmation, .webform-error') ||
+                answer.querySelector('.has-error input, .has-error select, .has-error textarea');
+            if (target) {
+                target.focus();
+            }
+        })
+        .catch(plain);
 }
 
 // ===== Submissions =====

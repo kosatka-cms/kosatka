@@ -13,11 +13,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/jpeg" // the decoders StoredImage reads a picture's size with
+	_ "image/png"
 	"io/fs"
 	"path"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/image/webp" // a WebP picture too
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/domain/files"
@@ -56,6 +60,9 @@ type Env struct {
 	Data []byte
 	// Nodes - a demo set's nodes by key, the ones its Data may name.
 	Nodes map[string]int
+	// Files - a demo set's directory (a theme's demo/): the pictures of
+	// its own its Data names ({file: …}); nil - none.
+	Files fs.FS
 }
 
 // Step - a set's demo step.
@@ -157,12 +164,32 @@ func ImageFile(ctx context.Context, env Env, rel string, w, h, i int, alt string
 	if err != nil {
 		return 0, err
 	}
+	return imageRow(ctx, env, uri, "image/jpeg", w, h, int(info.Size), alt, at)
+}
+
+// StoredImage puts the picture data (a JPEG, a PNG or a WebP: a demo
+// set's own) at rel of the public files and adds its file row, returning
+// its ID.
+func StoredImage(ctx context.Context, env Env, rel string, data []byte, alt string, at time.Time) (int, error) {
+	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return 0, fmt.Errorf("reading the picture %s: %w", rel, err)
+	}
+	mime := "image/" + format
+	if _, err := paths.PublicStore().Put(ctx, rel, bytes.NewReader(data), filestore.PutOptions{ContentType: mime}); err != nil {
+		return 0, err
+	}
+	return imageRow(ctx, env, entity.PublicScheme+rel, mime, cfg.Width, cfg.Height, len(data), alt, at)
+}
+
+// imageRow adds the file row of an image written to uri.
+func imageRow(ctx context.Context, env Env, uri, mime string, w, h, size int, alt string, at time.Time) (int, error) {
 	f, err := env.Client.File.Create().
 		SetURI(uri).
-		SetMimeType("image/jpeg").
+		SetMimeType(mime).
 		SetWidth(w).
 		SetHeight(h).
-		SetSizeBytes(int(info.Size)).
+		SetSizeBytes(size).
 		SetAlt(alt).
 		SetCreatedBy(env.CreatedBy).
 		SetCreatedAt(at).

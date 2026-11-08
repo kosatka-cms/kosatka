@@ -9,7 +9,7 @@
 
 {{define "breadcrumb"}}{{template "breadcrumbs_nav" .}}{{end}}
 
-{{define "content"}}
+{{define "content"}}{{attach "forms"}}
 <article class="node node-edit webform-edit">
     <h1 class="node-edit-title">{{.title}}</h1>
 
@@ -92,64 +92,60 @@
 
 {{/* webform_element_row - one question row of the editor: dict Key (the
      row's key), El (form.WebformElementInput; nil - a new row), Types,
-     Error. */}}
+     Error. Its head - the question, its type and the buttons; the
+     settings of its type (webform-editor.js shows them); "Required"; the
+     rarer settings under "More", open when one is set or the row has an
+     error. */}}
 {{define "webform_element_row"}}
-<div class="webform-element-row card mb-2">
-    <div class="card-body">
-        <input type="hidden" name="element_row" value="{{.Key}}">
-        {{with .Error}}<div class="text-danger small mb-1">{{.}}</div>{{end}}
-        <div class="row g-2">
-            <div class="col-md-7">
-                <input type="text" name="element_label_{{.Key}}" value="{{with .El}}{{.Label}}{{end}}" class="form-control" placeholder="{{t "Question"}}" maxlength="500">
-            </div>
-            <div class="col-md-3">
-                {{$current := ""}}{{with .El}}{{$current = print .Type}}{{end}}
-                <select name="element_type_{{.Key}}" class="form-select webform-element-type">
-                    {{range .Types}}<option value="{{.}}" {{if eq (print .) $current}}selected{{end}}>{{t .Label}}</option>{{end}}
-                </select>
-            </div>
-            <div class="col-md-2 text-end">
-                <button type="button" class="btn btn-outline-secondary btn-sm webform-element-up" title="{{t "Move up"}}" aria-label="{{t "Move up"}}">↑</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm webform-element-down" title="{{t "Move down"}}" aria-label="{{t "Move down"}}">↓</button>
-                <button type="button" class="btn btn-outline-danger btn-sm webform-element-remove" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">×</button>
-            </div>
-        </div>
-        <input type="text" name="element_description_{{.Key}}" value="{{with .El}}{{.Description}}{{end}}" class="form-control form-control-sm mt-2" placeholder="{{t "Hint under the question (optional)"}}">
-        <div class="webform-element-options mt-2">
-            <textarea name="element_options_{{.Key}}" rows="3" class="form-control form-control-sm" placeholder="{{t "Options, one per line"}}">{{with .El}}{{.Options}}{{end}}</textarea>
-        </div>
-        <div class="webform-element-ext mt-2">
-            <input type="text" name="element_ext_{{.Key}}" value="{{with .El}}{{.Ext}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Allowed extensions, e.g. pdf, docx, jpg (empty - documents and pictures)"}}">
-        </div>
-        <div class="row g-2 mt-2 webform-element-range">
-            <div class="col"><input type="text" inputmode="decimal" name="element_min_{{.Key}}" value="{{with .El}}{{.Min}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Minimum (optional)"}}"></div>
-            <div class="col"><input type="text" inputmode="decimal" name="element_max_{{.Key}}" value="{{with .El}}{{.Max}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Maximum (optional)"}}"></div>
-        </div>
-        <div class="webform-element-link mt-2">
-            <input type="text" name="element_link_{{.Key}}" value="{{with .El}}{{.Link}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Link to the privacy policy, e.g. /privacy (optional)"}}">
-        </div>
-        <div class="row g-2 mt-2 align-items-center webform-element-if">
-            <div class="col-auto small text-muted">{{t "Show only if"}}</div>
-            <div class="col-md-4">
-                <select name="element_if_{{.Key}}" class="form-select form-select-sm webform-element-if-target" data-current="{{with .El}}{{.IfKey}}{{end}}">
-                    <option value="">{{t "- always -"}}</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="text" name="element_ifvalue_{{.Key}}" value="{{with .El}}{{.IfValue}}{{end}}" class="form-control form-control-sm" placeholder="{{t "has the answer (empty - any answer)"}}">
-            </div>
-        </div>
-        <div class="row g-2 mt-2 align-items-center webform-element-prefill">
-            <div class="col-auto small text-muted"><label for="element_prefill_{{.Key}}">{{t "Fill from the address parameter"}}</label></div>
-            <div class="col-md-4">
-                <input type="text" id="element_prefill_{{.Key}}" name="element_prefill_{{.Key}}" value="{{with .El}}{{.Prefill}}{{end}}" class="form-control form-control-sm" placeholder="{{t "e.g. product (optional)"}}" maxlength="64" pattern="[A-Za-z0-9_\-]+">
-            </div>
-            <div class="col small text-muted">{{t "A link to the form with ?parameter=value answers the question."}}</div>
-        </div>
-        <div class="form-check mt-2 webform-element-required">
-            <input type="checkbox" class="form-check-input" id="element_required_{{.Key}}" name="element_required_{{.Key}}" value="1" {{with .El}}{{if .Required}}checked{{end}}{{end}}>
-            <label class="form-check-label" for="element_required_{{.Key}}">{{t "Required"}}</label>
+<div class="webform-element-row">
+    <input type="hidden" name="element_row" value="{{.Key}}">
+    {{with .Error}}<div class="text-danger small">{{.}}</div>{{end}}
+    <div class="webform-element-head">
+        <input type="text" name="element_label_{{.Key}}" value="{{with .El}}{{.Label}}{{end}}" class="form-control webform-element-label" placeholder="{{t "Question"}}" aria-label="{{t "Question"}}" maxlength="500">
+        {{$current := ""}}{{with .El}}{{$current = print .Type}}{{end}}
+        <select name="element_type_{{.Key}}" class="form-select webform-element-type" aria-label="{{t "Type"}}">
+            {{range .Types}}<option value="{{.}}" {{if eq (print .) $current}}selected{{end}}>{{t .Label}}</option>{{end}}
+        </select>
+        <div class="webform-element-actions">
+            <button type="button" class="btn btn-outline-secondary webform-element-up" title="{{t "Move up"}}" aria-label="{{t "Move up"}}">↑</button>
+            <button type="button" class="btn btn-outline-secondary webform-element-down" title="{{t "Move down"}}" aria-label="{{t "Move down"}}">↓</button>
+            <button type="button" class="btn btn-outline-danger webform-element-remove" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">×</button>
         </div>
     </div>
+    <div class="webform-element-options">
+        <textarea name="element_options_{{.Key}}" rows="3" class="form-control form-control-sm" placeholder="{{t "Options, one per line"}}">{{with .El}}{{.Options}}{{end}}</textarea>
+    </div>
+    <div class="webform-element-ext">
+        <input type="text" name="element_ext_{{.Key}}" value="{{with .El}}{{.Ext}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Allowed extensions, e.g. pdf, docx, jpg (empty - documents and pictures)"}}">
+    </div>
+    <div class="webform-element-range">
+        <input type="text" inputmode="decimal" name="element_min_{{.Key}}" value="{{with .El}}{{.Min}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Minimum (optional)"}}">
+        <input type="text" inputmode="decimal" name="element_max_{{.Key}}" value="{{with .El}}{{.Max}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Maximum (optional)"}}">
+    </div>
+    <div class="webform-element-link">
+        <input type="text" name="element_link_{{.Key}}" value="{{with .El}}{{.Link}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Link to the privacy policy, e.g. /privacy (optional)"}}">
+    </div>
+    <div class="form-check webform-element-required">
+        <input type="checkbox" class="form-check-input" id="element_required_{{.Key}}" name="element_required_{{.Key}}" value="1" {{with .El}}{{if .Required}}checked{{end}}{{end}}>
+        <label class="form-check-label" for="element_required_{{.Key}}">{{t "Required"}}</label>
+    </div>
+    <details class="webform-element-more"{{if or .Error (and .El (or .El.Description .El.IfKey .El.Prefill))}} open{{end}}>
+        <summary>{{t "More"}}</summary>
+        <div class="webform-element-more-body">
+            <input type="text" name="element_description_{{.Key}}" value="{{with .El}}{{.Description}}{{end}}" class="form-control form-control-sm" placeholder="{{t "Hint under the question (optional)"}}" aria-label="{{t "Hint under the question (optional)"}}">
+            <div class="webform-element-if webform-element-setting">
+                <label for="element_if_{{.Key}}">{{t "Show only if"}}</label>
+                <select id="element_if_{{.Key}}" name="element_if_{{.Key}}" class="form-select form-select-sm webform-element-if-target" data-current="{{with .El}}{{.IfKey}}{{end}}">
+                    <option value="">{{t "- always -"}}</option>
+                </select>
+                <input type="text" name="element_ifvalue_{{.Key}}" value="{{with .El}}{{.IfValue}}{{end}}" class="form-control form-control-sm" placeholder="{{t "has the answer (empty - any answer)"}}" aria-label="{{t "has the answer (empty - any answer)"}}">
+            </div>
+            <div class="webform-element-prefill webform-element-setting">
+                <label for="element_prefill_{{.Key}}">{{t "Fill from the address parameter"}}</label>
+                <input type="text" id="element_prefill_{{.Key}}" name="element_prefill_{{.Key}}" value="{{with .El}}{{.Prefill}}{{end}}" class="form-control form-control-sm" placeholder="{{t "e.g. product (optional)"}}" maxlength="64" pattern="[A-Za-z0-9_\-]+">
+                <div class="form-text">{{t "A link to the form with ?parameter=value answers the question."}}</div>
+            </div>
+        </div>
+    </details>
 </div>
 {{end}}

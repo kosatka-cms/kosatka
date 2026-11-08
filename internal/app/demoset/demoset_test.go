@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
@@ -84,6 +85,17 @@ func TestTermScalarOrMapping(t *testing.T) {
 	}
 }
 
+// TestTypePreview - a type's form previews unless "preview: false".
+func TestTypePreview(t *testing.T) {
+	s, err := Parse([]byte("content_types: [{name: a, label: A, comments: open}, {name: b, label: B, comments: open, preview: false}, {name: c, label: C, comments: open, preview: true}]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := []bool{s.ContentTypes[0].NoPreview(), s.ContentTypes[1].NoPreview(), s.ContentTypes[2].NoPreview()}; !slices.Equal(got, []bool{false, true, false}) {
+		t.Errorf("NoPreview: %v", got)
+	}
+}
+
 // TestParseAgo - days, hours and minutes before the install.
 func TestParseAgo(t *testing.T) {
 	for in, want := range map[string]string{"": "0s", "3d": "72h0m0s", "2d5h": "53h0m0s", "45m": "45m0s"} {
@@ -121,10 +133,41 @@ func TestDate(t *testing.T) {
 	}
 }
 
+// TestSetPictures - an image field's {file: …} and a module's content's:
+// a path inside the set's directory in a picture's format; Load wants
+// the file there and an image; Pictures lists them.
+func TestSetPictures(t *testing.T) {
+	for _, bad := range []string{"../out.jpg", "/abs.png", "notes.txt", "images/x.gif"} {
+		_, err := Parse([]byte("nodes: [{key: a, type: page, title: A, fields: {field_image: {file: " + bad + "}}}]\n"))
+		if err == nil || !strings.Contains(err.Error(), "picture") {
+			t.Errorf("%q: %v", bad, err)
+		}
+	}
+	defer UseSets(os.DirFS("testdata"))()
+	s, err := Load("fixture", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Pictures(); !slices.Equal(got, []string{"images/river.png"}) {
+		t.Errorf("pictures (a node's and a gallery's, once): %v", got)
+	}
+	if _, err := Parse([]byte("modules: {galleries: {pictures: [{title: T, file: ../x.jpg}]}}\n")); err == nil || !strings.Contains(err.Error(), "modules: galleries: picture") {
+		t.Errorf("a module's picture outside the set: %v", err)
+	}
+	missing := fstest.MapFS{"images/river.png": {Data: []byte("not a picture")}}
+	if errs := s.CheckPictures(missing); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not an image") {
+		t.Errorf("a file that isn't an image: %v", errs)
+	}
+	if errs := s.CheckPictures(fstest.MapFS{}); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not in the set's directory") {
+		t.Errorf("a missing file: %v", errs)
+	}
+}
+
 // TestThemeSet - a theme's own demo set (<theme>/demo/<lang>.yaml): listed
-// by the theme's name, put in that theme unless it names one; an
-// embedded set of the same name hides it; Regions - where its blocks and
-// menus go.
+// by the theme's name, put in that theme unless it names one, marked as
+// a theme's (its absent modules skipped on install - Absent lists them);
+// an embedded set of the same name hides it; Regions - where its blocks
+// and menus go.
 func TestThemeSet(t *testing.T) {
 	defer UseSets(os.DirFS("testdata"))()
 	themesDir := t.TempDir()
@@ -143,13 +186,14 @@ func TestThemeSet(t *testing.T) {
 	write("sand/theme.yaml", "name: Sand\n")
 	write("sand/demo/en.yaml", "blocks:\n  - {region: hero, body: <p>Hi</p>}\n  - {region: sidebar, body: <p>Side</p>}\nmenus:\n  - {name: m, label: M, region: hero}\n")
 	write("sand/demo/de.yaml", "site: {theme: other}\n")
+	write("sand/demo/es.yaml", "modules:\n  forms: {title: Hola}\n  forum: {topics: []}\n")
 	write("plain/theme.yaml", "name: Plain\n")
 	write("fixture/demo/en.yaml", "whatever: 1\n")
 
 	if got := Names(); !slices.Equal(got, []string{"fixture", "sand"}) {
 		t.Fatalf("names: %v", got)
 	}
-	if got := Languages("sand"); !slices.Equal(got, []string{"de", "en"}) {
+	if got := Languages("sand"); !slices.Equal(got, []string{"de", "en", "es"}) {
 		t.Errorf("languages: %v", got)
 	}
 	en, err := Load("sand", "en")
@@ -165,8 +209,21 @@ func TestThemeSet(t *testing.T) {
 	if de, err := Load("sand", "de"); err != nil || de.Site.Theme != "other" {
 		t.Errorf("a set naming its theme: %+v %v", de, err)
 	}
-	if _, err := Load("fixture", "en"); err != nil {
+	if !en.FromTheme {
+		t.Error("a theme's set isn't marked as one")
+	}
+	es, err := Load("sand", "es")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := es.Absent(func(m string) bool { return m == "forms" }); !slices.Equal(got, []string{"forum"}) {
+		t.Errorf("absent modules: %v, want [forum]", got)
+	}
+	fixture, err := Load("fixture", "en")
+	if err != nil {
 		t.Errorf("the embedded fixture, not the theme's broken one: %v", err)
+	} else if fixture.FromTheme {
+		t.Error("an engine's set marked as a theme's")
 	}
 	if _, err := Load("plain", "en"); err == nil {
 		t.Error("a theme without a demo set loads")

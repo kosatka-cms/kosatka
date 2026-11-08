@@ -115,6 +115,9 @@ func (r ContentTypeRepository) CreateContentType(ctx context.Context, ct entity.
 	if ct.Embedded {
 		create = create.SetEmbedded(true)
 	}
+	if ct.NoPreview {
+		create = create.SetNoPreview(true)
+	}
 	v, err := create.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("ContentTypeRepository.CreateContentType: %w", err)
@@ -146,6 +149,7 @@ func (r ContentTypeRepository) UpdateContentType(ctx context.Context, ct entity.
 		SetShowViewCount(ct.ShowViewCount).
 		SetRevisions(ct.Revisions).
 		SetRevisionsKeep(max(ct.RevisionsKeep, 0)).
+		SetNoPreview(ct.NoPreview).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {

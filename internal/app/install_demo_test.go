@@ -2,11 +2,16 @@ package app
 
 import (
 	"io/fs"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/kosatka-cms/kosatka/internal/app/demoset"
 	"github.com/kosatka-cms/kosatka/internal/app/starter"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/demo"
+	"github.com/kosatka-cms/kosatka/internal/paths"
 	"github.com/kosatka-cms/kosatka/pkg/slug"
 )
 
@@ -74,5 +79,38 @@ func TestDemoStarterNames(t *testing.T) {
 		if !has[want] {
 			t.Errorf("the starter set has no %s", want)
 		}
+	}
+}
+
+// TestDemoSetModulesOfTheme - the modules a theme's own demo set has
+// content for: the ones this build has, and the others skipped (a module
+// of its own repository the site isn't built with); an engine's set
+// keeps an unknown one (installModules refuses it).
+func TestDemoSetModulesOfTheme(t *testing.T) {
+	dir := t.TempDir()
+	paths.SetThemesDir(dir)
+	t.Cleanup(func() { paths.SetThemesDir("") })
+	if err := os.MkdirAll(filepath.Join(dir, "sand", "demo"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	set := "modules:\n  forms: {title: Write to us}\n  starship: {crew: 3}\n"
+	if err := os.WriteFile(filepath.Join(dir, "sand", "demo", "en.yaml"), []byte(set), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	modules, skipped, err := demoSetModules("sand", "en")
+	if err != nil || !slices.Equal(modules, []string{"forms"}) || !slices.Equal(skipped, []string{"starship"}) {
+		t.Errorf("a theme's set: %v, skipped %v, %v", modules, skipped, err)
+	}
+	engine := filepath.Join(dir, "engine")
+	if err := os.MkdirAll(filepath.Join(engine, "sets", "box"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(engine, "sets", "box", "en.yaml"), []byte(set), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	defer demoset.UseSets(os.DirFS(engine))()
+	modules, skipped, err = demoSetModules("box", "en")
+	if err != nil || !slices.Equal(modules, []string{"forms", "starship"}) || skipped != nil {
+		t.Errorf("an engine's set: %v, skipped %v, %v", modules, skipped, err)
 	}
 }

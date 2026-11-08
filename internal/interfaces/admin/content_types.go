@@ -235,6 +235,7 @@ func (c *Controller) ContentTypeUpdate(w http.ResponseWriter, r *http.Request) {
 	redirectField := ownTextField(r.FormValue("redirect_field"))
 	showSubmitted := r.FormValue("show_submitted") == "1"
 	showViewCount := r.FormValue("show_view_count") == "1"
+	noPreview := r.FormValue("preview") != "1"
 	revisions := r.FormValue("revisions") == "1"
 	// How many versions: empty or not a positive number - all.
 	revisionsKeep, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("revisions_keep")))
@@ -289,6 +290,7 @@ func (c *Controller) ContentTypeUpdate(w http.ResponseWriter, r *http.Request) {
 		ShowViewCount:      showViewCount,
 		Revisions:          revisions,
 		RevisionsKeep:      revisionsKeep,
+		NoPreview:          noPreview,
 	})
 	if err != nil {
 		c.LogFailure(err, "error updating content type", "id", id)

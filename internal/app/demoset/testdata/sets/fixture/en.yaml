@@ -104,6 +104,7 @@ nodes:
     author: writer_bob
     ago: 3d
     fields:
+      field_cover: {file: images/river.png, alt: The river at dusk}   # the set's own picture
       field_topic: Rivers
       field_tags: autumn
       field_rating: fine
@@ -183,3 +184,7 @@ modules:
       - {name: name, type: text, label: Name, required: true}
       - {name: topic, type: select, label: Topic, options: [Gardens, Rivers], prefill: topic}
     block: {region: sidebar, title: Write to us, weight: 50}
+  galleries:
+    node: garden
+    title: Photos
+    pictures: [The gate, {title: The river, file: images/river.png}]

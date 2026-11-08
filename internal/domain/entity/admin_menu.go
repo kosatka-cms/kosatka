@@ -149,8 +149,8 @@ var adminMenu = []AdminMenuSection{
 		{Label: i18n.N("Social login"), Path: "/admin/config/oauth", Permission: "full_access"},
 	}},
 	{Label: AdminSectionReports, Items: []AdminMenuItem{
-		{Label: i18n.N("Popular content"), Path: "/admin/reports/popular"},
 		{Label: i18n.N("Status report"), Path: "/admin/reports/status"},
+		{Label: i18n.N("Popular content"), Path: "/admin/reports/popular"},
 	}},
 }
 

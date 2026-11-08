@@ -32,6 +32,10 @@
     <div class="node-edit-buttons">
       <button type="submit" class="btn btn-primary">{{if .isCreateMode}}{{t "Create"}}{{else}}{{t "Save"}}{{end}}</button>
       {{if not .isCreateMode}}<a href="{{$node.Node.URL}}" class="btn btn-outline-secondary">{{t "Cancel"}}</a>{{end}}
+      {{/* The item as the form describes it, unsaved, in a new tab
+           (.formPreviewURL - interfaces.FormPreviewPath; a module's type
+           with a NodeFormPreviewer sets it too). */}}
+      {{with .formPreviewURL}}<button type="submit" class="btn btn-outline-secondary node-edit-preview" formaction="{{.}}" formtarget="_blank" formnovalidate>{{t "Preview"}}<span class="node-edit-preview-icon" aria-hidden="true"> ↗</span></button>{{end}}
     </div>
   </div>
   {{end}}

@@ -536,12 +536,16 @@ func init() {
 	contenttypedefDescRevisionsKeep := contenttypedefFields[17].Descriptor()
 	// contenttypedef.DefaultRevisionsKeep holds the default value on creation for the revisions_keep field.
 	contenttypedef.DefaultRevisionsKeep = contenttypedefDescRevisionsKeep.Default.(int)
+	// contenttypedefDescNoPreview is the schema descriptor for no_preview field.
+	contenttypedefDescNoPreview := contenttypedefFields[18].Descriptor()
+	// contenttypedef.DefaultNoPreview holds the default value on creation for the no_preview field.
+	contenttypedef.DefaultNoPreview = contenttypedefDescNoPreview.Default.(bool)
 	// contenttypedefDescEmbedded is the schema descriptor for embedded field.
-	contenttypedefDescEmbedded := contenttypedefFields[18].Descriptor()
+	contenttypedefDescEmbedded := contenttypedefFields[19].Descriptor()
 	// contenttypedef.DefaultEmbedded holds the default value on creation for the embedded field.
 	contenttypedef.DefaultEmbedded = contenttypedefDescEmbedded.Default.(bool)
 	// contenttypedefDescViewRoles is the schema descriptor for view_roles field.
-	contenttypedefDescViewRoles := contenttypedefFields[19].Descriptor()
+	contenttypedefDescViewRoles := contenttypedefFields[20].Descriptor()
 	// contenttypedef.DefaultViewRoles holds the default value on creation for the view_roles field.
 	contenttypedef.DefaultViewRoles = contenttypedefDescViewRoles.Default.(string)
 	// contenttypedef.ViewRolesValidator is a validator for the "view_roles" field. It is called by the builders before save.

@@ -86,6 +86,21 @@ func ImageFile(ctx context.Context, env Env, rel string, w, h, i int, alt string
 	return demo.ImageFile(ctx, env.core, rel, w, h, i, alt, at)
 }
 
+// SetPicture stores a picture of the demo set's own - file, a path in
+// its directory (a theme's demo/), as the set's content names it
+// ({file: …}) - at rel under the public files directory with its file
+// row: its ID. A JPEG, a PNG or a WebP.
+func SetPicture(ctx context.Context, env Env, rel, file, alt string, at time.Time) (int, error) {
+	if env.core.Files == nil {
+		return 0, fmt.Errorf("picture %q: the demo set has no directory of its own", file)
+	}
+	data, err := fs.ReadFile(env.core.Files, file)
+	if err != nil {
+		return 0, fmt.Errorf("picture %q: %w", file, err)
+	}
+	return demo.StoredImage(ctx, env.core, rel, data, alt, at)
+}
+
 // Vocabulary creates a demo vocabulary (its terms' addresses under
 // prefix): its ID.
 func Vocabulary(ctx context.Context, env Env, name, slug, prefix string) (int, error) {

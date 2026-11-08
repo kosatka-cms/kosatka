@@ -22,9 +22,11 @@ demo site](../themes/demo-site.md)). `-demo-set <theme>` (the theme's
 directory name) installs it and puts the site in that theme, unless the
 set's `site.theme` names another; an engine's set of the same name comes
 first. Its blocks go in the theme's own regions too, and its texts may
-show the theme's pictures (`/static/themes/<theme>/images/…`).
+show the theme's pictures (`/static/themes/<theme>/images/…`); its image
+fields may take pictures of its own from `demo/` (`{file, alt}`).
 `app theme check` loads it as the install does and checks that its
-blocks and menus are in the theme's regions ([Checking a
+pictures are in `demo/` and are images, its blocks and menus in the
+theme's regions ([Checking a
 theme](../themes/distribute.md#checking-a-theme)).
 
 ```bash
@@ -54,7 +56,7 @@ node's key, a View. A set may use the starter's fields (`field_body`,
 | `image_styles` | as in `starter.yaml`: `name`, `label`, `width`, `height`, `mode`, `anchor`, `hidpi` |
 | `vocabularies` | `name` (a machine name), `label`, `path` (where its term pages go), `terms` - names, or `{name, description}` |
 | `field_storages` | `name`, `type` (`text`, `number`, `bool`, `date`, `taxonomy`, `list`, `reference`, `image`, `file`, `link`…), `multiple`; a taxonomy's `vocabulary`, a reference's `target` (content types), a list's `options` (`{value, label}`), any other setting of the type in `config` |
-| `content_types` | as in `starter.yaml`, plus `path` (its items' addresses: `<path>/<title>`) and `show_view_count`; a field may be `required`, have a `date_format` |
+| `content_types` | as in `starter.yaml`, plus `path` (its items' addresses: `<path>/<title>`) and `show_view_count`; `preview: false` - its form without *Preview*; a field may be `required`, have a `date_format` |
 | `nodes` | the content, see below |
 | `views` | Views of content: `name`, `label`, `display_type` (`page` with a `path`, `block`, `attachment` with `attach_types` and an `attach_title`, `term` with `term_vocabularies`, `user_tab` - a profile tab, with `tab_path` and `tab_access`: `all` or `owner`), `style` (`list`, `grid` with `grid_columns`, `table`, `carousel`), `theme_template` (a template of the site's theme rendering the list, `views/<name>.html`), `page_size`, `skip` (the first N items left out), `pager`, `header` (HTML above the list), `group_by` (a field) with `group_date_format`; `fields`, `filters`, `sorts` on a field storage (`storage`) or a built-in field (`builtin`: the names the Views editor uses, e.g. `title`, `created_at`, `view_count` for a field, `views` for a sort; an unknown one stops the load; a module's criterion by its key, `ratings.weighted`, with its settings in `params`) |
 | `blocks` | placed in a theme's `region` with a `title` (`show_title`) and a `weight` (0 - its place in the list, times ten): a View of the set (`view`), a plugin block (`plugin`: `search_form`, `last_comments`, `tag_cloud` with its `vocabulary`…; `config`) or a text block (`body`); on every page, the front page only (`visibility: homepage`) or the pages of content `types` |
@@ -111,7 +113,7 @@ the set's users). Its `fields`, by the storage's type:
 | taxonomy | a term's name (several - a list) |
 | list | an option's value (several - a list) |
 | reference | a node's key (several - a list) |
-| image, file | a generated picture's number (several - a list), or `{picture, alt}` |
+| image, file | a generated picture's number (several - a list), `{picture, alt}`, or a picture of the set's own: `{file, alt}` - a `.jpg`, `.png` or `.webp` by its path in the set's directory (a theme's `demo/`), copied into the site's files |
 | link | an address, or `{url, title}` (several - a list) |
 
 ## Modules' content
@@ -131,7 +133,7 @@ modules:
   galleries:
     node: review_outer_wilds   # the gallery goes on this node
     title: The solar system
-    pictures: [The campfire, The observatory]
+    pictures: [The campfire, {title: The observatory, file: images/observatory.jpg}]   # drawn, or the set's own
   forms:
     title: Request
     elements:
@@ -152,7 +154,10 @@ title of its link in the footer menu (none - no link).
 Without `-modules`, `app install` installs the standard modules and the
 ones the set has content for; with `-modules`, only those listed (and
 the modules they require), and the set's content for a module the site
-doesn't have is skipped. A module's links go in the menus the `site`
+doesn't have is skipped. A module the site isn't built with at all is
+an error in the engine's set (a misspelt name, say) and skipped in a
+theme's (a module of its own repository, which only some sites have),
+with a line in the install's output. A module's links go in the menus the `site`
 section names (none - no link).
 
 `TestSetsLoad` loads every set in every language: an unknown key, a name

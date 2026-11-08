@@ -306,6 +306,7 @@ package modulekit
 		field ShowViewCount bool
 		field Revisions bool
 		field RevisionsKeep int
+		field NoPreview bool
 		field Embedded bool
 		field ViewRoles []string
 		field CreatedBy int
@@ -563,6 +564,7 @@ package modulekit
 	const modulekit.FormBlockPlacement untyped string
 	const modulekit.FormField untyped string
 	const modulekit.FormMenuLink untyped string
+	func modulekit.FormPreviewPath(contentType string, nodeID int) string
 	type FormSection = internal/interfaces.FormSection
 		field Module string
 		field Form string
@@ -687,6 +689,8 @@ package modulekit
 		method AfterDelete(fn func(ctx context.Context, n modulekit.Node))
 		method Delete(ctx context.Context, nodeID int) error
 		method Remove(ctx context.Context, nodeID int, user *modulekit.User) (trashed bool, err error)
+	type NodeFormPreviewer = internal/interfaces.NodeFormPreviewer
+		method FormPreview(w net/http.ResponseWriter, r *net/http.Request)
 	type NodeLink = internal/interfaces.NodeLink
 		field URL string
 		field Label string
@@ -1020,6 +1024,9 @@ package modulekit
 	const modulekit.TextViewDescription untyped string
 	const modulekit.TextViewTitle untyped string
 	func modulekit.TruncateMeta(s string, n int) string
+	type UnsavedPreview = internal/interfaces.UnsavedPreview
+		field Errors []string
+		field FilesLeft bool
 	type UploadResult = internal/domain/files.UploadResult
 		field Width int
 		field Height int
@@ -1224,6 +1231,7 @@ package modulekit/demokit
 		field Weight int
 		field Visibility internal/domain/entity.BlockVisibilityScope
 	func modulekit/demokit.Register(set string, run modulekit/demokit.Step)
+	func modulekit/demokit.SetPicture(ctx context.Context, env modulekit/demokit.Env, rel string, file string, alt string, at time.Time) (int, error)
 	type Step func(ctx context.Context, env modulekit/demokit.Env) error
 	func modulekit/demokit.Term(ctx context.Context, env modulekit/demokit.Env, vid int, name string, description string, path string, parent *int, weight int) (int, error)
 	type ViewBlock = internal/infrastructure/demo.ViewBlock

@@ -36,17 +36,27 @@ func demoSetNames() []string {
 }
 
 // demoSetModules - the modules the demo set name in lang has content
-// for (none for the blog: its modules' content comes with them); an
-// error when there is no such set.
-func demoSetModules(name, lang string) ([]string, error) {
+// for (none for the blog: its modules' content comes with them) and,
+// for a theme's own set, the ones this build hasn't (skipped: a module
+// of its own repository the site isn't built with); an error when there
+// is no such set.
+func demoSetModules(name, lang string) (modules, skipped []string, err error) {
 	if name == defaultDemoSet {
-		return nil, nil
+		return nil, nil, nil
 	}
 	set, err := demoset.Load(name, lang)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return slices.Sorted(maps.Keys(set.Modules)), nil
+	modules = slices.Sorted(maps.Keys(set.Modules))
+	if !set.FromTheme {
+		return modules, nil, nil
+	}
+	skipped = set.Absent(func(name string) bool {
+		_, ok := entity.ModuleByName(name)
+		return ok
+	})
+	return slices.DeleteFunc(modules, func(m string) bool { return slices.Contains(skipped, m) }), skipped, nil
 }
 
 // demoFS - the demo content ("install -demo") by language: demo/<lang>.json.

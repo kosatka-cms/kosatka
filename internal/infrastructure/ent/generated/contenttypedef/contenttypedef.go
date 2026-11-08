@@ -45,6 +45,8 @@ const (
 	FieldRevisions = "revisions"
 	// FieldRevisionsKeep holds the string denoting the revisions_keep field in the database.
 	FieldRevisionsKeep = "revisions_keep"
+	// FieldNoPreview holds the string denoting the no_preview field in the database.
+	FieldNoPreview = "no_preview"
 	// FieldEmbedded holds the string denoting the embedded field in the database.
 	FieldEmbedded = "embedded"
 	// FieldViewRoles holds the string denoting the view_roles field in the database.
@@ -79,6 +81,7 @@ var Columns = []string{
 	FieldShowViewCount,
 	FieldRevisions,
 	FieldRevisionsKeep,
+	FieldNoPreview,
 	FieldEmbedded,
 	FieldViewRoles,
 	FieldCreatedBy,
@@ -143,6 +146,8 @@ var (
 	DefaultRevisions bool
 	// DefaultRevisionsKeep holds the default value on creation for the "revisions_keep" field.
 	DefaultRevisionsKeep int
+	// DefaultNoPreview holds the default value on creation for the "no_preview" field.
+	DefaultNoPreview bool
 	// DefaultEmbedded holds the default value on creation for the "embedded" field.
 	DefaultEmbedded bool
 	// DefaultViewRoles holds the default value on creation for the "view_roles" field.
@@ -242,6 +247,11 @@ func ByRevisions(opts ...sql.OrderTermOption) OrderOption {
 // ByRevisionsKeep orders the results by the revisions_keep field.
 func ByRevisionsKeep(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRevisionsKeep, opts...).ToFunc()
+}
+
+// ByNoPreview orders the results by the no_preview field.
+func ByNoPreview(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNoPreview, opts...).ToFunc()
 }
 
 // ByEmbedded orders the results by the embedded field.

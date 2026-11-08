@@ -85,6 +85,7 @@ func (a *applier) contentTypes(ctx context.Context, s *Set) error {
 			SetDefaultPromote(t.Promote).
 			SetShowSubmitted(t.ShowSubmitted).
 			SetRevisions(t.Revisions).
+			SetNoPreview(t.NoPreview()).
 			SetCreatedBy(a.createdBy).
 			SetCreatedAt(a.now).
 			SetUpdatedAt(a.now).

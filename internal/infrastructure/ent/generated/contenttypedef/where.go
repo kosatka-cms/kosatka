@@ -134,6 +134,11 @@ func RevisionsKeep(v int) predicate.ContentTypeDef {
 	return predicate.ContentTypeDef(sql.FieldEQ(FieldRevisionsKeep, v))
 }
 
+// NoPreview applies equality check predicate on the "no_preview" field. It's identical to NoPreviewEQ.
+func NoPreview(v bool) predicate.ContentTypeDef {
+	return predicate.ContentTypeDef(sql.FieldEQ(FieldNoPreview, v))
+}
+
 // Embedded applies equality check predicate on the "embedded" field. It's identical to EmbeddedEQ.
 func Embedded(v bool) predicate.ContentTypeDef {
 	return predicate.ContentTypeDef(sql.FieldEQ(FieldEmbedded, v))
@@ -892,6 +897,16 @@ func RevisionsKeepLT(v int) predicate.ContentTypeDef {
 // RevisionsKeepLTE applies the LTE predicate on the "revisions_keep" field.
 func RevisionsKeepLTE(v int) predicate.ContentTypeDef {
 	return predicate.ContentTypeDef(sql.FieldLTE(FieldRevisionsKeep, v))
+}
+
+// NoPreviewEQ applies the EQ predicate on the "no_preview" field.
+func NoPreviewEQ(v bool) predicate.ContentTypeDef {
+	return predicate.ContentTypeDef(sql.FieldEQ(FieldNoPreview, v))
+}
+
+// NoPreviewNEQ applies the NEQ predicate on the "no_preview" field.
+func NoPreviewNEQ(v bool) predicate.ContentTypeDef {
+	return predicate.ContentTypeDef(sql.FieldNEQ(FieldNoPreview, v))
 }
 
 // EmbeddedEQ applies the EQ predicate on the "embedded" field.

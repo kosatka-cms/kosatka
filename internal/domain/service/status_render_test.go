@@ -12,7 +12,9 @@ import (
 
 // TestStatusReportPageRender - the status report's checks (errors first,
 // HTML descriptions), the engine (a site's own binary: the release's
-// page, the site's build) and the modules; the admin layout's bar links
+// page, the site's build - only with its commit) and the modules (folded,
+// with their count);
+// the admin layout's bar links
 // to it while checks warn.
 func TestStatusReportPageRender(t *testing.T) {
 	zzChdirToProjectRoot(t)
@@ -40,7 +42,7 @@ func TestStatusReportPageRender(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{`admin-pill--danger`, "Run <code>app migrate -apply</code>", `<span class="admin-table-sub">forms</span>`, `title="0123456789abcdef">01234567</code>`, "mysql 8.4.0", `<span title="20261015210625">06.11.2026 21:26</span>`, `<span class="admin-table-muted">· baseline</span>`, "Not installed"} {
+	for _, want := range []string{`admin-pill--danger`, "Run <code>app migrate -apply</code>", `<span class="admin-table-sub">forms</span>`, `title="0123456789abcdef">01234567</code>`, "mysql 8.4.0", `<span title="20261015210625">06.11.2026 21:26</span>`, `<span class="admin-table-muted">· baseline</span>`, "Not installed", `<details class="admin-settings-group admin-settings-fold">`, `<span class="admin-settings-count">2</span>`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("status report lacks %q", want)
 		}
@@ -62,6 +64,17 @@ func TestStatusReportPageRender(t *testing.T) {
 	}
 	if strings.Count(out, "Commit time") != 1 {
 		t.Error("a release's commit time shown (unknown)")
+	}
+
+	// A site's binary built outside a git checkout: no commit, no Site
+	// section.
+	data["build"] = buildinfo.Info{Version: "v0.1.2", GoVersion: "go1.26", Site: buildinfo.Site{Module: "example.com/site"}}
+	buf.Reset()
+	if err := set.ExecuteTemplate(&buf, "content", data); err != nil {
+		t.Fatal(err)
+	}
+	if out = buf.String(); strings.Contains(out, "example.com/site") {
+		t.Error("the Site section shown without the build's commit")
 	}
 
 	files, err = svc.pageFilesToParse("admin/reports/status.html", []string{"admin", "reports", "status.html"})

@@ -115,10 +115,16 @@ func runInstall(args []string) int {
 		if opts.demoSet == "" {
 			opts.demoSet = defaultDemoSet
 		}
-		var err error
-		if setModules, err = demoSetModules(opts.demoSet, lang); err != nil {
+		var (
+			skipped []string
+			err     error
+		)
+		if setModules, skipped, err = demoSetModules(opts.demoSet, lang); err != nil {
 			fmt.Fprintln(os.Stderr, "install: -demo-set:", err)
 			return 2
+		}
+		for _, name := range skipped {
+			fmt.Printf("install: the demo set's content for the %s module skipped: the site isn't built with it\n", name)
 		}
 	}
 	chosen, err := installModules(*moduleList, setModules)

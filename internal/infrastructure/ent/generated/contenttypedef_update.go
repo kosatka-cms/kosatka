@@ -286,6 +286,20 @@ func (_u *ContentTypeDefUpdate) AddRevisionsKeep(v int) *ContentTypeDefUpdate {
 	return _u
 }
 
+// SetNoPreview sets the "no_preview" field.
+func (_u *ContentTypeDefUpdate) SetNoPreview(v bool) *ContentTypeDefUpdate {
+	_u.mutation.SetNoPreview(v)
+	return _u
+}
+
+// SetNillableNoPreview sets the "no_preview" field if the given value is not nil.
+func (_u *ContentTypeDefUpdate) SetNillableNoPreview(v *bool) *ContentTypeDefUpdate {
+	if v != nil {
+		_u.SetNoPreview(*v)
+	}
+	return _u
+}
+
 // SetEmbedded sets the "embedded" field.
 func (_u *ContentTypeDefUpdate) SetEmbedded(v bool) *ContentTypeDefUpdate {
 	_u.mutation.SetEmbedded(v)
@@ -521,6 +535,9 @@ func (_u *ContentTypeDefUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.AddedRevisionsKeep(); ok {
 		_spec.AddField(contenttypedef.FieldRevisionsKeep, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.NoPreview(); ok {
+		_spec.SetField(contenttypedef.FieldNoPreview, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Embedded(); ok {
 		_spec.SetField(contenttypedef.FieldEmbedded, field.TypeBool, value)
@@ -818,6 +835,20 @@ func (_u *ContentTypeDefUpdateOne) AddRevisionsKeep(v int) *ContentTypeDefUpdate
 	return _u
 }
 
+// SetNoPreview sets the "no_preview" field.
+func (_u *ContentTypeDefUpdateOne) SetNoPreview(v bool) *ContentTypeDefUpdateOne {
+	_u.mutation.SetNoPreview(v)
+	return _u
+}
+
+// SetNillableNoPreview sets the "no_preview" field if the given value is not nil.
+func (_u *ContentTypeDefUpdateOne) SetNillableNoPreview(v *bool) *ContentTypeDefUpdateOne {
+	if v != nil {
+		_u.SetNoPreview(*v)
+	}
+	return _u
+}
+
 // SetEmbedded sets the "embedded" field.
 func (_u *ContentTypeDefUpdateOne) SetEmbedded(v bool) *ContentTypeDefUpdateOne {
 	_u.mutation.SetEmbedded(v)
@@ -1083,6 +1114,9 @@ func (_u *ContentTypeDefUpdateOne) sqlSave(ctx context.Context) (_node *ContentT
 	}
 	if value, ok := _u.mutation.AddedRevisionsKeep(); ok {
 		_spec.AddField(contenttypedef.FieldRevisionsKeep, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.NoPreview(); ok {
+		_spec.SetField(contenttypedef.FieldNoPreview, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Embedded(); ok {
 		_spec.SetField(contenttypedef.FieldEmbedded, field.TypeBool, value)
