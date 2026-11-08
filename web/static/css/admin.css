@@ -941,6 +941,37 @@ body.admin-shell .admin-settings-title {
     text-transform: uppercase;
     color: var(--admin-muted);
 }
+/* A settings group folded under its title (details.admin-settings-fold):
+   the title opens it, an arrow before it turns; the count after it. */
+body.admin-shell .admin-settings-fold > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    cursor: pointer;
+}
+body.admin-shell .admin-settings-fold > summary::-webkit-details-marker {
+    display: none;
+}
+body.admin-shell .admin-settings-fold > summary::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform .15s ease;
+}
+body.admin-shell .admin-settings-fold[open] > summary::before {
+    transform: rotate(45deg);
+}
+body.admin-shell .admin-settings-fold > summary:hover {
+    color: var(--admin-ink);
+}
+body.admin-shell .admin-settings-count {
+    font-weight: 600;
+    letter-spacing: 0;
+}
 body.admin-shell .admin-settings-card {
     border: 1px solid var(--admin-line);
     border-radius: 12px;

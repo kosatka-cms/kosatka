@@ -457,8 +457,9 @@ Notes:
    password and change it.
 2. Open **Reports → Status report** (`/admin/reports/status`). It shows
    the binary's release, commit and Go version (a site's own binary:
-   the engine's release and the site's commit), the database and its
-   version, the theme and the modules, and checks: pending migrations,
+   the engine's release and, when it was built in a git checkout, the
+   site's commit), the database and its version, the theme and the
+   modules (folded under their title), and checks: pending migrations,
    modules installed in the database that the binary doesn't have, that
    the public files directory (or bucket) is writable, that the site
    address is set (e-mails with links aren't sent without it), the mail

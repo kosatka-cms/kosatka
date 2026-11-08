@@ -1,7 +1,8 @@
 {{/* admin/reports/status - the status report (StatusReportPage): the
      site's checks (the core's and the enabled modules', each its level,
      title, value and description), the engine's build and environment,
-     the modules' state and last database update - each on a table card. */}}
+     the modules' state and last database update - each on a table card,
+     the modules folded. */}}
 {{template "layout.html" .}}
 
 {{define "page_meta"}}
@@ -52,8 +53,10 @@
 </section>
 
 {{/* The site's own binary (kosatka.Main with modules from outside the
-     engine): its module and the commit it was built from. */}}
-{{with .build.Site}}{{if .Module}}
+     engine): its module and the commit it was built from - only when the
+     build knows the commit (built in a git checkout; a build outside one,
+     such as a deploy script's tree, has nothing to show). */}}
+{{with .build.Site}}{{if and .Module .Commit}}
 <section class="admin-settings-group">
     <h2 class="admin-settings-title">{{t "Site"}}</h2>
     <div class="admin-table-card">
@@ -68,8 +71,10 @@
 </section>
 {{end}}{{end}}
 
-<section class="admin-settings-group">
-    <h2 class="admin-settings-title">{{t "Modules"}}</h2>
+{{/* The modules: folded - a long list, rarely needed; its title says
+     how many. */}}
+<details class="admin-settings-group admin-settings-fold">
+    <summary class="admin-settings-title">{{t "Modules"}}{{with .modules}} <span class="admin-settings-count">{{len .}}</span>{{end}}</summary>
     <div class="admin-table-card">
         <div class="table-responsive">
             <table class="table admin-table">
@@ -86,6 +91,6 @@
             </table>
         </div>
     </div>
-</section>
+</details>
 </div>
 {{end}}
