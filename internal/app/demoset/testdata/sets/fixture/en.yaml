@@ -104,6 +104,7 @@ nodes:
     author: writer_bob
     ago: 3d
     fields:
+      field_cover: {file: images/river.png, alt: The river at dusk}   # the set's own picture
       field_topic: Rivers
       field_tags: autumn
       field_rating: fine

@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
@@ -129,6 +130,33 @@ func TestDate(t *testing.T) {
 		if _, err := a.date(bad); err == nil {
 			t.Errorf("%q accepted", bad)
 		}
+	}
+}
+
+// TestSetPictures - an image field's {file: …}: a path inside the set's
+// directory in a picture's format; Load wants the file there and an
+// image; Pictures lists them.
+func TestSetPictures(t *testing.T) {
+	for _, bad := range []string{"../out.jpg", "/abs.png", "notes.txt", "images/x.gif"} {
+		_, err := Parse([]byte("nodes: [{key: a, type: page, title: A, fields: {field_image: {file: " + bad + "}}}]\n"))
+		if err == nil || !strings.Contains(err.Error(), "picture") {
+			t.Errorf("%q: %v", bad, err)
+		}
+	}
+	defer UseSets(os.DirFS("testdata"))()
+	s, err := Load("fixture", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Pictures(); !slices.Equal(got, []string{"images/river.png"}) {
+		t.Errorf("pictures: %v", got)
+	}
+	missing := fstest.MapFS{"images/river.png": {Data: []byte("not a picture")}}
+	if errs := s.CheckPictures(missing); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not an image") {
+		t.Errorf("a file that isn't an image: %v", errs)
+	}
+	if errs := s.CheckPictures(fstest.MapFS{}); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not in the set's directory") {
+		t.Errorf("a missing file: %v", errs)
 	}
 }
 

@@ -22,9 +22,11 @@ demo site](../themes/demo-site.md)). `-demo-set <theme>` (the theme's
 directory name) installs it and puts the site in that theme, unless the
 set's `site.theme` names another; an engine's set of the same name comes
 first. Its blocks go in the theme's own regions too, and its texts may
-show the theme's pictures (`/static/themes/<theme>/images/…`).
+show the theme's pictures (`/static/themes/<theme>/images/…`); its image
+fields may take pictures of its own from `demo/` (`{file, alt}`).
 `app theme check` loads it as the install does and checks that its
-blocks and menus are in the theme's regions ([Checking a
+pictures are in `demo/` and are images, its blocks and menus in the
+theme's regions ([Checking a
 theme](../themes/distribute.md#checking-a-theme)).
 
 ```bash
@@ -111,7 +113,7 @@ the set's users). Its `fields`, by the storage's type:
 | taxonomy | a term's name (several - a list) |
 | list | an option's value (several - a list) |
 | reference | a node's key (several - a list) |
-| image, file | a generated picture's number (several - a list), or `{picture, alt}` |
+| image, file | a generated picture's number (several - a list), `{picture, alt}`, or a picture of the set's own: `{file, alt}` - a `.jpg`, `.png` or `.webp` by its path in the set's directory (a theme's `demo/`), copied into the site's files |
 | link | an address, or `{url, title}` (several - a list) |
 
 ## Modules' content

@@ -69,6 +69,9 @@ type Set struct {
 	// built without a module it has content for (a module of its own
 	// repository) installs without that content (Absent).
 	FromTheme bool `yaml:"-"`
+	// files - the set's directory (Load): its own pictures (Pictures);
+	// nil - a set parsed alone.
+	files fs.FS
 }
 
 // Absent - the modules the set has content for that this build hasn't
@@ -383,8 +386,9 @@ func Languages(name string) []string {
 	return out
 }
 
-// Load reads set name in lang and checks it. A theme's own set without a
-// theme of its own (site.theme) puts the site in that theme.
+// Load reads set name in lang and checks it, its own pictures too
+// (CheckPictures). A theme's own set without a theme of its own
+// (site.theme) puts the site in that theme.
 func Load(name, lang string) (*Set, error) {
 	fsys, dir, fromTheme, ok := source(name)
 	if !ok {
@@ -397,6 +401,12 @@ func Load(name, lang string) (*Set, error) {
 	s, err := Parse(data)
 	if err != nil {
 		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, err)
+	}
+	if s.files, err = fs.Sub(fsys, dir); err != nil {
+		return nil, fmt.Errorf("demo set %s: %w", name, err)
+	}
+	if errs := s.CheckPictures(s.files); len(errs) > 0 {
+		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, errors.Join(errs...))
 	}
 	if fromTheme {
 		s.FromTheme = true
@@ -515,6 +525,15 @@ func (s *Set) check() error {
 			errs = append(errs, fmt.Errorf("node %q: %w", n.Key, err))
 		}
 		errs = append(errs, checkComments(n.Key, n.Replies, kinds["user"].seen)...)
+		for _, name := range slices.Sorted(maps.Keys(n.Fields)) {
+			for _, item := range fieldItems(n.Fields[name]) {
+				if f, _ := pictureFile(item); f != "" {
+					if err := checkPictureName(f); err != nil {
+						errs = append(errs, fmt.Errorf("node %q: %s: %w", n.Key, name, err))
+					}
+				}
+			}
+		}
 	}
 	for _, v := range s.Views {
 		kinds["view"].add(v.Name)

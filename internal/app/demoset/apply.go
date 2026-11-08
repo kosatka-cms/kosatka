@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"maps"
 	"path"
 	"regexp"
@@ -572,9 +573,26 @@ func (a *applier) termIDs(f entity.FieldInstanceDef, names []any) ([]int, error)
 	return ids, nil
 }
 
-// picture - the file of a generated picture: its number (an int), or
-// {picture, alt}; the node's title is its alternative text by default.
+// picture - the file of an image field's value: a generated picture, its
+// number (an int) or {picture, alt}, or the set's own, {file, alt}
+// (pictures.go); the node's title is its alternative text by default.
 func (a *applier) picture(ctx context.Context, n Node, field string, j int, raw any, at time.Time) (int, error) {
+	env := demo.Env{Client: a.Client, CreatedBy: a.CreatedBy}
+	if file, alt := pictureFile(raw); file != "" {
+		if a.set.files == nil {
+			return 0, fmt.Errorf("picture %q: the set has no directory of its own", file)
+		}
+		data, err := fs.ReadFile(a.set.files, file)
+		if err != nil {
+			return 0, fmt.Errorf("picture %q: %w", file, err)
+		}
+		if alt == "" {
+			alt = n.Title
+		}
+		ext := strings.ToLower(path.Ext(file))
+		rel := path.Join(pictureDir, fmt.Sprintf("%s-%s-%d%s", slug.Generate(n.Key), strings.TrimPrefix(field, "field_"), j, ext))
+		return demo.StoredImage(ctx, env, rel, data, alt, at)
+	}
 	number, alt := 0, n.Title
 	switch v := raw.(type) {
 	case int:
@@ -592,7 +610,6 @@ func (a *applier) picture(ctx context.Context, n Node, field string, j int, raw 
 		return 0, fmt.Errorf("a picture number, not %v", raw)
 	}
 	rel := path.Join(pictureDir, fmt.Sprintf("%s-%s-%d.jpg", slug.Generate(n.Key), strings.TrimPrefix(field, "field_"), j))
-	env := demo.Env{Client: a.Client, CreatedBy: a.CreatedBy}
 	return demo.ImageFile(ctx, env, rel, pictureWidth, pictureHeight, number, alt, at)
 }
 

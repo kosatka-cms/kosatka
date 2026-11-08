@@ -51,6 +51,14 @@ nodes:
       field_image: 1        # a generated picture
       field_body: |
         <p>The first article of the demo site.</p>
+  - key: dunes
+    type: article
+    title: Dunes at noon
+    ago: 5d
+    fields:
+      field_image: {file: images/dunes.jpg, alt: Dunes under a white sky}   # the theme's own, demo/images/dunes.jpg
+      field_body: |
+        <p>The second one, with the theme's own picture.</p>
   - key: about
     type: page
     title: About
@@ -96,8 +104,14 @@ What a demo site usually has:
   orders the blocks of a region.
 - **Lists in the theme's templates**: a View's `theme_template` names a
   `views/<name>.html` of the theme ([View templates](./templates.md#view-templates)).
-- **Pictures**: an image field takes a generated picture by its number;
-  a text block can show the theme's own pictures from its `static/`
+- **Pictures**: an image field takes a generated picture by its number,
+  or a picture of the theme's own - `{file: images/dunes.jpg, alt: …}`, a
+  path inside `demo/` (a `.jpg`, `.png` or `.webp`; the alternative text
+  is the item's title unless given). Installing copies it into the
+  site's files, as an upload: the site's image styles crop and scale it.
+  Keep these pictures in `demo/`, not in `static/`: the site serves
+  `static/`, and the demo's pictures are needed only by the install. A
+  text block can show the theme's pictures from its `static/`
   (`/static/themes/<theme>/images/…`).
 - **The modules' content** under `modules`: a form with its block in a
   region, a gallery on a content item, a poll. The modules a demo site

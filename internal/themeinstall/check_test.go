@@ -89,7 +89,7 @@ func TestCheckFindings(t *testing.T) {
 		"static/js/sand.js":     "fetch('https://api.example.com/x');\nKosatka.formatPlural(n, '@count grain', '@count grains');",
 		"translations/ru.json":  `{"strings": {"Sand": "Песок", "Hello @name": "Привет", "@count grain": "песчинки", "Unused": "Лишняя"}}`,
 		"translations/xx.json":  `{"strings": `,
-		"demo/en.yaml":          "blocks:\n  - {region: sidebar, body: <p>Hi</p>}\n  - {region: hero, body: <p>Hero</p>}\n",
+		"demo/en.yaml":          "blocks:\n  - {region: sidebar, body: <p>Hi</p>}\n  - {region: hero, body: <p>Hero</p>}\nnodes:\n  - {key: a, type: page, title: A, fields: {field_image: {file: images/gone.jpg}}}\n",
 		"demo/de.yaml":          "whatever: 1\n",
 	})
 	findings, err := Installer{}.Check(t.Context(), dir, nil)
@@ -115,6 +115,7 @@ func TestCheckFindings(t *testing.T) {
 		"problem: translations/ru.json: \"@count grain\": a plural string, its 3 forms (one, few, many) needed",
 		"warning: translations/ru.json: \"Unused\": the theme doesn't use it",
 		"problem: demo/en.yaml: region \"hero\": not one of the theme's",
+		"problem: demo/en.yaml: picture \"images/gone.jpg\": not in the set's directory",
 	} {
 		if !slices.Contains(got, want) {
 			t.Errorf("missing %q", want)
