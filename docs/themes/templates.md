@@ -491,8 +491,8 @@ Besides Go's built-in functions (`and`, `or`, `not`, `eq`, `index`,
 | `truncate s n` | the beginning of HTML `s`, `n` characters of text, tags closed (or the part before `<!--break-->`) |
 | `truncateText s n` | plain text cut to `n` characters with "…" (escaped) |
 | `plainPreview s n` | the same as `plainExcerpt` (the name teasers use) |
-| `plainExcerpt s n` | HTML as plain text, cut at a word to `n` characters |
-| `plainLead s n` | the first paragraph (block) of HTML as plain text, cut at a word to `n` characters (`0` - the whole paragraph): a card's text from a body that goes on with headings and lists |
+| `plainExcerpt s n` | HTML as plain text without its code blocks (`<pre>`; a text that is all code keeps it), cut at a word to `n` characters |
+| `plainLead s n` | the first paragraph (block) of HTML as plain text, code blocks left out, cut at a word to `n` characters (`0` - the whole paragraph): a card's text from a body that goes on with headings and lists |
 | `stripImages s` | `s` without `<img>` tags |
 | `json v` | `v` as JSON, for an attribute (`data-ids="{{json .IDs}}"`); inside `<script>` print the value itself |
 | `toString v` | `v` as a string |

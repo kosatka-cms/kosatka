@@ -17,3 +17,12 @@ func TestGenerate_truncatesAtWordBoundary(t *testing.T) {
 		t.Fatalf("expected truncated content ending in ..., got %q", got)
 	}
 }
+
+// TestGenerate_leavesOutCode - a description is the text's prose: its code
+// blocks left out.
+func TestGenerate_leavesOutCode(t *testing.T) {
+	got := Generate(`<p>Small images:</p><pre><code>FROM golang AS build</code></pre><p>build, then copy.</p>`, 0)
+	if got != "Small images: build, then copy." {
+		t.Errorf("Generate = %q", got)
+	}
+}

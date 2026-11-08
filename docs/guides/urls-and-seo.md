@@ -256,7 +256,7 @@ The first one with a value wins:
 
 If the chosen template renders empty (it has nothing but tokens, all of
 them empty), the built-in value is used. The description is stripped of
-HTML and cut to 160 characters.
+HTML and of the text's code blocks, and cut to 160 characters.
 
 **Image (og:image)** is a template of its own, on the default and on each
 type (not on rules), usually an image field:

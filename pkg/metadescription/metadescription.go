@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/kosatka-cms/kosatka/pkg/embedtag"
+	"github.com/kosatka-cms/kosatka/pkg/htmlsanitize"
 )
 
 // The patterns Generate strips with, compiled once: scripts and styles
@@ -21,13 +22,14 @@ var (
 	numericRegex    = regexp.MustCompile(`&#(\d+);`)
 )
 
-// Generate builds a plain-text meta description from HTML content,
-// truncated at a word boundary to maxLength runes (160 when 0).
+// Generate builds a plain-text meta description from HTML content - its
+// prose, the code blocks left out (htmlsanitize.WithoutCode) - truncated
+// at a word boundary to maxLength runes (160 when 0).
 func Generate(content string, maxLength int) string {
 	if maxLength == 0 {
 		maxLength = 160 // recommended meta description length
 	}
-	content = PlainText(content)
+	content = PlainText(htmlsanitize.WithoutCode(content))
 
 	if utf8.RuneCountInString(content) > maxLength {
 		runes := []rune(content)

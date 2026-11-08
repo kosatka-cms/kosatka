@@ -36,14 +36,15 @@ var (
 )
 
 // GetPlainPreview returns plain text without HTML (htmlsanitize.
-// StripToText: tags, entities and embed tags gone, blocks apart) - the
-// part before "<!--break-->" when there is one - cut to limit characters
-// with "…"; limit <= 0 - the whole text.
+// StripToText: tags, entities and embed tags gone, blocks apart) and
+// without its code blocks (htmlsanitize.WithoutCode) - the part before "<!--break-->"
+// when there is one - cut to limit characters with "…"; limit <= 0 - the
+// whole text.
 func GetPlainPreview(s string, limit int) string {
 	if idx := strings.Index(s, "<!--break-->"); idx != -1 {
 		s = s[:idx]
 	}
-	return textcut.Ellipsis(htmlsanitize.StripToText(s), limit)
+	return textcut.Ellipsis(htmlsanitize.StripToText(htmlsanitize.WithoutCode(s)), limit)
 }
 
 // truncateText - plain text s (not HTML: tags are text too) cut to at
@@ -52,18 +53,20 @@ func GetPlainPreview(s string, limit int) string {
 func truncateText(s string, limit int) string { return textcut.Ellipsis(s, limit) }
 
 // PlainExcerpt - HTML s as plain text (htmlsanitize.StripToText: blocks
-// apart, entities decoded) cut to at most limit runes at a word boundary
-// with "…" (a View field's TrimLength); limit <= 0 - the whole text.
+// apart, entities decoded) without its code blocks (htmlsanitize.WithoutCode), cut to
+// at most limit runes at a word boundary with "…" (a View field's
+// TrimLength, a teaser's text); limit <= 0 - the whole text.
 func PlainExcerpt(s string, limit int) string {
-	return textcut.AtWord(htmlsanitize.StripToText(s), limit)
+	return textcut.AtWord(htmlsanitize.StripToText(htmlsanitize.WithoutCode(s)), limit)
 }
 
 // PlainLead - the first block of HTML s (its first paragraph, heading,
-// list item…) as plain text, cut to at most limit runes at a word boundary
-// with "…" (limit <= 0 - the whole block): a card's short text from a body
-// that goes on with headings and lists. "" - no text.
+// list item…; code blocks left out, htmlsanitize.WithoutCode) as plain text, cut to at
+// most limit runes at a word boundary with "…" (limit <= 0 - the whole
+// block): a card's short text from a body that goes on with headings and
+// lists. "" - no text.
 func PlainLead(s string, limit int) string {
-	lines := htmlsanitize.StripToLines(embedtag.Strip(s))
+	lines := htmlsanitize.StripToLines(embedtag.Strip(htmlsanitize.WithoutCode(s)))
 	if len(lines) == 0 {
 		return ""
 	}
