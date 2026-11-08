@@ -1,7 +1,8 @@
 # The engine's tests' demo set (demoset.UseSets): a little of everything a
 # set may have - users, an image style, vocabularies, field storages of
-# each kind, a content type, content with field values, comments and
-# view counts, a page and a block View, blocks, menus, permissions.
+# each kind, a text format, a content type, content with field values,
+# comments and view counts, a page and a block View, blocks, menus,
+# permissions.
 site:
   slogan: Notes from the field
   front_page_view: latest
@@ -19,6 +20,16 @@ image_styles:
     height: 360
     mode: fill
     anchor: focal
+
+text_formats:
+  - name: notes_html
+    label: Notes with code
+    weight: -1
+    allowed_tags: p a ul ol li h2 pre code
+    allow_class: true
+    rich_editor: true
+    plugins: lists link codesample
+    toolbar: bold italic | bullist numlist | link | codesample
 
 vocabularies:
   - name: topics
@@ -73,7 +84,7 @@ content_types:
       - {storage: field_seen, label: Seen, show_on_detail: true, show_label: true, date_format: medium, sort_order: 40, display_order: 40}
       - {storage: field_source, label: Source, show_on_detail: true, sort_order: 50, display_order: 50}
       - {storage: field_related, label: Related, widget: autocomplete, show_on_detail: true, show_label: true, sort_order: 60, display_order: 60}
-      - {storage: field_body, label: Text, widget: textarea, text_formats: [basic_html, plain_text], show_on_detail: true, renders_in_body: true, sort_order: 70, display_order: 70}
+      - {storage: field_body, label: Text, widget: textarea, text_formats: [notes_html, basic_html, plain_text], show_on_detail: true, renders_in_body: true, sort_order: 70, display_order: 70}
 
 nodes:
   - key: garden
@@ -92,6 +103,7 @@ nodes:
       field_source: {url: "https://example.com/gardens", title: The gardens' map}
       field_body: |
         <p>Four beds and a well.</p>
+        <pre><code class="language-text">well: middle</code></pre>
     comments:
       - author: reader_ann
         body: Where is the well?

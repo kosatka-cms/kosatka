@@ -352,6 +352,7 @@ func galleriesClient(db testdb.DB) *galleriesent.Client {
 // TestInstallDemoSet - a site installed with a demo set (the tests',
 // demoset/testdata): the set's users, terms, content type, content with
 // its comments and a picture of the set's own (a node without its own comment mode has its type's),
+// its text format (the content's texts in it),
 // Views (a theme template too), blocks in the site's theme, menus (a new
 // one too), slogan, front page, permissions and the modules' content (a
 // form with its block and a question filled from the address) are there.
@@ -402,6 +403,8 @@ func TestInstallDemoSet(t *testing.T) {
 			"the theme template":    {1, `SELECT COUNT(*) FROM view_displays WHERE machine_name = ? AND theme_template = ?`, []any{"items", "cards"}},
 			"the form's block":      {1, `SELECT COUNT(*) FROM block_placements WHERE region = ? AND plugin_id = ? AND title = ?`, []any{"sidebar", "webform", "Write to us"}},
 			"a question's filling":  {1, `SELECT COUNT(*) FROM webform_elements WHERE machine_name = ? AND prefill_param = ?`, []any{"topic", "topic"}},
+			"the set's text format": {1, `SELECT COUNT(*) FROM text_formats WHERE machine_name = ? AND weight = ? AND allowed_tags = ? AND allow_class_attribute = ? AND has_rich_editor = ? AND tinymce_toolbar = ?`, []any{"notes_html", -1, "p a ul ol li h2 pre code", true, true, "bold italic | bullist numlist | link | codesample"}},
+			"a text in it":          {1, `SELECT COUNT(*) FROM field_value_text v JOIN text_formats f ON f.id = v.text_format_id JOIN nodes n ON n.id = v.node_id WHERE n.title = ? AND f.machine_name = ? AND v.value LIKE ?`, []any{"A walled garden", "notes_html", "%<pre><code class=\"language-text\">%"}},
 			"the set's own picture": {1, `SELECT COUNT(*) FROM files WHERE uri LIKE ? AND mime_type = ? AND width = ? AND height = ? AND alt = ?`, []any{"public://%/demo/river-cover-0.png", "image/png", 8, 6, "The river at dusk"}},
 			"a gallery's pictures":  {2, `SELECT COUNT(*) FROM gallery_items gi JOIN galleries g ON g.id = gi.gallery_id WHERE g.title = ?`, []any{"Photos"}},
 			"its own one":           {1, `SELECT COUNT(*) FROM files WHERE uri LIKE ? AND mime_type = ? AND alt = ?`, []any{"public://galleries/%/demo-2.png", "image/png", "The river"}},

@@ -57,10 +57,10 @@ func installCore(ctx context.Context, env Env) error {
 		// everyone - last.
 		{"text_formats", func() error {
 			return c.TextFormatDef.CreateBulk(
-				c.TextFormatDef.Create().SetMachineName("plain_text").SetLabel(i18n.N("Plain text")).
+				c.TextFormatDef.Create().SetMachineName(entity.TextFormatPlainText).SetLabel(i18n.N("Plain text")).
 					SetWeight(10).SetAllowedTags("").SetAllowClassAttribute(false).SetHasRichEditor(false).
 					SetCreatedAt(now).SetUpdatedAt(now),
-				c.TextFormatDef.Create().SetMachineName("basic_html").SetLabel(i18n.N("Basic HTML")).
+				c.TextFormatDef.Create().SetMachineName(entity.TextFormatBasicHTML).SetLabel(i18n.N("Basic HTML")).
 					SetWeight(0).SetAllowedTags("p br strong em u s a ul ol li blockquote h2 h3 h4 img").
 					SetAllowClassAttribute(false).SetHasRichEditor(true).
 					SetCreatedAt(now).SetUpdatedAt(now),
