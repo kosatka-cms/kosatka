@@ -58,6 +58,14 @@ type TextFormatDef struct {
 	UpdatedAt time.Time
 }
 
+// The core's text formats (its install step's): basic HTML with the
+// editor, plain text for everyone. A site, a module or a demo set adds its
+// own beside them.
+const (
+	TextFormatBasicHTML = "basic_html"
+	TextFormatPlainText = "plain_text"
+)
+
 // TextFormatDefs - a list of text formats.
 type TextFormatDefs []TextFormatDef
 

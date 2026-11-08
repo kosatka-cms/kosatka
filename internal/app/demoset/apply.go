@@ -56,7 +56,7 @@ const pictureWidth, pictureHeight = 1600, 900
 var pictureDir = path.Join(files.DynamicContentImageBasePath, "demo")
 
 // Apply creates the set on a new site that has the starter set: image
-// styles, users, vocabularies, field storages, content types, nodes with
+// styles, text formats, users, vocabularies, field storages, content types, nodes with
 // their values, view counts and comments, Views, blocks, menus and the
 // site's slogan and front page, the roles' permissions, then the
 // modules' demo steps with the set's content for them.
@@ -77,6 +77,7 @@ func (s *Set) Apply(ctx context.Context, t Target) (Result, error) {
 		run  func(context.Context) error
 	}{
 		{"image styles", a.imageStyles},
+		{"text formats", a.textFormats},
 		{"users", a.createUsers},
 		{"vocabularies", a.createVocabularies},
 		{"field storages", a.fieldStorages},
@@ -126,6 +127,20 @@ func (a *applier) imageStyles(ctx context.Context) error {
 			SetWidth(st.Width).SetHeight(st.Height).SetMode(st.Mode).SetAnchor(st.Anchor).SetHidpi(st.HiDPI).
 			SetCreatedAt(a.Now).SetUpdatedAt(a.Now).Exec(ctx); err != nil {
 			return fmt.Errorf("%s: %w", st.Name, err)
+		}
+	}
+	return nil
+}
+
+// textFormats creates the set's text formats (TextFormat), before the
+// content types whose fields name them.
+func (a *applier) textFormats(ctx context.Context) error {
+	for _, f := range a.set.TextFormats {
+		if err := a.Client.TextFormatDef.Create().SetMachineName(f.Name).SetLabel(f.Label).SetWeight(f.Weight).
+			SetAllowedTags(strings.Join(strings.Fields(f.AllowedTags), " ")).SetAllowClassAttribute(f.AllowClass).
+			SetHasRichEditor(f.RichEditor).SetTinymcePlugins(strings.TrimSpace(f.Plugins)).SetTinymceToolbar(strings.TrimSpace(f.Toolbar)).
+			SetCreatedBy(a.CreatedBy).SetCreatedAt(a.Now).SetUpdatedAt(a.Now).Exec(ctx); err != nil {
+			return fmt.Errorf("%s: %w", f.Name, err)
 		}
 	}
 	return nil
@@ -813,9 +828,9 @@ func (a *applier) blocks(ctx context.Context) error {
 			}
 			q = q.SetPlacementType(string(entity.BlockPlacementPlugin)).SetPluginID(b.Plugin).SetPluginConfig(config)
 		default:
-			format, err := a.Client.TextFormatDef.Query().Where(textformatdef.MachineName("basic_html")).OnlyID(ctx)
+			format, err := a.Client.TextFormatDef.Query().Where(textformatdef.MachineName(entity.TextFormatBasicHTML)).OnlyID(ctx)
 			if err != nil {
-				return fmt.Errorf("the basic_html text format: %w", err)
+				return fmt.Errorf("the %s text format: %w", entity.TextFormatBasicHTML, err)
 			}
 			block, err := a.Client.BlockDef.Create().SetTitle(b.Title).SetShowTitle(b.ShowTitle).SetBody(strings.TrimSpace(b.Body)).
 				SetTextFormatID(format).SetStatus(true).SetCreatedAt(a.Now).SetUpdatedAt(a.Now).Save(ctx)

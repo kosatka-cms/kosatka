@@ -176,7 +176,7 @@ func createDemoContent(ctx context.Context, c *generated.Client, createdBy int, 
 	if err := demo.Load(demoFS, lang, &content); err != nil {
 		return err
 	}
-	basicHTML, err := c.TextFormatDef.Query().Where(textformatdef.MachineName("basic_html")).OnlyID(ctx)
+	basicHTML, err := c.TextFormatDef.Query().Where(textformatdef.MachineName(entity.TextFormatBasicHTML)).OnlyID(ctx)
 	if err != nil {
 		return fmt.Errorf("the basic_html text format: %w", err)
 	}

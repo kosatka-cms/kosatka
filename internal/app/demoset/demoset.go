@@ -19,6 +19,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -51,6 +52,7 @@ type Set struct {
 	Site          Site                 `yaml:"site"`
 	Users         []string             `yaml:"users"`
 	ImageStyles   []starter.ImageStyle `yaml:"image_styles"`
+	TextFormats   []TextFormat         `yaml:"text_formats"`
 	Vocabularies  []Vocabulary         `yaml:"vocabularies"`
 	FieldStorages []FieldStorage       `yaml:"field_storages"`
 	ContentTypes  []ContentType        `yaml:"content_types"`
@@ -98,6 +100,26 @@ type Site struct {
 	// demo steps add their links to.
 	MainMenu   string `yaml:"main_menu"`
 	FooterMenu string `yaml:"footer_menu"`
+}
+
+// TextFormat - a text format of the set's own, beside the core's
+// (entity.TextFormatBasicHTML, entity.TextFormatPlainText): its machine
+// name (what content types' fields name in text_formats), its name, the
+// HTML tags it keeps (space-separated; never script or style) and the
+// class attribute on them, the visual editor with its TinyMCE plugins and
+// toolbar (empty - the editor's own). Weight - its place among the
+// formats: a field's first format by weight is the one its texts are
+// saved in, the set's content too. Who may use it beyond the
+// administrators - the set's permissions ("use_text_format_<name>").
+type TextFormat struct {
+	Name        string `yaml:"name"`
+	Label       string `yaml:"label"`
+	Weight      int    `yaml:"weight"`
+	AllowedTags string `yaml:"allowed_tags"`
+	AllowClass  bool   `yaml:"allow_class"`
+	RichEditor  bool   `yaml:"rich_editor"`
+	Plugins     string `yaml:"plugins"`
+	Toolbar     string `yaml:"toolbar"`
 }
 
 // Vocabulary - a vocabulary: its machine name (what fields and blocks
@@ -449,6 +471,10 @@ func Parse(data []byte) (*Set, error) {
 	return &s, nil
 }
 
+// machineName - a text format's machine name (the column's 64
+// characters at most).
+var machineName = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
+
 // names - a set's names of one kind, checked unique and not empty.
 type names struct {
 	kind string
@@ -470,7 +496,7 @@ func (n names) add(name string) {
 func (s *Set) check() error {
 	var errs []error
 	kinds := map[string]names{}
-	for _, k := range []string{"user", "image style", "vocabulary", "field storage", "content type", "node", "view", "menu"} {
+	for _, k := range []string{"user", "image style", "text format", "vocabulary", "field storage", "content type", "node", "view", "menu"} {
 		kinds[k] = names{kind: k, seen: map[string]bool{}, errs: &errs}
 	}
 	for _, u := range s.Users {
@@ -486,6 +512,22 @@ func (s *Set) check() error {
 			styles[st.Name] = true
 		}
 	}
+	// The core's formats and the set's are its fields' to use.
+	formats := map[string]bool{entity.TextFormatBasicHTML: true, entity.TextFormatPlainText: true}
+	for _, f := range s.TextFormats {
+		kinds["text format"].add(f.Name)
+		switch {
+		case formats[f.Name]:
+			errs = append(errs, fmt.Errorf("text format %q: the core's", f.Name))
+		case !machineName.MatchString(f.Name):
+			errs = append(errs, fmt.Errorf("text format %q: a machine name - lowercase Latin letters, digits and _, starting with a letter", f.Name))
+		case f.Label == "":
+			errs = append(errs, fmt.Errorf("text format %q: no label", f.Name))
+		case (entity.TextFormatDef{AllowedTags: f.AllowedTags}).AllowUnsafeContent():
+			errs = append(errs, fmt.Errorf("text format %q: a demo set's format keeps no script or style", f.Name))
+		}
+		formats[f.Name] = true
+	}
 	terms := map[string]map[string]bool{}
 	for _, v := range s.Vocabularies {
 		kinds["vocabulary"].add(v.Name)
@@ -494,8 +536,14 @@ func (s *Set) check() error {
 			terms[v.Name][t.Name] = true
 		}
 	}
+	// vocabularyOf - a taxonomy storage's vocabulary: its values on the
+	// nodes are terms of it.
+	vocabularyOf := map[string]string{}
 	for _, fs := range s.FieldStorages {
 		kinds["field storage"].add(fs.Name)
+		if fs.Type == entity.FieldTypeTaxonomy {
+			vocabularyOf[fs.Name] = fs.Vocabulary
+		}
 		if fs.Type == entity.FieldTypeTaxonomy && terms[fs.Vocabulary] == nil {
 			errs = append(errs, fmt.Errorf("field storage %q: no vocabulary %q", fs.Name, fs.Vocabulary))
 		}
@@ -514,6 +562,11 @@ func (s *Set) check() error {
 					errs = append(errs, fmt.Errorf("content type %q: no image style %q", ct.Name, style))
 				}
 			}
+			for _, format := range f.TextFormats {
+				if !formats[format] {
+					errs = append(errs, fmt.Errorf("content type %q: no text format %q", ct.Name, format))
+				}
+			}
 		}
 	}
 	for _, n := range s.Nodes {
@@ -526,7 +579,11 @@ func (s *Set) check() error {
 		}
 		errs = append(errs, checkComments(n.Key, n.Replies, kinds["user"].seen)...)
 		for _, name := range slices.Sorted(maps.Keys(n.Fields)) {
+			voc, taxonomy := vocabularyOf[name]
 			for _, item := range fieldItems(n.Fields[name]) {
+				if term := fmt.Sprint(item); taxonomy && terms[voc] != nil && !terms[voc][term] {
+					errs = append(errs, fmt.Errorf("node %q: %s: no term %q in vocabulary %q", n.Key, name, term, voc))
+				}
 				if f, _ := pictureFile(item); f != "" {
 					if err := checkPictureName(f); err != nil {
 						errs = append(errs, fmt.Errorf("node %q: %s: %w", n.Key, name, err))
