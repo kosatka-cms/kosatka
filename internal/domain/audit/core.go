@@ -35,6 +35,13 @@ const (
 	UserActivate = "user.activate"
 	UserDelete   = "user.delete"
 	UserRole     = "user.role"
+	// UserUpdate - an account's own data changed on its profile form, by
+	// its user or an administrator: the name, the e-mail, the password,
+	// the time zone, the signature, the picture, the profile fields;
+	// UserPasswordReset - the password set by a reset link mailed to the
+	// account's address.
+	UserUpdate        = "user.update"
+	UserPasswordReset = "user.password_reset"
 	// TwoFactorOn, TwoFactorOff - a user turned two-factor sign-in on or
 	// off; TwoFactorReset - an administrator turned it off for them.
 	TwoFactorOn     = "user.two_factor_on"
@@ -92,6 +99,8 @@ func init() {
 		{Name: UserActivate, Group: GroupUsers, Label: i18n.N("User activated"), Tone: ToneAccess},
 		{Name: UserDelete, Group: GroupUsers, Label: i18n.N("User deleted"), Tone: ToneDelete},
 		{Name: UserRole, Group: GroupUsers, Label: i18n.N("Role changed"), Tone: ToneAccess},
+		{Name: UserUpdate, Group: GroupUsers, Label: i18n.N("Account changed"), Tone: ToneChange},
+		{Name: UserPasswordReset, Group: GroupUsers, Label: i18n.N("Password reset by e-mail"), Tone: ToneAccess},
 		{Name: TwoFactorOn, Group: GroupUsers, Label: i18n.N("Two-factor sign-in turned on"), Tone: ToneAccess},
 		{Name: TwoFactorOff, Group: GroupUsers, Label: i18n.N("Two-factor sign-in turned off"), Tone: ToneAccess},
 		{Name: TwoFactorReset, Group: GroupUsers, Label: i18n.N("Two-factor sign-in reset"), Tone: ToneAccess},

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kosatka-cms/kosatka/internal/domain/audit"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/domain/service"
 	"github.com/kosatka-cms/kosatka/pkg/randtoken"
@@ -96,10 +97,15 @@ func (f *fakeResetUsers) Edit(_ context.Context, u entity.User) (*entity.User, e
 }
 
 // TestPasswordReset - the link mailed to an active account only (and
-// only with the site URL); a new password set by it once; a password to
-// correct leaves the link unused.
+// only with the site URL); a new password set by it once, in the action
+// log with the account's user as who did it; a password to correct
+// leaves the link unused.
 func TestPasswordReset(t *testing.T) {
 	ctx := t.Context()
+	audit.ResetListeners()
+	t.Cleanup(audit.ResetListeners)
+	var events []audit.Event
+	audit.OnAction(func(_ context.Context, e audit.Event) { events = append(events, e) })
 	setup := func() (*PasswordResetService, *fakeResetTokens, *fakeResetUsers, *fakeSignupMail) {
 		tokens := &fakeResetTokens{}
 		users := &fakeResetUsers{byEmail: map[string]*entity.User{
@@ -146,6 +152,9 @@ func TestPasswordReset(t *testing.T) {
 	}
 	if len(users.ended) != 1 || users.ended[0] != 1 {
 		t.Fatalf("the account's sessions not ended: %v", users.ended)
+	}
+	if len(events) != 1 || events[0].Type != audit.UserPasswordReset || events[0].Actor.UserID != 1 || events[0].Object.ID != "1" {
+		t.Fatalf("the action log: %+v", events)
 	}
 	if err := s.Reset(ctx, raw, "harpoon2", "harpoon2"); !errors.Is(err, ErrResetLinkInvalid) {
 		t.Fatalf("the link used again: %v", err)
