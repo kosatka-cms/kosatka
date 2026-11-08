@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,10 +20,10 @@ import (
 var demoFS embed.FS
 
 // demoContent - the form: its title, description and confirmation (plain
-// text),
-// the submit button's label, its elements, the demo users' submissions
-// (values by element machine name) and the title of its link in the
-// footer menu.
+// text), the submit button's label, its elements, the demo users'
+// submissions (values by element machine name), the title of its link
+// in the footer menu ("" - none) and the Form block showing it (none -
+// no block).
 type demoContent struct {
 	Title        string           `json:"title"`
 	Description  string           `json:"description"`
@@ -31,14 +32,29 @@ type demoContent struct {
 	Elements     []demoElement    `json:"elements"`
 	Submissions  []demoSubmission `json:"submissions"`
 	Menu         string           `json:"menu"`
+	Block        *demoBlock       `json:"block"`
 }
 
+// demoElement - a question: its machine name, type, label, whether it
+// must be answered, its options (a consent's: the policy's link) and the
+// address parameter that fills it (Prefill, WebformElement.PrefillParam).
 type demoElement struct {
-	Name     string   `json:"name"` // the machine name
+	Name     string   `json:"name"`
 	Type     string   `json:"type"`
 	Label    string   `json:"label"`
 	Required bool     `json:"required"`
 	Options  []string `json:"options"`
+	Prefill  string   `json:"prefill"`
+}
+
+// demoBlock - the Form block placed in a region of the site's theme
+// (a demo set's own regions), with its title (shown when not empty) and
+// weight, on every page or the front page only (Visibility "homepage").
+type demoBlock struct {
+	Region     string `json:"region"`
+	Title      string `json:"title"`
+	Weight     int    `json:"weight"`
+	Visibility string `json:"visibility"`
 }
 
 type demoSubmission struct {
@@ -87,6 +103,7 @@ func createDemo(ctx context.Context, env demokit.Env) error {
 			SetLabel(e.Label).
 			SetRequired(e.Required).
 			SetOptions(strings.Join(e.Options, "\n")).
+			SetPrefillParam(e.Prefill).
 			SetWeight(i).
 			Save(ctx)
 		if err != nil {
@@ -116,6 +133,21 @@ func createDemo(ctx context.Context, env demokit.Env) error {
 				return err
 			}
 		}
+	}
+	if b := content.Block; b != nil {
+		if b.Visibility != "" && b.Visibility != string(manifestkit.BlockVisibilityHomepage) {
+			return fmt.Errorf("the form's block: visibility %q (none or %q)", b.Visibility, manifestkit.BlockVisibilityHomepage)
+		}
+		p := demokit.Placement{Region: b.Region, Title: b.Title, ShowTitle: b.Title != "", Weight: b.Weight}
+		if b.Visibility != "" {
+			p.Visibility = manifestkit.BlockVisibilityHomepage
+		}
+		if err := demokit.PlacePlugin(ctx, env, PluginBlockWebform, map[string]string{manifestkit.PluginBlockTargetKey: strconv.Itoa(nodeID)}, p); err != nil {
+			return fmt.Errorf("the form's block: %w", err)
+		}
+	}
+	if content.Menu == "" {
+		return nil
 	}
 	return demokit.MenuLink(ctx, env, env.FooterMenu, content.Menu, "", nodeID, 30)
 }

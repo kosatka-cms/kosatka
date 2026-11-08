@@ -2,12 +2,14 @@ package demoset
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
+	"github.com/kosatka-cms/kosatka/internal/paths"
 )
 
 // TestSetsLoad - every set in every language loads and checks, the
@@ -116,5 +118,57 @@ func TestDate(t *testing.T) {
 		if _, err := a.date(bad); err == nil {
 			t.Errorf("%q accepted", bad)
 		}
+	}
+}
+
+// TestThemeSet - a theme's own demo set (<theme>/demo/<lang>.yaml): listed
+// by the theme's name, put in that theme unless it names one; an
+// embedded set of the same name hides it; Regions - where its blocks and
+// menus go.
+func TestThemeSet(t *testing.T) {
+	defer UseSets(os.DirFS("testdata"))()
+	themesDir := t.TempDir()
+	paths.SetThemesDir(themesDir)
+	t.Cleanup(func() { paths.SetThemesDir("") })
+	write := func(rel, body string) {
+		t.Helper()
+		p := filepath.Join(themesDir, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("sand/theme.yaml", "name: Sand\n")
+	write("sand/demo/en.yaml", "blocks:\n  - {region: hero, body: <p>Hi</p>}\n  - {region: sidebar, body: <p>Side</p>}\nmenus:\n  - {name: m, label: M, region: hero}\n")
+	write("sand/demo/de.yaml", "site: {theme: other}\n")
+	write("plain/theme.yaml", "name: Plain\n")
+	write("fixture/demo/en.yaml", "whatever: 1\n")
+
+	if got := Names(); !slices.Equal(got, []string{"fixture", "sand"}) {
+		t.Fatalf("names: %v", got)
+	}
+	if got := Languages("sand"); !slices.Equal(got, []string{"de", "en"}) {
+		t.Errorf("languages: %v", got)
+	}
+	en, err := Load("sand", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if en.Site.Theme != "sand" {
+		t.Errorf("a theme's set's theme: %q, want sand", en.Site.Theme)
+	}
+	if got := en.Regions(); !slices.Equal(got, []string{"hero", "sidebar"}) {
+		t.Errorf("regions: %v", got)
+	}
+	if de, err := Load("sand", "de"); err != nil || de.Site.Theme != "other" {
+		t.Errorf("a set naming its theme: %+v %v", de, err)
+	}
+	if _, err := Load("fixture", "en"); err != nil {
+		t.Errorf("the embedded fixture, not the theme's broken one: %v", err)
+	}
+	if _, err := Load("plain", "en"); err == nil {
+		t.Error("a theme without a demo set loads")
 	}
 }

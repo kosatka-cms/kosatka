@@ -89,6 +89,8 @@ func TestCheckFindings(t *testing.T) {
 		"static/js/sand.js":     "fetch('https://api.example.com/x');\nKosatka.formatPlural(n, '@count grain', '@count grains');",
 		"translations/ru.json":  `{"strings": {"Sand": "Песок", "Hello @name": "Привет", "@count grain": "песчинки", "Unused": "Лишняя"}}`,
 		"translations/xx.json":  `{"strings": `,
+		"demo/en.yaml":          "blocks:\n  - {region: sidebar, body: <p>Hi</p>}\n  - {region: hero, body: <p>Hero</p>}\n",
+		"demo/de.yaml":          "whatever: 1\n",
 	})
 	findings, err := Installer{}.Check(t.Context(), dir, nil)
 	if err != nil {
@@ -112,10 +114,16 @@ func TestCheckFindings(t *testing.T) {
 		"problem: translations/ru.json: \"Hello @name\": the translation drops the placeholder @name",
 		"problem: translations/ru.json: \"@count grain\": a plural string, its 3 forms (one, few, many) needed",
 		"warning: translations/ru.json: \"Unused\": the theme doesn't use it",
+		"problem: demo/en.yaml: region \"hero\": not one of the theme's",
 	} {
 		if !slices.Contains(got, want) {
 			t.Errorf("missing %q", want)
 		}
+	}
+	if !slices.ContainsFunc(got, func(s string) bool {
+		return strings.HasPrefix(s, "problem: demo/de.yaml:") && strings.Contains(s, "whatever")
+	}) {
+		t.Errorf("a broken demo set isn't reported:\n%s", strings.Join(got, "\n"))
 	}
 	if !slices.ContainsFunc(got, func(s string) bool {
 		return strings.HasPrefix(s, "problem: translations/xx.json: i18n: the xx catalog:")
