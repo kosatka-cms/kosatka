@@ -162,7 +162,8 @@ with a line in the install's output. A module's links go in the menus the `site`
 section names (none - no link).
 
 `TestSetsLoad` loads every set in every language: an unknown key, a name
-used twice and a reference to something the set hasn't fail it (one to
-the starter's fields, content types and Views is checked on install);
+used twice and a reference to something the set hasn't - a term of a
+menu link or of a node's field included - fail it (one to the starter's
+fields, content types and Views is checked on install);
 `TestDemoSet*` (`internal/app`) install a set on MySQL and PostgreSQL and
 open its pages.

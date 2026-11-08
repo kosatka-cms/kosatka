@@ -536,8 +536,14 @@ func (s *Set) check() error {
 			terms[v.Name][t.Name] = true
 		}
 	}
+	// vocabularyOf - a taxonomy storage's vocabulary: its values on the
+	// nodes are terms of it.
+	vocabularyOf := map[string]string{}
 	for _, fs := range s.FieldStorages {
 		kinds["field storage"].add(fs.Name)
+		if fs.Type == entity.FieldTypeTaxonomy {
+			vocabularyOf[fs.Name] = fs.Vocabulary
+		}
 		if fs.Type == entity.FieldTypeTaxonomy && terms[fs.Vocabulary] == nil {
 			errs = append(errs, fmt.Errorf("field storage %q: no vocabulary %q", fs.Name, fs.Vocabulary))
 		}
@@ -573,7 +579,11 @@ func (s *Set) check() error {
 		}
 		errs = append(errs, checkComments(n.Key, n.Replies, kinds["user"].seen)...)
 		for _, name := range slices.Sorted(maps.Keys(n.Fields)) {
+			voc, taxonomy := vocabularyOf[name]
 			for _, item := range fieldItems(n.Fields[name]) {
+				if term := fmt.Sprint(item); taxonomy && terms[voc] != nil && !terms[voc][term] {
+					errs = append(errs, fmt.Errorf("node %q: %s: no term %q in vocabulary %q", n.Key, name, term, voc))
+				}
 				if f, _ := pictureFile(item); f != "" {
 					if err := checkPictureName(f); err != nil {
 						errs = append(errs, fmt.Errorf("node %q: %s: %w", n.Key, name, err))

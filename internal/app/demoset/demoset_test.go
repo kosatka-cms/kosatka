@@ -56,6 +56,7 @@ func TestParseChecks(t *testing.T) {
 		"block no region":   {"blocks: [{body: hi}]\n", "a region"},
 		"menu node":         {"menus: [{name: m, links: [{title: T, node: nope}]}]\n", `no node "nope"`},
 		"menu term":         {"vocabularies: [{name: v, label: V, terms: [a]}]\nmenus: [{name: m, links: [{title: T, term: v/b}]}]\n", `no term "v/b"`},
+		"node term":         {"vocabularies: [{name: v, label: V, terms: [a]}]\nfield_storages: [{name: f, type: taxonomy, vocabulary: v}]\nnodes: [{key: n, type: t, title: T, fields: {f: [a, b]}}]\n", `node "n": f: no term "b" in vocabulary "v"`},
 		"view field":        {"views: [{name: v, fields: [{builtin: title, storage: f}]}]\n", "a storage or a built-in"},
 		"view builtin":      {"views: [{name: v, fields: [{builtin: nope}]}]\n", `no built-in field "nope"`},
 		"filter builtin":    {"views: [{name: v, filters: [{builtin: nope}]}]\n", `no built-in filter "nope"`},
