@@ -269,6 +269,16 @@ func (c *UserController) EditSave(w http.ResponseWriter, r *http.Request) {
 	if c.userTimezones != nil {
 		c.userTimezones.Forget(targetUser.ID)
 	}
+	// The account's changes for the action log: the form's own and its
+	// profile fields' (their values before the save).
+	changes := service.AccountChanges(ctx, *targetUser, updated, password != "")
+	if c.userFields != nil && len(fieldValues) > 0 {
+		before, err := c.userFields.UserValues(ctx, targetUser.ID)
+		if err != nil {
+			service.LogFallback(c.logger, err, "loading the profile fields' values before a save (their changes not in the action log)", "userID", targetUser.ID)
+		}
+		changes = append(changes, service.UserFieldChanges(before, fieldValues)...)
+	}
 	if c.userFields != nil {
 		if err := c.userFields.SaveValues(ctx, targetUser.ID, fieldValues); err != nil {
 			c.LogFailure(err, "error saving user field values", "userID", targetUser.ID)
@@ -282,6 +292,7 @@ func (c *UserController) EditSave(w http.ResponseWriter, r *http.Request) {
 		httputil.InternalServerError(w)
 		return
 	}
+	service.AuditUserUpdate(ctx, updated, changes)
 
 	if isSelf {
 		http.Redirect(w, r, "/me", http.StatusFound)
@@ -350,13 +361,30 @@ func (c *UserController) applyAdminFields(ctx context.Context, r *http.Request, 
 	default:
 		updated.Status = entity.UserStatusActive
 	}
-	if roleID, err := strconv.Atoi(r.Form.Get("role_id")); err == nil {
-		for _, role := range c.roleChoices(ctx, r, target) {
-			if role.ID == roleID {
-				updated.Role = &role
-			}
-		}
+	updated.Role = chosenRole(target, c.roleChoices(ctx, r, target), r.Form.Get("role_id"))
+}
+
+// chosenRole - the role the profile form gives target: the one of
+// choices with the form's role_id (roleID); not one of them - target's
+// own. A user without a role keeps none when the base role is the chosen
+// one: the form shows it chosen for such a user, and its permissions are
+// every signed-in user's anyway - saving the form for an e-mail doesn't
+// give a role (nor record a role change in the action log).
+func chosenRole(target *entity.User, choices entity.Roles, roleID string) *entity.Role {
+	id, err := strconv.Atoi(roleID)
+	if err != nil {
+		return target.Role
 	}
+	for _, role := range choices {
+		if role.ID != id {
+			continue
+		}
+		if target.Role == nil && role.Name == entity.RoleUser {
+			return nil
+		}
+		return &role
+	}
+	return target.Role
 }
 
 // applyAvatar sets updated's avatar from the form: deleted, a new one

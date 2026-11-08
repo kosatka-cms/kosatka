@@ -30,7 +30,7 @@ opens the log's settings.
 |---|---|
 | Content | created, moved to the trash, restored from it, deleted for good, published, unpublished (moderation included), its author changed, its address changed (with the old and the new one) |
 | Comments | deleted (with the replies to it), approved (published after waiting for approval), marked as spam |
-| Users, roles and permissions | a user created by an administrator, blocked, unblocked, activated (a registration approved), deleted, given another role, two-factor sign-in turned on or off by the user or reset by an administrator; a role created, renamed, deleted; a role's permissions changed - each permission granted or taken away |
+| Users, roles and permissions | a user created by an administrator, blocked, unblocked, activated (a registration approved), deleted, given another role; their account changed on the profile form, by them or an administrator - the name and the e-mail (what they were and became), the time zone, the password, the signature, the picture, the profile fields; a password reset by e-mail; two-factor sign-in turned on or off by the user or reset by an administrator; a role created, renamed, deleted; a role's permissions changed - each permission granted or taken away |
 | Settings and structure | a module enabled, disabled, uninstalled; any configuration page saved - content types and fields, Views, blocks, menus, text formats, the site's settings - named by its item in the admin menu |
 | Sign-ins | the sign-ins of users with access to the admin area; failed attempts under any name, with the reason (no such user, a wrong password, an account blocked, awaiting approval or with its e-mail not confirmed, a wrong two-factor code) |
 

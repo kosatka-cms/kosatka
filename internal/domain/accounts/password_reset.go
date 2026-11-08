@@ -85,7 +85,8 @@ func (s *PasswordResetService) Request(ctx context.Context, email, baseURL strin
 // names: the token used and the password saved in one transaction - a
 // failed save leaves the link working. ErrResetPasswordInvalid - the
 // password to correct (checked before the token is touched);
-// ErrResetLinkInvalid - the link is no good.
+// ErrResetLinkInvalid - the link is no good. A saved one is in the action
+// log (service.AuditUserPasswordReset).
 func (s *PasswordResetService) Reset(ctx context.Context, rawToken, password, confirm string) error {
 	if passwordErr, confirmErr := ValidatePassword(ctx, password, confirm); passwordErr != "" || confirmErr != "" {
 		return ErrResetPasswordInvalid
@@ -97,7 +98,8 @@ func (s *PasswordResetService) Reset(ctx context.Context, rawToken, password, co
 	if err != nil {
 		return fmt.Errorf("hashing the new password: %w", err)
 	}
-	return s.uow.Do(ctx, func(ctx context.Context) error {
+	var reset entity.User
+	if err := s.uow.Do(ctx, func(ctx context.Context) error {
 		uid, ok, err := s.tokens.ConsumePasswordReset(ctx, rawToken)
 		if err != nil {
 			return fmt.Errorf("using the reset token: %w", err)
@@ -120,6 +122,12 @@ func (s *PasswordResetService) Reset(ctx context.Context, rawToken, password, co
 		if _, err := s.users.BumpSessionVersion(ctx, uid); err != nil {
 			return fmt.Errorf("ending the sessions after a reset (user %d): %w", uid, err)
 		}
+		reset = *u
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	// In the action log once it's saved.
+	service.AuditUserPasswordReset(ctx, reset)
+	return nil
 }
