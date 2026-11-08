@@ -1,5 +1,6 @@
 // Package demoset - the demo sets of "app install -demo-set <name>": a
-// whole demo site as data, sets/<name>/<lang>.yaml - its theme, users,
+// whole demo site as data, sets/<name>/<lang>.yaml (or a theme's own,
+// <theme>/demo/<lang>.yaml) - its theme, users,
 // vocabularies, fields, content types, Views, blocks, menus and content
 // (nodes with their field values, comments, view counts), in one
 // language. Apply creates it on top of the starter set (starter.yaml),
@@ -15,7 +16,9 @@ import (
 	"fmt"
 	"io/fs"
 	"maps"
+	"os"
 	"path"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -25,6 +28,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/domain/views"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/demo"
+	"github.com/kosatka-cms/kosatka/internal/paths"
 )
 
 //go:embed sets
@@ -193,9 +197,13 @@ type View struct {
 	AttachTypes      []string `yaml:"attach_types"`
 	AttachTitle      string   `yaml:"attach_title"`
 	TermVocabularies []string `yaml:"term_vocabularies"`
-	GroupBy          string   `yaml:"group_by"`
-	GroupDateFormat  string   `yaml:"group_date_format"`
-	Header           string   `yaml:"header"`
+	// ThemeTemplate - a template of the site's theme rendering the list
+	// (views/<name>.html, entity.ViewDisplayDef.ThemeTemplate); "" - the
+	// style.
+	ThemeTemplate   string `yaml:"theme_template"`
+	GroupBy         string `yaml:"group_by"`
+	GroupDateFormat string `yaml:"group_date_format"`
+	Header          string `yaml:"header"`
 	// TabPath and TabAccess - a profile tab's (display_type user_tab):
 	// its address under a profile and who sees it (all, owner).
 	TabPath   string       `yaml:"tab_path"`
@@ -287,7 +295,35 @@ type Link struct {
 	Term  string `yaml:"term"`
 }
 
-// Names - the sets there are, sorted.
+// themeSetDir - the directory of a theme's own demo set,
+// <theme>/demo/<lang>.yaml, named by the theme's directory (the first of
+// paths.ThemesDirs having it); "" - none.
+const themeSetDir = "demo"
+
+// source - where set name is read: an embedded set (sets/<name>), else
+// the demo set of theme name (its demo/ directory); false - neither.
+// A theme's set is the theme's own: fromTheme.
+func source(name string) (fsys fs.FS, dir string, fromTheme bool, ok bool) {
+	if fi, err := fs.Stat(setsFS, path.Join("sets", name)); err == nil && fi.IsDir() && name != "" {
+		return setsFS, path.Join("sets", name), false, true
+	}
+	if dir := paths.ThemeDir(name); dir != "" {
+		if hasSets(os.DirFS(dir), themeSetDir) {
+			return os.DirFS(dir), themeSetDir, true, true
+		}
+	}
+	return nil, "", false, false
+}
+
+// hasSets - whether dir of fsys has a <lang>.yaml.
+func hasSets(fsys fs.FS, dir string) bool {
+	matches, _ := fs.Glob(fsys, path.Join(dir, "*.yaml"))
+	return len(matches) > 0
+}
+
+// Names - the sets there are, sorted: the embedded ones and the themes'
+// own (a theme with demo/<lang>.yaml, by its directory's name; an
+// embedded set of the same name hides it).
 func Names() []string {
 	entries, _ := fs.ReadDir(setsFS, "sets")
 	var out []string
@@ -296,12 +332,25 @@ func Names() []string {
 			out = append(out, e.Name())
 		}
 	}
+	for _, root := range paths.ThemesDirs() {
+		themes, _ := os.ReadDir(root)
+		for _, th := range themes {
+			if th.IsDir() && !strings.HasPrefix(th.Name(), ".") && !slices.Contains(out, th.Name()) && hasSets(os.DirFS(filepath.Join(root, th.Name())), themeSetDir) {
+				out = append(out, th.Name())
+			}
+		}
+	}
+	slices.Sort(out)
 	return out
 }
 
 // Languages - the languages set name is in, sorted.
 func Languages(name string) []string {
-	entries, _ := fs.ReadDir(setsFS, path.Join("sets", name))
+	fsys, dir, _, ok := source(name)
+	if !ok {
+		return nil
+	}
+	entries, _ := fs.ReadDir(fsys, dir)
 	var out []string
 	for _, e := range entries {
 		if lang, ok := strings.CutSuffix(e.Name(), ".yaml"); ok {
@@ -311,12 +360,14 @@ func Languages(name string) []string {
 	return out
 }
 
-// Load reads set name in lang and checks it.
+// Load reads set name in lang and checks it. A theme's own set without a
+// theme of its own (site.theme) puts the site in that theme.
 func Load(name, lang string) (*Set, error) {
-	if !slices.Contains(Names(), name) {
+	fsys, dir, fromTheme, ok := source(name)
+	if !ok {
 		return nil, fmt.Errorf("no demo set %q (there are: %s)", name, strings.Join(Names(), ", "))
 	}
-	data, err := fs.ReadFile(setsFS, path.Join("sets", name, lang+".yaml"))
+	data, err := fs.ReadFile(fsys, path.Join(dir, lang+".yaml"))
 	if err != nil {
 		return nil, fmt.Errorf("demo set %q has no %q (it has: %s)", name, lang, strings.Join(Languages(name), ", "))
 	}
@@ -324,7 +375,28 @@ func Load(name, lang string) (*Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, err)
 	}
+	if fromTheme && s.Site.Theme == "" {
+		s.Site.Theme = name
+	}
 	return s, nil
+}
+
+// Regions - the theme regions the set places its blocks and menus in,
+// each once, in order of first use.
+func (s *Set) Regions() []string {
+	var out []string
+	add := func(r string) {
+		if r != "" && !slices.Contains(out, r) {
+			out = append(out, r)
+		}
+	}
+	for _, b := range s.Blocks {
+		add(b.Region)
+	}
+	for _, m := range s.Menus {
+		add(m.Region)
+	}
+	return out
 }
 
 // Parse decodes a set (unknown keys are errors) and checks it.

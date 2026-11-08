@@ -16,6 +16,16 @@ A set is a directory of `internal/app/demoset/sets`, with a file per
 language, `<lang>.yaml`, holding everything in that language: labels,
 titles and texts. A site is installed in a language the set has.
 
+A theme may bring a demo site of its own: `demo/<lang>.yaml` in the
+theme's directory, in the same format. `-demo-set <theme>` (the theme's
+directory name) installs it and puts the site in that theme, unless the
+set's `site.theme` names another; an engine's set of the same name comes
+first. Its blocks go in the theme's own regions too, and its texts may
+show the theme's pictures (`/static/themes/<theme>/images/…`).
+`app theme check` loads it as the install does and checks that its
+blocks and menus are in the theme's regions ([Checking a
+theme](../themes/distribute.md#checking-a-theme)).
+
 ```bash
 app install -site-name "Recipes" -admin-name admin -admin-email admin@example.com \
   -language en -demo-set <set>
@@ -45,8 +55,8 @@ node's key, a View. A set may use the starter's fields (`field_body`,
 | `field_storages` | `name`, `type` (`text`, `number`, `bool`, `date`, `taxonomy`, `list`, `reference`, `image`, `file`, `link`…), `multiple`; a taxonomy's `vocabulary`, a reference's `target` (content types), a list's `options` (`{value, label}`), any other setting of the type in `config` |
 | `content_types` | as in `starter.yaml`, plus `path` (its items' addresses: `<path>/<title>`) and `show_view_count`; a field may be `required`, have a `date_format` |
 | `nodes` | the content, see below |
-| `views` | Views of content: `name`, `label`, `display_type` (`page` with a `path`, `block`, `attachment` with `attach_types` and an `attach_title`, `term` with `term_vocabularies`, `user_tab` - a profile tab, with `tab_path` and `tab_access`: `all` or `owner`), `style` (`list`, `grid` with `grid_columns`, `table`, `carousel`), `page_size`, `skip` (the first N items left out), `pager`, `header` (HTML above the list), `group_by` (a field) with `group_date_format`; `fields`, `filters`, `sorts` on a field storage (`storage`) or a built-in field (`builtin`: the names the Views editor uses, e.g. `title`, `created_at`, `view_count` for a field, `views` for a sort; an unknown one stops the load; a module's criterion by its key, `ratings.weighted`, with its settings in `params`) |
-| `blocks` | placed in a theme's `region` with a `title` (`show_title`) and a `weight`: a View of the set (`view`), a plugin block (`plugin`: `search_form`, `last_comments`, `tag_cloud` with its `vocabulary`…; `config`) or a text block (`body`); on every page, the front page only (`visibility: homepage`) or the pages of content `types` |
+| `views` | Views of content: `name`, `label`, `display_type` (`page` with a `path`, `block`, `attachment` with `attach_types` and an `attach_title`, `term` with `term_vocabularies`, `user_tab` - a profile tab, with `tab_path` and `tab_access`: `all` or `owner`), `style` (`list`, `grid` with `grid_columns`, `table`, `carousel`), `theme_template` (a template of the site's theme rendering the list, `views/<name>.html`), `page_size`, `skip` (the first N items left out), `pager`, `header` (HTML above the list), `group_by` (a field) with `group_date_format`; `fields`, `filters`, `sorts` on a field storage (`storage`) or a built-in field (`builtin`: the names the Views editor uses, e.g. `title`, `created_at`, `view_count` for a field, `views` for a sort; an unknown one stops the load; a module's criterion by its key, `ratings.weighted`, with its settings in `params`) |
+| `blocks` | placed in a theme's `region` with a `title` (`show_title`) and a `weight` (0 - its place in the list, times ten): a View of the set (`view`), a plugin block (`plugin`: `search_form`, `last_comments`, `tag_cloud` with its `vocabulary`…; `config`) or a text block (`body`); on every page, the front page only (`visibility: homepage`) or the pages of content `types` |
 | `menus` | `name`, `label`, `region`, `links` - to an address (`url`), a node (`node`: its key), a View page (`view`) or a term (`term`: `vocabulary/term`). Links to a menu the site has (the starter's `main`) go after its own |
 | `permissions` | what roles may beyond the starter's, by role name: `user: [create blog content, edit own blog content, use_text_format_basic_html]` |
 | `modules` | the modules' demo content, by module name - see below |
@@ -88,7 +98,7 @@ nodes:
 A node has a `key` other nodes, menus and filters name it by, its `type`,
 `title`, `author` (a user of the set; none - the administrator), `ago`,
 `promote` (none - its type's), `sticky`, `comment_mode` (`open`,
-`closed` or `hidden`; none - `open`), `path` (none - its type's,
+`closed` or `hidden`; none - its type's), `path` (none - its type's,
 `<path>/<title>`), `views` (its view count) and `comments` (threaded, by
 the set's users). Its `fields`, by the storage's type:
 
@@ -121,11 +131,22 @@ modules:
     node: review_outer_wilds   # the gallery goes on this node
     title: The solar system
     pictures: [The campfire, The observatory]
+  forms:
+    title: Request
+    elements:
+      - {name: topic, type: select, label: Topic, options: [Design, Support], prefill: topic}
+      - {name: consent, type: consent, label: I agree to the processing of my data}
+    block: {region: sidebar, title: Write to us, weight: 10}  # the Form block
   ratings:
     types: [game]              # the content types rated
     votes:
       - {node: hades, scores: {pixel_kid: 5, retro_anna: 4}}
 ```
+
+A form's question with `prefill` is filled from that address parameter
+(`?topic=Design`); `block` places the *Form* block showing the form in a
+region (`visibility: homepage` - on the front page only); `menu` - the
+title of its link in the footer menu (none - no link).
 
 Without `-modules`, `app install` installs the standard modules and the
 ones the set has content for; with `-modules`, only those listed (and

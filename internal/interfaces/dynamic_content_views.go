@@ -280,7 +280,7 @@ func (c *DynamicContentController) renderProfileCommentTab(ctx context.Context, 
 			themePager = pager
 		}
 		if html, ok, err := c.renderThemeCommentViewList(ctx, view.ThemeTemplate, comments, themePager); ok {
-			return html, total, err
+			return views.WithViewTexts(view, html), total, err
 		}
 	}
 	data := views.CommentListData(ctx, view, viewFields, comments)
@@ -330,7 +330,7 @@ func (c *DynamicContentController) renderThemeView(ctx context.Context, name str
 func (c *DynamicContentController) renderContentViewFragment(ctx context.Context, view entity.ViewDisplayDef, nodes entity.Nodes, pager *pagination.Pagination) (template.HTML, error) {
 	if view.ThemeTemplate != "" {
 		if html, ok, err := c.renderThemeViewList(ctx, view.ThemeTemplate, nodes, pager); ok {
-			return html, err
+			return views.WithViewTexts(view, html), err
 		}
 	}
 	viewFields, err := c.viewService.EffectiveFieldsByView(ctx, view)

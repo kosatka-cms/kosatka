@@ -199,6 +199,7 @@ warning: theme.yaml:20: version 1.2.0 is the release v1.2.0, with changes after 
 | the theme's files | a `/static/themes/<this theme>/…` path, a `themeCSS`/`themeJS` name or a stylesheet's relative `url(…)` with no file behind it | a path into another theme's files (not the base theme's) |
 | other servers | a template, stylesheet or script loading a script, a stylesheet, a font, a picture or a frame from another server (a CDN, web fonts) | |
 | the catalogs | a string of the theme a language's catalog lacks; a translation that drops a placeholder or adds HTML; a plural string without the language's forms; a catalog that doesn't parse | a translation of a string the theme doesn't use (one of the engine's it rewords is fine) |
+| the demo site | `demo/<lang>.yaml` doesn't load as `app install -demo-set` loads it, or puts a block or a menu in a region the theme hasn't | |
 | the release | `version` older than the repository's latest release tag | no release yet; `version` newer than the latest tag (not tagged yet); `version` the latest tag's with commits or changes after it |
 
 The strings are those of the templates, scripts and manifest (as
@@ -218,6 +219,10 @@ Before a release:
 
 - **`app theme check`** passes (see [above](#checking-a-theme)).
 
+- **A demo site** (optional): `demo/<lang>.yaml` - the theme's own
+  demo set, installed with `app install -demo-set <theme>` (see [Demo
+  sets](../contributing/demo-sets.md)): a site that looks like the
+  screenshot in one command.
 - **The manifest loads.** The theme is on **Appearance** and in
   `app theme list`; a theme with an error in `theme.yaml` isn't, and both
   name its directory with the error.

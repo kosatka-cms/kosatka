@@ -351,8 +351,10 @@ func galleriesClient(db testdb.DB) *galleriesent.Client {
 
 // TestInstallDemoSet - a site installed with a demo set (the tests',
 // demoset/testdata): the set's users, terms, content type, content with
-// its comments, Views, blocks in the site's theme, menus (a new one too),
-// slogan, front page and permissions are there.
+// its comments (a node without its own comment mode has its type's),
+// Views (a theme template too), blocks in the site's theme, menus (a new
+// one too), slogan, front page, permissions and the modules' content (a
+// form with its block and a question filled from the address) are there.
 func TestInstallDemoSet(t *testing.T) {
 	paths.SetPublicFiles(t.TempDir(), "/files")
 	t.Cleanup(func() { paths.SetPublicFiles("", "") })
@@ -395,6 +397,11 @@ func TestInstallDemoSet(t *testing.T) {
 			"a link to a View":      {1, `SELECT COUNT(*) FROM menu_links WHERE title = ? AND link_view_id IS NOT NULL`, []any{"All items"}},
 			"a link to content":     {1, `SELECT COUNT(*) FROM menu_links WHERE title = ? AND link_node_id IS NOT NULL`, []any{"About"}},
 			"the slogan":            {1, `SELECT COUNT(*) FROM site_information WHERE slogan = ?`, []any{"Notes from the field"}},
+			"the type's comments":   {1, `SELECT COUNT(*) FROM nodes WHERE title = ? AND comment_mode = ?`, []any{"About these notes", "hidden"}},
+			"a node's own":          {1, `SELECT COUNT(*) FROM nodes WHERE title = ? AND comment_mode = ?`, []any{"A walled garden", "open"}},
+			"the theme template":    {1, `SELECT COUNT(*) FROM view_displays WHERE machine_name = ? AND theme_template = ?`, []any{"items", "cards"}},
+			"the form's block":      {1, `SELECT COUNT(*) FROM block_placements WHERE region = ? AND plugin_id = ? AND title = ?`, []any{"sidebar", "webform", "Write to us"}},
+			"a question's filling":  {1, `SELECT COUNT(*) FROM webform_elements WHERE machine_name = ? AND prefill_param = ?`, []any{"topic", "topic"}},
 		} {
 			if got := count(c.query, c.args...); got != c.n {
 				t.Errorf("%s: %d, want %d", what, got, c.n)

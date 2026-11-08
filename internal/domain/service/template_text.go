@@ -58,6 +58,18 @@ func PlainExcerpt(s string, limit int) string {
 	return textcut.AtWord(htmlsanitize.StripToText(s), limit)
 }
 
+// PlainLead - the first block of HTML s (its first paragraph, heading,
+// list item…) as plain text, cut to at most limit runes at a word boundary
+// with "…" (limit <= 0 - the whole block): a card's short text from a body
+// that goes on with headings and lists. "" - no text.
+func PlainLead(s string, limit int) string {
+	lines := htmlsanitize.StripToLines(embedtag.Strip(s))
+	if len(lines) == 0 {
+		return ""
+	}
+	return textcut.AtWord(lines[0], limit)
+}
+
 // getPreview returns a preview of s (without its embed tags, embedtag): if
 // s contains "<!--break-->", the part before it as-is; otherwise s
 // truncated to limit non-space text runes with "…", keeping the HTML

@@ -101,7 +101,10 @@ type typeRows struct {
 	id      int
 	path    string
 	promote bool
-	fields  entity.FieldInstanceDefs
+	// comments - the type's default comment mode, a node's without its
+	// own (Node.Comments).
+	comments entity.CommentMode
+	fields   entity.FieldInstanceDefs
 }
 
 type applier struct {
@@ -247,7 +250,7 @@ func (a *applier) contentTypes(ctx context.Context) error {
 		if p, ok := strings.CutSuffix(ct.PathPattern, "/[node:title]"); ok && p != "" {
 			prefix = p
 		}
-		a.types[ct.MachineName] = typeRows{id: ct.ID, path: prefix, promote: ct.DefaultPromote, fields: fields}
+		a.types[ct.MachineName] = typeRows{id: ct.ID, path: prefix, promote: ct.DefaultPromote, comments: entity.CommentMode(ct.DefaultCommentMode), fields: fields}
 	}
 	return nil
 }
@@ -331,6 +334,10 @@ func (a *applier) createNodes(ctx context.Context) error {
 		if n.Promote != nil {
 			promote = *n.Promote
 		}
+		comments := n.Comments
+		if comments == "" {
+			comments = t.comments
+		}
 		address := n.Path
 		if address == "" {
 			address = t.path + "/" + slug.Generate(n.Title)
@@ -343,7 +350,7 @@ func (a *applier) createNodes(ctx context.Context) error {
 			SetOnModeration(0).
 			SetPromote(promote).
 			SetSticky(n.Sticky).
-			SetCommentMode(string(n.Comments.OrDefault())).
+			SetCommentMode(string(comments.OrDefault())).
 			SetCreatedBy(author).
 			SetCreatedAt(at).
 			SetUpdatedAt(at).
@@ -632,6 +639,7 @@ func (a *applier) view(ctx context.Context, v View) (int, error) {
 		SetShowPagination(v.Pager).
 		SetPageSize(v.PageSize).
 		SetSkipItems(v.Skip).
+		SetThemeTemplate(v.ThemeTemplate).
 		SetAttachContentTypes(strings.Join(v.AttachTypes, ",")).
 		SetAttachTitle(v.AttachTitle).
 		SetAttachShowTitle(v.AttachTitle != "").

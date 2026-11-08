@@ -738,7 +738,7 @@ func (s *CacheService) renderCommentViewBlock(ctx context.Context, view entity.V
 	}
 	if view.ThemeTemplate != "" && views.ThemeTemplateExists(ctx, view.ThemeTemplate) {
 		html, err := views.RenderThemeTemplate(ctx, s.templateService, view.ThemeTemplate, map[string]any{"comments": comments, "pagerCompact": true, RequestLocationKey: zone, RequestLanguageKey: i18n.FromContext(ctx), RequestThemeKey: RequestTheme(ctx)}, pager)
-		return pagedThemeBlock(html, pager, part), err
+		return pagedThemeBlock(views.WithViewTexts(view, html), pager, part), err
 	}
 	viewFields, err := s.viewService.EffectiveFieldsByView(ctx, view)
 	if err != nil {
@@ -791,7 +791,7 @@ func (s *CacheService) renderContentViewBlock(ctx context.Context, view entity.V
 			return "", fmt.Errorf("error building teaser items for view block: %w", err)
 		}
 		html, err := views.RenderThemeTemplate(ctx, s.templateService, view.ThemeTemplate, map[string]any{"items": items, "pagerCompact": true, RequestLocationKey: zone, RequestLanguageKey: i18n.FromContext(ctx), RequestThemeKey: RequestTheme(ctx)}, pager)
-		return pagedThemeBlock(html, pager, part), err
+		return pagedThemeBlock(views.WithViewTexts(view, html), pager, part), err
 	}
 	viewFields, err := s.viewService.EffectiveFieldsByView(ctx, view)
 	if err != nil {

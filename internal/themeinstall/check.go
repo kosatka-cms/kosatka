@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/mod/semver"
 
+	"github.com/kosatka-cms/kosatka/internal/app/demoset"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/domain/themes"
 	"github.com/kosatka-cms/kosatka/internal/i18nextract"
@@ -57,6 +58,8 @@ func (f Finding) String() string {
 //     strings the theme doesn't use - engine is the engine's and the
 //     modules' strings (translations.Sources), translated by their own
 //     catalogs, not the theme's;
+//   - its own demo sets (demo/<lang>.yaml): each loads, in the theme's
+//     regions;
 //   - in a theme's own git repository, its version against the latest
 //     release tag.
 func (in Installer) Check(ctx context.Context, dir string, engine []i18n.Source) ([]Finding, error) {
@@ -76,6 +79,9 @@ func (in Installer) Check(ctx context.Context, dir string, engine []i18n.Source)
 		return nil, err
 	}
 	if err := c.translations(engine); err != nil {
+		return nil, err
+	}
+	if err := c.demo(info, manifestOK); err != nil {
 		return nil, err
 	}
 	if manifestOK {
@@ -377,6 +383,39 @@ func (c *checker) translations(engine []i18n.Source) error {
 		for _, e := range entries {
 			if k := key(e.Context, e.Source); !used[k] && !engines[k] {
 				c.warn(rel, 0, "%q: the theme doesn't use it", e.Source)
+			}
+		}
+	}
+	return nil
+}
+
+// demo checks the theme's own demo sets (demo/<lang>.yaml, app install
+// -demo-set <theme>): each loads as the engine's sets do, its blocks and
+// menus in the theme's regions (a subtheme's, without regions of its
+// own, are its base's: not checked).
+func (c *checker) demo(info entity.ThemeInfo, manifestOK bool) error {
+	sets, err := filepath.Glob(filepath.Join(c.dir, "demo", "*.yaml"))
+	if err != nil {
+		return err
+	}
+	slices.Sort(sets)
+	for _, path := range sets {
+		rel := c.rel(path)
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		set, err := demoset.Parse(b)
+		if err != nil {
+			c.problem(rel, 0, "%v", err)
+			continue
+		}
+		if !manifestOK || len(info.Regions) == 0 {
+			continue
+		}
+		for _, r := range set.Regions() {
+			if !slices.ContainsFunc(info.Regions, func(tr entity.ThemeRegion) bool { return string(tr.ID) == r }) {
+				c.problem(rel, 0, "region %q: not one of the theme's", r)
 			}
 		}
 	}

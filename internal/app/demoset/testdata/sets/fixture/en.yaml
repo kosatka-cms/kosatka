@@ -140,6 +140,7 @@ views:
     label: Items
     display_type: page
     path: items-list
+    theme_template: cards
     style: grid
     grid_columns: 2
     pager: true
@@ -171,3 +172,14 @@ menus:
 
 permissions:
   user: [create item content, edit own item content]
+
+modules:
+  forms:
+    title: Write to us
+    description: A question about the notes.
+    confirmation: Thank you!
+    submit: Send
+    elements:
+      - {name: name, type: text, label: Name, required: true}
+      - {name: topic, type: select, label: Topic, options: [Gardens, Rivers], prefill: topic}
+    block: {region: sidebar, title: Write to us, weight: 50}
