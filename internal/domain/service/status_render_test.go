@@ -42,7 +42,7 @@ func TestStatusReportPageRender(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{`admin-pill--danger`, "Run <code>app migrate -apply</code>", `<span class="admin-table-sub">forms</span>`, `title="0123456789abcdef">01234567</code>`, "mysql 8.4.0", `<span title="20261015210625">06.11.2026 21:26</span>`, `<span class="admin-table-muted">· baseline</span>`, "Not installed", `<details class="admin-settings-group admin-settings-fold">`, `<span class="admin-settings-count">2</span>`} {
+	for _, want := range []string{`admin-pill--danger`, "Run <code>app migrate -apply</code>", `<span class="admin-table-sub">forms</span>`, `title="0123456789abcdef">01234567</code>`, "mysql 8.4.0", `<span title="20261015210625">06.11.2026 21:26</span>`, `<span class="admin-table-muted">· baseline</span>`, "Not installed", `<details class="admin-settings-group admin-settings-fold">`, `<summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">Modules <span class="admin-module-count">2</span></h2></summary>`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("status report lacks %q", want)
 		}

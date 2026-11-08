@@ -71,10 +71,10 @@
 </section>
 {{end}}{{end}}
 
-{{/* The modules: folded - a long list, rarely needed; its title says
-     how many. */}}
+{{/* The modules: folded - a long list, rarely needed; its head says
+     how many (a folded group as on the Modules page, admin.css). */}}
 <details class="admin-settings-group admin-settings-fold">
-    <summary class="admin-settings-title">{{t "Modules"}}{{with .modules}} <span class="admin-settings-count">{{len .}}</span>{{end}}</summary>
+    <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Modules"}}{{with .modules}} <span class="admin-module-count">{{len .}}</span>{{end}}</h2></summary>
     <div class="admin-table-card">
         <div class="table-responsive">
             <table class="table admin-table">
