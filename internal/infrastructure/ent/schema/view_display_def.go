@@ -116,6 +116,9 @@ func (ViewDisplayDef) Fields() []ent.Field {
 		// otherwise a FieldTypeText field (enforced by views.GlossaryFieldType).
 		field.Int("glossary_field_storage_id").SchemaType(map[string]string{dialect.MySQL: "int unsigned"}).Optional().Nillable(),
 		field.Int("page_size").SchemaType(mysqlType("int")).Default(30),
+		// skip_items - the first skip_items items of the result are left out
+		// (entity.ViewDisplayDef.SkipItems); 0 = none.
+		field.Int("skip_items").SchemaType(mysqlType("int")).Default(0),
 		// header_text/footer_text - rich text rendered before/after the list. Part
 		// of the Settings bundle (inherited from the View's Default with it).
 		// Sanitized on save by views.DefaultService.

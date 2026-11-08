@@ -135,7 +135,7 @@ func buildLanguage(src fs.FS, code string, known map[string]i18n.Source) (Langua
 				l.Stale = append(l.Stale, e)
 				continue
 			}
-			if err := check(e, forms); err != nil {
+			if err := CheckEntry(e, forms); err != nil {
 				problems = append(problems, Problem{File: file, Source: e.Source, Err: err})
 				continue
 			}
@@ -165,10 +165,10 @@ func compareEntries(a, b i18n.Entry) int {
 	return strings.Compare(a.Context+"\x04"+a.Source, b.Context+"\x04"+b.Source)
 }
 
-// check - why e can't stand for its source: an empty translation, plural
-// forms not the language's number (or with a text too), a translation
-// failing i18n.CheckTranslation.
-func check(e i18n.Entry, forms int) error {
+// CheckEntry - why e can't stand for its source: an empty translation,
+// plural forms not the language's number (forms; or with a text too), a
+// translation failing i18n.CheckTranslation.
+func CheckEntry(e i18n.Entry, forms int) error {
 	texts := []string{e.Text}
 	if len(e.Forms) > 0 {
 		if e.Text != "" || len(e.Forms) != forms {

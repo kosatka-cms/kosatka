@@ -56753,6 +56753,8 @@ type ViewDisplayDefMutation struct {
 	show_glossary                      *bool
 	page_size                          *int
 	addpage_size                       *int
+	skip_items                         *int
+	addskip_items                      *int
 	header_text                        *string
 	footer_text                        *string
 	overflow_header_text               *string
@@ -58393,6 +58395,62 @@ func (m *ViewDisplayDefMutation) ResetPageSize() {
 	m.addpage_size = nil
 }
 
+// SetSkipItems sets the "skip_items" field.
+func (m *ViewDisplayDefMutation) SetSkipItems(i int) {
+	m.skip_items = &i
+	m.addskip_items = nil
+}
+
+// SkipItems returns the value of the "skip_items" field in the mutation.
+func (m *ViewDisplayDefMutation) SkipItems() (r int, exists bool) {
+	v := m.skip_items
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSkipItems returns the old "skip_items" field's value of the ViewDisplayDef entity.
+// If the ViewDisplayDef object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ViewDisplayDefMutation) OldSkipItems(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSkipItems is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSkipItems requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSkipItems: %w", err)
+	}
+	return oldValue.SkipItems, nil
+}
+
+// AddSkipItems adds i to the "skip_items" field.
+func (m *ViewDisplayDefMutation) AddSkipItems(i int) {
+	if m.addskip_items != nil {
+		*m.addskip_items += i
+	} else {
+		m.addskip_items = &i
+	}
+}
+
+// AddedSkipItems returns the value that was added to the "skip_items" field in this mutation.
+func (m *ViewDisplayDefMutation) AddedSkipItems() (r int, exists bool) {
+	v := m.addskip_items
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSkipItems resets all changes to the "skip_items" field.
+func (m *ViewDisplayDefMutation) ResetSkipItems() {
+	m.skip_items = nil
+	m.addskip_items = nil
+}
+
 // SetHeaderText sets the "header_text" field.
 func (m *ViewDisplayDefMutation) SetHeaderText(s string) {
 	m.header_text = &s
@@ -59295,7 +59353,7 @@ func (m *ViewDisplayDefMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ViewDisplayDefMutation) Fields() []string {
-	fields := make([]string, 0, 49)
+	fields := make([]string, 0, 50)
 	if m.base_entity != nil {
 		fields = append(fields, viewdisplaydef.FieldBaseEntity)
 	}
@@ -59403,6 +59461,9 @@ func (m *ViewDisplayDefMutation) Fields() []string {
 	}
 	if m.page_size != nil {
 		fields = append(fields, viewdisplaydef.FieldPageSize)
+	}
+	if m.skip_items != nil {
+		fields = append(fields, viewdisplaydef.FieldSkipItems)
 	}
 	if m.header_text != nil {
 		fields = append(fields, viewdisplaydef.FieldHeaderText)
@@ -59523,6 +59584,8 @@ func (m *ViewDisplayDefMutation) Field(name string) (ent.Value, bool) {
 		return m.GlossaryFieldStorageID()
 	case viewdisplaydef.FieldPageSize:
 		return m.PageSize()
+	case viewdisplaydef.FieldSkipItems:
+		return m.SkipItems()
 	case viewdisplaydef.FieldHeaderText:
 		return m.HeaderText()
 	case viewdisplaydef.FieldFooterText:
@@ -59630,6 +59693,8 @@ func (m *ViewDisplayDefMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldGlossaryFieldStorageID(ctx)
 	case viewdisplaydef.FieldPageSize:
 		return m.OldPageSize(ctx)
+	case viewdisplaydef.FieldSkipItems:
+		return m.OldSkipItems(ctx)
 	case viewdisplaydef.FieldHeaderText:
 		return m.OldHeaderText(ctx)
 	case viewdisplaydef.FieldFooterText:
@@ -59917,6 +59982,13 @@ func (m *ViewDisplayDefMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPageSize(v)
 		return nil
+	case viewdisplaydef.FieldSkipItems:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSkipItems(v)
+		return nil
 	case viewdisplaydef.FieldHeaderText:
 		v, ok := value.(string)
 		if !ok {
@@ -60031,6 +60103,9 @@ func (m *ViewDisplayDefMutation) AddedFields() []string {
 	if m.addpage_size != nil {
 		fields = append(fields, viewdisplaydef.FieldPageSize)
 	}
+	if m.addskip_items != nil {
+		fields = append(fields, viewdisplaydef.FieldSkipItems)
+	}
 	if m.addstatus != nil {
 		fields = append(fields, viewdisplaydef.FieldStatus)
 	}
@@ -60055,6 +60130,8 @@ func (m *ViewDisplayDefMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedCarouselSlidesPerView()
 	case viewdisplaydef.FieldPageSize:
 		return m.AddedPageSize()
+	case viewdisplaydef.FieldSkipItems:
+		return m.AddedSkipItems()
 	case viewdisplaydef.FieldStatus:
 		return m.AddedStatus()
 	case viewdisplaydef.FieldCreatedBy:
@@ -60102,6 +60179,13 @@ func (m *ViewDisplayDefMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddPageSize(v)
+		return nil
+	case viewdisplaydef.FieldSkipItems:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSkipItems(v)
 		return nil
 	case viewdisplaydef.FieldStatus:
 		v, ok := value.(int)
@@ -60356,6 +60440,9 @@ func (m *ViewDisplayDefMutation) ResetField(name string) error {
 		return nil
 	case viewdisplaydef.FieldPageSize:
 		m.ResetPageSize()
+		return nil
+	case viewdisplaydef.FieldSkipItems:
+		m.ResetSkipItems()
 		return nil
 	case viewdisplaydef.FieldHeaderText:
 		m.ResetHeaderText()

@@ -1,6 +1,8 @@
 {{define "edit_scripts.html"}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.39.0/dist/tagify.css" />
-<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify@4.39.0"></script>
+{{/* Tagify 4.39.0 (the tag inputs), served by the site like Bootstrap:
+     web/static/css/tagify.min.css, web/static/js/tagify.min.js. */}}
+<link rel="stylesheet" href="{{ staticCSS "tagify" }}">
+<script src="{{ staticJS "tagify" }}"></script>
 {{template "tinymce_user_files.html" .}}
 
 {{/* The content form's pickers and its address (content-form.js). */}}

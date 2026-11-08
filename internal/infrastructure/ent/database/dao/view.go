@@ -57,6 +57,7 @@ func ToViewDisplayDefEntity(v *generated.ViewDisplayDef) entity.ViewDisplayDef {
 		CarouselLinkFieldStorageID: v.CarouselLinkFieldStorageID,
 		CarouselEffect:             v.CarouselEffect,
 		PageSize:                   v.PageSize,
+		SkipItems:                  v.SkipItems,
 		HeaderText:                 v.HeaderText,
 		FooterText:                 v.FooterText,
 		OverflowHeaderText:         v.OverflowHeaderText,

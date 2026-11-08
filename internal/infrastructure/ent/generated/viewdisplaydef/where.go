@@ -230,6 +230,11 @@ func PageSize(v int) predicate.ViewDisplayDef {
 	return predicate.ViewDisplayDef(sql.FieldEQ(FieldPageSize, v))
 }
 
+// SkipItems applies equality check predicate on the "skip_items" field. It's identical to SkipItemsEQ.
+func SkipItems(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldEQ(FieldSkipItems, v))
+}
+
 // HeaderText applies equality check predicate on the "header_text" field. It's identical to HeaderTextEQ.
 func HeaderText(v string) predicate.ViewDisplayDef {
 	return predicate.ViewDisplayDef(sql.FieldEQ(FieldHeaderText, v))
@@ -1738,6 +1743,46 @@ func PageSizeLT(v int) predicate.ViewDisplayDef {
 // PageSizeLTE applies the LTE predicate on the "page_size" field.
 func PageSizeLTE(v int) predicate.ViewDisplayDef {
 	return predicate.ViewDisplayDef(sql.FieldLTE(FieldPageSize, v))
+}
+
+// SkipItemsEQ applies the EQ predicate on the "skip_items" field.
+func SkipItemsEQ(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldEQ(FieldSkipItems, v))
+}
+
+// SkipItemsNEQ applies the NEQ predicate on the "skip_items" field.
+func SkipItemsNEQ(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldNEQ(FieldSkipItems, v))
+}
+
+// SkipItemsIn applies the In predicate on the "skip_items" field.
+func SkipItemsIn(vs ...int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldIn(FieldSkipItems, vs...))
+}
+
+// SkipItemsNotIn applies the NotIn predicate on the "skip_items" field.
+func SkipItemsNotIn(vs ...int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldNotIn(FieldSkipItems, vs...))
+}
+
+// SkipItemsGT applies the GT predicate on the "skip_items" field.
+func SkipItemsGT(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldGT(FieldSkipItems, v))
+}
+
+// SkipItemsGTE applies the GTE predicate on the "skip_items" field.
+func SkipItemsGTE(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldGTE(FieldSkipItems, v))
+}
+
+// SkipItemsLT applies the LT predicate on the "skip_items" field.
+func SkipItemsLT(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldLT(FieldSkipItems, v))
+}
+
+// SkipItemsLTE applies the LTE predicate on the "skip_items" field.
+func SkipItemsLTE(v int) predicate.ViewDisplayDef {
+	return predicate.ViewDisplayDef(sql.FieldLTE(FieldSkipItems, v))
 }
 
 // HeaderTextEQ applies the EQ predicate on the "header_text" field.

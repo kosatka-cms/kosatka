@@ -124,6 +124,7 @@ var (
 			entity.ViewFieldBuiltinCreatedAt,
 			entity.ViewFieldBuiltinViewCount,
 			entity.ViewFieldBuiltinCommentCount,
+			entity.ViewFieldBuiltinReadingTime,
 			entity.ViewFieldBuiltinAuthor,
 			entity.ViewFieldBuiltinLink,
 		},
@@ -219,6 +220,8 @@ func FieldBuiltinLabel(ctx context.Context, b entity.ViewFieldBuiltinField) stri
 		return i18n.T(ctx, "Page views")
 	case entity.ViewFieldBuiltinCommentCount:
 		return i18n.T(ctx, "Comments")
+	case entity.ViewFieldBuiltinReadingTime:
+		return i18n.T(ctx, "Reading time")
 	case entity.ViewFieldBuiltinAuthor, entity.ViewFieldBuiltinCommentAuthor:
 		return i18n.T(ctx, "Author")
 	case entity.ViewFieldBuiltinLink:

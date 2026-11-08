@@ -84,6 +84,8 @@ const (
 	FieldGlossaryFieldStorageID = "glossary_field_storage_id"
 	// FieldPageSize holds the string denoting the page_size field in the database.
 	FieldPageSize = "page_size"
+	// FieldSkipItems holds the string denoting the skip_items field in the database.
+	FieldSkipItems = "skip_items"
 	// FieldHeaderText holds the string denoting the header_text field in the database.
 	FieldHeaderText = "header_text"
 	// FieldFooterText holds the string denoting the footer_text field in the database.
@@ -207,6 +209,7 @@ var Columns = []string{
 	FieldShowGlossary,
 	FieldGlossaryFieldStorageID,
 	FieldPageSize,
+	FieldSkipItems,
 	FieldHeaderText,
 	FieldFooterText,
 	FieldOverflowHeaderText,
@@ -313,6 +316,8 @@ var (
 	DefaultShowGlossary bool
 	// DefaultPageSize holds the default value on creation for the "page_size" field.
 	DefaultPageSize int
+	// DefaultSkipItems holds the default value on creation for the "skip_items" field.
+	DefaultSkipItems int
 	// OverflowHeaderTextValidator is a validator for the "overflow_header_text" field. It is called by the builders before save.
 	OverflowHeaderTextValidator func(string) error
 	// GroupByFieldValidator is a validator for the "group_by_field" field. It is called by the builders before save.
@@ -509,6 +514,11 @@ func ByGlossaryFieldStorageID(opts ...sql.OrderTermOption) OrderOption {
 // ByPageSize orders the results by the page_size field.
 func ByPageSize(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPageSize, opts...).ToFunc()
+}
+
+// BySkipItems orders the results by the skip_items field.
+func BySkipItems(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSkipItems, opts...).ToFunc()
 }
 
 // ByHeaderText orders the results by the header_text field.

@@ -306,6 +306,13 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 	data["fieldValues"] = fieldValues
 	data["fieldFormats"] = fieldFormats
 	data["fieldTerms"] = fieldTerms
+	// readingTime - the minutes reading the item takes, 0 - nothing to
+	// read (entity.ReadingMinutesOf); commentCount - its published
+	// comments while the core shows them (see nodeCommentCount).
+	data["readingTime"] = entity.ReadingMinutesOf(dc.Fields, func(f entity.FieldInstanceDef) any { return dc.Values[f.ID] })
+	if n, ok := c.nodeCommentCount(ctx, dc.Node, moduleParts.comments); ok {
+		data["commentCount"] = n
+	}
 	// Breadcrumb trail; the last item is the heading title shown on the page.
 	trailTitle := dc.Node.Title
 	if def.TitleDisplay == entity.TitleDisplayTranslatedFirst && altTitle != "" {
@@ -320,6 +327,21 @@ func (c *DynamicContentController) Detail(w http.ResponseWriter, r *http.Request
 	}
 
 	c.RenderOrFail(w, r, "dynamic/page.html", data)
+}
+
+// nodeCommentCount - the node's published comments; false while the core
+// doesn't show them (hidden, a module's comments in their place) or
+// they fail to count (logged).
+func (c *DynamicContentController) nodeCommentCount(ctx context.Context, node entity.Node, commentsModule string) (int, bool) {
+	if node.CommentMode == entity.CommentModeHidden || commentsModule != "" || c.commentsService == nil {
+		return 0, false
+	}
+	n, err := c.commentsService.CountByNodeID(ctx, node.ID, entity.CommentPublished, false)
+	if err != nil {
+		c.LogFailure(err, "counting the item's comments (no count shown)", "node_id", node.ID)
+		return 0, false
+	}
+	return n, true
 }
 
 // attachComments gives the page its comments in its HTML ("commentsList":

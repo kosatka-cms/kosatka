@@ -14,6 +14,9 @@ type TeaserItem struct {
 	// Terms - taxonomy field terms by machine_name.
 	Terms        map[string]TaxonomyTerms
 	CommentCount int
+	// ReadingTime - the minutes reading the item takes (ReadingMinutesOf
+	// its fields; 0 - nothing to read).
+	ReadingTime int
 	// Images - image field files by machine_name.
 	Images map[string]File
 	// DefaultImages - the default image (FieldInstanceDef.DefaultImageID)

@@ -34,6 +34,8 @@ type viewPreviewRequest struct {
 	CarouselEffect             string `json:"carousel_effect"`
 	ShowPagination             bool   `json:"show_pagination"`
 	PageSize                   int    `json:"page_size"`
+	// SkipItems - the draft value; nil - the saved one (0 is a value).
+	SkipItems *int `json:"skip_items"`
 	// HeaderText/FooterText - draft values, rendered as-is in the admin-only
 	// preview; ViewUpdate sanitizes them on save.
 	HeaderText string `json:"header_text"`
@@ -125,6 +127,10 @@ func (c *DynamicContentController) ViewPreview(w http.ResponseWriter, r *http.Re
 	if page < 1 {
 		page = 1
 	}
+	skipItems := view.SkipItems
+	if req.SkipItems != nil {
+		skipItems = max(*req.SkipItems, 0)
+	}
 
 	nodes, total, err := c.viewService.PreviewView(ctx, *view, views.PreviewSettings{
 		DisplayStyle:        displayStyle,
@@ -132,6 +138,7 @@ func (c *DynamicContentController) ViewPreview(w http.ResponseWriter, r *http.Re
 		ShowPagination:      req.ShowPagination,
 		PageSize:            pageSize,
 		Page:                page,
+		SkipItems:           skipItems,
 		Letter:              req.Letter,
 		ExposedFilterValues: req.ExposedFilters,
 	})

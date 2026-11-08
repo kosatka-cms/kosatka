@@ -41,15 +41,7 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 		return entity.Nodes{}, 0, nil
 	}
 
-	pageSize := params.PageSize
-	if pageSize <= 0 {
-		pageSize = 30
-	}
-	page := params.Page
-	if page < 1 {
-		page = 1
-	}
-	offset := (page - 1) * pageSize
+	skip, offset, pageSize := pageWindow(params)
 
 	// similar is set only by a similar_to_current_node contextual filter:
 	// its ranking orders the nodes the View's filters allow, the View's own
@@ -68,7 +60,7 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 		if err != nil {
 			return nil, 0, err
 		}
-		return nodesPage(ctx, client, sortIDsByKeys(ids, append(similar.sortKeys(), tieBreaks...)), offset, pageSize)
+		return nodesPage(ctx, client, afterSkip(sortIDsByKeys(ids, append(similar.sortKeys(), tieBreaks...)), skip), offset-skip, pageSize)
 	}
 
 	// Empty sorts means "created_at desc". A single builtin criterion uses
@@ -83,6 +75,7 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 	// newest…): one SQL ORDER BY too, not every matching ID sorted in Go.
 	if orders, ok := nodeColumnOrders(sorts); ok && len(sorts) > 1 {
 		total, err := client.Node.Query().Where(predicates...).Count(ctx)
+		total = max(total-skip, 0)
 		if err != nil || total == 0 {
 			return entity.Nodes{}, total, err
 		}
@@ -119,6 +112,7 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 
 	if len(sorts) == 1 && sorts[0].FieldStorage == nil && sorts[0].Module == nil {
 		total, err := client.Node.Query().Where(predicates...).Count(ctx)
+		total = max(total-skip, 0)
 		if err != nil || total == 0 {
 			return entity.Nodes{}, total, err
 		}
@@ -180,8 +174,7 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 	if err != nil {
 		return nil, 0, fmt.Errorf("running the view: %w", err)
 	}
-	total := len(allIDs)
-	if total == 0 {
+	if len(allIDs) <= skip {
 		return entity.Nodes{}, 0, nil
 	}
 
@@ -189,7 +182,25 @@ func (e *Engine) RunView(ctx context.Context, params entity.ViewRunParams) (enti
 	if err != nil {
 		return nil, 0, err
 	}
-	return nodesPage(ctx, client, sortedIDs, offset, pageSize)
+	return nodesPage(ctx, client, afterSkip(sortedIDs, skip), offset-skip, pageSize)
+}
+
+// pageWindow - the run's skipped items (ViewRunParams.Skip), the offset
+// of its page past them and the pages before it, and the page size
+// (30 when unset).
+func pageWindow(params entity.ViewRunParams) (skip, offset, pageSize int) {
+	pageSize = params.PageSize
+	if pageSize <= 0 {
+		pageSize = 30
+	}
+	page := max(params.Page, 1)
+	skip = max(params.Skip, 0)
+	return skip, skip + (page-1)*pageSize, pageSize
+}
+
+// afterSkip - ids without the first skip of them.
+func afterSkip(ids []int, skip int) []int {
+	return ids[min(skip, len(ids)):]
 }
 
 // nodesPage loads the page of sortedIDs (every matching node, in the

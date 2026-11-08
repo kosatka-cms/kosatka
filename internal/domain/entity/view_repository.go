@@ -136,6 +136,10 @@ type ViewRunParams struct {
 	QueryParams map[string]string
 	PageSize    int
 	Page        int // 1-based
+	// Skip - the first Skip items of the result are left out: page 1
+	// starts after them, and the total counts only the rest
+	// (ViewDisplayDef.SkipItems).
+	Skip int
 	// ContextCreatedByID/ContextNodeID - the node being viewed:
 	// ContextCreatedByID feeds Contextual filters; ContextNodeID (when
 	// >0) always excludes the current node from the results. 0 = no

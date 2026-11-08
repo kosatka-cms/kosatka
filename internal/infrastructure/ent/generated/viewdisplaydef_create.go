@@ -513,6 +513,20 @@ func (_c *ViewDisplayDefCreate) SetNillablePageSize(v *int) *ViewDisplayDefCreat
 	return _c
 }
 
+// SetSkipItems sets the "skip_items" field.
+func (_c *ViewDisplayDefCreate) SetSkipItems(v int) *ViewDisplayDefCreate {
+	_c.mutation.SetSkipItems(v)
+	return _c
+}
+
+// SetNillableSkipItems sets the "skip_items" field if the given value is not nil.
+func (_c *ViewDisplayDefCreate) SetNillableSkipItems(v *int) *ViewDisplayDefCreate {
+	if v != nil {
+		_c.SetSkipItems(*v)
+	}
+	return _c
+}
+
 // SetHeaderText sets the "header_text" field.
 func (_c *ViewDisplayDefCreate) SetHeaderText(v string) *ViewDisplayDefCreate {
 	_c.mutation.SetHeaderText(v)
@@ -876,6 +890,10 @@ func (_c *ViewDisplayDefCreate) defaults() {
 		v := viewdisplaydef.DefaultPageSize
 		_c.mutation.SetPageSize(v)
 	}
+	if _, ok := _c.mutation.SkipItems(); !ok {
+		v := viewdisplaydef.DefaultSkipItems
+		_c.mutation.SetSkipItems(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := viewdisplaydef.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -1037,6 +1055,9 @@ func (_c *ViewDisplayDefCreate) check() error {
 	}
 	if _, ok := _c.mutation.PageSize(); !ok {
 		return &ValidationError{Name: "page_size", err: errors.New(`generated: missing required field "ViewDisplayDef.page_size"`)}
+	}
+	if _, ok := _c.mutation.SkipItems(); !ok {
+		return &ValidationError{Name: "skip_items", err: errors.New(`generated: missing required field "ViewDisplayDef.skip_items"`)}
 	}
 	if v, ok := _c.mutation.OverflowHeaderText(); ok {
 		if err := viewdisplaydef.OverflowHeaderTextValidator(v); err != nil {
@@ -1228,6 +1249,10 @@ func (_c *ViewDisplayDefCreate) createSpec() (*ViewDisplayDef, *sqlgraph.CreateS
 	if value, ok := _c.mutation.PageSize(); ok {
 		_spec.SetField(viewdisplaydef.FieldPageSize, field.TypeInt, value)
 		_node.PageSize = value
+	}
+	if value, ok := _c.mutation.SkipItems(); ok {
+		_spec.SetField(viewdisplaydef.FieldSkipItems, field.TypeInt, value)
+		_node.SkipItems = value
 	}
 	if value, ok := _c.mutation.HeaderText(); ok {
 		_spec.SetField(viewdisplaydef.FieldHeaderText, field.TypeString, value)

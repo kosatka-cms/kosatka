@@ -620,6 +620,27 @@ func (_u *ViewDisplayDefUpdate) AddPageSize(v int) *ViewDisplayDefUpdate {
 	return _u
 }
 
+// SetSkipItems sets the "skip_items" field.
+func (_u *ViewDisplayDefUpdate) SetSkipItems(v int) *ViewDisplayDefUpdate {
+	_u.mutation.ResetSkipItems()
+	_u.mutation.SetSkipItems(v)
+	return _u
+}
+
+// SetNillableSkipItems sets the "skip_items" field if the given value is not nil.
+func (_u *ViewDisplayDefUpdate) SetNillableSkipItems(v *int) *ViewDisplayDefUpdate {
+	if v != nil {
+		_u.SetSkipItems(*v)
+	}
+	return _u
+}
+
+// AddSkipItems adds value to the "skip_items" field.
+func (_u *ViewDisplayDefUpdate) AddSkipItems(v int) *ViewDisplayDefUpdate {
+	_u.mutation.AddSkipItems(v)
+	return _u
+}
+
 // SetHeaderText sets the "header_text" field.
 func (_u *ViewDisplayDefUpdate) SetHeaderText(v string) *ViewDisplayDefUpdate {
 	_u.mutation.SetHeaderText(v)
@@ -1273,6 +1294,12 @@ func (_u *ViewDisplayDefUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.AddedPageSize(); ok {
 		_spec.AddField(viewdisplaydef.FieldPageSize, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SkipItems(); ok {
+		_spec.SetField(viewdisplaydef.FieldSkipItems, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSkipItems(); ok {
+		_spec.AddField(viewdisplaydef.FieldSkipItems, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.HeaderText(); ok {
 		_spec.SetField(viewdisplaydef.FieldHeaderText, field.TypeString, value)
@@ -2175,6 +2202,27 @@ func (_u *ViewDisplayDefUpdateOne) AddPageSize(v int) *ViewDisplayDefUpdateOne {
 	return _u
 }
 
+// SetSkipItems sets the "skip_items" field.
+func (_u *ViewDisplayDefUpdateOne) SetSkipItems(v int) *ViewDisplayDefUpdateOne {
+	_u.mutation.ResetSkipItems()
+	_u.mutation.SetSkipItems(v)
+	return _u
+}
+
+// SetNillableSkipItems sets the "skip_items" field if the given value is not nil.
+func (_u *ViewDisplayDefUpdateOne) SetNillableSkipItems(v *int) *ViewDisplayDefUpdateOne {
+	if v != nil {
+		_u.SetSkipItems(*v)
+	}
+	return _u
+}
+
+// AddSkipItems adds value to the "skip_items" field.
+func (_u *ViewDisplayDefUpdateOne) AddSkipItems(v int) *ViewDisplayDefUpdateOne {
+	_u.mutation.AddSkipItems(v)
+	return _u
+}
+
 // SetHeaderText sets the "header_text" field.
 func (_u *ViewDisplayDefUpdateOne) SetHeaderText(v string) *ViewDisplayDefUpdateOne {
 	_u.mutation.SetHeaderText(v)
@@ -2858,6 +2906,12 @@ func (_u *ViewDisplayDefUpdateOne) sqlSave(ctx context.Context) (_node *ViewDisp
 	}
 	if value, ok := _u.mutation.AddedPageSize(); ok {
 		_spec.AddField(viewdisplaydef.FieldPageSize, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SkipItems(); ok {
+		_spec.SetField(viewdisplaydef.FieldSkipItems, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSkipItems(); ok {
+		_spec.AddField(viewdisplaydef.FieldSkipItems, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.HeaderText(); ok {
 		_spec.SetField(viewdisplaydef.FieldHeaderText, field.TypeString, value)

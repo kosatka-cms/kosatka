@@ -38,17 +38,10 @@ func (e *Engine) RunCommentView(ctx context.Context, params entity.ViewRunParams
 		predicates = append(predicates, comment.Status(entity.CommentPublished))
 	}
 
-	pageSize := params.PageSize
-	if pageSize <= 0 {
-		pageSize = 30
-	}
-	page := params.Page
-	if page < 1 {
-		page = 1
-	}
-	offset := (page - 1) * pageSize
+	skip, offset, pageSize := pageWindow(params)
 
 	total, err := client.Comment.Query().Where(predicates...).Count(ctx)
+	total = max(total-skip, 0)
 	if err != nil || total == 0 {
 		return entity.Comments{}, total, err
 	}

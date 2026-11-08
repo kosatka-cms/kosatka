@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -113,6 +114,8 @@ type fakeListTypes struct {
 	types    entity.ContentTypeDefs
 	values   map[int]map[int]any // node ID → storage ID → value
 	valueErr error
+	// fieldsByType - content type ID → its fields.
+	fieldsByType map[int]entity.FieldInstanceDefs
 }
 
 func (f *fakeListTypes) FieldStorageByID(_ context.Context, id int) (*entity.FieldStorageDef, error) {
@@ -149,6 +152,11 @@ func (f *fakeListTypes) FieldValuesForNodes(_ context.Context, nodeIDs []int, fi
 		}
 	}
 	return out, nil
+}
+
+// FieldsByContentTypeID - the type's fields (fieldsByType).
+func (f *fakeListTypes) FieldsByContentTypeID(_ context.Context, id int) (entity.FieldInstanceDefs, error) {
+	return f.fieldsByType[id], nil
 }
 
 type fakeListNodes struct {
@@ -331,5 +339,38 @@ func TestContentViewBuiltinsHandled(t *testing.T) {
 	}
 	if len(viewBuiltinByID) != len(viewBuiltins) {
 		t.Errorf("viewBuiltins: %d builtins under %d IDs", len(viewBuiltins), len(viewBuiltinByID))
+	}
+}
+
+// TestBuildContentListReadingTime - the reading time field: of the long
+// text fields a node's type shows on its page, as text; none for a node
+// with nothing to read or a type without such fields.
+func TestBuildContentListReadingTime(t *testing.T) {
+	body := entity.FieldInstanceDef{ID: 31, FieldStorageID: 11, FieldType: entity.FieldTypeText, ShowOnDetail: true, WidgetConfig: map[string]any{"widget": "wysiwyg"}}
+	subtitle := entity.FieldInstanceDef{ID: 32, FieldStorageID: 12, FieldType: entity.FieldTypeText, ShowOnDetail: true}
+	types := &fakeListTypes{
+		types: entity.ContentTypeDefs{{ID: 1, MachineName: "article"}, {ID: 2, MachineName: "link"}},
+		fieldsByType: map[int]entity.FieldInstanceDefs{
+			1: {body, subtitle},
+			2: {subtitle},
+		},
+		values: map[int]map[int]any{
+			1: {11: "<p>" + strings.Repeat("word ", 450) + "</p>", 12: strings.Repeat("word ", 450)},
+			3: {12: "A subtitle"},
+		},
+	}
+	viewFields := entity.ViewFieldDefs{{ID: 1, BuiltinField: entity.ViewFieldBuiltinReadingTime}}
+	nodes := entity.Nodes{{ID: 1, Type: "article"}, {ID: 2, Type: "article"}, {ID: 3, Type: "link"}}
+	fields, items, err := BuildContentList(t.Context(), ContentListSources{Types: types}, 1, viewFields, nodes, ContentListOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fields) != 1 || fields[0].MachineName != "reading_time" || fields[0].Label != "Reading time" {
+		t.Fatalf("fields = %+v", fields)
+	}
+	for i, want := range []string{"3 min read", "", ""} {
+		if got, _ := items[i].Values[contentViewBuiltinReadingTimeID].(string); got != want {
+			t.Errorf("node %d: %v, want %v", nodes[i].ID, got, want)
+		}
 	}
 }
