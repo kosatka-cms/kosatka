@@ -415,6 +415,8 @@ the display style; without the file the display style is used.
   `.comments` for a View of comments.
 - `.pagination` and `.showPagination` - the pager. The template
   outputs it itself (`pagination.html` takes the whole data, as above).
+- The display's *Text before the list* and *Text after the list* are
+  output around the template's list, as with the display style.
 - The file is rendered on its own, with `pagination.html`, the field
   templates and every `partials/*.html` of the engine and the theme
   (not the teasers or the page layout). Shared markup for View templates
@@ -490,6 +492,7 @@ Besides Go's built-in functions (`and`, `or`, `not`, `eq`, `index`,
 | `truncateText s n` | plain text cut to `n` characters with "…" (escaped) |
 | `plainPreview s n` | the same as `plainExcerpt` (the name teasers use) |
 | `plainExcerpt s n` | HTML as plain text, cut at a word to `n` characters |
+| `plainLead s n` | the first paragraph (block) of HTML as plain text, cut at a word to `n` characters (`0` - the whole paragraph): a card's text from a body that goes on with headings and lists |
 | `stripImages s` | `s` without `<img>` tags |
 | `json v` | `v` as JSON, for an attribute (`data-ids="{{json .IDs}}"`); inside `<script>` print the value itself |
 | `toString v` | `v` as a string |

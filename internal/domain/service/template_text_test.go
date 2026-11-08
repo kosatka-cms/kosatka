@@ -19,3 +19,24 @@ func TestGetPlainPreview(t *testing.T) {
 		}
 	}
 }
+
+// TestPlainLead - the first block of a text as plain text: a body's
+// opening paragraph without the headings and lists after it, cut at a
+// word; embeds and empty blocks left out; a plain text's first line.
+func TestPlainLead(t *testing.T) {
+	for _, tc := range []struct {
+		in    string
+		limit int
+		want  string
+	}{
+		{"<p>Apps for iOS &amp; Android.</p><h2>What's included</h2><ul><li>Design</li></ul>", 0, "Apps for iOS & Android."},
+		{"[[block:7]]<p></p><p>First words of a long opening paragraph</p>", 20, "First words of a…"},
+		{"Plain text\nsecond line", 0, "Plain text"},
+		{"<h2>A heading first</h2><p>Text</p>", 0, "A heading first"},
+		{"", 10, ""},
+	} {
+		if got := PlainLead(tc.in, tc.limit); got != tc.want {
+			t.Errorf("PlainLead(%q, %d) = %q, want %q", tc.in, tc.limit, got, tc.want)
+		}
+	}
+}

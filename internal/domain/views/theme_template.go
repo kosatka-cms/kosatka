@@ -8,6 +8,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/paths"
 	"github.com/kosatka-cms/kosatka/pkg/pagination"
 )
@@ -43,4 +44,24 @@ func RenderThemeTemplate(ctx context.Context, ts NamedRenderer, name string, dat
 		return "", fmt.Errorf("error rendering theme view template %q: %w", name, err)
 	}
 	return template.HTML(buf.String()), nil
+}
+
+// WithViewTexts - list (a View's list as its theme template renders it)
+// with the display's header and footer texts around it, as
+// dynamic/list.html puts them around the list on the View's page: in a
+// block, an embedded View, the front page's feed and a profile tab too.
+// The texts are the admin's sanitized HTML (SanitizeAdmin).
+func WithViewTexts(view entity.ViewDisplayDef, list template.HTML) template.HTML {
+	if view.HeaderText == "" && view.FooterText == "" {
+		return list
+	}
+	var b bytes.Buffer
+	if view.HeaderText != "" {
+		b.WriteString(`<div class="view-text view-header-text">` + view.HeaderText + `</div>`)
+	}
+	b.WriteString(string(list))
+	if view.FooterText != "" {
+		b.WriteString(`<div class="view-text view-footer-text">` + view.FooterText + `</div>`)
+	}
+	return template.HTML(b.String())
 }

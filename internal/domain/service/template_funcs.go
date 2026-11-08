@@ -226,6 +226,8 @@ func (c funcScope) markupFuncs() template.FuncMap {
 		"truncateText": truncateText,
 		"plainPreview": PlainExcerpt,
 		"plainExcerpt": PlainExcerpt,
+		// plainLead - the first paragraph of HTML as plain text (PlainLead).
+		"plainLead": PlainLead,
 		"processContent": func(s string) template.HTML {
 			if t.contentProcessor != nil {
 				return template.HTML(t.contentProcessor.ProcessImages(s))
