@@ -3,13 +3,14 @@
      latest comments column from .lastComments
      (CacheService.GetSidebarData, base_controller.go): each comment's
      Summary (its subject or the start of its text), linking the comment.
-     The .block class
+     Its heading is the placement's, as every system block's
+     (region_blocks.html: "Show title", the title or else the block's
+     name). The .block class
      matches the generic View block wrapper in region_blocks.html, for the
      shared column layout rule (.last-comments-container.row >
      .last-comments-column, styles.css). */}}
 {{define "block_last_comments"}}
 <div class="block">
-    <h2>{{t "Recent comments"}}</h2>
     <div class="item-list">
         <ul>
             {{range .lastComments}}
