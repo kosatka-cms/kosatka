@@ -39,6 +39,11 @@ regions:
 blocks:
   - plugin: copyright
     region: footer_bottom
+  - title: Powered by Kosatka CMS
+    region: footer_bottom
+    weight: 10
+    body: |
+      <p>Powered by <a href="https://github.com/kosatka-cms/kosatka" target="_blank" rel="noopener">Kosatka CMS</a></p>
 # settings - the theme's options on the Appearance page
 # (entity.ThemeSetting): each scheme's accent (the shades follow it) and
 # the scheme a visitor who hasn't chosen one sees.
