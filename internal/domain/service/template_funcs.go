@@ -577,8 +577,8 @@ func (c funcScope) pageFuncs() template.FuncMap {
 			return entity.TranslatedText(c.setLang(), entity.TextViewTitle, strconv.Itoa(v.ID), v.Label)
 		},
 		// blockTitle - a custom block's title in the page's language;
-		// placementTitle - a placement's (fallback - the View's or the
-		// menu's label when it has none of its own).
+		// placementTitle - a placement's (fallback - the View's, the
+		// menu's or the system block's name when it has none of its own).
 		"blockTitle": func(b entity.BlockDef) string {
 			return entity.TranslatedText(c.setLang(), entity.TextBlockTitle, strconv.Itoa(b.ID), b.Title)
 		},
@@ -588,6 +588,16 @@ func (c funcScope) pageFuncs() template.FuncMap {
 				title = fallback
 			}
 			return entity.TranslatedText(c.setLang(), entity.TextPlacementTitle, strconv.Itoa(p.ID), title)
+		},
+		// pluginBlockLabel - a system block's name (entity.PluginBlockLabels)
+		// in the page's language: a plugin placement's title when it has
+		// none of its own; "" for an unknown one.
+		"pluginBlockLabel": func(id entity.PluginBlockID) string {
+			label := entity.PluginBlockLabels()[id]
+			if label == "" {
+				return ""
+			}
+			return theme.translator().T(c.setLang(), "", label)
 		},
 		// resolveMenuBlockRoot - template wrapper around ResolveMenuBlockRoot
 		// ("Initial visibility level"), used by region_blocks.html's menu

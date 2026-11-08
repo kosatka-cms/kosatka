@@ -10,6 +10,22 @@ import (
 // The core's data steps.
 func init() {
 	RegisterUpdate(CoreSet, Update{Version: "20261106173400", Description: "mail_resend_key", Run: moveResendKey})
+	RegisterUpdate(CoreSet, Update{Version: "20261108174000", Description: "last_comments_title", Run: showLastCommentsTitle})
+}
+
+// showLastCommentsTitle - the latest comments block (plugin
+// "last_comments") had a heading of its own, "Recent comments", whatever
+// its placement's "Show title"; now its heading is the placement's, as
+// every system block's - the title, or else the block's name. Its
+// placements without "Show title" get it, so a site keeps a heading over
+// the block: the block's name, or the title given to the placement. One
+// already showing its title shows it once now instead of twice.
+func showLastCommentsTitle(ctx context.Context, env Env) error {
+	if _, err := env.DB.ExecContext(ctx, env.Dialect.Rebind("UPDATE block_placements SET show_title = ? WHERE placement_type = ? AND plugin_id = ? AND show_title = ?"),
+		true, "plugin", "last_comments", false); err != nil {
+		return fmt.Errorf("showing the latest comments block's title: %w", err)
+	}
+	return nil
 }
 
 // moveResendKey - Resend left the engine for a module of its own

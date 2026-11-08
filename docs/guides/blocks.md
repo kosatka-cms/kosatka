@@ -91,7 +91,7 @@ is on the block's page (the pencil icon).
 | Setting | Blocks | What it does |
 |---|---|---|
 | *Region* | all | where the block is |
-| *Title*, *Show title* / *Display title* | system, View, menu | a heading above the block; a View or menu block defaults to the View's or menu's name |
+| *Title*, *Show title* / *Display title* | system, View, menu | a heading above the block; a View or menu block defaults to the View's or menu's name, a system block to its own (*Recent comments*) |
 | *Shows* and the block's own settings | system | see the table above |
 | *Initial level*, *Number of levels* | menu | which part of the menu tree to show ([Menus](./menus.md)) |
 | *Load on scroll* | custom, View | see below |

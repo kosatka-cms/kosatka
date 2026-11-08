@@ -413,8 +413,8 @@ func createDemoSidebar(ctx context.Context, c *generated.Client, theme string, t
 		SetCreatedAt(now).SetUpdatedAt(now).Exec(ctx); err != nil {
 		return err
 	}
-	// The title shows on Popular and the tag cloud: the search needs none,
-	// the latest comments block has its own heading.
+	// The title shows on Popular, the latest comments and the tag cloud:
+	// the search needs none.
 	place := func(q *generated.BlockPlacementDefCreate, title string, showTitle bool, weight int) error {
 		return q.SetTheme(entity.ThemeKey(theme)).SetRegion("sidebar").
 			SetTitle(title).SetShowTitle(showTitle).SetWeight(weight).
@@ -426,7 +426,7 @@ func createDemoSidebar(ctx context.Context, c *generated.Client, theme string, t
 	if err := place(c.BlockPlacementDef.Create().SetPlacementType(string(entity.BlockPlacementView)).SetViewDisplayID(popular.ID), titles.Popular, true, 10); err != nil {
 		return err
 	}
-	if err := place(c.BlockPlacementDef.Create().SetPlacementType(string(entity.BlockPlacementPlugin)).SetPluginID(string(entity.PluginBlockLastComments)), titles.Comments, false, 20); err != nil {
+	if err := place(c.BlockPlacementDef.Create().SetPlacementType(string(entity.BlockPlacementPlugin)).SetPluginID(string(entity.PluginBlockLastComments)), titles.Comments, true, 20); err != nil {
 		return err
 	}
 	return place(c.BlockPlacementDef.Create().SetPlacementType(string(entity.BlockPlacementPlugin)).SetPluginID(string(entity.PluginBlockTagCloud)).

@@ -775,34 +775,45 @@ func TestPluginBlockDispatch_UserMenuAndLastComments(t *testing.T) {
 		t.Fatalf("a user's menu: %s", out)
 	}
 
+	// The latest comments: this plugin block renders only its own column
+	// (web/templates/blocks/last_comments.html); its heading is the
+	// placement's, as every system block's - "Show title", the title or
+	// else the block's name - once.
 	lastCommentsID := entity.PluginBlockLastComments
-	bp2 := map[entity.Region][]entity.BlockWithPlacement{
-		entity.Region("widgets_col_1"): {{
-			Placement: entity.BlockPlacementDef{PlacementType: entity.BlockPlacementPlugin, PluginID: &lastCommentsID, VisibilityScope: entity.BlockVisibilityAll},
-		}},
+	renderComments := func(title string, show bool) string {
+		t.Helper()
+		bp2 := map[entity.Region][]entity.BlockWithPlacement{
+			entity.Region("widgets_col_1"): {{
+				Placement: entity.BlockPlacementDef{PlacementType: entity.BlockPlacementPlugin, PluginID: &lastCommentsID, VisibilityScope: entity.BlockVisibilityAll, Title: title, ShowTitle: show},
+			}},
+		}
+		data2 := map[string]any{
+			"Region": entity.Region("widgets_col_1"),
+			"Ctx": map[string]any{
+				"blockPlacements": bp2,
+				"isHomepage":      false,
+				"lastComments":    entity.Comments{{ID: 5, Content: "<p>Great issue</p>", Node: &entity.Node{ID: 1, Title: "The node"}}},
+			},
+		}
+		var buf2 bytes.Buffer
+		if err := svc.RenderNamed(&buf2, "region_blocks", data2, zzBlockTemplateFiles...); err != nil {
+			t.Fatalf("render error: %v", err)
+		}
+		return buf2.String()
 	}
-	data2 := map[string]any{
-		"Region": entity.Region("widgets_col_1"),
-		"Ctx": map[string]any{
-			"blockPlacements": bp2,
-			"isHomepage":      false,
-			"lastComments":    entity.Comments{{ID: 5, Content: "<p>Great issue</p>", Node: &entity.Node{ID: 1, Title: "The node"}}},
-		},
-	}
-	var buf2 bytes.Buffer
-	if err := svc.RenderNamed(&buf2, "region_blocks", data2, zzBlockTemplateFiles...); err != nil {
-		t.Fatalf("render error: %v", err)
-	}
-	// The last-comments-container.row wrapper lives in
-	// web/templates/last_comments.html (around the widgets_col_1/2/3
-	// regions); this plugin block renders only its own column, see
-	// web/templates/blocks/last_comments.html.
-	if !bytes.Contains(buf2.Bytes(), []byte("Recent comments")) {
-		t.Fatalf("expected last comments widget markup, got: %s", buf2.String())
-	}
+	out := renderComments("", false)
 	// Each comment's text linking it.
-	if !bytes.Contains(buf2.Bytes(), []byte(`<a href="/comment/5#comment-5">Great issue</a>`)) {
-		t.Errorf("a latest comment: %s", buf2.String())
+	if !strings.Contains(out, `<a href="/comment/5#comment-5">Great issue</a>`) {
+		t.Errorf("a latest comment: %s", out)
+	}
+	if strings.Contains(out, "<h2") {
+		t.Errorf("without Show title, no heading: %s", out)
+	}
+	if out := renderComments("", true); strings.Count(out, "<h2") != 1 || !strings.Contains(out, "<h2>Recent comments</h2>") {
+		t.Errorf("Show title without a title - the block's name, once: %s", out)
+	}
+	if out := renderComments("Talked about", true); strings.Count(out, "<h2") != 1 || !strings.Contains(out, "<h2>Talked about</h2>") {
+		t.Errorf("Show title - the placement's title, once: %s", out)
 	}
 }
 

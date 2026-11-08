@@ -8,6 +8,8 @@
      - custom block (Block.Title/Body; the <h2> is controlled by
        Block.ShowTitle, see entity.BlockDef.ShowTitle);
      - plugin block (dispatched by Placement.PluginID via "plugin_block");
+       its <h2> - Placement.ShowTitle, the placement's title or else the
+       system block's name (pluginBlockLabel), as for every system block;
      - View block (PlacementType "view"): pre-rendered by CacheService into
        .Ctx.viewBlockContent[Placement.ID] (see resolveViewBlockContent);
      - menu block (PlacementType "menu"): rendered per request since the
@@ -37,7 +39,7 @@
 {{attachBlock .Placement.PluginIDValue}}
 <div class="lazy-block" data-lazy-block="/api/block-placement/{{.Placement.ID}}{{with $ctx.currentPath}}?path={{queryEscape .}}{{end}}">{{renderOptional "block_placeholder" $region $ctx}}</div>
 {{else if eq (print .Placement.PlacementType) "plugin"}}
-{{if .Placement.ShowTitle}}<h2>{{placementTitle .Placement ""}}</h2>{{end}}
+{{if .Placement.ShowTitle}}<h2>{{placementTitle .Placement (pluginBlockLabel .Placement.PluginIDValue)}}</h2>{{end}}
 {{template "plugin_block" (dict "PluginID" (print .Placement.PluginIDValue) "Ctx" $ctx "Placement" .Placement "Data" .PluginData)}}
 {{else if eq (print .Placement.PlacementType) "view"}}
 {{if .ViewDisplay}}
