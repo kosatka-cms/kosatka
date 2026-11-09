@@ -52,8 +52,12 @@ type Result struct {
 // 1600×900, under the content images' directory.
 const pictureWidth, pictureHeight = 1600, 900
 
-// pictureDir - where a set's pictures go, under the public files.
-var pictureDir = path.Join(files.DynamicContentImageBasePath, "demo")
+// pictureDir, documentDir - where a set's pictures and documents go,
+// under the public files.
+var (
+	pictureDir  = path.Join(files.DynamicContentImageBasePath, "demo")
+	documentDir = path.Join(files.DynamicContentFileBasePath, "demo")
+)
 
 // Apply creates the set on a new site that has the starter set: image
 // styles, text formats, users, vocabularies, field storages, content types, nodes with
@@ -475,7 +479,13 @@ func (a *applier) values(ctx context.Context, n Node, fields entity.FieldInstanc
 		case entity.FieldTypeImage, entity.FieldTypeFile:
 			var ids []int
 			for j, item := range items {
-				id, err := a.picture(ctx, n, name, j, item, at)
+				var id int
+				var err error
+				if file, docName := documentFile(item); file != "" && f.FieldType == entity.FieldTypeFile {
+					id, err = a.document(ctx, n, name, j, file, docName, at)
+				} else {
+					id, err = a.picture(ctx, n, name, j, item, at)
+				}
 				if err != nil {
 					return nil, nil, nil, fmt.Errorf("%s: %w", name, err)
 				}
@@ -626,6 +636,24 @@ func (a *applier) picture(ctx context.Context, n Node, field string, j int, raw 
 	}
 	rel := path.Join(pictureDir, fmt.Sprintf("%s-%s-%d.jpg", slug.Generate(n.Key), strings.TrimPrefix(field, "field_"), j))
 	return demo.ImageFile(ctx, env, rel, pictureWidth, pictureHeight, number, alt, at)
+}
+
+// document - the file of a file field's value {file, name}: the set's own
+// document, its link showing name (the file's name by default).
+func (a *applier) document(ctx context.Context, n Node, field string, j int, file, name string, at time.Time) (int, error) {
+	if a.set.files == nil {
+		return 0, fmt.Errorf("document %q: the set has no directory of its own", file)
+	}
+	data, err := fs.ReadFile(a.set.files, file)
+	if err != nil {
+		return 0, fmt.Errorf("document %q: %w", file, err)
+	}
+	if name == "" {
+		name = path.Base(file)
+	}
+	ext := strings.ToLower(path.Ext(file))
+	rel := path.Join(documentDir, fmt.Sprintf("%s-%s-%d%s", slug.Generate(n.Key), strings.TrimPrefix(field, "field_"), j, ext))
+	return demo.StoredFile(ctx, demo.Env{Client: a.Client, CreatedBy: a.CreatedBy}, rel, data, name, at)
 }
 
 // link - a link value: an address, or {url, title}.

@@ -113,6 +113,12 @@ What a demo site usually has:
   `static/`, and the demo's pictures are needed only by the install. A
   text block can show the theme's pictures from its `static/`
   (`/static/themes/<theme>/images/…`).
+- **Documents**: a file field takes a document of the theme's own -
+  `{file: docs/catalogue.pdf, name: Catalogue.pdf}`, a path inside
+  `demo/` of a format a file field allows (`.pdf`, `.doc`, `.docx`,
+  `.xls`, `.xlsx`, `.zip`, `.txt`); `name` is what its link shows, the
+  file's name unless given. Installing copies it into the site's files,
+  as an upload.
 - **The modules' content** under `modules`: a form with its block in a
   region, a gallery on a content item (its pictures drawn by their
   titles, or the theme's own: `{title: …, file: images/…}`), a poll. The modules a demo site
