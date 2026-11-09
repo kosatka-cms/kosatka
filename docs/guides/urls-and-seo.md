@@ -387,10 +387,11 @@ link to Google's Rich Results Test.
 **Site information** has *Who runs the site - for search engines*: an
 organization, a local business or a person, its name (the site's by
 default), its profiles elsewhere (an address per line), a phone and an
-email, a local business's address; the site's logo is its logo. It is
-the publisher of the articles' markup, and the front page carries it
-with the site itself. *The site's search in the results* adds the
-site's search (`/search?q=…`) for search engines to offer.
+email, a local business's address; the logo uploaded on *Site
+information* is its logo (a theme's logo isn't). It is the publisher of
+the articles' markup, and the front page carries it with the site
+itself. *The site's search in the results* adds the site's search
+(`/search?q=…`) for search engines to offer.
 
 ## The sitemap
 

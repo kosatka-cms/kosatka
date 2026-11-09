@@ -54,6 +54,10 @@ type ThemeInfo struct {
 	// site's when Site information has none (service.SiteIconFor); a
 	// subtheme without one takes its base's.
 	Favicon string `yaml:"favicon"`
+	// Logo - the theme's logo, a path on the site ("/static/…"): the
+	// site's when Site information has none (service.SiteLogoFor); a
+	// subtheme without one takes its base's.
+	Logo string `yaml:"logo"`
 	// Blocks - the blocks the theme comes with (ThemeBlock, CheckBlocks);
 	// a subtheme without its own takes its base's.
 	Blocks []ThemeBlock `yaml:"blocks"`

@@ -121,3 +121,48 @@ func TestShowLastCommentsTitle(t *testing.T) {
 		}
 	})
 }
+
+// TestClearStarterLogo - the engine's logo, which app install used to
+// save as the site's, is cleared (the theme's shows); a logo the site
+// uploaded stays; a second run changes nothing.
+func TestClearStarterLogo(t *testing.T) {
+	testdb.Each(t, func(t *testing.T, db testdb.DB) {
+		ctx := context.Background()
+		r := migrations.Runner{DB: db.DB, Dialect: db.Dialect}
+		if err := r.EnsureTable(ctx); err != nil {
+			t.Fatal(err)
+		}
+		files, err := migrations.Files(db.Dialect, migrations.CoreSet)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, f := range files {
+			if err := r.Apply(ctx, migrations.CoreSet, f); err != nil {
+				t.Fatal(err)
+			}
+		}
+		env := migrations.Env{DB: db.DB, Dialect: db.Dialect}
+		for _, c := range []struct {
+			logo, want string
+		}{{"/static/images/kosatka-logo.svg", ""}, {"public://site/logo/mark.png", "public://site/logo/mark.png"}} {
+			if _, err := db.DB.ExecContext(ctx, "DELETE FROM site_information"); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.DB.ExecContext(ctx, db.Dialect.Rebind("INSERT INTO site_information (id, logo) VALUES (?, ?)"), 1, c.logo); err != nil {
+				t.Fatal(err)
+			}
+			for run := 1; run <= 2; run++ {
+				if err := migrations.ClearStarterLogo(ctx, env); err != nil {
+					t.Fatalf("%s, run %d: %v", c.logo, run, err)
+				}
+				var got *string
+				if err := db.DB.QueryRowContext(ctx, "SELECT logo FROM site_information").Scan(&got); err != nil {
+					t.Fatal(err)
+				}
+				if (got == nil && c.want != "") || (got != nil && *got != c.want) {
+					t.Errorf("%s, run %d: %v, want %q", c.logo, run, got, c.want)
+				}
+			}
+		}
+	})
+}

@@ -104,8 +104,9 @@ func TestInstall(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if si.Theme == nil || *si.Theme != set.Site.Theme || si.Logo == nil || *si.Logo != set.Site.Logo {
-			t.Errorf("default theme and logo: %v %v", si.Theme, si.Logo)
+		// No logo of the site's: the theme's shows (theme.yaml "logo").
+		if si.Theme == nil || *si.Theme != set.Site.Theme || (si.Logo != nil && *si.Logo != "") {
+			t.Errorf("default theme and no logo: %v %v", si.Theme, si.Logo)
 		}
 		u, err := client.User.Query().Where(user.Username("Admin User")).WithRole().Only(ctx)
 		if err != nil {

@@ -230,7 +230,7 @@ hard reload, or with the cache off in the browser's developer tools).
 The server reads some things once per run and needs a restart after you
 change them:
 
-- the theme's settings, `base`, `stylesheets` and `favicon` in
+- the theme's settings, `base`, `stylesheets`, `favicon` and `logo` in
   `theme.yaml` (regions, labels and description are re-read by the admin
   pages);
 - the theme's `translations/*.json`.

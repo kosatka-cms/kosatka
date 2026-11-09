@@ -10,10 +10,11 @@ var (
 	AtlasDriver       = atlasDriver
 )
 
-// MoveResendKey, ShowLastCommentsTitle - moveResendKey and
-// showLastCommentsTitle for the external tests
+// MoveResendKey, ShowLastCommentsTitle, ClearStarterLogo - moveResendKey,
+// showLastCommentsTitle and clearStarterLogo for the external tests
 // (update_core_integration_test.go).
 var (
 	MoveResendKey         = moveResendKey
 	ShowLastCommentsTitle = showLastCommentsTitle
+	ClearStarterLogo      = clearStarterLogo
 )

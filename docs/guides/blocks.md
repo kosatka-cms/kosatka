@@ -50,7 +50,7 @@ System blocks of the engine:
 
 | Block | Shows | Settings |
 |---|---|---|
-| Logo | the logo set on *Site information*, a link to the front page; without one, nothing | - |
+| Logo | the logo set on *Site information*, else the theme's; a link to the front page; without either, nothing | - |
 | Search the site | the search form ([Search](./search.md)) | - |
 | User menu | sign in / the signed-in user's links | - |
 | Recent comments | the latest 10 comments, each a link to it, and a link to all of them (`/comments/recent`) | - |

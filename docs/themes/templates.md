@@ -459,7 +459,8 @@ A system block's markup is replaced like any template: a theme's
 
 | Key | What |
 |---|---|
-| `.siteName`, `.siteSlogan`, `.siteLogoURI` | from **Site information** (empty when not set) |
+| `.siteName`, `.siteSlogan` | from **Site information** (empty when not set) |
+| `.siteLogoURI` | the logo uploaded on **Site information**, else the theme's ([`logo`](./manifest.md#logo)); empty when neither |
 | `.user` | the signed-in user (`.Username`…), nil for a guest |
 | `.isAdmin` | the user may use the admin |
 | `.isHomepage` | the front page |
