@@ -68,8 +68,8 @@
 {{end}}
 
 {{define "field_line_reference"}}
-{{/* Content a block names (.Nodes, its public ones; a node page's
-     references are shown by Views instead): links to it. */}}
+{{/* Content a content item or a block names (.Nodes, its public ones
+     the visitor may view): links to it. */}}
 {{if .Nodes}}<p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} {{range $i, $n := .Nodes}}{{if $i}}, {{end}}<a href="{{$n.URL}}">{{$n.Title}}</a>{{end}}</p>{{end}}
 {{end}}
 

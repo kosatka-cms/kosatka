@@ -344,9 +344,11 @@ See [Taxonomy](./taxonomy.md) for vocabularies, terms and term pages.
 | Target type | The machine names of the types that may be referenced, comma-separated. Empty - any type. |
 | Mutual reference | Fields with several values only. If A references B, B automatically gets a reference to A in the same field, and loses it when A drops it. |
 
-A reference field isn't printed on the content page. To show related
-content, add a [View](./views.md) attachment with a contextual filter on
-the field.
+On the content page a reference field is a line of links to the content
+it names - the published only, the visitor may view - when *Show on the
+page* is ticked. To show related content another way (cards, a list with
+pictures), untick it and add a [View](./views.md) attachment with a
+contextual filter on the field.
 
 **image**
 
