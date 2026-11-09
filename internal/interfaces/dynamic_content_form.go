@@ -35,17 +35,25 @@ func (c *DynamicContentController) validateSlugFree(ctx context.Context, f *form
 	}
 }
 
-// resolveImagesField fills f.FieldValues for an image field with several
-// images: the node's own and the ones picked from the media library (the
-// field may take them: pickedFiles) kept in the form's order (<field>_keep;
-// a form without them keeps the node's all), less the ticked ones
-// (<field>_delete), each with its alt text (<field>_alt_<file id>), then
-// the new uploads (<field>, several files, when the field takes uploads)
-// while the field's MaxValues allows. The value is the file IDs,
-// comma-joined, as dynamicValuesFromForm parses them.
-func (c *DynamicContentController) resolveImagesField(r *http.Request, contentType string, field entity.FieldInstanceDef, existing any, f *form.DynamicForm) {
+// resolveFilesField fills f.FieldValues for an image or a file field with
+// several files: the node's own and the ones picked from the media library
+// (the field may take them: pickedFiles) kept in the form's order
+// (<field>_keep; a form without them keeps the node's all), less the
+// ticked ones (<field>_delete), an image each with its alt text
+// (<field>_alt_<file id>), then the new uploads (<field>, several files,
+// when the field takes uploads; an image field's as images, a file
+// field's as documents) while the field's MaxValues allows. The value is
+// the file IDs, comma-joined, as dynamicValuesFromForm parses them.
+func (c *DynamicContentController) resolveFilesField(r *http.Request, contentType string, field entity.FieldInstanceDef, existing any, f *form.DynamicForm) {
 	ctx := r.Context()
 	fieldName := fmt.Sprintf("field_%d", field.ID)
+	isImage := field.FieldType == entity.FieldTypeImage
+	tooMany := func(limit int) string {
+		if isImage {
+			return i18n.Plural(ctx, limit, "At most @count image.", "At most @count images.")
+		}
+		return i18n.Plural(ctx, limit, "At most @count file.", "At most @count files.")
+	}
 	uploadError := func(msg string) {
 		if f.FieldUploadErrors == nil {
 			f.FieldUploadErrors = make(map[int]string)
@@ -87,14 +95,14 @@ func (c *DynamicContentController) resolveImagesField(r *http.Request, contentTy
 		if err != nil || (!own[id] && !picked[id]) || deleted[id] || slices.Contains(ids, id) {
 			continue
 		}
-		if alt, sent := r.Form[fmt.Sprintf("%s_alt_%d", fieldName, id)]; sent {
+		if alt, sent := r.Form[fmt.Sprintf("%s_alt_%d", fieldName, id)]; sent && isImage {
 			setFileAlt(f, id, strings.TrimSpace(alt[0]))
 		}
 		ids = append(ids, id)
 	}
 
 	if limit := field.MaxValues(); limit > 0 && len(ids) > limit {
-		uploadError(i18n.Plural(ctx, limit, "At most @count image.", "At most @count images."))
+		uploadError(tooMany(limit))
 		ids = ids[:limit]
 	}
 	var uploads []*multipart.FileHeader
@@ -104,7 +112,7 @@ func (c *DynamicContentController) resolveImagesField(r *http.Request, contentTy
 	if len(uploads) > 0 {
 		user, hasUser := currentNodeUser(c.BaseController, r)
 		if limit := field.MaxValues(); limit > 0 && len(ids)+len(uploads) > limit {
-			uploadError(i18n.Plural(ctx, limit, "At most @count image.", "At most @count images."))
+			uploadError(tooMany(limit))
 			uploads = nil
 		}
 		for _, header := range uploads {
@@ -117,7 +125,12 @@ func (c *DynamicContentController) resolveImagesField(r *http.Request, contentTy
 				c.LogFailure(err, "error opening field upload", "fieldID", field.ID)
 				continue
 			}
-			fileID, err := SaveFieldImageWithPolicy(ctx, &c.fileUploadService, c.fileRepo, file, header, FieldUploadTokens(contentType, user.ID), field)
+			var fileID int
+			if isImage {
+				fileID, err = SaveFieldImageWithPolicy(ctx, &c.fileUploadService, c.fileRepo, file, header, FieldUploadTokens(contentType, user.ID), field)
+			} else {
+				fileID, err = SaveFieldFileWithPolicy(ctx, &c.fileUploadService, c.fileRepo, file, header, FieldUploadTokens(contentType, user.ID), field)
+			}
 			if err != nil {
 				c.LogFailure(err, "error saving field upload", "fieldID", field.ID)
 				uploadError(i18n.ErrorText(ctx, err))

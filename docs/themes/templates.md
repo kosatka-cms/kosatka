@@ -366,8 +366,10 @@ engine does (`"Block" true` - without the modules' links).
 A field's compact "Label: value" line on the content page - in the
 fields' card and in a group - is `field_line_<field type>`
 (`fields/line.html`; `factBoxFieldLine` calls it): it gets `.Field`,
-`.Value` and the type's resolved data (`.Terms`, `.FileLink`, `.Users`,
-`.Nodes`). Define one in a `fields/` file to show a type your way.
+`.Value` and the type's resolved data (`.Terms`, `.FileLink` - a file
+field's first file, `.FileLinks` - all of them in order, `.Users`,
+`.Nodes`). Define one in a `fields/` file to show a type your way. The
+page's data has them by field ID: `.fileFieldLinks`, `.fileFieldItems`.
 
 The content form's inputs are `field_input_<field type>`
 (`fields/input.html`): a theme or a module replaces a type's input by

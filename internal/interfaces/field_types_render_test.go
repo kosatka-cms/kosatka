@@ -128,3 +128,34 @@ func TestFieldTypesOnPage(t *testing.T) {
 		}
 	}
 }
+
+// TestSeveralFilesLine - a file field with several files: on the page, a
+// list of download links, each with its name and size, in order; with
+// one, the one line.
+func TestSeveralFilesLine(t *testing.T) {
+	field := entity.FieldInstanceDef{ID: 1, MachineName: "field_docs", Label: "Documents", FieldType: entity.FieldTypeFile, Config: map[string]any{"multiple": true}, ShowOnDetail: true, ShowLabel: true}
+	ts := service.NewTemplateService(false).(*service.DefaultTemplateService)
+	render := func(ids []int, items []fileLinkInfo) string {
+		t.Helper()
+		dc := &entity.DynamicContent{Fields: entity.FieldInstanceDefs{field}, Values: map[int]any{1: ids}}
+		ctx := map[string]any{
+			"item": dc, "taxonomyFieldTerms": map[int]entity.TaxonomyTerms{}, "imageFieldURLs": map[int]string{}, "imageFieldAlts": map[int]string{},
+			"imageFieldItems": map[int][]imageItem{}, "fileFieldLinks": map[int]fileLinkInfo{1: items[0]}, "fileFieldItems": map[int][]fileLinkInfo{1: items},
+			"userFieldUsers": map[int][]entity.User{}, "referenceFieldNodes": map[int]entity.Nodes{},
+		}
+		var buf strings.Builder
+		if err := ts.RenderPageBlock(&buf, "dynamic/page.html", "node_sections", map[string]any{"Ctx": ctx, "Sections": buildDisplaySections(dc.Fields, dc, nil, nil), "Block": true}); err != nil {
+			t.Fatal(err)
+		}
+		return buf.String()
+	}
+	two := render([]int{4, 5}, []fileLinkInfo{{FileID: 4, URI: "/files/prices.pdf", Name: "prices.pdf", SizeBytes: 2048}, {FileID: 5, URI: "/files/terms.pdf", Name: "terms.pdf", SizeBytes: 1024}})
+	prices, terms := strings.Index(two, ">prices.pdf</a>"), strings.Index(two, ">terms.pdf</a>")
+	if !strings.Contains(two, `<ul class="field-files">`) || prices < 0 || terms < prices {
+		t.Errorf("two files: a list in order wanted:\n%s", two)
+	}
+	one := render([]int{4}, []fileLinkInfo{{FileID: 4, URI: "/files/prices.pdf", Name: "prices.pdf", SizeBytes: 2048}})
+	if strings.Contains(one, "field-files") || !strings.Contains(one, ">prices.pdf</a>") {
+		t.Errorf("one file: its line wanted:\n%s", one)
+	}
+}

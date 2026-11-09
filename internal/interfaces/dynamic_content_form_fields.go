@@ -562,13 +562,13 @@ func initLinks(f *form.DynamicForm) map[int][]entity.Link {
 // ticked delete_field_<id>, otherwise the saved one carried forward -
 // a file input can't be pre-filled and SetFieldValues replaces the
 // field's rows, so an untouched field would be wiped. An image's alt
-// text is applied to its file, new or kept. Several images -
-// resolveImagesField.
+// text is applied to its file, new or kept. Several images or files -
+// resolveFilesField.
 func resolveFileUploads(fr *formRequest, field entity.FieldInstanceDef, f *form.DynamicForm) error {
 	c, r := fr.c, fr.r
 	isImage := field.FieldType == entity.FieldTypeImage
-	if isImage && field.Multiple() {
-		c.resolveImagesField(r, fr.contentType, field, fr.saved[field.ID], f)
+	if field.Multiple() {
+		c.resolveFilesField(r, fr.contentType, field, fr.saved[field.ID], f)
 		return nil
 	}
 	fieldName := fmt.Sprintf("field_%d", field.ID)

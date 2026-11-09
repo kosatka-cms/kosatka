@@ -201,7 +201,7 @@ Adding a field takes two steps.
    - **Field label**.
    - **Type** - see the table below. It can't be changed later.
    - **Multiple values** - for `list`, `taxonomy`, `reference`, `image`,
-     `link`, `date` and `user` only.
+     `file`, `link`, `date` and `user` only.
    - **Required**.
    - Under *More*, optionally: **machine_name** (it always starts with
      `field_`; empty - generated from the label), **Group (form)** - a
@@ -384,11 +384,13 @@ opening in the image viewer. Where one picture stands for the content -
 a card, the page's preview image (`og:image`), a feed, a search result -
 it is the first image.
 
-**file** - the same as an image, without the resolutions and with one
-file only: *Default file*, extensions (empty -
-`pdf doc docx xls xlsx zip txt`), directory (empty - `content/files`),
-max size, private files and where files come from. The site-wide upload
-limits are on `/admin/config/upload-settings`; see
+**file** - the same as an image, without the resolutions: *Default
+file*, extensions (empty - `pdf doc docx xls xlsx zip txt`), directory
+(empty - `content/files`), max size, private files, where files come
+from and, with several values, *Most files* (empty - no limit). Several
+files are rows in the form (↑/↓ to order them, ✕ to delete one, *Add
+files* for more) and a list of download links on the page. The
+site-wide upload limits are on `/admin/config/upload-settings`; see
 [Files and images](./files-and-images.md).
 
 **link**

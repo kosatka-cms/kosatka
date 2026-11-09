@@ -33,7 +33,7 @@ var fieldTypeDefs = map[ContentTypeFieldType]fieldTypeDef{
 	FieldTypeTaxonomy:  {multiple: true, decode: decodeOneOrMany[int]},
 	FieldTypeReference: {multiple: true, decode: decodeOneOrMany[int]},
 	FieldTypeImage:     {multiple: true, decode: decodeOneOrMany[int]},
-	FieldTypeFile:      {decode: decodeOneOrMany[int]},
+	FieldTypeFile:      {multiple: true, decode: decodeOneOrMany[int]},
 	// Links and users: a slice whatever the cardinality.
 	FieldTypeLink: {multiple: true, decode: decodeAs[[]Link]},
 	FieldTypeUser: {multiple: true, decode: decodeAs[[]int]},

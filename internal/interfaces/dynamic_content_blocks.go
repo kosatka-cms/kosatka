@@ -376,6 +376,7 @@ func (c *DynamicContentController) fieldInputDataOf(ctx context.Context, forms [
 		return imageStyleOriginal
 	})
 	files := splitKeyed(k, c.fileFieldLinks(ctx, k.fields, k.values))
+	fileItems := splitKeyed(k, c.fileFieldItems(ctx, k.fields, k.values))
 	// The terms, nodes and users chosen, by field ID: the pickers' tags.
 	terms := splitKeyed(k, c.taxonomyFieldTerms(ctx, k.fields, k.values))
 	nodes := splitKeyed(k, c.referenceFieldNodes(ctx, k.fields, k.values))
@@ -409,7 +410,7 @@ func (c *DynamicContentController) fieldInputDataOf(ctx context.Context, forms [
 		data["textFormatIDs"] = textFormats
 		sentAlts(in, alts[i], items[i])
 		data["imageFieldURLs"], data["imageFieldAlts"], data["imageFieldItems"] = urls[i], alts[i], items[i]
-		data["fileFieldLinks"] = files[i]
+		data["fileFieldLinks"], data["fileFieldItems"] = files[i], fileItems[i]
 		// A form sent back with errors: the file kept for the next submit,
 		// the saved one ticked for deleting (sentBack).
 		data["fileFieldSent"], data["fileFieldDeletes"] = in.sent.SentFiles, in.sent.FileDeletes
@@ -615,6 +616,7 @@ func (c *DynamicContentController) blockViews(ctx context.Context, fields entity
 		terms := splitKeyed(k, c.taxonomyFieldTerms(ctx, k.fields, k.values))
 		references := splitKeyed(k, c.referenceFieldNodes(ctx, k.fields, k.values))
 		files := splitKeyed(k, c.fileFieldLinks(ctx, k.fields, k.values))
+		fileItems := splitKeyed(k, c.fileFieldItems(ctx, k.fields, k.values))
 		users := splitKeyed(k, c.userFieldUsers(ctx, k.fields, k.values))
 		for i, item := range items {
 			imageFieldURLs, imageFieldAlts := map[int]string{}, map[int]string{}
@@ -645,6 +647,7 @@ func (c *DynamicContentController) blockViews(ctx context.Context, fields entity
 					"imageFieldAlts":      imageFieldAlts,
 					"imageFieldItems":     imageItems[i],
 					"fileFieldLinks":      files[i],
+					"fileFieldItems":      fileItems[i],
 					"taxonomyFieldTerms":  terms[i],
 					"userFieldUsers":      users[i],
 					"referenceFieldNodes": references[i],

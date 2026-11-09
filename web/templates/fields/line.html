@@ -1,6 +1,6 @@
 {{/* field_line_<type> - a field's compact "Label: value" line on the
      content page (factBoxFieldLine's dict: Field, Value, and the type's
-     resolved data - Terms, FileLink, Users, Nodes): the compact flow and a
+     resolved data - Terms, FileLink, FileLinks, Users, Nodes): the compact flow and a
      group's members (buildDisplaySections, pageFieldType.line). A theme's
      or a module's fields/*.html replaces one by defining it; a type
      without one has none (field_line_default). */}}
@@ -55,8 +55,14 @@
 {{define "field_line_file"}}
 {{/* A File field is an inline download link in the normal field flow
      (unlike images, which get their own section). .FileLink is a zero
-     struct when empty, so check .FileLink.URI (a struct is always truthy). */}}
-{{if .FileLink.URI}}
+     struct when empty, so check .FileLink.URI (a struct is always truthy).
+     Several files (.FileLinks, in order): a list of links, each with its
+     size. */}}
+{{if and .Field.Multiple .FileLinks (gt (len .FileLinks) 1)}}
+<div class="field-files-line">{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}}
+<ul class="field-files">{{range .FileLinks}}<li><a href="{{.URI}}" download>{{.Name}}</a> ({{humanFileSize .SizeBytes}})</li>{{end}}</ul>
+</div>
+{{else if .FileLink.URI}}
 <p>{{if .Field.ShowLabel}}<span class="field-list">{{.Field.Label}}:</span>{{end}} <a href="{{.FileLink.URI}}" download>{{.FileLink.Name}}</a> ({{humanFileSize .FileLink.SizeBytes}})</p>
 {{end}}
 {{end}}

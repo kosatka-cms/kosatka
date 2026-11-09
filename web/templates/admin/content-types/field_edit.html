@@ -656,6 +656,17 @@
             {{template "admin_upload_max_size" (dict "Set" .field.HasMaxUploadSize "Value" .field.MaxUploadSizeMB)}}
             {{template "field_private_files" .field}}
             {{template "field_media_source" .field}}
+            {{if .field.Multiple}}
+            <div class="admin-setting">
+                <div class="admin-setting-text">
+                    <label for="max_values" class="admin-setting-label">{{t "Most files"}}</label>
+                    <span class="admin-setting-help">{{t "Empty - no limit."}}</span>
+                </div>
+                <div class="admin-setting-control">
+                    <input type="number" id="max_values" name="max_values" class="form-control admin-max-xs" value="{{with .field.MaxValues}}{{.}}{{end}}" min="1">
+                </div>
+            </div>
+            {{end}}
         </div>
     </section>
 {{end}}

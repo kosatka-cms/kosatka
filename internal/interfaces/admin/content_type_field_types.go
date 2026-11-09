@@ -177,10 +177,12 @@ var adminFieldTypes = map[entity.ContentTypeFieldType]adminFieldType{
 		privateFilesFromForm(r, config)
 		maxValuesFromForm(r, config)
 	}, check: checkFileDirectory},
-	// A file's - and whether its files are private.
+	// A file's - how many too (several files), and whether its files are
+	// private.
 	entity.FieldTypeFile: {instance: func(r *http.Request, config map[string]any) {
 		uploadSettingsFromForm(r, config)
 		privateFilesFromForm(r, config)
+		maxValuesFromForm(r, config)
 	}, check: checkFileDirectory},
 	entity.FieldTypeLink: {
 		storage: func(r *http.Request, config map[string]any) {
@@ -277,7 +279,7 @@ func formIDs(r *http.Request, name string) []any {
 }
 
 // maxValuesFromForm - max_values (entity.FieldInstanceDef.MaxValues: of
-// several dates, links, users, images, blocks).
+// several dates, links, users, images, files, blocks).
 func maxValuesFromForm(r *http.Request, config map[string]any) {
 	if n, err := strconv.Atoi(strings.TrimSpace(r.FormValue("max_values"))); err == nil && n > 0 {
 		config["max_values"] = n

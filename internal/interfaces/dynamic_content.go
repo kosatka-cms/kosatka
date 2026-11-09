@@ -234,7 +234,13 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 	for id, items := range imageFieldItems {
 		imageFieldURLs[id], imageFieldAlts[id] = items[0].URL, items[0].Alt
 	}
-	fileFieldLinks := c.fileFieldLinks(ctx, displayFields, dc.Values)
+	// fileFieldItems - every file of a file field, in order;
+	// fileFieldLinks - its first.
+	fileFieldItems := c.fileFieldItems(ctx, displayFields, dc.Values)
+	fileFieldLinks := map[int]fileLinkInfo{}
+	for id, items := range fileFieldItems {
+		fileFieldLinks[id] = items[0]
+	}
 	taxonomyFieldTerms := c.taxonomyFieldTerms(ctx, displayFields, dc.Values)
 	userFieldUsers := c.userFieldUsers(ctx, displayFields, dc.Values)
 	altTitle := dc.GetAltTitle()
@@ -260,6 +266,7 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 		"imageFieldAlts":     imageFieldAlts,
 		"imageFieldItems":    imageFieldItems,
 		"fileFieldLinks":     fileFieldLinks,
+		"fileFieldItems":     fileFieldItems,
 		"taxonomyFieldTerms": taxonomyFieldTerms,
 		"userFieldUsers":     userFieldUsers,
 		// referenceFieldNodes - none: a node page's references are shown

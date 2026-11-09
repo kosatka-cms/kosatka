@@ -397,6 +397,21 @@ img.dynamic-field-image {
     padding-left: 1.25rem;
 }
 
+/* A file field with several files in the compact lines: a list of
+   download links, each with its size. */
+.field-files-line {
+    margin-bottom: 1rem;
+}
+
+.item-characteristic .field-files-line:last-child {
+    margin-bottom: 0;
+}
+
+.field-files-line > .field-files {
+    margin: .25rem 0 0;
+    padding-left: 1.25rem;
+}
+
 /* A user field: its people in a row, an avatar and a name each. */
 .field-users-line {
     margin-bottom: 1rem;
