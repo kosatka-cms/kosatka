@@ -161,12 +161,45 @@ func TestSetPictures(t *testing.T) {
 	if _, err := Parse([]byte("modules: {galleries: {pictures: [{title: T, file: ../x.jpg}]}}\n")); err == nil || !strings.Contains(err.Error(), "modules: galleries: picture") {
 		t.Errorf("a module's picture outside the set: %v", err)
 	}
-	missing := fstest.MapFS{"images/river.png": {Data: []byte("not a picture")}}
-	if errs := s.CheckPictures(missing); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not an image") {
+	pdf := []byte("%PDF-1.4\n")
+	missing := fstest.MapFS{"images/river.png": {Data: []byte("not a picture")}, "docs/notes.pdf": {Data: pdf}}
+	if errs := s.CheckFiles(missing); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not an image") {
 		t.Errorf("a file that isn't an image: %v", errs)
 	}
-	if errs := s.CheckPictures(fstest.MapFS{}); len(errs) != 1 || !strings.Contains(errs[0].Error(), "not in the set's directory") {
-		t.Errorf("a missing file: %v", errs)
+	if errs := s.CheckFiles(fstest.MapFS{}); len(errs) != 2 || !strings.Contains(errs[0].Error(), "not in the set's directory") || !strings.Contains(errs[1].Error(), "document") {
+		t.Errorf("missing files: %v", errs)
+	}
+}
+
+// TestSetDocuments - a file field's {file: …}: a path inside the set's
+// directory of a format a file field allows; Load wants it there and not
+// a page or a script; Documents lists them, Pictures doesn't.
+func TestSetDocuments(t *testing.T) {
+	const head = "field_storages: [{name: field_doc, type: file}]\nnodes: [{key: a, type: page, title: A, fields: {field_doc: {file: "
+	for _, bad := range []string{"../out.pdf", "docs/page.html", "docs/run.exe", "docs/notes"} {
+		_, err := Parse([]byte(head + bad + "}}}]\n"))
+		if err == nil || !strings.Contains(err.Error(), "document") {
+			t.Errorf("%q: %v", bad, err)
+		}
+	}
+	defer UseSets(os.DirFS("testdata"))()
+	s, err := Load("fixture", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Documents(); !slices.Equal(got, []string{"docs/notes.pdf"}) {
+		t.Errorf("documents: %v", got)
+	}
+	if slices.Contains(s.Pictures(), "docs/notes.pdf") {
+		t.Errorf("a document among the pictures: %v", s.Pictures())
+	}
+	png, err := os.ReadFile("testdata/sets/fixture/images/river.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := fstest.MapFS{"images/river.png": {Data: png}, "docs/notes.pdf": {Data: []byte("<!DOCTYPE html><script>alert(1)</script>")}}
+	if errs := s.CheckFiles(page); len(errs) != 1 || !strings.Contains(errs[0].Error(), "a page, a script or a program") {
+		t.Errorf("a page sent as a PDF: %v", errs)
 	}
 }
 

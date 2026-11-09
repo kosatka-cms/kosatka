@@ -66,6 +66,8 @@ field_storages:
   - name: field_related
     type: reference
     target: [item]
+  - name: field_notes
+    type: file
 
 content_types:
   - name: item
@@ -84,6 +86,7 @@ content_types:
       - {storage: field_seen, label: Seen, show_on_detail: true, show_label: true, date_format: medium, sort_order: 40, display_order: 40}
       - {storage: field_source, label: Source, show_on_detail: true, sort_order: 50, display_order: 50}
       - {storage: field_related, label: Related, widget: autocomplete, show_on_detail: true, show_label: true, sort_order: 60, display_order: 60}
+      - {storage: field_notes, label: Notes, show_on_detail: true, show_label: true, sort_order: 65, display_order: 65}
       - {storage: field_body, label: Text, widget: textarea, text_formats: [notes_html, basic_html, plain_text], show_on_detail: true, renders_in_body: true, sort_order: 70, display_order: 70}
 
 nodes:
@@ -122,6 +125,7 @@ nodes:
       field_rating: fine
       field_seen: -20d
       field_related: garden
+      field_notes: {file: docs/notes.pdf, name: Field notes.pdf}   # the set's own document
       field_body: |
         <p>Low water, leaves on it.</p>
   - key: about

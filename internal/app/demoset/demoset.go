@@ -408,8 +408,8 @@ func Languages(name string) []string {
 	return out
 }
 
-// Load reads set name in lang and checks it, its own pictures too
-// (CheckPictures). A theme's own set without a theme of its own
+// Load reads set name in lang and checks it, its own files too
+// (CheckFiles). A theme's own set without a theme of its own
 // (site.theme) puts the site in that theme.
 func Load(name, lang string) (*Set, error) {
 	fsys, dir, fromTheme, ok := source(name)
@@ -427,7 +427,7 @@ func Load(name, lang string) (*Set, error) {
 	if s.files, err = fs.Sub(fsys, dir); err != nil {
 		return nil, fmt.Errorf("demo set %s: %w", name, err)
 	}
-	if errs := s.CheckPictures(s.files); len(errs) > 0 {
+	if errs := s.CheckFiles(s.files); len(errs) > 0 {
 		return nil, fmt.Errorf("demo set %s/%s: %w", name, lang, errors.Join(errs...))
 	}
 	if fromTheme {
@@ -585,7 +585,11 @@ func (s *Set) check() error {
 					errs = append(errs, fmt.Errorf("node %q: %s: no term %q in vocabulary %q", n.Key, name, term, voc))
 				}
 				if f, _ := pictureFile(item); f != "" {
-					if err := checkPictureName(f); err != nil {
+					check := checkPictureName
+					if s.storageType(name) == entity.FieldTypeFile {
+						check = checkDocumentName
+					}
+					if err := check(f); err != nil {
 						errs = append(errs, fmt.Errorf("node %q: %s: %w", n.Key, name, err))
 					}
 				}

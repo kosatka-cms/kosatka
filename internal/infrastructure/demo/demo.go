@@ -17,6 +17,7 @@ import (
 	_ "image/jpeg" // the decoders StoredImage reads a picture's size with
 	_ "image/png"
 	"io/fs"
+	"mime"
 	"path"
 	"time"
 
@@ -180,6 +181,33 @@ func StoredImage(ctx context.Context, env Env, rel string, data []byte, alt stri
 		return 0, err
 	}
 	return imageRow(ctx, env, entity.PublicScheme+rel, mime, cfg.Width, cfg.Height, len(data), alt, at)
+}
+
+// StoredFile puts a document's data (a demo set's own: a PDF…) at rel of
+// the public files and adds its file row - its media type by its
+// extension, name the one its link shows (entity.File.OriginalFilename) -
+// returning its ID.
+func StoredFile(ctx context.Context, env Env, rel string, data []byte, name string, at time.Time) (int, error) {
+	mimeType := mime.TypeByExtension(path.Ext(rel))
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+	if _, err := paths.PublicStore().Put(ctx, rel, bytes.NewReader(data), filestore.PutOptions{ContentType: mimeType}); err != nil {
+		return 0, err
+	}
+	f, err := env.Client.File.Create().
+		SetURI(entity.PublicScheme + rel).
+		SetMimeType(mimeType).
+		SetSizeBytes(len(data)).
+		SetOriginalFilename(name).
+		SetCreatedBy(env.CreatedBy).
+		SetCreatedAt(at).
+		SetUpdatedAt(at).
+		Save(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return f.ID, nil
 }
 
 // imageRow adds the file row of an image written to uri.

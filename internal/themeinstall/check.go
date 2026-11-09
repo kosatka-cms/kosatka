@@ -410,8 +410,9 @@ func (c *checker) demo(info entity.ThemeInfo, manifestOK bool) error {
 			c.problem(rel, 0, "%v", err)
 			continue
 		}
-		// Its own pictures (an image field's {file: …}): in demo/, images.
-		for _, err := range set.CheckPictures(os.DirFS(filepath.Join(c.dir, "demo"))) {
+		// Its own files (an image or a file field's {file: …}): in demo/,
+		// pictures images, documents no pages or scripts.
+		for _, err := range set.CheckFiles(os.DirFS(filepath.Join(c.dir, "demo"))) {
 			c.problem(rel, 0, "%v", err)
 		}
 		if !manifestOK || len(info.Regions) == 0 {
