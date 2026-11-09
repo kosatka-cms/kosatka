@@ -14,7 +14,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
-	"github.com/kosatka-cms/kosatka/internal/domain/imageurl"
 	"github.com/kosatka-cms/kosatka/internal/domain/service"
 	"github.com/kosatka-cms/kosatka/internal/domain/themes"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/middleware"
@@ -244,10 +243,10 @@ func (c *BaseController) GetCommonDataWithUser(r *http.Request, user *entity.Use
 	csrfToken := csrf.Token(c.store, r)
 
 	// siteLogoURI/siteName - data for the "logo" plugin block
-	// (entity.PluginBlockLogo, blocks/logo.html), resolved per request rather
-	// than cached so a newly uploaded logo shows immediately. No hardcoded
-	// fallback: empty means no logo is configured and the block renders
-	// nothing.
+	// (entity.PluginBlockLogo, blocks/logo.html) and the themes' headers,
+	// resolved per request rather than cached so a newly uploaded logo
+	// shows immediately: the uploaded logo, else the request's theme's
+	// (service.SiteLogoFor); empty - neither, the block renders nothing.
 	siteLogoURI := ""
 	siteName := ""
 	siteSlogan := ""
@@ -257,7 +256,7 @@ func (c *BaseController) GetCommonDataWithUser(r *http.Request, user *entity.Use
 			lang := i18n.FromContext(ctx)
 			siteName = entity.TranslatedText(lang, entity.TextSiteName, entity.SiteTextRef, site.SiteName)
 			siteSlogan = entity.TranslatedText(lang, entity.TextSiteSlogan, entity.SiteTextRef, site.Slogan)
-			siteLogoURI = imageurl.PublicURI(site.Logo.URI)
+			siteLogoURI = service.SiteLogoFor(paths.ThemeFor(ctx), site.Logo.URI)
 		} else {
 			service.LogFallback(c.logger, err, "loading site information (no name, slogan or logo)")
 		}

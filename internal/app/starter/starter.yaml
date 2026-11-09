@@ -9,7 +9,6 @@
 # Site information).
 site:
   theme: kosatka
-  logo: /static/images/kosatka-logo.svg
   front_page_view: frontpage
 
 # The image styles of the article's image: a card in lists (the front

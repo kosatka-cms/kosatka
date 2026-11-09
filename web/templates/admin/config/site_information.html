@@ -127,7 +127,7 @@
         <div class="admin-setting">
             <div class="admin-setting-text">
                 <span class="admin-setting-label">{{t "Logo"}}</span>
-                <span class="admin-setting-help">{{t "Shown by the \"Logo\" block in the site header (<a href=\":url\">Blocks and regions</a>). If no logo is set, the block is not displayed." ":url" "/admin/config/blocks"}}</span>
+                <span class="admin-setting-help">{{t "Shown in the site header by the theme or by the \"Logo\" block (<a href=\":url\">Blocks and regions</a>), the same in every theme. Without one, the active theme's logo is shown, if it has one." ":url" "/admin/config/blocks"}}</span>
             </div>
             <div class="admin-setting-control">
                 {{if .site.Logo.URI}}
@@ -136,8 +136,13 @@
                 </div>
                 <div class="form-check mb-2">
                     <input type="checkbox" class="form-check-input" id="delete_logo" name="delete_logo" value="1">
-                    <label class="form-check-label" for="delete_logo">{{t "Delete logo (the block will no longer be displayed)"}}</label>
+                    <label class="form-check-label" for="delete_logo">{{t "Delete the logo (the theme's will be shown, if it has one)"}}</label>
                 </div>
+                {{else if .themeLogo}}
+                <div class="mb-2">
+                    <img src="{{.themeLogo}}" alt="{{t "Current logo"}}" style="max-width: 300px; max-height: 100px;">
+                </div>
+                <p class="form-text mb-2">{{t "The active theme's logo; one uploaded here replaces it."}}</p>
                 {{end}}
                 <input type="file" class="form-control" name="logo" accept="image/jpeg,image/png,image/gif,image/webp">
             </div>
@@ -170,7 +175,7 @@
             <div class="admin-setting">
                 <div class="admin-setting-text">
                     <label for="schema-org-kind" class="admin-setting-label">{{t "It is"}}</label>
-                    <span class="admin-setting-help">{{t "The publisher of the articles' markup and the site's card in the results (the front page's JSON-LD). The logo above is its logo."}}</span>
+                    <span class="admin-setting-help">{{t "The publisher of the articles' markup and the site's card in the results (the front page's JSON-LD). The logo uploaded above is its logo (not a theme's)."}}</span>
                 </div>
                 <div class="admin-setting-control">
                     <select id="schema-org-kind" name="schema_org_kind" class="form-select">

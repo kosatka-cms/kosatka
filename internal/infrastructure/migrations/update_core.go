@@ -11,6 +11,24 @@ import (
 func init() {
 	RegisterUpdate(CoreSet, Update{Version: "20261106173400", Description: "mail_resend_key", Run: moveResendKey})
 	RegisterUpdate(CoreSet, Update{Version: "20261108174000", Description: "last_comments_title", Run: showLastCommentsTitle})
+	RegisterUpdate(CoreSet, Update{Version: "20261108230000", Description: "theme_logo", Run: clearStarterLogo})
+}
+
+// starterLogo - the logo app install gave every site before the themes
+// had logos of their own: the engine's, a path on the site.
+const starterLogo = "/static/images/kosatka-logo.svg"
+
+// clearStarterLogo - a theme has a logo of its own now (theme.yaml
+// "logo"), shown while Site information has none; app install no longer
+// saves the engine's logo as the site's. A site still holding that one
+// gets none of its own: in the Kosatka theme its logo is the same (the
+// theme's), in another theme the theme's logo, or none. A logo the site
+// uploaded stays.
+func clearStarterLogo(ctx context.Context, env Env) error {
+	if _, err := env.DB.ExecContext(ctx, env.Dialect.Rebind("UPDATE site_information SET logo = NULL WHERE logo = ?"), starterLogo); err != nil {
+		return fmt.Errorf("clearing the engine's logo saved as the site's: %w", err)
+	}
+	return nil
 }
 
 // showLastCommentsTitle - the latest comments block (plugin

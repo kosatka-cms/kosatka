@@ -197,11 +197,13 @@ described in [Page scripts](./scripts.md).
 - **Images** of the theme go in `static/images/` (or anywhere in
   `static/`). Link them from templates with their full URL,
   `/static/themes/<theme>/images/…`, and from CSS relatively.
-- **The logo** is the site's, not the theme's: it is uploaded on **Site
-  information** (`/admin/config/system/site-information`). Templates get
-  its URL as `.siteLogoURI` (empty when none is uploaded), and the *Logo*
-  system block shows it in whatever region it is placed. A new site gets
-  the engine's logo (`/static/images/kosatka-logo.svg`).
+- **The logo** is the manifest's [`logo`](./manifest.md#logo) until the
+  site uploads its own on **Site information**
+  (`/admin/config/system/site-information`), which replaces it in every
+  theme. Templates get the one in use as `.siteLogoURI` (empty when
+  neither the site nor the theme has one), and the *Logo* system block
+  shows it in whatever region it is placed. The Kosatka theme's is the
+  engine's logo (`/static/images/kosatka-logo.svg`).
 - **The icon** (favicon) is the manifest's
   [`favicon`](./manifest.md#icon). The site's own icon, uploaded on **Site
   information**, replaces it in every theme. The engine outputs the

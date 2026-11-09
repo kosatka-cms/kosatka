@@ -367,7 +367,7 @@ func createSite(ctx context.Context, r migrations.Runner, client *generated.Clie
 	err = func() error {
 		if err := c.SiteInformation.UpdateOneID(1).
 			SetSiteName(siteName).SetSiteEmail(adminEmail).SetDefaultLanguage(lang).
-			SetLogo(set.Site.Logo).SetTheme(set.Site.Theme).
+			SetTheme(set.Site.Theme).
 			Exec(ctx); err != nil {
 			return fmt.Errorf("site information: %w", err)
 		}

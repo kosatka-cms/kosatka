@@ -38,8 +38,9 @@ func TestSiteIconFor(t *testing.T) {
 	}
 }
 
-// TestThemeFaviconChecked - a manifest's favicon is a path on the site;
-// another host's ("//…", "https://…") makes the manifest invalid.
+// TestThemeFaviconChecked - a manifest's favicon and logo are paths on
+// the site; another host's ("//…", "https://…") makes the manifest
+// invalid.
 func TestThemeFaviconChecked(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "web", "templates"), 0o755); err != nil {
@@ -53,12 +54,14 @@ func TestThemeFaviconChecked(t *testing.T) {
 		"static/relative.png":        false,
 		"/static/a\" onload=\"x.png": false,
 	} {
-		body := "regions:\n  - id: top\n    label: Top\nfavicon: '" + strings.ReplaceAll(favicon, "'", "''") + "'\n"
-		if err := os.WriteFile(filepath.Join(dir, "web", "templates", themes.InfoFile), []byte(body), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		if _, err := themes.LoadInfoFor(""); (err == nil) != ok {
-			t.Errorf("favicon %q: %v, want valid %v", favicon, err, ok)
+		for _, key := range []string{"favicon", "logo"} {
+			body := "regions:\n  - id: top\n    label: Top\n" + key + ": '" + strings.ReplaceAll(favicon, "'", "''") + "'\n"
+			if err := os.WriteFile(filepath.Join(dir, "web", "templates", themes.InfoFile), []byte(body), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := themes.LoadInfoFor(""); (err == nil) != ok {
+				t.Errorf("%s %q: %v, want valid %v", key, favicon, err, ok)
+			}
 		}
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/files"
 	"github.com/kosatka-cms/kosatka/internal/domain/service"
 	"github.com/kosatka-cms/kosatka/internal/interfaces"
+	"github.com/kosatka-cms/kosatka/internal/paths"
 	"github.com/kosatka-cms/kosatka/pkg/httputil"
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
 	"github.com/kosatka-cms/kosatka/pkg/sitetime"
@@ -180,6 +181,8 @@ func (c *Controller) SiteInformationSettings(w http.ResponseWriter, r *http.Requ
 	data["feedViews"] = feedViews
 	data["pageSEO"] = entity.PageSEO{Title: i18n.T(r.Context(), "@title - Admin panel", "@title", i18n.T(r.Context(), "Site information"))}
 	data["site"] = si
+	// themeLogo - the active theme's logo, shown while none is uploaded.
+	data["themeLogo"] = service.SiteLogoFor(paths.Theme(), "")
 	data["saved"] = r.URL.Query().Get("saved") == "1"
 	data["error"] = r.URL.Query().Get("error") == "1"
 	data["timezoneError"] = r.URL.Query().Get("error") == "timezone"

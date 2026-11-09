@@ -29,11 +29,11 @@ type Set struct {
 	Menus         []Menu         `yaml:"menus"`
 }
 
-// Site - the site's theme (its directory), logo (a path on the site) and
-// front page (a View of the set).
+// Site - the site's theme (its directory) and front page (a View of the
+// set). The logo is the theme's (theme.yaml "logo") until one is uploaded
+// on Site information.
 type Site struct {
 	Theme         string `yaml:"theme"`
-	Logo          string `yaml:"logo"`
 	FrontPageView string `yaml:"front_page_view"`
 }
 

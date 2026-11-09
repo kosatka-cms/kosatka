@@ -19,6 +19,7 @@ tags: [light, cards, two-columns]
 screenshot: screenshot.jpg
 min_version: 0.2.0
 favicon: /static/themes/sand/favicon.png
+logo: /static/themes/sand/logo.svg
 default_region: sidebar
 regions:
   - id: header
@@ -52,6 +53,7 @@ settings:
 | `screenshot` | path | a picture in the theme's `static/`: `.png`, `.jpg` or `.webp`, 3:2 (for example 1500×1000) |
 | `min_version` | `X.Y.Z` | the oldest engine release the theme works with (see [below](#engine-version)) |
 | `favicon` | path | the theme's icon, a path on the site (see [below](#icon)) |
+| `logo` | path | the theme's logo, a path on the site (see [below](#logo)) |
 | `default_region` | region ID | where a newly placed block goes. Empty or not one of `regions` - the first region |
 | `regions` | list | the theme's [regions](#regions), required |
 | `blocks` | list | the [starter blocks](#starter-blocks) |
@@ -238,9 +240,15 @@ screen icon on phones (180×180 px or larger).
 The site's own icon, uploaded on **Site information**, replaces it in
 every theme. The engine outputs the icon itself; templates don't.
 
-The logo is not part of the manifest: it is uploaded on **Site
-information** and shown by the *Logo* system block or by the theme's
-header (see [Images, logo and icon](./assets-and-translations.md#images-logo-and-icon)).
+## Logo
+
+`logo` is the theme's logo: a path on the site starting with `/`, like
+`favicon` - usually a file of the theme's `static/`
+(`/static/themes/sand/logo.svg`). It is the site's logo while **Site
+information** has none: a logo uploaded there replaces it in every
+theme. Templates get the one in use as `.siteLogoURI` (see [Images, logo
+and icon](./assets-and-translations.md#images-logo-and-icon)). A theme
+without `logo` shows none until the site uploads one.
 
 ## Subthemes
 

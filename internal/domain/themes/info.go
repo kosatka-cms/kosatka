@@ -101,7 +101,7 @@ func readManifest(dir string) (entity.ThemeInfo, string, error) {
 	return info, p, nil
 }
 
-// faviconRe - a manifest's favicon: a path on the site (not
+// faviconRe - a manifest's favicon or logo: a path on the site (not
 // another host's, "//…").
 var faviconRe = regexp.MustCompile(`^/[A-Za-z0-9._~-][A-Za-z0-9._~/-]*$`)
 
@@ -279,6 +279,9 @@ func loadInfo(dir string, depth int) (entity.ThemeInfo, error) {
 	if info.Favicon != "" && !faviconRe.MatchString(info.Favicon) {
 		return info, fmt.Errorf("%s: favicon %q: a path on the site, /…", p, info.Favicon)
 	}
+	if info.Logo != "" && !faviconRe.MatchString(info.Logo) {
+		return info, fmt.Errorf("%s: logo %q: a path on the site, /…", p, info.Logo)
+	}
 	if info.Base != "" {
 		switch {
 		case dir == "":
@@ -309,6 +312,9 @@ func loadInfo(dir string, depth int) (entity.ThemeInfo, error) {
 		info.Settings = settings
 		if info.Favicon == "" {
 			info.Favicon = base.Favicon
+		}
+		if info.Logo == "" {
+			info.Logo = base.Logo
 		}
 		if len(info.Blocks) == 0 {
 			info.Blocks = base.Blocks
@@ -357,6 +363,16 @@ func cachedManifest(dir string) entity.ThemeInfo {
 func Favicon(dir string) string {
 	if favicon := cachedManifest(dir).Favicon; favicon != "" && faviconRe.MatchString(favicon) {
 		return favicon
+	}
+	return ""
+}
+
+// Logo - the logo theme dir's own manifest gives (theme.yaml "logo", as
+// Favicon: not its base's, the caller walks the chain); "" - none, or not
+// a path on the site.
+func Logo(dir string) string {
+	if logo := cachedManifest(dir).Logo; logo != "" && faviconRe.MatchString(logo) {
+		return logo
 	}
 	return ""
 }
