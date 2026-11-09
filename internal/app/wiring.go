@@ -185,8 +185,8 @@ func newBackgroundServices(drv *sql.Driver, baseLogger *slog.Logger) backgroundS
 // (bootSiteSettings…) and the cache has had its first refresh. Its
 // background loops (the cache's refresh, the scheduler) run until ctx
 // ends; the jobs it returns tells when they have returned.
-func buildHandler(ctx context.Context, mux *http.ServeMux, drv *sql.Driver, cfg *config.Config, baseLogger *slog.Logger) (http.Handler, backgroundJobs) {
-	s := &wiring{ctx: ctx, mux: mux, drv: drv, cfg: cfg, baseLogger: baseLogger}
+func buildHandler(ctx context.Context, mux *http.ServeMux, drv *sql.Driver, cfg *config.Config, baseLogger *slog.Logger, observer *middleware.HTTPObserver) (http.Handler, backgroundJobs) {
+	s := &wiring{ctx: ctx, mux: mux, drv: drv, cfg: cfg, baseLogger: baseLogger, observer: observer}
 	s.store = newSessionStore(cfg, baseLogger)
 
 	// The modules register their hooks below; none of an earlier wiring
@@ -236,6 +236,7 @@ func (s *wiring) withMiddleware() http.Handler {
 		Logger:        s.baseLogger,
 		TwoFactor:     s.twoFactorService,
 		Ping:          s.drv.DB().PingContext,
+		Observer:      s.observer,
 	})
 }
 
@@ -249,8 +250,10 @@ type wiring struct {
 	drv        *sql.Driver
 	cfg        *config.Config
 	baseLogger *slog.Logger
-	store      *sessions.CookieStore
-	client     *generated.Client
+	// observer - the requests' metrics and log lines (nil - none).
+	observer *middleware.HTTPObserver
+	store    *sessions.CookieStore
+	client   *generated.Client
 
 	// wireData
 	images             imageStack
@@ -1113,6 +1116,8 @@ type middlewareDeps struct {
 	TwoFactor *twofactor.Service
 	// Ping - whether the database answers (/healthz).
 	Ping func(context.Context) error
+	// Observer - the requests' metrics and log lines (nil - none).
+	Observer *middleware.HTTPObserver
 }
 
 // withMiddleware wraps the routes in the site's middleware, from the
@@ -1121,7 +1126,7 @@ func withMiddleware(routes http.Handler, d middlewareDeps) http.Handler {
 	bg := d.Background
 	// The 404s the modules log (OnNotFound): inside the redirects and the
 	// blocks, which answer before the routes.
-	handler := middleware.NotFoundHooksMiddleware(routes)
+	handler := middleware.NotFoundHooksMiddleware(middleware.RouteRecorder(routes))
 	handler = middleware.RedirectMiddleware(bg.redirect)(handler)
 	handler = middleware.BlockedBotMiddleware(bg.blockedBot)(handler)
 	handler = middleware.BlockedIPMiddleware(bg.blockedIP)(handler)
@@ -1185,7 +1190,11 @@ func withMiddleware(routes http.Handler, d middlewareDeps) http.Handler {
 	handler = middleware.UserMemoMiddleware(handler)
 	// A panic anywhere inside: a 500 and the stack in the log.
 	handler = middleware.RecoverMiddleware(d.Logger)(handler)
-	// /healthz answers ahead of every other layer; the security headers
-	// go on every response, its too.
+	// The requests' metrics and log lines see every answer of the layers
+	// inside (RouteRecorder, around the routes, tells them the route);
+	// each request has its id first.
+	handler = middleware.RequestIDMiddleware(d.Observer.Middleware(handler))
+	// /healthz answers ahead of every other layer (not counted, no id);
+	// the security headers go on every response, its too.
 	return middleware.SecurityHeadersMiddleware(middleware.HealthMiddleware(d.Ping)(handler))
 }

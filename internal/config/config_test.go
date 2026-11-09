@@ -197,3 +197,33 @@ func TestFilesDriverSections(t *testing.T) {
 		t.Errorf("no section: %+v %v", b, err)
 	}
 }
+
+func TestLogAndMetrics(t *testing.T) {
+	for _, v := range []string{"LOG_FORMAT", "LOG_REQUESTS", "METRICS_LISTEN"} {
+		if old, ok := os.LookupEnv(v); ok {
+			if err := os.Unsetenv(v); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = os.Setenv(v, old) })
+		}
+	}
+	load := func(body string) (*Config, error) {
+		t.Helper()
+		p := filepath.Join(t.TempDir(), "config.yaml")
+		if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return LoadPath(p)
+	}
+	cfg, err := load("port: 8080\n")
+	if err != nil || cfg.Log.Format != LogFormatText || cfg.Log.Requests || cfg.Metrics.Listen != "" {
+		t.Errorf("defaults: %+v %+v %v", cfg.Log, cfg.Metrics, err)
+	}
+	cfg, err = load("log:\n  format: \" JSON \"\n  requests: true\nmetrics:\n  listen: 127.0.0.1:9101\n")
+	if err != nil || cfg.Log.Format != LogFormatJSON || !cfg.Log.Requests || cfg.Metrics.Listen != "127.0.0.1:9101" {
+		t.Errorf("set: %+v %+v %v", cfg.Log, cfg.Metrics, err)
+	}
+	if _, err := load("log:\n  format: xml\n"); err == nil {
+		t.Error("log.format xml accepted")
+	}
+}

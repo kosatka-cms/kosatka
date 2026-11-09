@@ -477,6 +477,9 @@ journalctl -u kosatka@kosatka -f
 journalctl -u kosatka@kosatka --since "1 hour ago" | grep -E 'level=(WARN|ERROR)'
 ```
 
+To send the log and the site's metrics to Grafana, Elasticsearch or
+another monitoring system, see [Monitoring](./monitoring.md).
+
 ## 9. Update the site
 
 Migrations are built into the binary: the new binary brings the

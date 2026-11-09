@@ -79,7 +79,7 @@ func ClientIP(r *http.Request) string {
 	if err != nil {
 		peer = r.RemoteAddr
 	}
-	if !fromTrustedProxy(r) {
+	if !FromTrustedProxy(r) {
 		return peer
 	}
 	if entries := forwardedFor(r); len(entries) > 0 {
@@ -117,8 +117,9 @@ func forwardedFor(r *http.Request) []string {
 	return out
 }
 
-// fromTrustedProxy - whether the connection's peer is a trusted proxy.
-func fromTrustedProxy(r *http.Request) bool {
+// FromTrustedProxy - whether the connection's peer is a trusted proxy
+// (SetTrustedProxies), whose headers about the visitor may be believed.
+func FromTrustedProxy(r *http.Request) bool {
 	peer, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		peer = r.RemoteAddr
@@ -134,5 +135,5 @@ func IsHTTPS(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
 	}
-	return fromTrustedProxy(r) && strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https")
+	return FromTrustedProxy(r) && strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https")
 }

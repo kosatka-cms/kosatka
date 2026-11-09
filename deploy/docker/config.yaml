@@ -19,3 +19,8 @@ secrets_key: ""      # SECRETS_KEY - seals the secrets kept in the database
 session:
   secret_key: ""     # SESSION_SECRET_KEY
   secure: false      # SESSION_SECURE - the session cookies only over HTTPS (true behind one)
+log:
+  format: text       # LOG_FORMAT - text (key=value lines) or json (for a log collector)
+  requests: false    # LOG_REQUESTS - a line for every request answered
+metrics:
+  listen: ""         # METRICS_LISTEN - e.g. 0.0.0.0:9101: GET /metrics in the Prometheus format; empty - off

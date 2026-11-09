@@ -24,7 +24,7 @@ func RecoverMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 				if err, ok := rec.(error); ok && errors.Is(err, http.ErrAbortHandler) {
 					panic(rec)
 				}
-				logger.Error("panic serving a request", "method", r.Method, "path", r.URL.Path, "panic", rec, "stack", string(debug.Stack()))
+				logger.ErrorContext(r.Context(), "panic serving a request", "method", r.Method, "path", r.URL.Path, "panic", rec, "stack", string(debug.Stack()))
 				httputil.InternalServerError(w)
 			}()
 			next.ServeHTTP(w, r)
