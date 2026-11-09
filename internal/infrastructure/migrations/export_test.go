@@ -18,3 +18,7 @@ var (
 	ShowLastCommentsTitle = showLastCommentsTitle
 	ClearStarterLogo      = clearStarterLogo
 )
+
+// KeepNodePageReferences - keepNodePageReferences for the external tests
+// (update_core_references_integration_test.go).
+var KeepNodePageReferences = keepNodePageReferences

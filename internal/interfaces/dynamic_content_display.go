@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -329,8 +330,8 @@ var pageFieldTypes = map[entity.ContentTypeFieldType]pageFieldType{
 		id, ok := d.dc.Values[f.ID].(int)
 		return ok && id > 0
 	}},
-	// A reference - a block's: links to the content (a node page's are
-	// shown by Views).
+	// A reference - links to the content, the public only
+	// (publicReferenceNodes): a node page's and a block's.
 	entity.FieldTypeReference: {line: func(d sectionData, f entity.FieldInstanceDef) bool {
 		return len(d.references[f.ID]) > 0
 	}},
@@ -377,14 +378,15 @@ func hasLinks(d sectionData, f entity.FieldInstanceDef) bool {
 // display order. A group with visible members and a field standing in a
 // section of its own (pageFieldType.own: a body text, an image, a module's
 // formatter, blocks) each get theirs; the fields with a line in between
-// are batched into ordinary sections.
+// are batched into ordinary sections. Without the reference fields'
+// nodes: displaySectionsOf has them.
 func buildDisplaySections(displayFields entity.FieldInstanceDefs, dc *entity.DynamicContent, taxonomyFieldTerms map[int]entity.TaxonomyTerms, imageFieldURLs map[int]string) entity.DisplaySections {
 	return displaySectionsOf(displayFields, dc, taxonomyFieldTerms, imageFieldURLs, nil)
 }
 
-// displaySectionsOf - buildDisplaySections, a block's: its reference
-// fields shown too, by their nodes (references - the ones to show, by
-// field ID; nil - none, the node page's: Views attach those).
+// displaySectionsOf - buildDisplaySections with the reference fields
+// shown too, by their nodes (references - the ones to show, by field ID,
+// publicReferenceNodes; nil - none): a node page's and a block's.
 func displaySectionsOf(displayFields entity.FieldInstanceDefs, dc *entity.DynamicContent, taxonomyFieldTerms map[int]entity.TaxonomyTerms, imageFieldURLs map[int]string, references map[int]entity.Nodes) entity.DisplaySections {
 	d := sectionData{dc: dc, terms: taxonomyFieldTerms, imageURLs: imageFieldURLs, references: references}
 	hasLine := func(f entity.FieldInstanceDef) bool {
@@ -533,6 +535,18 @@ func (c *DynamicContentController) userFieldUsers(ctx context.Context, fields en
 				out[f.ID] = append(out[f.ID], u)
 			}
 		}
+	}
+	return out
+}
+
+// publicReferenceNodes - referenceFieldNodes, the public only (published,
+// not on moderation: entity.Node.IsPublic): what a page shows of the
+// content its reference fields name. Content its visitor may not view
+// the query leaves out itself (entity.ContentVisitor).
+func (c *DynamicContentController) publicReferenceNodes(ctx context.Context, fields entity.FieldInstanceDefs, values map[int]any) map[int]entity.Nodes {
+	out := c.referenceFieldNodes(ctx, fields, values)
+	for id, nodes := range out {
+		out[id] = slices.DeleteFunc(nodes, func(n entity.Node) bool { return !n.IsPublic() })
 	}
 	return out
 }

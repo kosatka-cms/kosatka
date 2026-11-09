@@ -613,17 +613,14 @@ func (c *DynamicContentController) blockViews(ctx context.Context, fields entity
 			return f.DetailImageStyle
 		}))
 		terms := splitKeyed(k, c.taxonomyFieldTerms(ctx, k.fields, k.values))
-		references := splitKeyed(k, c.referenceFieldNodes(ctx, k.fields, k.values))
+		// The content the block names (an actor, say): the public only.
+		references := splitKeyed(k, c.publicReferenceNodes(ctx, k.fields, k.values))
 		files := splitKeyed(k, c.fileFieldLinks(ctx, k.fields, k.values))
 		users := splitKeyed(k, c.userFieldUsers(ctx, k.fields, k.values))
 		for i, item := range items {
 			imageFieldURLs, imageFieldAlts := map[int]string{}, map[int]string{}
 			for id, images := range imageItems[i] {
 				imageFieldURLs[id], imageFieldAlts[id] = images[0].URL, images[0].Alt
-			}
-			// The content the block names (an actor, say): the public only.
-			for id, nodes := range references[i] {
-				references[i][id] = slices.DeleteFunc(nodes, func(n entity.Node) bool { return !n.IsPublic() })
 			}
 			dc := &entity.DynamicContent{Node: entity.Node{ID: item.ID, Type: entity.ContentType(item.Type)}, Fields: item.Fields, Values: item.Values, TextFormats: item.TextFormats}
 			fieldValues, fieldTerms := map[string]any{}, map[string]entity.TaxonomyTerms{}

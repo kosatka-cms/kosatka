@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
@@ -91,5 +92,53 @@ func TestReferenceFieldNodes(t *testing.T) {
 	}
 	if _, ok := got[4]; ok {
 		t.Error("a text field resolved as a reference")
+	}
+}
+
+// publicNodes - nodes by ID: 7 published, 8 unpublished, 9 on moderation.
+type publicNodes struct{ entity.NodesRepository }
+
+func (publicNodes) ByIDs(_ context.Context, ids []int) (map[int]entity.Node, error) {
+	all := map[int]entity.Node{
+		7: {ID: 7, Title: "Column", Status: 1},
+		8: {ID: 8, Title: "Draft", Status: 0},
+		9: {ID: 9, Title: "Pending", Status: 1, OnModeration: 1},
+	}
+	out := map[int]entity.Node{}
+	for _, id := range ids {
+		if n, ok := all[id]; ok {
+			out[id] = n
+		}
+	}
+	return out, nil
+}
+
+// TestNodePageReferences - a content item's page shows its reference
+// field as a line of links to the public content it names (not a draft,
+// not one on moderation), as a block does; with none public, no line.
+func TestNodePageReferences(t *testing.T) {
+	c := &DynamicContentController{nodeRepo: publicNodes{}}
+	fields := entity.FieldInstanceDefs{
+		{ID: 1, MachineName: "field_products", Label: "Products", FieldType: entity.FieldTypeReference, Config: map[string]any{"multiple": true}, ShowOnDetail: true, ShowLabel: true},
+		{ID: 2, MachineName: "field_draft", Label: "Draft", FieldType: entity.FieldTypeReference, ShowOnDetail: true},
+	}
+	values := map[int]any{1: []int{7, 8, 9}, 2: 8}
+	refs := c.publicReferenceNodes(context.Background(), fields, values)
+	if n := refs[1]; len(n) != 1 || n[0].ID != 7 {
+		t.Errorf("the public only: %+v", n)
+	}
+	if n := refs[2]; len(n) != 0 {
+		t.Errorf("a draft: %+v", n)
+	}
+	dc := &entity.DynamicContent{Fields: fields, Values: values}
+	sections := displaySectionsOf(fields, dc, nil, nil, refs)
+	var shown []string
+	for _, sec := range sections {
+		for _, f := range sec.Fields {
+			shown = append(shown, f.MachineName)
+		}
+	}
+	if !slices.Equal(shown, []string{"field_products"}) {
+		t.Errorf("the page's reference lines: %v, want field_products", shown)
 	}
 }

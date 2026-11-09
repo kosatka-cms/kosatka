@@ -237,10 +237,11 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 	fileFieldLinks := c.fileFieldLinks(ctx, displayFields, dc.Values)
 	taxonomyFieldTerms := c.taxonomyFieldTerms(ctx, displayFields, dc.Values)
 	userFieldUsers := c.userFieldUsers(ctx, displayFields, dc.Values)
+	referenceFieldNodes := c.publicReferenceNodes(ctx, displayFields, dc.Values)
 	altTitle := dc.GetAltTitle()
 	// displaySections: one block per section, in display order (see
-	// buildDisplaySections).
-	displaySections := buildDisplaySections(displayFields, dc, taxonomyFieldTerms, imageFieldURLs)
+	// displaySectionsOf); a reference field's line - its public nodes.
+	displaySections := displaySectionsOf(displayFields, dc, taxonomyFieldTerms, imageFieldURLs, referenceFieldNodes)
 	// LCP hint - the first image shown in the standard field output.
 	for _, sec := range displaySections {
 		if sec.Image != nil {
@@ -262,9 +263,9 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 		"fileFieldLinks":     fileFieldLinks,
 		"taxonomyFieldTerms": taxonomyFieldTerms,
 		"userFieldUsers":     userFieldUsers,
-		// referenceFieldNodes - none: a node page's references are shown
-		// by Views (a block's are, blockViews).
-		"referenceFieldNodes": map[int]entity.Nodes{},
+		// referenceFieldNodes - the content the reference fields name,
+		// the public only (field_line_reference links to it).
+		"referenceFieldNodes": referenceFieldNodes,
 		"altTitle":            altTitle,
 		"displaySections":     displaySections,
 		"blockViews":          c.blockViews(ctx, displayFields, dc.Values),
