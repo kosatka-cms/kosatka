@@ -105,7 +105,7 @@
         {{range $section.Fields}}
         {{$value := index $ctx.item.Values .ID}}
         {{$terms := index $ctx.taxonomyFieldTerms .ID}}
-        {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
+        {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "FileLinks" (and $ctx.fileFieldItems (index $ctx.fileFieldItems .ID)) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
         {{end}}
     </fieldset>
 </div>
@@ -162,7 +162,7 @@
     {{range $section.Fields}}
     {{$value := index $ctx.item.Values .ID}}
     {{$terms := index $ctx.taxonomyFieldTerms .ID}}
-    {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
+    {{template "factBoxFieldLine" (dict "Field" . "Value" $value "Terms" $terms "FileLink" (index $ctx.fileFieldLinks .ID) "FileLinks" (and $ctx.fileFieldItems (index $ctx.fileFieldItems .ID)) "Users" (index $ctx.userFieldUsers .ID) "Nodes" (index $ctx.referenceFieldNodes .ID))}}
     {{end}}
 </div>
 {{end}}

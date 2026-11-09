@@ -149,58 +149,71 @@ func (c *DynamicContentController) imageFieldURLs(ctx context.Context, fields en
 }
 
 // fileLinkInfo is one FieldTypeFile value's resolved download-link info
-// for the file field's line (field_line_file, fields/line.html).
+// for the file field's line (field_line_file, fields/line.html) and its
+// input (field_input_file).
 type fileLinkInfo struct {
+	FileID    int
 	URI       string
 	Name      string
 	SizeBytes int
 }
 
-// fileFieldLinks is the FieldTypeFile counterpart of imageFieldURLs (same
-// default-file fallback, no image style). Name falls back to the URI's
-// basename when the file has no original filename.
+// fileFieldLinks is the FieldTypeFile counterpart of imageFieldURLs: each
+// file field's first file (same default-file fallback, no image style).
+// Every file of a field with several - fileFieldItems.
 func (c *DynamicContentController) fileFieldLinks(ctx context.Context, fields entity.FieldInstanceDefs, values map[int]any) map[int]fileLinkInfo {
 	links := make(map[int]fileLinkInfo)
-	// Every field's file in one query.
-	fieldFile := map[int]int{}
+	for id, items := range c.fileFieldItems(ctx, fields, values) {
+		links[id] = items[0]
+	}
+	return links
+}
+
+// fileFieldItems - each file field's files, in order (one, or several;
+// none - the field's default file), by field ID. Name falls back to the
+// URI's basename when the file has no original filename; a file that no
+// longer exists is skipped.
+func (c *DynamicContentController) fileFieldItems(ctx context.Context, fields entity.FieldInstanceDefs, values map[int]any) map[int][]fileLinkInfo {
+	items := make(map[int][]fileLinkInfo)
+	// Every field's files in one query.
+	fieldFiles := map[int][]int{}
 	var all []int
 	for _, f := range fields {
 		if f.FieldType != entity.FieldTypeFile {
 			continue
 		}
-		if fileID := resolveImageFieldFileID(values[f.ID], f.DefaultImageID); fileID > 0 {
-			fieldFile[f.ID] = fileID
-			all = append(all, fileID)
+		if ids := resolveImageFieldFileIDs(values[f.ID], f.DefaultImageID); len(ids) > 0 {
+			fieldFiles[f.ID] = ids
+			all = append(all, ids...)
 		}
 	}
 	if len(all) == 0 {
-		return links
+		return items
 	}
 	files, err := c.fileRepo.ByIDs(ctx, all)
 	if err != nil {
 		c.LogFailure(err, "error resolving file field files", "fileIDs", all)
-		return links
+		return items
 	}
 	for _, f := range fields {
-		fileID, ok := fieldFile[f.ID]
-		if !ok {
-			continue
-		}
-		file, ok := files[fileID]
-		if !ok {
-			continue
-		}
-		name := file.OriginalFilename
-		if name == "" {
-			name = path.Base(file.URI)
-		}
-		links[f.ID] = fileLinkInfo{
-			URI:       imageurl.Original(file).URI,
-			Name:      name,
-			SizeBytes: file.SizeBytes,
+		for _, fileID := range fieldFiles[f.ID] {
+			file, ok := files[fileID]
+			if !ok {
+				continue
+			}
+			name := file.OriginalFilename
+			if name == "" {
+				name = path.Base(file.URI)
+			}
+			items[f.ID] = append(items[f.ID], fileLinkInfo{
+				FileID:    fileID,
+				URI:       imageurl.Original(file).URI,
+				Name:      name,
+				SizeBytes: file.SizeBytes,
+			})
 		}
 	}
-	return links
+	return items
 }
 
 // taxonomyFieldTerms resolves each taxonomy field's stored term ID(s) into
@@ -327,8 +340,7 @@ var pageFieldTypes = map[entity.ContentTypeFieldType]pageFieldType{
 		return false
 	}},
 	entity.FieldTypeFile: {line: func(d sectionData, f entity.FieldInstanceDef) bool {
-		id, ok := d.dc.Values[f.ID].(int)
-		return ok && id > 0
+		return entity.FirstFileID(d.dc.Values[f.ID]) > 0
 	}},
 	// A reference - links to the content, the public only
 	// (publicReferenceNodes): a node page's and a block's.

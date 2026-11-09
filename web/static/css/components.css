@@ -414,6 +414,20 @@ ul:where(.search-results) {
 :where(.field-image-row:has(.field-image-delete-input:checked)) :where(.field-image-thumb, .field-image-alt) {
     opacity: .4;
 }
+/* A file field with several files (fields/input.html): the image rows,
+   the file's name and size in place of the preview and the alt text. */
+:where(.field-file-name) {
+    flex: 1 1 10rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+:where(.field-file-size) {
+    color: var(--bs-secondary-color);
+    font-size: .875em;
+}
+:where(.field-image-row:has(.field-image-delete-input:checked)) :where(.field-file-name, .field-file-size) {
+    opacity: .4;
+}
 /* The content form's link field (node/edit_dynamic.html): a row each - its
    address, its title (a field with titles), a module's preview - and, with
    several, ↑/↓/✕ (the image rows' buttons); "Add a link" under them. */

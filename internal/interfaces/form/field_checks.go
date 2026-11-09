@@ -40,8 +40,8 @@ var fieldChecks = map[entity.ContentTypeFieldType]fieldCheck{
 	entity.FieldTypeBool:     {},
 	entity.FieldTypeList:     {after: checkList},
 	entity.FieldTypeTaxonomy: {after: checkTerms},
-	// Several references and images - comma-joined IDs (the search
-	// widget, resolveImagesField).
+	// Several references, images and files - comma-joined IDs (the
+	// search widget, resolveFilesField).
 	entity.FieldTypeReference: {after: checkIDs},
 	entity.FieldTypeImage:     {before: checkUpload, after: checkIDs},
 	entity.FieldTypeFile:      {before: checkUpload, after: checkIDs},

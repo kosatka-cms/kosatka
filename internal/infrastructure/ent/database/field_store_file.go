@@ -38,8 +38,8 @@ var fileStore = &fieldStore{
 	},
 }
 
-// fileMultiStore - field_value_file_multi: an image field's several
-// images' file IDs ([]int) in the editor's order (delta), each once.
+// fileMultiStore - field_value_file_multi: an image or a file field's
+// several files' IDs ([]int) in the editor's order (delta), each once.
 var fileMultiStore = &fieldStore{
 	table: fileMultiValues,
 	read: func(ctx context.Context, c *generated.Client, fields map[int]entity.FieldInstanceDef, nodeIDs []int, sink valueSink) error {
@@ -78,5 +78,5 @@ var fileMultiStore = &fieldStore{
 
 func init() {
 	registerFieldStorage(fieldStorage{single: fileStore, multiple: fileMultiStore, moveColumn: fieldvaluefile.FieldFileID}, entity.FieldTypeImage)
-	registerFieldStorage(fieldStorage{single: fileStore}, entity.FieldTypeFile)
+	registerFieldStorage(fieldStorage{single: fileStore, multiple: fileMultiStore, moveColumn: fieldvaluefile.FieldFileID}, entity.FieldTypeFile)
 }

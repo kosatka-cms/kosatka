@@ -78,7 +78,7 @@ func TestFileIDs(t *testing.T) {
 			t.Errorf("%#v: %v %d, want %v %d", tc.v, got, FirstFileID(tc.v), tc.want, tc.first)
 		}
 	}
-	if !FieldTypeImage.AllowsMultiple() || FieldTypeFile.AllowsMultiple() {
-		t.Error("images hold several values, files one")
+	if !FieldTypeImage.AllowsMultiple() || !FieldTypeFile.AllowsMultiple() {
+		t.Error("images and files hold several values")
 	}
 }

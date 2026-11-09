@@ -1,12 +1,12 @@
 // ===== The media library picker =====
 // An image or file field's "From the media library" ([data-media-picker] -
 // the field's ID; data-media-name - its input name; data-media-kind -
-// "image" or "file"; data-media-multiple - several images): a window of
+// "image" or "file"; data-media-multiple - several images or files): a window of
 // the files the field may take (/api/media/pick, found by name or alt
 // text), one chosen with its preview and alt text (the file's: the same
 // wherever it is used). One - into the field's row and its hidden
 // <name>_library (a file uploaded after clears it); several - a new row
-// with its <name>_keep, as the field's own images have.
+// with its <name>_keep, as the field's own images (or files) have.
 Kosatka.behaviors.mediaPicker = {
     attach: function (context) {
         Kosatka.once('media-picker', '[data-media-picker]', context).forEach(function (button) {
@@ -23,7 +23,7 @@ Kosatka.behaviors.mediaPicker = {
             button.addEventListener('click', function () {
                 Kosatka.mediaPickerWindow(field, isImage, function (item, alt) {
                     if (multiple) {
-                        addRow(holder, name, item, alt);
+                        addRow(holder, name, item, alt, isImage);
                     } else if (isImage) {
                         putImage(holder, name, item, alt, picked, upload);
                     } else {
@@ -78,7 +78,7 @@ Kosatka.behaviors.mediaPicker = {
             }
             shown.textContent = item.name;
         }
-        function addRow(holder, name, item, alt) {
+        function addRow(holder, name, item, alt, isImage) {
             var list = holder.querySelector('[data-field-images]');
             if (!list || list.querySelector('input[name="' + name + '_keep"][value="' + item.id + '"]')) return;
             var row = el('div', 'field-image-row');
@@ -87,17 +87,23 @@ Kosatka.behaviors.mediaPicker = {
             keep.type = 'hidden';
             keep.name = name + '_keep';
             keep.value = item.id;
-            var img = el('img', 'field-image-thumb');
-            img.src = item.thumb;
-            img.alt = alt;
-            var altBox = el('div', 'field-image-alt');
-            var altInput = el('input', 'form-control form-control-sm');
-            altInput.type = 'text';
-            altInput.name = name + '_alt_' + item.id;
-            altInput.maxLength = 255;
-            altInput.value = alt;
-            altInput.setAttribute('aria-label', Kosatka.t('Alt text'));
-            altBox.appendChild(altInput);
+            var shown = [];
+            if (isImage) {
+                var img = el('img', 'field-image-thumb');
+                img.src = item.thumb;
+                img.alt = alt;
+                var altBox = el('div', 'field-image-alt');
+                var altInput = el('input', 'form-control form-control-sm');
+                altInput.type = 'text';
+                altInput.name = name + '_alt_' + item.id;
+                altInput.maxLength = 255;
+                altInput.value = alt;
+                altInput.setAttribute('aria-label', Kosatka.t('Alt text'));
+                altBox.appendChild(altInput);
+                shown = [img, altBox];
+            } else {
+                shown = [el('span', 'field-file-name', item.name)];
+            }
             var actions = el('div', 'field-image-actions');
             [['-1', '↑', Kosatka.t('Move up')], ['1', '↓', Kosatka.t('Move down')]].forEach(function (m) {
                 var b = el('button', 'field-image-btn', m[1]);
@@ -113,7 +119,7 @@ Kosatka.behaviors.mediaPicker = {
             remove.setAttribute('aria-label', Kosatka.t('Delete'));
             remove.addEventListener('click', function () { row.remove(); });
             actions.appendChild(remove);
-            row.append(keep, img, altBox, actions);
+            row.append.apply(row, [keep].concat(shown, [actions]));
             list.appendChild(row);
         }
     }

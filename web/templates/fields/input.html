@@ -12,7 +12,8 @@
      (taxonomy options and "-- "-indented labels by term ID), SelectedTerms
      (multi-value taxonomy), SelectedNodes (multi-value reference),
      Tags (a picker's chosen, JSON), ImageURL/ImageAlt (image), Images (an
-     image field with several), FileLink (file), SentFile / DeleteTicked (a
+     image field with several), FileLink (file), Files (a file field with
+     several), SentFile / DeleteTicked (a
      form sent back with errors: its file kept for the next submit, the
      saved one ticked for deleting), Blocks (a blocks field's,
      blocksFieldForm). A {{template}} call resets "." and "$" to this dict,
@@ -21,7 +22,7 @@
      inputs show from In (the page's data, or a block's Inputs: the keys of
      fieldInputData), Prefix, TextFormats, TimeZone. */}}
 {{define "dynamicFieldInputIn"}}{{$in := .In}}{{$p := .Prefix}}{{$tf := .TextFormats}}{{$tz := .TimeZone}}{{with .Field}}
-{{template "dynamicFieldInput" (dict "Field" . "Prefix" $p "Value" (index $in.values .ID) "Options" (index $in.taxonomyOptions .ID) "HierarchyLabels" (index $in.taxonomyHierarchyLabels .ID) "SelectedTerms" (index $in.multiTaxonomyFieldTerms .ID) "SelectedNodes" (index $in.referenceFieldNodes .ID) "SelectedUsers" (index $in.userFieldUsers .ID) "Tags" (index $in.tagPickers .ID) "ImageURL" (index $in.imageFieldURLs .ID) "ImageAlt" (index $in.imageFieldAlts .ID) "Images" (index $in.imageFieldItems .ID) "FileLink" (index $in.fileFieldLinks .ID) "SentFile" (and $in.fileFieldSent (index $in.fileFieldSent .ID)) "DeleteTicked" (and $in.fileFieldDeletes (index $in.fileFieldDeletes .ID)) "Blocks" (index $in.blockFields .ID) "TextFormats" $tf "SelectedTextFormatID" (index $in.textFormatIDs .ID) "TimeZone" $tz)}}
+{{template "dynamicFieldInput" (dict "Field" . "Prefix" $p "Value" (index $in.values .ID) "Options" (index $in.taxonomyOptions .ID) "HierarchyLabels" (index $in.taxonomyHierarchyLabels .ID) "SelectedTerms" (index $in.multiTaxonomyFieldTerms .ID) "SelectedNodes" (index $in.referenceFieldNodes .ID) "SelectedUsers" (index $in.userFieldUsers .ID) "Tags" (index $in.tagPickers .ID) "ImageURL" (index $in.imageFieldURLs .ID) "ImageAlt" (index $in.imageFieldAlts .ID) "Images" (index $in.imageFieldItems .ID) "FileLink" (index $in.fileFieldLinks .ID) "Files" (and $in.fileFieldItems (index $in.fileFieldItems .ID)) "SentFile" (and $in.fileFieldSent (index $in.fileFieldSent .ID)) "DeleteTicked" (and $in.fileFieldDeletes (index $in.fileFieldDeletes .ID)) "Blocks" (index $in.blockFields .ID) "TextFormats" $tf "SelectedTextFormatID" (index $in.textFormatIDs .ID) "TimeZone" $tz)}}
 {{end}}{{end}}
 {{/* textFormatPicker - per-value text format dropdown (see
      entity.TextFormatDef), shown only when AllowedTextFormatIDs() is
@@ -463,6 +464,38 @@
 {{end}}
 
 {{define "field_input_file"}}{{$p := or .Prefix ""}}{{$fieldName := printf "%sfield_%d" $p .Field.ID}}
+    {{if .Field.Multiple}}
+    {{/* Several files: each kept one in order ({{$fieldName}}_keep - the
+         order of these inputs is the order saved; ↑/↓ move a row, the
+         rows of several images' script, field-images in app.js), its name,
+         a tick to delete it (shown as a ✕ button; a row to be deleted
+         fades); new files are added after them. */}}
+    <div class="field-images field-files-edit" data-field-images>
+        {{range .Files}}
+        <div class="field-image-row" data-field-image>
+            <input type="hidden" name="{{$fieldName}}_keep" value="{{.FileID}}">
+            <a href="{{.URI}}" class="field-file-name" download>{{.Name}}</a>
+            <span class="field-file-size">{{humanFileSize .SizeBytes}}</span>
+            <div class="field-image-actions">
+                <button type="button" class="field-image-btn" data-field-image-move="-1" aria-label="{{t "Move up"}}" title="{{t "Move up"}}">↑</button>
+                <button type="button" class="field-image-btn" data-field-image-move="1" aria-label="{{t "Move down"}}" title="{{t "Move down"}}">↓</button>
+                <input type="checkbox" id="{{$fieldName}}_delete_{{.FileID}}" name="{{$fieldName}}_delete" value="{{.FileID}}" class="field-image-delete-input visually-hidden">
+                <label for="{{$fieldName}}_delete_{{.FileID}}" class="field-image-btn field-image-delete" title="{{t "Delete"}}"><span aria-hidden="true">✕</span><span class="visually-hidden">{{t "Delete"}}</span></label>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{if .Field.AllowsUpload}}
+    <label for="{{$fieldName}}" class="form-label field-images-add">{{t "Add files"}}</label>
+    <input type="file" id="{{$fieldName}}" name="{{$fieldName}}" class="form-control" multiple>
+    {{end}}
+    {{template "field_media_picker" (dict "Field" .Field "Prefix" $p "Name" $fieldName)}}
+    {{if .Field.AllowedFileExtensionsString}}
+    <small class="form-text text-muted">{{t "Allowed extensions:"}} {{.Field.AllowedFileExtensionsString}}</small>
+    {{end}}
+    {{with .Field.MaxValues}}<div class="form-text">{{plural . "At most @count file." "At most @count files."}}</div>{{end}}
+
+    {{else}}
     {{if .FileLink.URI}}
     <div class="current-image mb-3">
         <p><strong>{{t "Current file:"}}</strong> <a href="{{.FileLink.URI}}" download>{{.FileLink.Name}}</a></p>
@@ -477,6 +510,7 @@
     {{with .SentFile}}<input type="hidden" name="{{$fieldName}}_sent" value="{{.}}">{{end}}
     {{if .Field.AllowedFileExtensionsString}}
     <small class="form-text text-muted">{{t "Allowed extensions:"}} {{.Field.AllowedFileExtensionsString}}</small>
+    {{end}}
     {{end}}
 {{end}}
 
