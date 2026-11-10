@@ -16,6 +16,11 @@
   <a href="https://github.com/kosatka-cms/kosatka/releases">Releases</a>
 </p>
 
+<p align="center">
+  <img src="docs/assets/screens/site-front.webp" alt="A demo site in the Kosatka theme: the front page with its articles, the popular content and the latest comments" width="49%">
+  <img src="docs/assets/screens/admin-overview.webp" alt="The admin's overview: content, comments, users and views, what needs attention, the recent changes and the popular content" width="49%">
+</p>
+
 ## Features
 
 - **[Content types and fields](https://kosatka-cms.github.io/kosatka/guides/content-types/)** -

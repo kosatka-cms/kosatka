@@ -466,6 +466,8 @@ Notes:
    transport, the MySQL `sql_mode`, the in-memory caches' refresh, the
    background jobs, and the modules' own checks. A warning or an error
    also shows as a bar on the admin's pages.
+
+   ![The Status report's checks: the database updates, the public files, the site address, the mail, the SQL mode, the secrets, the background jobs and the private files, all OK](../assets/screens/status-report.webp)
 3. Upload an image and check it shows.
 
 The service logs to standard output, one line per event

@@ -1,0 +1,10 @@
+[
+  {"name": "site-front", "path": "/", "guest": true},
+  {"name": "admin-overview", "path": "/admin"},
+  {"name": "content-type-fields", "from": "/admin/config/content-types", "link": "^/admin/config/content-types/[^/]+/fields$"},
+  {"name": "content-edit", "from": "/admin/content", "link": "^/", "text": "Meet Kosatka CMS", "then": "^/node/[0-9]+/edit$"},
+  {"name": "views-edit", "from": "/admin/config/views", "link": "^/admin/config/views/[^/]+$", "text": "Front page"},
+  {"name": "blocks", "path": "/admin/config/blocks"},
+  {"name": "appearance", "path": "/admin/config/appearance"},
+  {"name": "status-report", "path": "/admin/reports/status"}
+]

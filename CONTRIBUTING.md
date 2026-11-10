@@ -116,6 +116,12 @@ modules' or the contributing pages).
 - `./scripts/docs.sh` builds the site (`./scripts/docs.sh dev` serves it
   at http://localhost:4321/kosatka/), in Docker when Node.js isn't
   installed.
+- The screenshots of the admin and the demo site
+  (`docs/assets/screens/`) are taken by `./scripts/docs_screenshots.sh`:
+  a fresh demo site on a throwaway MySQL in Docker, the pages of
+  `scripts/screenshots/shots.json` taken with the Chrome installed on the
+  machine. Run it again when the admin's look changes; a new shot is a
+  line in `shots.json`.
 
 ## Commits and pull requests
 
