@@ -15,23 +15,23 @@ func TestPeopleListSortURL(t *testing.T) {
 	}{
 		{
 			name:    "empty sort defaults to created, toggles to asc",
-			rawURL:  "/admin/people",
+			rawURL:  "/admin/users",
 			column:  "created",
-			wantURL: "/admin/people?order=asc&sort=created",
+			wantURL: "/admin/users?order=asc&sort=created",
 		},
 		{
 			name:    "different column resets to desc",
-			rawURL:  "/admin/people?sort=created&order=asc",
+			rawURL:  "/admin/users?sort=created&order=asc",
 			column:  "last_access",
-			wantURL: "/admin/people?order=desc&sort=last_access",
+			wantURL: "/admin/users?order=desc&sort=last_access",
 		},
 		{
 			// No sort in query defaults to "created", which matches the clicked column, so
 			// order toggles off the default current order=desc -> asc.
 			name:    "preserves created/status/role filters and toggles off default order",
-			rawURL:  "/admin/people?created=1&status=1&role=2",
+			rawURL:  "/admin/users?created=1&status=1&role=2",
 			column:  "created",
-			wantURL: "/admin/people?created=1&order=asc&role=2&sort=created&status=1",
+			wantURL: "/admin/users?created=1&order=asc&role=2&sort=created&status=1",
 		},
 	}
 

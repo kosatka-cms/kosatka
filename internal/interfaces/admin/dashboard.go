@@ -105,7 +105,7 @@ func (c *Controller) dashboardTiles(ctx context.Context, st entity.DashboardStat
 	}
 	if has(service.PermAdministerUsers) {
 		tiles = append(tiles, dashboardTile{Label: i18n.T(ctx, "New users in @days days", "@days", dashboardRecentDays), Value: st.UsersSince,
-			URL: "/admin/people", Note: i18n.T(ctx, "@count in all", "@count", st.Users)})
+			URL: "/admin/users", Note: i18n.T(ctx, "@count in all", "@count", st.Users)})
 	}
 	if counting {
 		tiles = append(tiles, dashboardTile{Label: i18n.T(ctx, "Views today"), Value: st.ViewsToday,

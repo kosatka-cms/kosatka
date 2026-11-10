@@ -21,7 +21,7 @@ func TestListPage(t *testing.T) {
 	at := time.Date(2026, 10, 25, 19, 40, 0, 0, time.UTC)
 	rows := []row{
 		{Entry: Entry{At: at, ActorID: 3, ActorName: "ann", IP: "203.0.113.5",
-			Object:  modulekit.ActionObject{Kind: "role", ID: "editor", Label: "Editor", URL: "/admin/people/permissions"},
+			Object:  modulekit.ActionObject{Kind: "role", ID: "editor", Label: "Editor", URL: "/admin/users/permissions"},
 			Changes: []modulekit.ActionChange{{Field: "Delete any content", From: "no", To: "yes"}}},
 			Action: "Permissions changed", Tone: modulekit.ActionToneAccess, Kind: "Role"},
 		{Entry: Entry{At: at, Object: modulekit.ActionObject{Kind: "node", ID: "12", Label: "Old <post>"}}, Action: "Content deleted", Tone: modulekit.ActionToneDelete, Kind: "Article"},
@@ -32,7 +32,7 @@ func TestListPage(t *testing.T) {
 		"filter": Filter{}, "groups": groups(), "pagination": pagination.New(1, 2, perPage, manifest.AdminPath, nil)})
 	for _, want := range []string{
 		`href="/admin/reports/action-log?actor_id=3" class="fw-semibold">ann</a>`, "203.0.113.5",
-		`action-log-badge action-log-badge--access">Permissions changed`, `<a href="/admin/people/permissions">Editor</a>`,
+		`action-log-badge action-log-badge--access">Permissions changed`, `<a href="/admin/users/permissions">Editor</a>`,
 		"Role · ID editor", "<summary>What changed</summary>", `<td class="action-log-to">yes</td>`,
 		`action-log-badge--delete">Content deleted`, "Old &lt;post&gt;", "Article · ID 12",
 		`<option value="content">Content</option>`,

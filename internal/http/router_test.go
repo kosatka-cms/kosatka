@@ -39,6 +39,9 @@ func TestRegisterAdminRoutes_NoPatternConflicts(t *testing.T) {
 	}()
 
 	mux := http.NewServeMux()
+	// The site's catch-all (router.go): an admin pattern for every method
+	// conflicts with it.
+	mux.HandleFunc("GET /", func(http.ResponseWriter, *http.Request) {})
 	ac := &admin.Controller{}
 	dc := &interfaces.DynamicContentController{}
 	RegisterAdminRoutes(mux, nil, ac, dc, &interfaces.StyleguideController{}, nil, nil)

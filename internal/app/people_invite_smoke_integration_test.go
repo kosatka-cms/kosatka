@@ -27,9 +27,9 @@ func TestPeopleInvite(t *testing.T) {
 		if err := db.DB.QueryRow(db.Dialect.Rebind(`SELECT id FROM roles WHERE name = ?`), entity.RoleUser).Scan(&roleID); err != nil {
 			t.Fatal(err)
 		}
-		where, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"invite"}, "username": {""},
+		where, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"invite"}, "username": {""},
 			"email": {"invitee@example.com"}, "status": {"1"}, "role_id": {fmt.Sprint(roleID)}})
-		if !ok || !strings.Contains(where, "/admin/people?invited=") {
+		if !ok || !strings.Contains(where, "/admin/users?invited=") {
 			t.Fatalf("the invitation: %q", where)
 		}
 		var id int
@@ -40,7 +40,7 @@ func TestPeopleInvite(t *testing.T) {
 		if name != "invitee" || hash != entity.PasswordUnset {
 			t.Errorf("the invited account: %q %q", name, hash)
 		}
-		if _, page := s.get("/admin/people"); !strings.Contains(page, fmt.Sprintf(`formaction="/admin/people/%d/invite"`, id)) {
+		if _, page := s.get("/admin/users"); !strings.Contains(page, fmt.Sprintf(`formaction="/admin/users/%d/invite"`, id)) {
 			t.Error("the list has no invitation to send again")
 		}
 

@@ -39,7 +39,7 @@ the author won't know who complained.
 
 | Permission | |
 |---|---|
-| *Report content and comments* | sends complaints. The module gives it to the *Signed-in user* role (`user`) when it is installed; take it away on **People → Permissions** to stop a role complaining |
+| *Report content and comments* | sends complaints. The module gives it to the *Signed-in user* role (`user`) when it is installed; take it away on **Users → Permissions** to stop a role complaining |
 | *Handle complaints* | the queue and the module's settings, together with *Access administration (/admin)* |
 
 ## The queue

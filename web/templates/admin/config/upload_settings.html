@@ -66,7 +66,7 @@
         <div class="admin-setting">
             <div class="admin-setting-text">
                 <label for="user_file_extensions" class="admin-setting-label">{{t "Documents in users' files"}}</label>
-                <span class="admin-setting-help">{{t "Extensions separated by spaces, for example: pdf docx xlsx zip. Users can upload these files besides images to their files (the profile \"Files\" tab and the editor) and link to them in texts. Web pages, scripts and programs are never accepted. Empty - images only."}} {{t "Documents can be uploaded only by roles with the \"Upload documents\" permission (<a href=\":url\">Permissions</a>); everyone else uploads images only." ":url" "/admin/people/permissions"}}</span>
+                <span class="admin-setting-help">{{t "Extensions separated by spaces, for example: pdf docx xlsx zip. Users can upload these files besides images to their files (the profile \"Files\" tab and the editor) and link to them in texts. Web pages, scripts and programs are never accepted. Empty - images only."}} {{t "Documents can be uploaded only by roles with the \"Upload documents\" permission (<a href=\":url\">Permissions</a>); everyone else uploads images only." ":url" "/admin/users/permissions"}}</span>
             </div>
             <div class="admin-setting-control">
                 <input type="text" id="user_file_extensions" name="user_file_extensions" class="form-control" value="{{.userFileExtensions}}">

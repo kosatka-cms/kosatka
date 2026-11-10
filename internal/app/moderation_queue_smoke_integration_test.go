@@ -50,7 +50,7 @@ func TestModerationQueueBulk(t *testing.T) {
 			"moderators", `{"moderate content": true}`); err != nil {
 			t.Fatal(err)
 		}
-		if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {"mod"}, "email": {"mod@example.com"},
+		if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"mod"}, "email": {"mod@example.com"},
 			"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {fmt.Sprint(id(`SELECT id FROM roles WHERE name = 'moderators'`))}}); !ok {
 			t.Fatal("create the moderator")
 		}

@@ -20,7 +20,7 @@ func TestUserFieldTemplatesRender(t *testing.T) {
 	if err := svc.RenderNamed(&buf, "content", map[string]any{"fields": fields, "error": "exists"}, "admin/people/user_fields.html", "admin/alerts.html", "admin/icons.html"); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`action="/admin/people/fields/2/edit"`, `action="/admin/people/fields/1/delete"`, `value="Favorite book"`, "<code>hobby</code>", "already exists"} {
+	for _, want := range []string{`action="/admin/users/fields/2/edit"`, `action="/admin/users/fields/1/delete"`, `value="Favorite book"`, "<code>hobby</code>", "already exists"} {
 		if !strings.Contains(buf.String(), want) {
 			t.Errorf("admin page: missing %q", want)
 		}

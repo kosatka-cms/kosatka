@@ -15,7 +15,7 @@ func TestAdminMenuCurrent(t *testing.T) {
 		"/admin/config/content-types/1":      "Structure/Content types",
 		"/admin/config/modules/forum/delete": "Modules/Modules",
 		"/admin/config/content-typesx":       "",
-		"/admin/people":                      "",
+		"/admin/users":                       "",
 		"/admin":                             "Overview/Overview",
 	} {
 		s, it, ok := AdminMenuCurrent(menu, path)

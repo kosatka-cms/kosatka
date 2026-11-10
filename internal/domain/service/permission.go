@@ -21,7 +21,7 @@ import (
 // Permissions: the engine declares them (general ones
 // here, four per node type generated from the content types), a role
 // holds the granted ones in Role.Permissions, and the
-// /admin/people/permissions page edits the role × permission matrix.
+// /admin/users/permissions page edits the role × permission matrix.
 const (
 	// PermFullAccess - every permission (the administrator role).
 	PermFullAccess = "full_access"
@@ -349,7 +349,7 @@ func (s *PermissionService) CreateRole(ctx context.Context, name, label string) 
 func roleObject(r entity.Role, withURL bool) audit.Object {
 	o := audit.Object{Kind: audit.KindRole, ID: r.Name, Label: r.Label()}
 	if withURL {
-		o.URL = "/admin/people/permissions"
+		o.URL = "/admin/users/permissions"
 	}
 	return o
 }

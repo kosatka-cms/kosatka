@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </nav>
     <div class="admin-bar-end">
         {{if gt .pendingPeopleCount 0}}
-        <a href="/admin/people?status=pending" class="admin-bar-pill admin-bar-pill--warn">{{t "Accounts awaiting approval: @count" "@count" .pendingPeopleCount}}</a>
+        <a href="/admin/users?status=pending" class="admin-bar-pill admin-bar-pill--warn">{{t "Accounts awaiting approval: @count" "@count" .pendingPeopleCount}}</a>
         {{end}}
         {{if .maintenanceBanner}}
         <a href="/admin/config/maintenance" class="admin-bar-pill admin-bar-pill--warn admin-top-bar-maintenance">{{t "Maintenance mode"}}</a>

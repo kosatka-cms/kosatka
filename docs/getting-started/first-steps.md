@@ -40,7 +40,7 @@ Each part is shown only to who may open what it lists. The main places:
 | `/admin/config/menus` | the menus |
 | `/admin/config/appearance` | the themes and their settings |
 | `/admin/config/modules` | the modules: enable, disable, uninstall |
-| `/admin/people` | the users, their roles and permissions |
+| `/admin/users` | the users, their roles and permissions |
 | `/admin/config/mail` | how the site sends e-mail |
 | `/admin/reports/status` | the status report: the version, the database, what needs attention |
 

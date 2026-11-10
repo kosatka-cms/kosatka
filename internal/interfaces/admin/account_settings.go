@@ -307,7 +307,7 @@ func (c *Controller) AccountSettingsPage(w http.ResponseWriter, r *http.Request)
 	c.RenderOrFail(w, r, "admin/people/account_settings.html", data)
 }
 
-// TwoFactorReset handles POST /admin/people/{id}/two-factor/reset: the
+// TwoFactorReset handles POST /admin/users/{id}/two-factor/reset: the
 // user's two-factor sign-in turned off (they lost the phone and the
 // codes); they turn it on again after signing in. Back to their form.
 func (c *Controller) TwoFactorReset(w http.ResponseWriter, r *http.Request) {

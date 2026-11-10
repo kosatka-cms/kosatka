@@ -50,7 +50,7 @@ func TestComplaintsModule(t *testing.T) {
 		}
 
 		role := fmt.Sprint(count(`SELECT id FROM roles WHERE name = ?`, entity.RoleUser))
-		if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {"reader"}, "email": {"reader@example.com"},
+		if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"reader"}, "email": {"reader@example.com"},
 			"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {role}}); !ok {
 			t.Fatal("create reader")
 		}

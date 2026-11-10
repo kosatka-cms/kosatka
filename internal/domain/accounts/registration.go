@@ -241,7 +241,7 @@ func (s *RegistrationService) check(ctx context.Context, username, email, passwo
 }
 
 // NewAccount - an account an administrator creates
-// (/admin/people/create).
+// (/admin/users/create).
 type NewAccount struct {
 	Username, Email, Password, PasswordConfirm string
 	// Invite - no password: the person gets the invitation and sets their
@@ -454,7 +454,7 @@ func MailTokenData(baseURL string, site *entity.SiteInformation, u *entity.User,
 		SiteSlogan:           site.Slogan,
 		SiteLoginURL:         base + "/login",
 		SiteURLBrief:         baseURL,
-		SitePeoplePendingURL: base + "/admin/people?status=pending",
+		SitePeoplePendingURL: base + "/admin/users?status=pending",
 		UserName:             u.Username,
 		UserEmail:            u.Email,
 		UserEditURL:          base + "/me/edit",

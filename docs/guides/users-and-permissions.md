@@ -8,7 +8,7 @@ sidebar:
 People on a Kosatka site are guests (not signed in) and users with an
 account. What a user may do comes from roles: each role holds a set of
 permissions, and each account has one role. Most of it is under
-**People** in the admin.
+**Users** in the admin.
 
 ## Roles
 
@@ -27,7 +27,7 @@ An account has one role of its own. Its permissions add to those of
 the base role: a user whose role is *Editor* has the editor's
 permissions plus the signed-in user's.
 
-To add a role, open `/admin/people/roles` and fill in *Add role*:
+To add a role, open `/admin/users/roles` and fill in *Add role*:
 
 | Field | |
 |---|---|
@@ -41,7 +41,7 @@ another role first).
 
 ## Permissions
 
-`/admin/people/permissions` is a table: a row per permission, a column
+`/admin/users/permissions` is a table: a row per permission, a column
 per role. Tick the boxes and press *Save permissions*. The full-access
 role's column is always ticked and can't be changed.
 
@@ -109,11 +109,11 @@ formats) to the roles that should write formatted text.
 
 ## Managing accounts
 
-`/admin/people` lists the accounts. Filter by status (*Active*,
+`/admin/users` lists the accounts. Filter by status (*Active*,
 *Pending approval*, *Blocked*) and role; sort by *Created* or *Last
 access*. Pending accounts have an *Approve* button.
 
-**Add user** (`/admin/people/create`) asks for the e-mail, the login,
+**Add user** (`/admin/users/create`) asks for the e-mail, the login,
 how the password is set, the role and status, and the required profile
 fields. The password:
 
@@ -165,9 +165,9 @@ created.
 
 | Option | |
 |---|---|
-| Administrators only | no public registration: accounts are created at `/admin/people/create`; the sign-in page and the user menu offer no registration, and `/user/register` says it is disabled |
+| Administrators only | no public registration: accounts are created at `/admin/users/create`; the sign-in page and the user menu offer no registration, and `/user/register` says it is disabled |
 | Visitors (default) | anyone can register at `/user/register` |
-| Visitors, but administrator approval is required | the account waits as *Pending approval*; the site's e-mail (Site information) is told, and an administrator approves it at `/admin/people` |
+| Visitors, but administrator approval is required | the account waits as *Pending approval*; the site's e-mail (Site information) is told, and an administrator approves it at `/admin/users` |
 
 A new site starts with *Visitors, but administrator approval is
 required*.
@@ -189,7 +189,7 @@ administrators' notice of a new registration request - are on the
 
 ## Profile fields
 
-`/admin/people/fields` (*User fields*) adds your own fields to the
+`/admin/users/fields` (*User fields*) adds your own fields to the
 profile, for example *City* or *Website*. Each is a text field with:
 
 | Field | |
@@ -244,7 +244,7 @@ required field is empty is sent to fill it in first.
 
 ### Deleting one's own account
 
-By default only an administrator deletes accounts (*People*, with the
+By default only an administrator deletes accounts (*Users*, with the
 user's content or keeping it without an author). A site where people
 should be able to leave on their own grants their role the permission
 *Delete their own account*. Their profile's *Edit* tab then ends with

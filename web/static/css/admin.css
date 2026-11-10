@@ -2208,7 +2208,7 @@ body.admin-shell .block-zone tr.block-row-changed > td:first-child::after {
     height: calc(100% - var(--bs-modal-margin) * 2 - var(--admin-bar-offset, 0px));
 }
 
-/* Permissions matrix (/admin/people/permissions): the role names stick to
+/* Permissions matrix (/admin/users/permissions): the role names stick to
    the top of the window as the page scrolls, below the fixed admin bar
    (--admin-bar-offset, set by app.js). */
 .permissions-table thead th {

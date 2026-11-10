@@ -44,7 +44,7 @@ func TestCommentModeration(t *testing.T) {
 		readers := one(`SELECT id FROM roles WHERE name = 'readers'`)
 		member := func(name string) (*site, int) {
 			t.Helper()
-			if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {name}, "email": {name + "@example.com"},
+			if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {name}, "email": {name + "@example.com"},
 				"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {fmt.Sprint(readers)}}); !ok {
 				t.Fatalf("create %s", name)
 			}

@@ -21,7 +21,7 @@ import (
 // PeoplePerPage - accounts on a page of the people list.
 const PeoplePerPage = 25
 
-// PeopleList handles GET /admin/people: the accounts, filtered by status
+// PeopleList handles GET /admin/users: the accounts, filtered by status
 // and role, sorted by creation or last access, a page at a time, with
 // their two-factor state and pending invitations.
 func (c *Controller) PeopleList(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func (c *Controller) PeopleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pager := pagination.New(effectivePage, totalCount, PeoplePerPage, "/admin/people", r.URL.Query())
+	pager := pagination.New(effectivePage, totalCount, PeoplePerPage, "/admin/users", r.URL.Query())
 
 	displayOrder := orderKey
 	if displayOrder != "asc" && displayOrder != "desc" {
@@ -76,7 +76,7 @@ func (c *Controller) PeopleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := c.getAdminData(r)
-	data["title"] = i18n.T(ctx, "People")
+	data["title"] = i18n.T(ctx, "Users")
 	data["pageSEO"] = entity.PageSEO{Title: i18n.T(ctx, "@title - Admin panel", "@title", data["title"])}
 	data["users"] = users
 	if users != nil {
@@ -108,7 +108,7 @@ func (c *Controller) PeopleList(w http.ResponseWriter, r *http.Request) {
 	c.RenderOrFail(w, r, "admin/people/index.html", data)
 }
 
-// peopleListSortURL builds /admin/people?sort=&order= for column header links (resets to page 1).
+// peopleListSortURL builds /admin/users?sort=&order= for column header links (resets to page 1).
 func peopleListSortURL(r *http.Request, column string) string {
 	q := r.URL.Query()
 	currentSort := strings.TrimSpace(q.Get("sort"))
@@ -141,13 +141,13 @@ func peopleListSortURL(r *http.Request, column string) string {
 	if rid := strings.TrimSpace(q.Get("role")); rid != "" {
 		v.Set("role", rid)
 	}
-	return "/admin/people?" + v.Encode()
+	return "/admin/users?" + v.Encode()
 }
 
-// PeopleCreateForm shows the admin form to create a user (GET /admin/people/create).
+// PeopleCreateForm shows the admin form to create a user (GET /admin/users/create).
 func (c *Controller) PeopleCreateForm(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Redirect(w, r, "/admin/people/create", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users/create", http.StatusSeeOther)
 		return
 	}
 	ctx := r.Context()
@@ -175,10 +175,10 @@ func (c *Controller) withRequiredFields(r *http.Request, data map[string]any) ma
 	return data
 }
 
-// PeopleCreate handles POST /admin/people/create.
+// PeopleCreate handles POST /admin/users/create.
 func (c *Controller) PeopleCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Redirect(w, r, "/admin/people/create", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users/create", http.StatusSeeOther)
 		return
 	}
 	ctx := r.Context()
@@ -260,10 +260,10 @@ func (c *Controller) PeopleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if invite {
-		http.Redirect(w, r, "/admin/people?invited="+c.inviteOutcome(), http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?invited="+c.inviteOutcome(), http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, "/admin/people?created=1", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/users?created=1", http.StatusSeeOther)
 }
 
 // inviteOutcome - what the list says of an invitation just made or sent
@@ -302,13 +302,13 @@ func (c *Controller) invitedTarget(w http.ResponseWriter, r *http.Request) (curr
 		return nil, nil
 	}
 	if target.PasswordHash != entity.PasswordUnset {
-		http.Redirect(w, r, "/admin/people", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 		return nil, nil
 	}
 	return current, target
 }
 
-// PeopleInviteResend handles POST /admin/people/{id}/invite: the
+// PeopleInviteResend handles POST /admin/users/{id}/invite: the
 // invitation sent again with a new link (the earlier one stops working).
 func (c *Controller) PeopleInviteResend(w http.ResponseWriter, r *http.Request) {
 	current, target := c.invitedTarget(w, r)
@@ -317,13 +317,13 @@ func (c *Controller) PeopleInviteResend(w http.ResponseWriter, r *http.Request) 
 	}
 	if err := c.registration.SendInvite(r.Context(), target, interfaces.MailBaseURL(), current.Username); err != nil {
 		c.LogFailure(err, "sending an invitation again", "user_id", target.ID)
-		http.Redirect(w, r, "/admin/people?error=1", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?error=1", http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, "/admin/people?invited="+c.inviteOutcome(), http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/users?invited="+c.inviteOutcome(), http.StatusSeeOther)
 }
 
-// PeopleInviteCancel handles POST /admin/people/{id}/invite/cancel: an
+// PeopleInviteCancel handles POST /admin/users/{id}/invite/cancel: an
 // invitation not accepted withdrawn - its account, never used, deleted.
 func (c *Controller) PeopleInviteCancel(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -335,11 +335,11 @@ func (c *Controller) PeopleInviteCancel(w http.ResponseWriter, r *http.Request) 
 		var err error
 		if done, err = c.userDeletionService.DeleteWithContentStep(ctx, target.ID, 5*time.Second); err != nil {
 			c.LogFailure(err, "withdrawing an invitation", "user_id", target.ID)
-			http.Redirect(w, r, "/admin/people?error=1", http.StatusSeeOther)
+			http.Redirect(w, r, "/admin/users?error=1", http.StatusSeeOther)
 			return
 		}
 	}
-	http.Redirect(w, r, "/admin/people?invite_cancelled=1", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/users?invite_cancelled=1", http.StatusSeeOther)
 }
 
 // renderPeopleCreate renders the account form again: what the admin
@@ -361,16 +361,16 @@ func (c *Controller) renderPeopleCreate(w http.ResponseWriter, r *http.Request, 
 	c.RenderOrFail(w, r, "admin/people/create.html", c.withRequiredFields(r, data))
 }
 
-// PeopleApprove activates a pending user (POST /admin/people/{id}/approve).
+// PeopleApprove activates a pending user (POST /admin/users/{id}/approve).
 func (c *Controller) PeopleApprove(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Redirect(w, r, "/admin/people", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 		return
 	}
 	ctx := r.Context()
 	id, ok := c.PathID(r)
 	if !ok {
-		http.Redirect(w, r, "/admin/people?status=pending", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?status=pending", http.StatusSeeOther)
 		return
 	}
 	current, _ := c.GetCurrentUser(r)
@@ -381,12 +381,12 @@ func (c *Controller) PeopleApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	switch err := c.registration.Approve(ctx, id, interfaces.MailBaseURL()); {
 	case errors.Is(err, accounts.ErrNotPending) || errors.Is(err, entity.ErrEntityNotFound):
-		http.Redirect(w, r, "/admin/people?status=pending", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?status=pending", http.StatusSeeOther)
 	case err != nil:
 		c.LogFailure(err, "people approve update", "user_id", id)
-		http.Redirect(w, r, "/admin/people?status=pending&error=1", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?status=pending&error=1", http.StatusSeeOther)
 	default:
-		http.Redirect(w, r, "/admin/people?status=pending&approved=1", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/users?status=pending&approved=1", http.StatusSeeOther)
 	}
 }
 

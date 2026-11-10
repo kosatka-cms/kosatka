@@ -94,7 +94,7 @@ type Parts struct {
 	// only while it is enabled).
 	Requirements StatusCheck
 	// UserContent - the module's content of a user that "delete the
-	// account and all its content" (/admin/people) counts and deletes too.
+	// account and all its content" (/admin/users) counts and deletes too.
 	UserContent *UserContent
 }
 

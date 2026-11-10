@@ -593,7 +593,7 @@ is a line with its current value, opened by a click:
 Enabled modules can add their own sections.
 
 Who may create, edit and delete content of each type is set on the
-permissions page (`/admin/people/permissions`), in the type's own group:
+permissions page (`/admin/users/permissions`), in the type's own group:
 *Create*, *Edit own*, *Edit any*, *Delete any*; see
 [Users and permissions](./users-and-permissions.md#permissions).
 

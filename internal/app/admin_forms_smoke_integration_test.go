@@ -267,7 +267,7 @@ func TestAdminCreateEditDelete(t *testing.T) {
 
 		// A user: created by the administrator, edited, deleted (the
 		// people list's bulk action).
-		if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {"carol"}, "email": {"carol@example.com"},
+		if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"carol"}, "email": {"carol@example.com"},
 			"password": {"carol-password-1234"}, "password_confirm": {"carol-password-1234"}, "status": {"1"},
 			"role_id": {fmt.Sprint(id("SELECT id FROM roles WHERE name = ?", entity.RoleUser))}}); !ok {
 			t.Fatal("create user")
@@ -276,12 +276,12 @@ func TestAdminCreateEditDelete(t *testing.T) {
 		for round := 1; round <= 2; round++ {
 			s.resave(fmt.Sprintf("/user/%d/edit", carol), round)
 		}
-		req, err := http.NewRequest(http.MethodPost, s.base+"/api/admin/bulk/people", strings.NewReader(fmt.Sprintf(`{"action":"delete","ids":[%d]}`, carol)))
+		req, err := http.NewRequest(http.MethodPost, s.base+"/api/admin/bulk/users", strings.NewReader(fmt.Sprintf(`{"action":"delete","ids":[%d]}`, carol)))
 		if err != nil {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-CSRF-Token", s.csrf("/admin/people"))
+		req.Header.Set("X-CSRF-Token", s.csrf("/admin/users"))
 		if resp, err := s.client.Do(req); err != nil || resp.StatusCode >= 400 {
 			t.Errorf("delete user: %v %v", resp, err)
 		} else {
@@ -290,7 +290,7 @@ func TestAdminCreateEditDelete(t *testing.T) {
 		gone("user", "users", carol)
 
 		// A role and a redirect: their forms are on their lists.
-		const roles = "/admin/people/roles"
+		const roles = "/admin/users/roles"
 		if _, ok := s.submit(roles, roles, url.Values{"name": {"editor_test"}, "label": {"Editor test"}}); !ok {
 			t.Fatal("create role")
 		}

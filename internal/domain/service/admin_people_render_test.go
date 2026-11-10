@@ -34,7 +34,7 @@ func TestAdminPeopleRolesRender(t *testing.T) {
 	roles := &entity.Roles{editors, {ID: 3, Name: "reviewer"}}
 
 	out := render("admin/people/index.html", map[string]any{
-		"roles": roles, "filterRoleID": 2, "pagination": pagination.New(1, 1, 50, "/admin/people", nil),
+		"roles": roles, "filterRoleID": 2, "pagination": pagination.New(1, 1, 50, "/admin/users", nil),
 		"users": []entity.User{{ID: 7, Username: "ann", Slug: "users/ann", Status: entity.UserStatusActive, Role: &editors}},
 	})
 	for _, want := range []string{`<option value="2" selected>Editors</option>`, `<option value="3" >reviewer</option>`, `<td>Editors</td>`} {

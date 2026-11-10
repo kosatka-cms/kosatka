@@ -18,7 +18,7 @@ import (
 const userDeletionNodeBatch = 20
 
 // UserDeletionService - "delete the account and all its content"
-// (/admin/people): every node the user created (through the regular
+// (/admin/users): every node the user created (through the regular
 // per-type node delete, with all its cascades), the modules' content of
 // theirs (AddModuleContent), uploaded files (DB rows and disk), avatar and personal
 // upload folder, then the account itself (comments, auth tokens, OAuth

@@ -35,7 +35,7 @@ func TestAdminPermissions(t *testing.T) {
 		}
 		clerks := id(`SELECT id FROM roles WHERE name = 'clerks'`)
 		admins := id(`SELECT id FROM roles WHERE name = ?`, entity.RoleAdmin)
-		if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {"clerk"}, "email": {"clerk@example.com"},
+		if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"clerk"}, "email": {"clerk@example.com"},
 			"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {fmt.Sprint(clerks)}}); !ok {
 			t.Fatal("create the clerk")
 		}
@@ -45,9 +45,9 @@ func TestAdminPermissions(t *testing.T) {
 		clerk := s.visitor()
 		clerk.signInAs("clerk", memberPassword)
 		for path, want := range map[string]int{
-			"/admin/people":             http.StatusOK,
-			"/admin/people/permissions": http.StatusForbidden,
-			"/admin/people/roles":       http.StatusForbidden,
+			"/admin/users":             http.StatusOK,
+			"/admin/users/permissions": http.StatusForbidden,
+			"/admin/users/roles":       http.StatusForbidden,
 		} {
 			if code, _ := clerk.get(path); code != want {
 				t.Errorf("the clerk on %s: %d, want %d", path, code, want)
@@ -65,7 +65,7 @@ func TestAdminPermissions(t *testing.T) {
 			t.Errorf("the clerk's role after the save: %d, want %d", got, clerks)
 		}
 		// Creating an account: only the registered users' role.
-		if _, page := clerk.get("/admin/people/create"); strings.Contains(page, fmt.Sprintf(`<option value="%d"`, admins)) {
+		if _, page := clerk.get("/admin/users/create"); strings.Contains(page, fmt.Sprintf(`<option value="%d"`, admins)) {
 			t.Error("the clerk may create an administrator")
 		}
 
@@ -76,9 +76,9 @@ func TestAdminPermissions(t *testing.T) {
 		if code, _ := clerk.get("/user/999999/edit"); code != http.StatusNotFound {
 			t.Errorf("the clerk on a profile form of no user: %d, want 404", code)
 		}
-		req, _ := http.NewRequest(http.MethodPost, clerk.base+"/api/admin/bulk/people", strings.NewReader(fmt.Sprintf(`{"action":"block","ids":[%d,%d]}`, adminID, clerkID)))
+		req, _ := http.NewRequest(http.MethodPost, clerk.base+"/api/admin/bulk/users", strings.NewReader(fmt.Sprintf(`{"action":"block","ids":[%d,%d]}`, adminID, clerkID)))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-CSRF-Token", clerk.csrf("/admin/people"))
+		req.Header.Set("X-CSRF-Token", clerk.csrf("/admin/users"))
 		resp, err := clerk.client.Do(req)
 		if err != nil {
 			t.Fatal(err)
@@ -89,7 +89,7 @@ func TestAdminPermissions(t *testing.T) {
 		}
 		// Last: on a site without the check the save would take the
 		// clerk's own permissions away.
-		if resp := clerk.post("/admin/people/permissions", url.Values{"csrf_token": {clerk.csrf("/admin/people")}, "grant": {fmt.Sprintf("%d|full_access", clerks)}}); resp.StatusCode != http.StatusForbidden {
+		if resp := clerk.post("/admin/users/permissions", url.Values{"csrf_token": {clerk.csrf("/admin/users")}, "grant": {fmt.Sprintf("%d|full_access", clerks)}}); resp.StatusCode != http.StatusForbidden {
 			t.Errorf("the clerk saving the permissions: %d, want 403", resp.StatusCode)
 		}
 		s.checkLog()

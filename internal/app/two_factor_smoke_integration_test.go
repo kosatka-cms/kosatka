@@ -115,7 +115,7 @@ func TestTwoFactor(t *testing.T) {
 		if err := db.DB.QueryRow(`SELECT id FROM users WHERE username = 'admin'`).Scan(&adminID); err != nil {
 			t.Fatal(err)
 		}
-		if c, where, _ := s.postRead(fmt.Sprintf("/admin/people/%d/two-factor/reset", adminID), url.Values{"csrf_token": {s.csrf("/admin/people")}}); c != http.StatusSeeOther || !strings.Contains(where, "two_factor_reset=1") {
+		if c, where, _ := s.postRead(fmt.Sprintf("/admin/users/%d/two-factor/reset", adminID), url.Values{"csrf_token": {s.csrf("/admin/users")}}); c != http.StatusSeeOther || !strings.Contains(where, "two_factor_reset=1") {
 			t.Fatalf("the reset: %d → %q", c, where)
 		}
 		var left int
