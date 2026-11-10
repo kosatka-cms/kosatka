@@ -11,6 +11,8 @@ region: your own text, a menu, a View, or a system block such as the
 search form or the logo. Which blocks go where is the block layout, set
 in the admin under **Structure → Blocks** (`/admin/config/blocks`).
 
+![The Blocks page: the active theme's tab, the form to add a block, its system, View and menu blocks, and the Header region with the main navigation](../assets/screens/blocks.webp)
+
 ## Regions
 
 The theme declares its regions; the admin can't add or remove them. The

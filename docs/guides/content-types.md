@@ -181,6 +181,8 @@ The *Fields* tab (`/admin/config/content-types/{id}/fields`) lists the
 type's fields in form order. Every type has a title; everything else is a
 field.
 
+![The Fields tab of the Article type: the form to add a field, and the type's fields - Section, Tags, Image - with their types, widgets and form groups](../assets/screens/content-type-fields.webp)
+
 A field is shared: it has a machine name unique across the whole site,
 and once created it can be attached to other types too ("Add existing
 field"). Its type, machine name, number of values and shared settings
@@ -564,6 +566,8 @@ A theme can replace the page layout of a type with its own template; see
 Editors create content from the *Create content* menu (`/create`), which
 lists the enabled types they have the *Create* permission for, or at
 `/create/<machine_name>`. A content item is edited at `/node/{id}/edit`.
+
+![The form of an article: its title, section, tags, image and body on the left; its state, Save, Cancel and Preview, and a link for viewing on the right](../assets/screens/content-edit.webp)
 
 The form has two columns. The main one has the title and the type's
 fields in the type's form order, on a card; a form group is a card of

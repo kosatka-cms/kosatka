@@ -84,7 +84,10 @@ their screenshots.
 The admin's **Appearance** page (`/admin/config/appearance`)
 lists the engine's templates and every directory under `themes/` with a
 valid `theme.yaml`, each with its screenshot, version, description,
-author and tags. The active theme comes first. A directory whose
+author and tags. The active theme comes first.
+
+![The Appearance page: the Kosatka theme, active, and the engine's own templates, each with its screenshot and description, and the links to the themes catalog and the style guide](../assets/screens/appearance.webp)
+ A directory whose
 `theme.yaml` is missing or fails a [check](./manifest.md#checks) is
 named above the list, with the error.
 

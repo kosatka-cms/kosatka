@@ -16,6 +16,8 @@ Views are managed in the admin under **Structure → Views (lists)**
 
 ## Create a View
 
+![The page of a View, the front page feed: its settings (a block, a list, pagination, ten items a page), its unpublished changes, and its filters](../assets/screens/views-edit.webp)
+
 1. Open `/admin/config/views`.
 2. Under *Add view* enter a *Name*, choose the *Type* of the display
    (*Page*, *Block*, *Attachment to content* or *Term page*) and the
