@@ -24,7 +24,7 @@
 
 <section class="admin-settings-card admin-add-card" aria-labelledby="user-field-add">
     <h2 class="admin-add-title" id="user-field-add">{{t "Add field"}}</h2>
-    <form method="post" action="/admin/people/fields" class="admin-add-form">
+    <form method="post" action="/admin/users/fields" class="admin-add-form">
         <label class="admin-filter">
             <span class="admin-filter-label">{{t "Name"}}</span>
             <input type="text" name="label" class="form-control" placeholder="{{t "Favorite book"}}" required>
@@ -61,7 +61,7 @@
                 {{range .fields}}
                 <tr>
                     <td>
-                        <form method="post" action="/admin/people/fields/{{.ID}}/edit" id="user-field-{{.ID}}"></form>
+                        <form method="post" action="/admin/users/fields/{{.ID}}/edit" id="user-field-{{.ID}}"></form>
                         <input type="text" name="label" value="{{.Label}}" form="user-field-{{.ID}}" class="form-control form-control-sm" aria-label="{{t "Name"}}" required>
                         <span class="admin-table-sub"><code>{{.MachineName}}</code></span>
                     </td>
@@ -70,7 +70,7 @@
                     <td><input type="checkbox" name="required" value="1" form="user-field-{{.ID}}" class="form-check-input"{{if .Required}} checked{{end}} title="{{t "Asked at sign-up, can't be left empty"}}" aria-label="{{t "Required"}}"></td>
                     <td class="text-nowrap text-end">
                         <button type="submit" form="user-field-{{.ID}}" class="btn btn-sm btn-outline-primary">{{t "Save"}}</button>
-                        <form method="post" action="/admin/people/fields/{{.ID}}/delete" class="d-inline" data-confirm="{{t "Delete field \"@label\" along with its values for all users?" "@label" .Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>
+                        <form method="post" action="/admin/users/fields/{{.ID}}/delete" class="d-inline" data-confirm="{{t "Delete field \"@label\" along with its values for all users?" "@label" .Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>
                     </td>
                 </tr>
                 {{else}}

@@ -140,11 +140,11 @@ var adminMenu = []AdminMenuSection{
 		{Label: i18n.N("Access blocking"), Path: "/admin/config/robots", Group: adminGroupSecurity},
 		{Label: i18n.N("Spam protection (reCAPTCHA)"), Path: "/admin/config/captcha", Group: adminGroupSecurity, Permission: "full_access"},
 	}},
-	{Label: i18n.N("People"), Items: []AdminMenuItem{
-		{Label: i18n.N("User list"), Path: "/admin/people", Permission: "administer users"},
-		{Label: i18n.N("Roles"), Path: "/admin/people/roles", Permission: "administer permissions"},
-		{Label: i18n.N("Permissions"), Path: "/admin/people/permissions", Permission: "administer permissions"},
-		{Label: i18n.N("User fields"), Path: "/admin/people/fields", Permission: "administer users"},
+	{Label: i18n.N("Users"), Items: []AdminMenuItem{
+		{Label: i18n.N("User list"), Path: "/admin/users", Permission: "administer users"},
+		{Label: i18n.N("Roles"), Path: "/admin/users/roles", Permission: "administer permissions"},
+		{Label: i18n.N("Permissions"), Path: "/admin/users/permissions", Permission: "administer permissions"},
+		{Label: i18n.N("User fields"), Path: "/admin/users/fields", Permission: "administer users"},
 		{Label: i18n.N("Account settings"), Path: "/admin/config/account", Permission: "administer users"},
 		{Label: i18n.N("Social login"), Path: "/admin/config/oauth", Permission: "full_access"},
 	}},

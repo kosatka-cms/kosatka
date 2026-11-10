@@ -26,7 +26,7 @@ func TestVisibleAdminMenu(t *testing.T) {
 	all := func(string) bool { return true }
 
 	sections, items := menuLabels(VisibleAdminMenu(all))
-	if strings.Join(sections, ",") != "Overview,Content,Structure,Appearance,Modules,Configuration,People,Reports" {
+	if strings.Join(sections, ",") != "Overview,Content,Structure,Appearance,Modules,Configuration,Users,Reports" {
 		t.Fatalf("sections: %v", sections)
 	}
 	if !strings.Contains(strings.Join(items["Content"], ","), "Error reports") || !strings.Contains(strings.Join(items["Configuration"], ","), "Feeds") {

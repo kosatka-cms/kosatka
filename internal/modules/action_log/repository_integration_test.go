@@ -30,7 +30,7 @@ func TestRecorder(t *testing.T) {
 		rec.Record(ctx, modulekit.ActionEvent{At: now, Actor: actor, Action: modulekit.Action{Type: "node.delete",
 			Object: modulekit.ActionObject{Kind: "node", ID: "12", Label: "Old post", Subtype: "article"}}})
 		rec.Record(ctx, modulekit.ActionEvent{At: now.Add(-48 * time.Hour), Actor: actor, Action: modulekit.Action{Type: "role.permissions",
-			Object:  modulekit.ActionObject{Kind: "role", ID: "editor", Label: "Editor", URL: "/admin/people/permissions"},
+			Object:  modulekit.ActionObject{Kind: "role", ID: "editor", Label: "Editor", URL: "/admin/users/permissions"},
 			Changes: []modulekit.ActionChange{{Field: "Delete any content", From: "no", To: "yes"}}}})
 
 		all, total, err := repo.List(ctx, Filter{}, 50, 0)
@@ -40,7 +40,7 @@ func TestRecorder(t *testing.T) {
 		if e := all[0]; e.Type != "node.delete" || e.Group != "content" || e.ActorID != 1 || e.ActorName != "ann" || e.IP != "203.0.113.5" || e.Object.Subtype != "article" || !e.At.Equal(now) {
 			t.Errorf("newest: %+v", e)
 		}
-		if e := all[1]; len(e.Changes) != 1 || e.Changes[0].To != "yes" || e.Object.URL != "/admin/people/permissions" {
+		if e := all[1]; len(e.Changes) != 1 || e.Changes[0].To != "yes" || e.Object.URL != "/admin/users/permissions" {
 			t.Errorf("older: %+v", e)
 		}
 		for name, f := range map[string]Filter{

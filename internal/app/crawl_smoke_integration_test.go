@@ -97,13 +97,13 @@ func seedSite(t *testing.T, s *site, db testdb.DB) {
 
 	// A required profile field: the administrator's "add user" and the
 	// sign-up ask it.
-	if _, ok := s.submit("/admin/people/fields", "/admin/people/fields",
+	if _, ok := s.submit("/admin/users/fields", "/admin/users/fields",
 		url.Values{"label": {"City"}, "machine_name": {"city"}, "required": {"1"}}); !ok {
 		t.Fatal("create profile field")
 	}
 	city := id("SELECT id FROM user_fields WHERE machine_name = 'city'")
 	cityInput := fmt.Sprintf("user_field_%d", city)
-	if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {"member"}, "email": {"member@example.com"},
+	if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"member"}, "email": {"member@example.com"},
 		"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, cityInput: {"Paris"},
 		"role_id": {fmt.Sprint(id("SELECT id FROM roles WHERE name = '" + entity.RoleUser + "'"))}}); !ok {
 		t.Fatal("create member")

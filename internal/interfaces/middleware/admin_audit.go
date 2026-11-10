@@ -14,7 +14,7 @@ import (
 // the users' fields, the performance page's actions. Pages with actions
 // of their own in the log (the Modules page, the roles and permissions,
 // content, users) aren't here.
-var adminSaveAuditPaths = []string{"/admin/config/", "/admin/people/fields", "/admin/performance/"}
+var adminSaveAuditPaths = []string{"/admin/config/", "/admin/users/fields", "/admin/performance/"}
 
 // adminSaveAuditSkip - under adminSaveAuditPaths, but recorded otherwise.
 var adminSaveAuditSkip = []string{"/admin/config/modules"}

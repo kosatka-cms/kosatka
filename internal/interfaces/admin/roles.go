@@ -10,10 +10,10 @@ import (
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
 )
 
-// Roles - create, rename and delete roles (/admin/people/roles); their
-// permissions are edited on /admin/people/permissions.
+// Roles - create, rename and delete roles (/admin/users/roles); their
+// permissions are edited on /admin/users/permissions.
 
-const rolesAdminURL = "/admin/people/roles"
+const rolesAdminURL = "/admin/users/roles"
 
 // roleRow - a role as the list shows it.
 type roleRow struct {
@@ -41,7 +41,7 @@ func rolesErrorCode(err error) string {
 	return "save"
 }
 
-// RolesPage renders GET /admin/people/roles.
+// RolesPage renders GET /admin/users/roles.
 func (c *Controller) RolesPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	roles, err := c.permissions.Roles(ctx)
@@ -71,7 +71,7 @@ func (c *Controller) RolesPage(w http.ResponseWriter, r *http.Request) {
 	c.RenderOrFail(w, r, "admin/people/roles.html", data)
 }
 
-// RoleCreate handles POST /admin/people/roles.
+// RoleCreate handles POST /admin/users/roles.
 func (c *Controller) RoleCreate(w http.ResponseWriter, r *http.Request) {
 	if _, err := c.permissions.CreateRole(r.Context(), r.FormValue("name"), r.FormValue("label")); err != nil {
 		c.logger.Warn("error creating role", "error", err)
@@ -81,7 +81,7 @@ func (c *Controller) RoleCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, rolesAdminURL+"?success=created", http.StatusSeeOther)
 }
 
-// RoleRename handles POST /admin/people/roles/{id}/rename.
+// RoleRename handles POST /admin/users/roles/{id}/rename.
 func (c *Controller) RoleRename(w http.ResponseWriter, r *http.Request) {
 	id, ok := c.PathID(r)
 	if !ok {
@@ -96,7 +96,7 @@ func (c *Controller) RoleRename(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, rolesAdminURL+"?success=saved", http.StatusSeeOther)
 }
 
-// RoleDelete handles POST /admin/people/roles/{id}/delete.
+// RoleDelete handles POST /admin/users/roles/{id}/delete.
 func (c *Controller) RoleDelete(w http.ResponseWriter, r *http.Request) {
 	id, ok := c.PathID(r)
 	if !ok {

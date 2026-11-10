@@ -417,7 +417,7 @@ func TestInstallAndServe(t *testing.T) {
 		if code, _ := s.get(entity.AvatarPlaceholderURL); code != 200 {
 			t.Errorf("GET %s: %d", entity.AvatarPlaceholderURL, code)
 		}
-		for _, path := range []string{"/me", "/admin/content", "/admin/people", "/admin/config/modules",
+		for _, path := range []string{"/me", "/admin/content", "/admin/users", "/admin/config/modules",
 			"/admin/config/system/site-information", "/admin/config/date-formats", "/admin/config/text-formats",
 			"/create/article", "/create/page"} {
 			if code, _ := s.get(path); code != 200 {
@@ -870,12 +870,12 @@ func TestServeModulesNeverInstalled(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		req, err := http.NewRequest(http.MethodPost, s.base+"/api/admin/bulk/people", strings.NewReader(`{"action":"delete_with_content","ids":[50]}`))
+		req, err := http.NewRequest(http.MethodPost, s.base+"/api/admin/bulk/users", strings.NewReader(`{"action":"delete_with_content","ids":[50]}`))
 		if err != nil {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-CSRF-Token", s.csrf("/admin/people"))
+		req.Header.Set("X-CSRF-Token", s.csrf("/admin/users"))
 		resp, err := s.client.Do(req)
 		if err != nil {
 			t.Fatal(err)

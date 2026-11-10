@@ -84,7 +84,7 @@ func newPermissionsTestController(roles *fakeAdminPermRoles) *Controller {
 
 func postPermissions(c *Controller, grants ...string) *httptest.ResponseRecorder {
 	form := url.Values{"grant": grants}
-	req := httptest.NewRequest(http.MethodPost, "/admin/people/permissions", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/admin/users/permissions", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	c.PermissionsSave(rec, req)
@@ -109,7 +109,7 @@ func TestPermissionsSave(t *testing.T) {
 		"3|moderate content", // full-access role - ignored
 		"2|not a permission", // outside the catalog - ignored
 	)
-	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/people/permissions?success=1" {
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/users/permissions?success=1" {
 		t.Fatalf("response %d %q", rec.Code, rec.Header().Get("Location"))
 	}
 	user, mod, admin := roles.roles[1], roles.roles[2], roles.roles[3]
@@ -134,7 +134,7 @@ func TestPermissionsSave(t *testing.T) {
 func TestPermissionsSaveRolesError(t *testing.T) {
 	roles := &fakeAdminPermRoles{roles: map[int]*entity.Role{}, listErr: errors.New("db down")}
 	rec := postPermissions(newPermissionsTestController(roles), "1|publish content")
-	if rec.Header().Get("Location") != "/admin/people/permissions?error=save" {
+	if rec.Header().Get("Location") != "/admin/users/permissions?error=save" {
 		t.Fatalf("Location = %q", rec.Header().Get("Location"))
 	}
 }
@@ -172,8 +172,8 @@ func TestRolesHandlers(t *testing.T) {
 		{"delete base", c.RoleDelete, "1", nil, "?error=protected"},
 		{"delete in use", c.RoleDelete, "2", nil, "?error=in-use"},
 	} {
-		if got := postRoles(c, "/admin/people/roles", tc.handler, tc.id, tc.form); got != "/admin/people/roles"+tc.want {
-			t.Errorf("%s: Location %q, want %q", tc.name, got, "/admin/people/roles"+tc.want)
+		if got := postRoles(c, "/admin/users/roles", tc.handler, tc.id, tc.form); got != "/admin/users/roles"+tc.want {
+			t.Errorf("%s: Location %q, want %q", tc.name, got, "/admin/users/roles"+tc.want)
 		}
 	}
 	if roles.roles[2].Description != "Moderators" {
@@ -188,7 +188,7 @@ func TestRolesHandlers(t *testing.T) {
 	if created == 0 {
 		t.Fatal("role not created")
 	}
-	if got := postRoles(c, "/admin/people/roles", c.RoleDelete, strconv.Itoa(created), nil); got != "/admin/people/roles?success=deleted" {
+	if got := postRoles(c, "/admin/users/roles", c.RoleDelete, strconv.Itoa(created), nil); got != "/admin/users/roles?success=deleted" {
 		t.Fatalf("delete: %q", got)
 	}
 }

@@ -22,7 +22,7 @@ modules you want) to `app install`. See [Using modules](../using-modules.md).
 | A poll's page | its own address, `/poll/<question>` by default |
 | The vote log of a poll | `/node/<id>/poll/votes`, the *Votes* link on the poll's page |
 | The *Poll* block | **Structure → Blocks**, *Add system block* |
-| The *View poll votes* permission | **People → Permissions**, the general group |
+| The *View poll votes* permission | **Users → Permissions**, the general group |
 
 The module has no settings page and no admin pages of its own. Polls are
 listed with the rest of the content at `/admin/content` (filter by type

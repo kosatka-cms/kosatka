@@ -104,11 +104,11 @@ func (c *Controller) BulkConfirmComment(w http.ResponseWriter, r *http.Request) 
 
 // BulkConfirmPeople shows confirmation page for bulk people actions
 func (c *Controller) BulkConfirmPeople(w http.ResponseWriter, r *http.Request) {
-	action, ok := bulkAction(w, r, "/admin/people")
+	action, ok := bulkAction(w, r, "/admin/users")
 	if !ok {
 		return
 	}
-	page := bulkConfirmPage{Action: action, API: "/api/admin/bulk/people", Redirect: "/admin/people", Title: bulkPeopleTitle}
+	page := bulkConfirmPage{Action: action, API: "/api/admin/bulk/users", Redirect: "/admin/users", Title: bulkPeopleTitle}
 	if action == peopleActionDeleteWithContent {
 		page.Notice = i18n.T(r.Context(), "The accounts and everything these users created will be permanently deleted: content of all types (with its comments and everything attached to it), their comments, private messages, uploaded files and avatars. Site settings (content types, Views, vocabularies) are not affected.")
 		page.Danger = true
@@ -194,7 +194,7 @@ func bulkOtherTitle(ctx context.Context, action string, n int) string {
 	return i18n.T(ctx, "Confirm @action of @count items", "@action", action, "@count", n)
 }
 
-// peopleActionDeleteWithContent - the /admin/people bulk action that
+// peopleActionDeleteWithContent - the /admin/users bulk action that
 // deletes the account and all its content (plain "delete" keeps the
 // user's nodes, made authorless via nodes.created_by ON DELETE SET NULL).
 const peopleActionDeleteWithContent = "delete_with_content"
@@ -441,7 +441,7 @@ func (c *Controller) BulkExecuteComments(w http.ResponseWriter, r *http.Request)
 	_ = json.NewEncoder(w).Encode(bulkAPIResponse{Processed: processed, Total: len(req.IDs), Errors: errs})
 }
 
-// BulkExecutePeople handles POST /api/admin/bulk/people
+// BulkExecutePeople handles POST /api/admin/bulk/users
 func (c *Controller) BulkExecutePeople(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		httputil.JSONError(w, i18n.T(r.Context(), "The request could not be read."), http.StatusBadRequest)

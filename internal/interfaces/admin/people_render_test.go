@@ -35,22 +35,22 @@ func TestPeopleInvitesRender(t *testing.T) {
 		{ID: 10, Username: "cat", Slug: "users/cat", Status: entity.UserStatusActive, PasswordHash: entity.PasswordUnset},
 	}
 	out := renderPeople(t, "admin/people/index.html", map[string]any{
-		"users": users, "pagination": pagination.New(1, 3, 50, "/admin/people", nil), "invited": "off",
+		"users": users, "pagination": pagination.New(1, 3, 50, "/admin/users", nil), "invited": "off",
 		"invites": map[int]*peopleInvite{7: {Until: until}, 8: {Until: until.AddDate(0, 0, -14), Expired: true}, 10: {NotSent: true}},
 	})
 	for _, want := range []string{
 		`Email is off: the account is created, the invitation wasn't sent.`,
 		`<span class="admin-pill admin-pill--scheduled">Invited</span><span class="admin-table-sub">link until`,
 		`<span class="admin-pill admin-pill--warn">Invitation expired</span>`,
-		`<span class="admin-pill admin-pill--warn">Invitation not sent</span>`, `formaction="/admin/people/10/invite"`,
-		`formaction="/admin/people/7/invite" data-bulk-skip class="btn btn-sm btn-outline-primary">Send again</button>`,
-		`formaction="/admin/people/8/invite/cancel" data-bulk-skip data-confirm="Withdraw the invitation?`,
+		`<span class="admin-pill admin-pill--warn">Invitation not sent</span>`, `formaction="/admin/users/10/invite"`,
+		`formaction="/admin/users/7/invite" data-bulk-skip class="btn btn-sm btn-outline-primary">Send again</button>`,
+		`formaction="/admin/users/8/invite/cancel" data-bulk-skip data-confirm="Withdraw the invitation?`,
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("no %s in %s", want, out)
 		}
 	}
-	if strings.Contains(out, "/admin/people/9/invite") || strings.Count(out, `admin-pill--ok">Active`) != 1 {
+	if strings.Contains(out, "/admin/users/9/invite") || strings.Count(out, `admin-pill--ok">Active`) != 1 {
 		t.Errorf("a user with a password shown as invited: %s", out)
 	}
 }

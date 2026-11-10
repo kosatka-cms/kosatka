@@ -376,12 +376,12 @@ func TestRolesPageRenders(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{`action="/admin/people/roles/4/delete"`, "has users", "cannot be deleted", "The role has users", `value="Forum moderator"`} {
+	for _, want := range []string{`action="/admin/users/roles/4/delete"`, "has users", "cannot be deleted", "The role has users", `value="Forum moderator"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q", want)
 		}
 	}
-	if strings.Contains(out, `action="/admin/people/roles/2/delete"`) || strings.Contains(out, `action="/admin/people/roles/1/delete"`) {
+	if strings.Contains(out, `action="/admin/users/roles/2/delete"`) || strings.Contains(out, `action="/admin/users/roles/1/delete"`) {
 		t.Error("a delete button for a role that can't be deleted")
 	}
 }

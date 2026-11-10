@@ -11,10 +11,10 @@ import (
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
 )
 
-// Permissions - the role × permission matrix (/admin/people/permissions),
+// Permissions - the role × permission matrix (/admin/users/permissions),
 // backed by service.PermissionService.
 
-const permissionsAdminURL = "/admin/people/permissions"
+const permissionsAdminURL = "/admin/users/permissions"
 
 // permissionRoleColumn - a role as a matrix column.
 type permissionRoleColumn struct {
@@ -24,7 +24,7 @@ type permissionRoleColumn struct {
 	Base bool
 }
 
-// PermissionsPage renders GET /admin/people/permissions.
+// PermissionsPage renders GET /admin/users/permissions.
 func (c *Controller) PermissionsPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	catalog, err := c.permissions.Catalog(ctx)
@@ -59,7 +59,7 @@ func (c *Controller) PermissionsPage(w http.ResponseWriter, r *http.Request) {
 	c.RenderOrFail(w, r, "admin/people/permissions.html", data)
 }
 
-// PermissionsSave handles POST /admin/people/permissions: each checked
+// PermissionsSave handles POST /admin/users/permissions: each checked
 // box is a "grant" value "<role id>|<permission>".
 func (c *Controller) PermissionsSave(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

@@ -14,7 +14,7 @@
 {{end}}
 
 {{define "page_actions"}}
-<a href="/admin/people/create" class="btn btn-primary">+ {{t "Add user"}}</a>
+<a href="/admin/users/create" class="btn btn-primary">+ {{t "Add user"}}</a>
 {{end}}
 
 {{define "breadcrumb"}}{{end}}
@@ -29,7 +29,7 @@
 {{if .inviteCancelled}}<div class="alert alert-success" role="status">{{t "The invitation was withdrawn."}}</div>{{end}}
 {{if eq .approved "1"}}<div class="alert alert-success" role="status">{{t "User approved."}}</div>{{end}}
 
-<form method="get" action="/admin/people" class="admin-filters" data-autosubmit>
+<form method="get" action="/admin/users" class="admin-filters" data-autosubmit>
     <input type="hidden" name="sort" value="{{.sort}}">
     <input type="hidden" name="order" value="{{.order}}">
     <div class="admin-filter">
@@ -51,10 +51,10 @@
         </select>
     </div>
     <noscript><button type="submit" class="btn btn-primary">{{tc "verb" "Filter"}}</button></noscript>
-    {{if or .filterStatus .filterRoleID}}<a href="/admin/people" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+    {{if or .filterStatus .filterRoleID}}<a href="/admin/users" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
 </form>
 
-<form method="post" action="/admin/people/bulk-confirm" id="bulkForm" class="admin-table-card">
+<form method="post" action="/admin/users/bulk-confirm" id="bulkForm" class="admin-table-card">
     <div class="admin-bulk-bar" data-bulk-bar hidden>
         <span class="admin-bulk-count">{{t "Selected:"}} <span data-bulk-count>0</span></span>
         <button type="submit" name="action" value="block" class="btn btn-sm btn-outline-primary">{{tc "verb" "Block"}}</button>
@@ -90,9 +90,9 @@
                     <td class="text-nowrap admin-table-muted">{{formatDate .CreatedAt}}</td>
                     <td class="text-nowrap admin-table-muted">{{if not .LastActivity.IsZero}}{{formatDate .LastActivity}}{{else}}-{{end}}</td>
                     <td class="text-end text-nowrap">
-                        {{if eq .Status 2}}<button type="submit" formaction="/admin/people/{{.ID}}/approve" data-bulk-skip class="btn btn-sm btn-success">{{t "Approve"}}</button>{{end}}
-                        {{if and $.invites (index $.invites .ID)}}<button type="submit" formaction="/admin/people/{{.ID}}/invite" data-bulk-skip class="btn btn-sm btn-outline-primary">{{t "Send again"}}</button>
-                        <button type="submit" formaction="/admin/people/{{.ID}}/invite/cancel" data-bulk-skip data-confirm="{{t "Withdraw the invitation? The account, never used, is deleted."}}" class="btn btn-sm btn-outline-secondary">{{t "Withdraw"}}</button>{{end}}
+                        {{if eq .Status 2}}<button type="submit" formaction="/admin/users/{{.ID}}/approve" data-bulk-skip class="btn btn-sm btn-success">{{t "Approve"}}</button>{{end}}
+                        {{if and $.invites (index $.invites .ID)}}<button type="submit" formaction="/admin/users/{{.ID}}/invite" data-bulk-skip class="btn btn-sm btn-outline-primary">{{t "Send again"}}</button>
+                        <button type="submit" formaction="/admin/users/{{.ID}}/invite/cancel" data-bulk-skip data-confirm="{{t "Withdraw the invitation? The account, never used, is deleted."}}" class="btn btn-sm btn-outline-secondary">{{t "Withdraw"}}</button>{{end}}
                         {{/* The modules' buttons for the user (moduleHook
                              "admin_people_actions": dict "User", "Ctx" - the page's data). */}}
                         {{moduleHook "admin_people_actions" (dict "User" . "Ctx" $)}}

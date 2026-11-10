@@ -10,7 +10,7 @@ import (
 
 // EnsureUserRole returns the built-in role of registered users
 // (entity.RoleUser), creating it on first use with no permissions
-// (granted on /admin/people/permissions). Registration and social login
+// (granted on /admin/users/permissions). Registration and social login
 // share it.
 func EnsureUserRole(ctx context.Context, repo entity.RoleRepository) (*entity.Role, error) {
 	role, err := repo.ByName(ctx, entity.RoleUser)

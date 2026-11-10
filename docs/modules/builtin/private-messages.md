@@ -175,7 +175,7 @@ off.
 
 ## Deleting a user
 
-In the user list (**People**), *Delete the account and all its content*
+In the user list (**Users**), *Delete the account and all its content*
 also deletes the user's private messages: the confirmation counts them
 (*private messages: N*). Their messages and their place in each
 conversation go; a conversation left with no messages is deleted, and

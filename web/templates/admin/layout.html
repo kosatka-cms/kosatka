@@ -12,7 +12,7 @@
     {{if and .isAdmin (gt .pendingPeopleCount 0)}}
     <div class="alert alert-info py-2" role="status">
         {{t "There are accounts awaiting approval (@count)." "@count" .pendingPeopleCount}}
-        <a href="/admin/people?status=pending" class="alert-link">{{t "Go to the list"}}</a>
+        <a href="/admin/users?status=pending" class="alert-link">{{t "Go to the list"}}</a>
     </div>
     {{end}}
     {{/* A page defines "breadcrumb" (a link back, above the title),

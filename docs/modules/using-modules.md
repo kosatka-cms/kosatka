@@ -36,7 +36,7 @@ rows its data tables have, and its CSS and JavaScript files.
    styles of *Galleries*), and its blocks that name a region are placed
    in the site's theme. Labels it writes are put in the site's language.
    If the install fails, nothing is saved.
-3. Give roles the module's permissions, if it has any (**People →
+3. Give roles the module's permissions, if it has any (**Users →
    Permissions**), and place its blocks (**Structure → Blocks**, see
    [Blocks](../guides/blocks.md)).
 

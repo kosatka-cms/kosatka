@@ -31,7 +31,7 @@ had it, it starts disabled: enable it on the **Modules** page (see
   to the list. A *Create form* button is shown to those who may create
   forms.
 - **The *Form* block**, which shows a chosen form anywhere on the site.
-- **Permissions** (**People → Permissions**, see
+- **Permissions** (**Users → Permissions**, see
   [Users and permissions](../../guides/users-and-permissions.md#permissions)):
 
 | Permission | What it allows |

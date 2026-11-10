@@ -13,7 +13,7 @@ import (
 
 // User fields - profile fields shown on the profile and edited in the profile form.
 
-const userFieldsAdminURL = "/admin/people/fields"
+const userFieldsAdminURL = "/admin/users/fields"
 
 // userFieldsErrorCodes - the ?error= code per service error.
 var userFieldsErrorCodes = map[error]string{
@@ -32,7 +32,7 @@ func userFieldsErrorCode(err error) string {
 	return "save"
 }
 
-// UserFieldsPage renders GET /admin/people/fields.
+// UserFieldsPage renders GET /admin/users/fields.
 func (c *Controller) UserFieldsPage(w http.ResponseWriter, r *http.Request) {
 	fields, err := c.userFields.Fields(r.Context())
 	if err != nil {
@@ -49,7 +49,7 @@ func (c *Controller) UserFieldsPage(w http.ResponseWriter, r *http.Request) {
 	c.RenderOrFail(w, r, "admin/people/user_fields.html", data)
 }
 
-// UserFieldCreate handles POST /admin/people/fields.
+// UserFieldCreate handles POST /admin/users/fields.
 func (c *Controller) UserFieldCreate(w http.ResponseWriter, r *http.Request) {
 	maxLen, _ := strconv.Atoi(r.FormValue("max_len"))
 	if err := c.userFields.CreateField(r.Context(), r.FormValue("machine_name"), r.FormValue("label"), maxLen, r.FormValue("required") != ""); err != nil {
@@ -60,7 +60,7 @@ func (c *Controller) UserFieldCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, userFieldsAdminURL+"?success=created", http.StatusSeeOther)
 }
 
-// UserFieldUpdate handles POST /admin/people/fields/{id}/edit.
+// UserFieldUpdate handles POST /admin/users/fields/{id}/edit.
 func (c *Controller) UserFieldUpdate(w http.ResponseWriter, r *http.Request) {
 	id, ok := c.PathID(r)
 	if !ok {
@@ -77,7 +77,7 @@ func (c *Controller) UserFieldUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, userFieldsAdminURL+"?success=saved", http.StatusSeeOther)
 }
 
-// UserFieldDelete handles POST /admin/people/fields/{id}/delete - the
+// UserFieldDelete handles POST /admin/users/fields/{id}/delete - the
 // field and every user's value of it.
 func (c *Controller) UserFieldDelete(w http.ResponseWriter, r *http.Request) {
 	id, ok := c.PathID(r)

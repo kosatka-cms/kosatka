@@ -5,13 +5,13 @@
 {{template "layout.html" .}}
 
 {{define "page_meta"}}
-<span class="admin-page-meta">{{t "User roles. Role permissions are on the <a href=\":url\">\"Permissions\"</a> page; a role is assigned in the user profile." ":url" "/admin/people/permissions"}}</span>
+<span class="admin-page-meta">{{t "User roles. Role permissions are on the <a href=\":url\">\"Permissions\"</a> page; a role is assigned in the user profile." ":url" "/admin/users/permissions"}}</span>
 {{end}}
 
 {{define "page_body"}}{{template "content" .}}{{end}}
 
 {{define "content"}}
-{{if eq .success "created"}}<div class="alert alert-success">{{t "Role created. Grant it permissions on the <a href=\":url\">\"Permissions\"</a> page." ":url" "/admin/people/permissions"}}</div>{{end}}
+{{if eq .success "created"}}<div class="alert alert-success">{{t "Role created. Grant it permissions on the <a href=\":url\">\"Permissions\"</a> page." ":url" "/admin/users/permissions"}}</div>{{end}}
 {{if eq .success "saved"}}<div class="alert alert-success">{{t "Role name saved."}}</div>{{end}}
 {{if eq .success "deleted"}}<div class="alert alert-success">{{t "Role deleted."}}</div>{{end}}
 {{template "admin_alerts" (dict "Ctx" .
@@ -25,7 +25,7 @@
 
 <section class="admin-settings-card admin-add-card" aria-labelledby="role-add">
     <h2 class="admin-add-title" id="role-add">{{t "Add role"}}</h2>
-    <form method="post" action="/admin/people/roles" class="admin-add-form">
+    <form method="post" action="/admin/users/roles" class="admin-add-form">
         <label class="admin-filter">
             <span class="admin-filter-label">{{t "Name"}}</span>
             <input type="text" name="label" class="form-control" placeholder="{{t "Forum moderator"}}" required>
@@ -52,7 +52,7 @@
                 {{range .roles}}
                 <tr>
                     <td>
-                        <form method="post" action="/admin/people/roles/{{.Role.ID}}/rename" class="admin-table-inline-form">
+                        <form method="post" action="/admin/users/roles/{{.Role.ID}}/rename" class="admin-table-inline-form">
                             <input type="text" name="label" value="{{.Role.Description}}" class="form-control form-control-sm" aria-label="{{t "Name"}}" required>
                             <button type="submit" class="btn btn-sm btn-outline-primary">{{t "Save"}}</button>
                         </form>
@@ -62,7 +62,7 @@
                     <td class="text-nowrap text-end">
                         {{if or .Base .FullAccess}}<span class="admin-table-muted">{{t "cannot be deleted"}}</span>
                         {{else if .Users}}<span class="admin-table-muted" title="{{t "Assign the users another role first"}}">{{t "has users"}}</span>
-                        {{else}}<form method="post" action="/admin/people/roles/{{.Role.ID}}/delete" class="d-inline" data-confirm="{{t "Delete role \"@name\"?" "@name" .Role.Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>{{end}}
+                        {{else}}<form method="post" action="/admin/users/roles/{{.Role.ID}}/delete" class="d-inline" data-confirm="{{t "Delete role \"@name\"?" "@name" .Role.Label}}"><button type="submit" class="admin-icon-btn admin-icon-btn--danger" title="{{t "Delete"}}" aria-label="{{t "Delete"}}">{{template "admin_icon_delete"}}</button></form>{{end}}
                     </td>
                 </tr>
                 {{end}}

@@ -70,7 +70,7 @@
                     <small class="form-text text-muted">{{t "Your signature is shown below your comments. HTML is allowed."}}</small>
                 </div>
 
-                {{/* Admin-defined profile fields (/admin/people/fields). */}}
+                {{/* Admin-defined profile fields (/admin/users/fields). */}}
                 {{range .userFields}}
                 <div class="form-group">
                     <label for="user_field_{{.Field.ID}}">{{.Field.Label}}{{if .Field.Required}} <span class="required">*</span>{{end}}</label>
@@ -118,7 +118,7 @@
                     <a href="/me/two-factor" class="btn btn-sm btn-outline-primary">{{if .twoFactorOn}}{{t "Manage"}}{{else}}{{t "Turn on"}}{{end}}</a>
                     {{else if .canResetTwoFactor}}
                     <small class="form-text text-muted">{{t "Lost the phone and the recovery codes? A reset turns it off; the user turns it on again after signing in."}}</small>
-                    <button type="submit" class="btn btn-sm btn-outline-danger" formaction="/admin/people/{{.editUser.ID}}/two-factor/reset" formmethod="post" formnovalidate data-confirm="{{t "Reset the two-factor sign-in of @name?" "@name" .editUser.Username}}">{{t "Reset two-factor sign-in"}}</button>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" formaction="/admin/users/{{.editUser.ID}}/two-factor/reset" formmethod="post" formnovalidate data-confirm="{{t "Reset the two-factor sign-in of @name?" "@name" .editUser.Username}}">{{t "Reset two-factor sign-in"}}</button>
                     {{end}}
                 </div>
                 {{end}}

@@ -41,7 +41,7 @@ func TestSubscriptionsModule(t *testing.T) {
 		}
 		role := fmt.Sprint(count(`SELECT id FROM roles WHERE name = ?`, entity.RoleUser))
 		for _, name := range []string{"reader", "writer"} {
-			if _, ok := s.submit("/admin/people/create", "/admin/people/create", url.Values{"password_mode": {"set"}, "username": {name}, "email": {name + "@example.com"},
+			if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {name}, "email": {name + "@example.com"},
 				"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {role}}); !ok {
 				t.Fatalf("create %s", name)
 			}
