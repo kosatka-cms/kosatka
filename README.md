@@ -58,6 +58,11 @@
 - **[Security](https://kosatka-cms.github.io/kosatka/guides/security/)** - uploads
   checked by their content, private files, cleaned HTML, CSRF tokens,
   rate limits, an action log.
+- **[Monitoring](https://kosatka-cms.github.io/kosatka/guides/monitoring/)** - a JSON
+  log with a line for every request and request ids, Prometheus metrics
+  (requests by route, answer time, the database pool), a ready Grafana
+  dashboard, Alloy configuration and alert rules
+  ([deploy/monitoring](deploy/monitoring/)).
 
 ## Extending
 

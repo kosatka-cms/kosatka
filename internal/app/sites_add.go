@@ -31,8 +31,11 @@ const defaultStart = "systemctl enable --now kosatka-site@{site}"
 // newSite - what app sites add makes: the site's name and directory, its
 // config and secrets, and app install's flags.
 type newSite struct {
-	Name           string
-	Port           int
+	Name string
+	Port int
+	// MetricsPort - the port of its metrics (metrics.listen on
+	// 127.0.0.1); 0 - none.
+	MetricsPort    int
 	URL            string
 	DBDriver       string
 	DBHost         string
@@ -52,6 +55,7 @@ func (h *sitesHost) runSitesAdd(args []string) int {
 	fs := flag.NewFlagSet("sites add", flag.ContinueOnError)
 	fs.StringVar(&h.root, "root", h.root, "the sites root: a directory per site")
 	fs.IntVar(&s.Port, "port", 0, "the port the site listens on (required; each site its own)")
+	fs.IntVar(&s.MetricsPort, "metrics-port", 0, "the port of the site's metrics, /metrics on 127.0.0.1 (metrics.listen; empty - none; each site its own)")
 	fs.StringVar(&s.URL, "url", "", "the site's address, e.g. https://blog.example.com (required)")
 	fs.StringVar(&s.DBDriver, "db-driver", "mysql", "the database: mysql or postgres")
 	fs.StringVar(&s.DBHost, "db-host", "127.0.0.1", "the database host")
@@ -177,17 +181,49 @@ func (h *sitesHost) checkNewSite(ctx context.Context, s newSite) error {
 	if err != nil {
 		return err
 	}
+	if s.MetricsPort < 0 || s.MetricsPort > 65535 || (s.MetricsPort != 0 && s.MetricsPort == s.Port) {
+		return fmt.Errorf("-metrics-port %d: a port of its own, not the site's", s.MetricsPort)
+	}
 	for _, other := range sites {
-		if info, err := h.siteInfo(ctx, other); err == nil && info.Port == s.Port {
-			return fmt.Errorf("port %d is site %s's", s.Port, other.Name)
+		info, err := h.siteInfo(ctx, other)
+		if err != nil {
+			continue
+		}
+		taken := []int{info.Port}
+		if p := listenPort(info.MetricsListen); p > 0 {
+			taken = append(taken, p)
+		}
+		for _, p := range taken {
+			if p == s.Port || (s.MetricsPort != 0 && p == s.MetricsPort) {
+				return fmt.Errorf("port %d is site %s's", p, other.Name)
+			}
 		}
 	}
-	l, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(s.Port))
-	if err != nil {
-		return fmt.Errorf("port %d is in use", s.Port)
+	for _, p := range []int{s.Port, s.MetricsPort} {
+		if p == 0 {
+			continue
+		}
+		l, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(p))
+		if err != nil {
+			return fmt.Errorf("port %d is in use", p)
+		}
+		_ = l.Close()
 	}
-	_ = l.Close()
 	return nil
+}
+
+// listenPort - the port of an address like 127.0.0.1:9101, 0 when there
+// is none.
+func listenPort(addr string) int {
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return 0
+	}
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return 0
+	}
+	return p
 }
 
 // writeSiteDir writes site s's directory: its config, its secrets (a
@@ -217,6 +253,9 @@ func writeSiteDir(dir string, s newSite) error {
 		cfg += fmt.Sprintf("  port: %d\n", s.DBPort)
 	}
 	cfg += fmt.Sprintf("  scheme: %s\n", s.DBName)
+	if s.MetricsPort > 0 {
+		cfg += fmt.Sprintf("metrics:\n  listen: 127.0.0.1:%d\n", s.MetricsPort)
+	}
 	if err := os.WriteFile(filepath.Join(dir, siteConfigFile), []byte(cfg), 0o644); err != nil {
 		return err
 	}

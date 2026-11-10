@@ -20,6 +20,9 @@ type siteConfigInfo struct {
 	PublicBaseURL string `json:"public_base_url"`
 	Theme         string `json:"theme"`
 	EngineDir     string `json:"engine_dir"`
+	// MetricsListen - the metrics server's address (metrics.listen), ""
+	// - none.
+	MetricsListen string `json:"metrics_listen"`
 	DB            struct {
 		Driver string `json:"driver"`
 		Host   string `json:"host"`
@@ -57,6 +60,7 @@ func runConfig(args []string) int {
 func configInfo(cfg *config.Config) siteConfigInfo {
 	var info siteConfigInfo
 	info.Env, info.Port, info.PublicBaseURL, info.Theme, info.EngineDir = cfg.Env, cfg.Port, cfg.PublicBaseURL, cfg.Theme, cfg.EngineDir
+	info.MetricsListen = cfg.Metrics.Listen
 	info.DB.Driver, info.DB.Host, info.DB.Port, info.DB.Name = cfg.DB.Driver, cfg.DB.Host, cfg.DB.Port, cfg.DB.Scheme
 	info.Files.PublicDir, info.Files.PublicURL, info.Files.PrivateDir = cfg.Files.PublicDir, cfg.Files.PublicURL, cfg.Files.PrivateDir
 	info.Files.Storage = storageName(storageOf(cfg.Files.Storage), func() (filestore.Store, error) {
@@ -74,8 +78,8 @@ func printConfig(w io.Writer, info siteConfigInfo, asJSON bool) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(info)
 	}
-	_, err := fmt.Fprintf(w, "env: %s\nport: %d\npublic_base_url: %s\ntheme: %s\nengine_dir: %s\ndb: %s %s:%d/%s\nfiles: %s (%s), private %s, storage %s, private storage %s\n",
-		info.Env, info.Port, info.PublicBaseURL, info.Theme, info.EngineDir,
+	_, err := fmt.Fprintf(w, "env: %s\nport: %d\npublic_base_url: %s\ntheme: %s\nengine_dir: %s\nmetrics_listen: %s\ndb: %s %s:%d/%s\nfiles: %s (%s), private %s, storage %s, private storage %s\n",
+		info.Env, info.Port, info.PublicBaseURL, info.Theme, info.EngineDir, info.MetricsListen,
 		info.DB.Driver, info.DB.Host, info.DB.Port, info.DB.Name,
 		info.Files.PublicDir, info.Files.PublicURL, info.Files.PrivateDir, info.Files.Storage, info.Files.PrivateStorage)
 	return err

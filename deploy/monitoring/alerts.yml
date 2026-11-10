@@ -1,0 +1,66 @@
+# Alert rules for Kosatka sites, in the Prometheus rule format: for a
+# Prometheus, Mimir or Grafana Cloud ruler, or as a model for Grafana's
+# own alert rules. They expect the labels of deploy/monitoring/config.alloy
+# (site on the sites' metrics) and the server's node_exporter metrics.
+# Thresholds are a start: tune them to the site.
+groups:
+  - name: kosatka
+    rules:
+      - alert: KosatkaMetricsDown
+        expr: up{site!=""} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.site }}: /metrics isn't answering"
+          description: The site's process is down, or its metrics.listen address changed.
+
+      - alert: KosatkaServerErrors
+        expr: |
+          sum by (site) (rate(kosatka_http_requests_total{code=~"5.."}[5m]))
+            / sum by (site) (rate(kosatka_http_requests_total[5m])) > 0.01
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.site }}: {{ $value | humanizePercentage }} of the answers are server errors"
+          description: More than 1% of the requests end in a 5xx; the site's log has the errors (level ERROR).
+
+      - alert: KosatkaSlowAnswers
+        expr: |
+          histogram_quantile(0.95,
+            sum by (site, le) (rate(kosatka_http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.site }}: 5% of the requests take over {{ $value | humanizeDuration }}"
+          description: The 95th percentile of the answer time is above a second; the dashboard's slowest routes show where.
+
+      - alert: KosatkaDatabasePoolWaits
+        expr: rate(kosatka_db_wait_count_total[5m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.site }}: queries wait for a free database connection"
+          description: The pool (db.max_open_conns) is too small for the load, or queries hold connections too long.
+
+      - alert: KosatkaRestarting
+        expr: changes(process_start_time_seconds{site!=""}[15m]) > 2
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.site }} restarted {{ $value }} times in 15 minutes"
+          description: The process keeps failing; the log before each start says why.
+
+      - alert: ServerDiskFilling
+        expr: |
+          node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"}
+            / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} < 0.15
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: {{ $value | humanizePercentage }} of the disk left"
+          description: Uploads, backups, database dumps and the journal grow.

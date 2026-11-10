@@ -155,7 +155,8 @@ app config [-json]
 
 Prints the site's settings as the engine reads them - the config file
 with the environment over it - without the secrets: the environment, the
-port, the site address, the theme, the engine directory, the database
+port, the site address, the theme, the engine directory, the metrics
+server's address (`metrics.listen`), the database
 (driver, host, port, name), the file directories and where the files
 are kept (`local`, or what the storage says: `s3://<bucket>/<prefix>/`).
 `-json` prints them as JSON.

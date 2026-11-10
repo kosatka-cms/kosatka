@@ -34,7 +34,7 @@ journalctl -u kosatka@example -n 5 -o cat
 ```
 
 Several sites on one server: each its own metrics port (`9101`,
-`9102`…). The metrics server answers `GET /metrics` only; keep it on
+`9102`…; [`app sites add`](./multisite.md) takes it as `-metrics-port`). The metrics server answers `GET /metrics` only; keep it on
 the loopback address, or behind a firewall when the collector runs on
 another machine.
 
@@ -201,7 +201,9 @@ bash -c 'read -rsp "Token: " T; echo; printf "GRAFANA_CLOUD_TOKEN=\"%s\"\n" "$T"
 
 Write `/etc/alloy/config.alloy` - here for one site, `example` (the
 unit `kosatka@example.service`, its metrics on port 9101). A second
-site: another `targets` entry and another `loki.source.journal`.
+site: another `targets` entry and another `loki.source.journal`. The same
+file is in the repository,
+[deploy/monitoring/config.alloy](https://github.com/kosatka-cms/kosatka/blob/main/deploy/monitoring/config.alloy).
 
 ```hcl
 logging {
@@ -319,7 +321,32 @@ node_filesystem_avail_bytes{job="integrations/unix", mountpoint="/"}
 A panel's menu, *Explore*, opens its query here - a start for a query or
 an alert rule of your own.
 
-### 8. The server's dashboard
+### 8. The sites' dashboard
+
+[deploy/monitoring/kosatka-dashboard.json](https://github.com/kosatka-cms/kosatka/blob/main/deploy/monitoring/kosatka-dashboard.json)
+is a dashboard for Kosatka sites. Download it and import it:
+*Dashboards*, *New*, *Import*, *Upload dashboard JSON file*, *Import*.
+It expects the labels of the configuration above: `site` on the sites'
+metrics, `job="kosatka"` and `site` on their log.
+
+![The dashboard's overview and requests for a test site, example: requests a second, the share of server errors, the 95th percentile of the answer time, the sites up, how long it has run, its engine; requests by status (200, 302, 404) and the answer time (p50, p95, p99) over three minutes](./monitoring-dashboard.jpg)
+
+At the top: *Metrics* and *Log* - the Prometheus and Loki sources;
+*Site* - one site, several or all; *Restarts* - the sites' restarts (a
+deploy is one) as marks on the graphs.
+
+| Row | What it shows |
+|---|---|
+| *Overview* | requests a second, the share of server errors, the 95th percentile of the answer time, the sites up, how long each has run, the engine each runs |
+| *Requests* | requests by status, the answer time (median, 95th and 99th percentiles), the busiest and the slowest routes, server errors by route |
+| *Process and database* | requests in flight and goroutines, the connection pool, queries waiting for a connection, memory, garbage collection |
+| *Log* | the log's lines by level, the warnings and errors, the requests over a second (with `log.requests`) |
+
+A route is the address pattern that answered: the slowest routes say
+which part of the site is slow (`/` is content at its own path), the
+log's slow requests which address.
+
+### 9. The server's dashboard
 
 [*Node Exporter Full*](https://grafana.com/grafana/dashboards/1860) is
 the usual dashboard for a Linux server's metrics in the node_exporter
@@ -372,7 +399,7 @@ prometheus.exporter.unix "host" {
 The same metric serves an alert on a site's service stopping:
 `node_systemd_unit_state{name="kosatka@example.service", state="active"} == 0`.
 
-### 9. Checking the site from outside
+### 10. Checking the site from outside
 
 Everything above comes from inside the server; when the server, its
 network or the web server in front of the site fails, nothing comes at
@@ -422,11 +449,18 @@ See Elastic's documentation for those inputs.
 In Grafana, *Alerts & IRM*, *Alert rules*, *New alert rule*: a query, the
 condition and how long it holds, and where to send the alert (e-mail, a
 messenger) in *Contact points*.
+[deploy/monitoring/alerts.yml](https://github.com/kosatka-cms/kosatka/blob/main/deploy/monitoring/alerts.yml) holds the rules below in
+the Prometheus format - for a Prometheus or Mimir ruler, or to copy the
+queries from.
 
 - The site not answering: a check of `https://<site>/healthz` from
   outside the server (it answers `ok` while the database does) -
-  [step 9](#9-checking-the-site-from-outside).
+  [step 10](#10-checking-the-site-from-outside).
+- A site's `/metrics` not answering: its process is down.
 - The share of server errors above, say, 1% for 10 minutes.
 - The 95th percentile of the answer time above a second.
+- Queries waiting for a database connection: the pool is too small for
+  the load.
+- A site restarting again and again: it keeps failing.
 - The disk filling up (`node_filesystem_avail_bytes` of the server's
   metrics): uploads, backups and the journal grow.
