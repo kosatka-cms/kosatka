@@ -177,6 +177,7 @@ own, as in [Running in production](./production.md).
    | Flag | |
    |---|---|
    | `-port <n>`, `-url <address>` | where it listens, its public address (required) |
+   | `-metrics-port <n>` | the port of its metrics, `/metrics` on `127.0.0.1` (`metrics.listen`; see [Monitoring](./monitoring.md)); none without it. Like `-port`, one no other site has and nothing listens on |
    | `-db-name <name>` | its database (required) |
    | `-db-driver mysql\|postgres`, `-db-host`, `-db-port`, `-db-user` | the database server (default `mysql`, `127.0.0.1`, the driver's port, the site's name) |
    | `-site-name`, `-admin-name`, `-admin-email` | as for [`app install`](../reference/cli.md#app-install) (required) |

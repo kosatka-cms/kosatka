@@ -23,7 +23,7 @@ func addFixture(t *testing.T, install string) (*sitesHost, *[][]string, *[]strin
 	h.run = func(_ context.Context, s hostSite, _ string, args ...string) (string, error) {
 		runs = append(runs, append([]string{s.Name}, args...))
 		if args[0] == "config" {
-			return `{"port": 8101}`, nil
+			return `{"port": 8101, "metrics_listen": "127.0.0.1:9101"}`, nil
 		}
 		if rest, failed := strings.CutPrefix(install, "ERR "); failed {
 			return rest, errors.New("exit status 1")
@@ -57,6 +57,9 @@ func TestSitesAdd(t *testing.T) {
 		if !strings.Contains(string(cfg), want) {
 			t.Errorf("site.yaml lacks %q:\n%s", want, cfg)
 		}
+	}
+	if strings.Contains(string(cfg), "metrics:") {
+		t.Errorf("metrics without -metrics-port:\n%s", cfg)
 	}
 	envFile := filepath.Join(dir, siteEnvFile)
 	if fi, err := os.Stat(envFile); err != nil || fi.Mode().Perm() != 0o600 {
@@ -98,14 +101,18 @@ func TestSitesAddChecks(t *testing.T) {
 		t.Fatal(err)
 	}
 	for name, mod := range map[string]func(*newSite){
-		"a bad name":          func(s *newSite) { s.Name = "Shop!" },
-		"a taken name":        func(s *newSite) { s.Name = "blog" },
-		"no address":          func(s *newSite) { s.URL = "shop.example.com" },
-		"another database":    func(s *newSite) { s.DBDriver = "sqlite" },
-		"no database":         func(s *newSite) { s.DBName = "" },
-		"no password":         func(s *newSite) { s.DBPassword = "" },
-		"no port":             func(s *newSite) { s.Port = 0 },
-		"another site's port": func(s *newSite) { s.Port = 8101 },
+		"a bad name":                     func(s *newSite) { s.Name = "Shop!" },
+		"a taken name":                   func(s *newSite) { s.Name = "blog" },
+		"no address":                     func(s *newSite) { s.URL = "shop.example.com" },
+		"another database":               func(s *newSite) { s.DBDriver = "sqlite" },
+		"no database":                    func(s *newSite) { s.DBName = "" },
+		"no password":                    func(s *newSite) { s.DBPassword = "" },
+		"no port":                        func(s *newSite) { s.Port = 0 },
+		"another site's port":            func(s *newSite) { s.Port = 8101 },
+		"metrics on its port":            func(s *newSite) { s.MetricsPort = s.Port },
+		"another site's metrics port":    func(s *newSite) { s.MetricsPort = 9101 },
+		"metrics on another site's port": func(s *newSite) { s.MetricsPort = 8101 },
+		"a metrics port out of range":    func(s *newSite) { s.MetricsPort = 70000 },
 	} {
 		s := testNewSite("shop", 18733)
 		mod(&s)
@@ -155,5 +162,28 @@ func TestNginxSiteUploads(t *testing.T) {
 	}
 	if !strings.Contains(out, `add_header Content-Disposition "attachment" always;`) {
 		t.Error("other files not downloaded")
+	}
+}
+
+// TestSitesAddMetricsPort - -metrics-port writes metrics.listen on the
+// loopback address.
+func TestSitesAddMetricsPort(t *testing.T) {
+	h, _, _ := addFixture(t, "install: done\n")
+	s := testNewSite("shop", 18735)
+	s.MetricsPort = 18736
+	if err := h.add(context.Background(), s, "", time.Second, ""); err != nil {
+		t.Fatal(err)
+	}
+	cfg, _ := os.ReadFile(filepath.Join(h.root, "shop", siteConfigFile))
+	if !strings.Contains(string(cfg), "metrics:\n  listen: 127.0.0.1:18736\n") {
+		t.Errorf("site.yaml lacks metrics.listen:\n%s", cfg)
+	}
+}
+
+func TestListenPort(t *testing.T) {
+	for addr, want := range map[string]int{"127.0.0.1:9101": 9101, ":9102": 9102, "": 0, "localhost": 0, "[::1]:9103": 9103} {
+		if got := listenPort(addr); got != want {
+			t.Errorf("listenPort(%q) = %d, want %d", addr, got, want)
+		}
 	}
 }

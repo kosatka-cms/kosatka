@@ -1,0 +1,72 @@
+// Grafana Alloy on a Kosatka site's server: the server's metrics, the
+// site's /metrics and its log, sent to Prometheus and Loki (Grafana
+// Cloud's, or your own). Copy it to /etc/alloy/config.alloy; the
+// addresses and the token come from Alloy's environment file
+// (/etc/default/alloy on Debian and Ubuntu). The guide: docs/guides/monitoring.md.
+//
+// Here for one site, "example": its unit kosatka@example.service, its
+// metrics on port 9101 (metrics.listen: 127.0.0.1:9101). Another site:
+// another entry in targets and another loki.source.journal. The labels
+// job="kosatka" and site are what deploy/monitoring/kosatka-dashboard.json
+// and alerts.yml expect.
+
+logging {
+  level = "warn"
+}
+
+// The server: processor, memory, disks, network.
+prometheus.exporter.unix "host" { }
+
+prometheus.scrape "host" {
+  targets         = prometheus.exporter.unix.host.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.grafana.receiver]
+}
+
+// The sites' metrics.
+prometheus.scrape "kosatka" {
+  targets = [
+    {"__address__" = "127.0.0.1:9101", "site" = "example"},
+  ]
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.grafana.receiver]
+}
+
+prometheus.remote_write "grafana" {
+  endpoint {
+    url = sys.env("PROMETHEUS_URL")
+    basic_auth {
+      username = sys.env("PROMETHEUS_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+  }
+}
+
+// The sites' log, from the systemd journal: one source a unit.
+loki.source.journal "example" {
+  matches    = "_SYSTEMD_UNIT=kosatka@example.service"
+  labels     = {job = "kosatka", site = "example"}
+  forward_to = [loki.process.kosatka.receiver]
+}
+
+// The level as a label, from text lines (level=INFO) and JSON ones
+// ("level":"INFO").
+loki.process "kosatka" {
+  stage.regex {
+    expression = `(?:level=|"level":")(?P<level>[A-Z]+)`
+  }
+  stage.labels {
+    values = {level = ""}
+  }
+  forward_to = [loki.write.grafana.receiver]
+}
+
+loki.write "grafana" {
+  endpoint {
+    url = sys.env("LOKI_URL")
+    basic_auth {
+      username = sys.env("LOKI_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+  }
+}
