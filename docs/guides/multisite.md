@@ -2,7 +2,7 @@
 title: Several sites on one server
 description: One engine for any number of sites, each with its own database, files and theme; one command updates them all.
 sidebar:
-  order: 17
+  order: 18
 ---
 
 Kosatka is multisite: one engine on a server serves any number of sites.

@@ -8,6 +8,7 @@ import (
 	coreSQL "database/sql"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -23,6 +24,8 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/config"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/database"
+	"github.com/kosatka-cms/kosatka/internal/interfaces/middleware"
+	"github.com/kosatka-cms/kosatka/internal/lib/requestid"
 	"github.com/kosatka-cms/kosatka/internal/lib/slogquiet"
 	"github.com/kosatka-cms/kosatka/internal/modules/manifests"
 	"github.com/kosatka-cms/kosatka/internal/paths"
@@ -73,7 +76,7 @@ func Main() {
 	}
 	httputil.SetTrustedProxies(proxies)
 
-	log := setupLogger(cfg.IsLocal())
+	log := setupLogger(cfg.IsLocal(), cfg.Log.Format)
 	slog.SetDefault(log)
 	log.Info("Starting server...")
 
@@ -101,7 +104,10 @@ func Main() {
 	// scheduler) run until it ends.
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
-	handler, jobs := buildHandler(ctx, mux, drv, cfg, log)
+	reg := newMetricsRegistry(cfg, drv.DB())
+	observer := middleware.NewHTTPObserver(reg, requestLogger(cfg, log))
+	handler, jobs := buildHandler(ctx, mux, drv, cfg, log, observer)
+	metricsServer := startMetricsServer(cfg.Metrics.Listen, reg, log)
 
 	serverOne := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
@@ -139,6 +145,11 @@ func Main() {
 	if err := serverOne.Shutdown(shutdownCtx); err != nil {
 		log.Error("server forced to shutdown", "error", err)
 		exitCode = 1
+	}
+	if metricsServer != nil {
+		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+			log.Warn("the metrics server forced to shutdown", "error", err)
+		}
 	}
 	// The background loops end before the database closes.
 	cancelCtx()
@@ -185,18 +196,29 @@ func NewEntConn(cfg *config.DBConfig) (*coreSQL.DB, *sql.Driver, error) {
 	return db, driver, nil
 }
 
-// setupLogger - the service's log: text lines on standard output
-// (level=INFO …, the production guide greps them), DEBUG and up on a
+// setupLogger - the service's log on standard output: text lines
+// (level=INFO …, the production guide greps them) or, with format json,
+// a JSON object a line for a log collector; DEBUG and up on a
 // development machine (local, env local), INFO and up on a live site.
-func setupLogger(local bool) *slog.Logger {
+// The lines written with a request's context carry its request_id.
+func setupLogger(local bool, format string) *slog.Logger {
+	return slog.New(newLogHandler(os.Stdout, local, format))
+}
+
+// newLogHandler - setupLogger's handler, writing to out.
+func newLogHandler(out io.Writer, local bool, format string) slog.Handler {
 	level := slog.LevelInfo
 	if local {
 		level = slog.LevelDebug
 	}
-	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+	opts := &slog.HandlerOptions{Level: level}
+	var h slog.Handler = slog.NewTextHandler(out, opts)
+	if format == config.LogFormatJSON {
+		h = slog.NewJSONHandler(out, opts)
+	}
 	// Client disconnects (context canceled, broken pipe) are not server
 	// errors: logged at DEBUG.
-	return slog.New(slogquiet.New(log.Handler()))
+	return slogquiet.New(requestid.NewHandler(h))
 }
 
 // generateSessionSecret generates a random 32-byte secret key for session encryption.

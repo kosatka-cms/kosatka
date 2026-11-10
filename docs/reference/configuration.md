@@ -89,6 +89,16 @@ See [Files in object storage](../guides/file-storage.md).
 |---|---|---|---|
 | `trash_days` | `CONTENT_TRASH_DAYS` | `30` | days deleted content stays in the trash before it is deleted for good ([The trash](../guides/content-types.md#the-trash)); `-1` - until the trash is emptied by hand (`CONTENT_TRASH_DAYS=0` does the same, but `0` in the file counts as unset: `30`) |
 
+## The log and metrics: `log`, `metrics`
+
+| Key | Variable | Default | What |
+|---|---|---|---|
+| `log.format` | `LOG_FORMAT` | `text` | the log on standard output: `text` (`time=… level=INFO msg=…` lines) or `json` (a JSON object a line, for a log collector) |
+| `log.requests` | `LOG_REQUESTS` | `false` | a line for every request answered: method, path (without the query string), route, status, time, bytes, user, request id |
+| `metrics.listen` | `METRICS_LISTEN` | - | the address of a second HTTP server answering `GET /metrics` in the Prometheus format, e.g. `127.0.0.1:9101`; unset - no metrics |
+
+See [Monitoring](../guides/monitoring.md).
+
 ## E-mail: `email`
 
 The site sends through SMTP when `smtp_host` is set, or through a mail

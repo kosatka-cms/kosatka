@@ -89,6 +89,35 @@ type Config struct {
 	EngineDir string `yaml:"engine_dir" env:"ENGINE_DIR"`
 	// Content - the content's lifecycle.
 	Content ContentConfig `yaml:"content"`
+	// Log - the service's log on standard output.
+	Log LogConfig `yaml:"log"`
+	// Metrics - the service's metrics for a monitoring system.
+	Metrics MetricsConfig `yaml:"metrics"`
+}
+
+// The log's formats (LogConfig.Format).
+const (
+	// LogFormatText - key=value lines (time=… level=INFO msg=…).
+	LogFormatText = "text"
+	// LogFormatJSON - a JSON object a line, for a log collector.
+	LogFormatJSON = "json"
+)
+
+// LogConfig - the service's log.
+type LogConfig struct {
+	// Format - LogFormatText (the default) or LogFormatJSON.
+	Format string `yaml:"format" env:"LOG_FORMAT" env-default:"text"`
+	// Requests - a line for every request answered (method, path, route,
+	// status, time, bytes, user, request id; middleware.HTTPObserver).
+	Requests bool `yaml:"requests" env:"LOG_REQUESTS"`
+}
+
+// MetricsConfig - the metrics in the Prometheus text format.
+type MetricsConfig struct {
+	// Listen - the address of a second HTTP server answering GET /metrics
+	// only (e.g. 127.0.0.1:9101, reached by a collector on the same
+	// host); empty - no metrics.
+	Listen string `yaml:"listen" env:"METRICS_LISTEN"`
 }
 
 // ContentConfig - the content's lifecycle.
@@ -362,10 +391,28 @@ func LoadPath(configPath string) (*Config, error) {
 	if err := applyEnv(&cfg); err != nil {
 		return nil, err
 	}
+	if err := applyLogFormat(&cfg); err != nil {
+		return nil, err
+	}
 	applyDBTLSDefault(&cfg)
 	applyDBPortDefault(&cfg)
 	applyCatalogsOff(&cfg)
 	return &cfg, nil
+}
+
+// applyLogFormat - log.format in its canonical form, empty - text; any
+// other value is an error (a typo would leave the collector a log it
+// can't read).
+func applyLogFormat(cfg *Config) error {
+	cfg.Log.Format = strings.ToLower(strings.TrimSpace(cfg.Log.Format))
+	switch cfg.Log.Format {
+	case "":
+		cfg.Log.Format = LogFormatText
+	case LogFormatText, LogFormatJSON:
+	default:
+		return fmt.Errorf("log.format %q (LOG_FORMAT): %s or %s", cfg.Log.Format, LogFormatText, LogFormatJSON)
+	}
+	return nil
 }
 
 // applyCatalogsOff - "off" as a catalog's address is no catalog (an

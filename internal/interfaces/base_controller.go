@@ -412,11 +412,12 @@ func (c *BaseController) RenderNotFound(w http.ResponseWriter, r *http.Request) 
 // error the server's - logged and a 500, not hidden behind a 404.
 func (c *BaseController) RenderLoadFailure(w http.ResponseWriter, r *http.Request, err error, msg string, args ...any) {
 	if isNotFound(err) {
-		c.logger.Debug(msg, append(args, "error", err)...)
+		c.logger.DebugContext(r.Context(), msg, append(args, "error", err)...)
 		c.RenderNotFound(w, r)
 		return
 	}
-	c.logger.Error(msg, append(args, "error", err)...)
+	// With the request's context: the line carries its request_id.
+	c.logger.ErrorContext(r.Context(), msg, append(args, "error", err)...)
 	httputil.InternalServerError(w)
 }
 

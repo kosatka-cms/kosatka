@@ -2,7 +2,7 @@
 title: Security
 description: How Kosatka protects a site - uploads checked by their content, files served so they can't run, private files only for those who may see their content, safe HTML, sign-in protections - and what is up to you.
 sidebar:
-  order: 18
+  order: 19
 ---
 
 Security in Kosatka is built in rather than added by modules: what a

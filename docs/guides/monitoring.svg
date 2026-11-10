@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 630" width="960" height="630" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <title>A Kosatka site, Grafana Alloy and Grafana</title>
+  <desc>On the site's server, Kosatka serves pages on its port behind nginx and its metrics at /metrics on a second port reachable from the server only; its log goes to the systemd journal. Grafana Alloy, on the same server, fetches /metrics every minute, reads the journal and measures the server itself, then sends the metrics to Prometheus and the log to Loki. Grafana reads both and sends alerts by e-mail. Grafana Cloud's Synthetic Monitoring requests /healthz from outside and reports to Grafana.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-out" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0e7490"/>
+    </marker>
+  </defs>
+  <style>
+    .name { font-size: 13px; font-weight: 700; fill: #0f172a; }
+    .text { font-size: 12px; fill: #334155; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; fill: #0f172a; }
+    .small { font-size: 11px; fill: #64748b; }
+    .group { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; fill: #475569; }
+    .label { font-size: 11px; fill: #475569; }
+    .label-out { font-size: 11px; fill: #0e7490; }
+    .edge { stroke: #475569; stroke-width: 1.6; fill: none; }
+    .edge-out { stroke: #0e7490; stroke-width: 1.6; fill: none; stroke-dasharray: 6 4; }
+  </style>
+
+  <rect x="0" y="0" width="960" height="630" rx="12" fill="#ffffff"/>
+
+  <!-- Outside -->
+  <rect x="20" y="80" width="150" height="48" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="36" y="101" class="name">Visitors</text>
+  <text x="36" y="118" class="small">browsers, crawlers</text>
+  <text x="20" y="148" class="small">through a CDN, if any</text>
+
+  <!-- The site's server -->
+  <rect x="210" y="40" width="345" height="530" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="330" y="62" class="group">THE SITE'S SERVER</text>
+
+  <rect x="228" y="80" width="130" height="48" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="244" y="101" class="name">nginx</text>
+  <text x="244" y="118" class="small">the web server</text>
+
+  <rect x="395" y="80" width="145" height="120" rx="8" fill="#ecfeff" stroke="#0e7490"/>
+  <text x="410" y="101" class="name">Kosatka</text>
+  <text x="474" y="101" class="small">one process</text>
+  <line x1="395" y1="112" x2="540" y2="112" stroke="#a5d8e2"/>
+  <text x="410" y="132" class="mono">:3333</text>
+  <text x="458" y="132" class="text">pages</text>
+  <line x1="395" y1="144" x2="540" y2="144" stroke="#a5d8e2"/>
+  <text x="410" y="163" class="mono">:9101</text>
+  <text x="458" y="163" class="mono">/metrics</text>
+  <text x="410" y="185" class="small">127.0.0.1 only</text>
+
+  <rect x="395" y="250" width="145" height="52" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="410" y="272" class="name">systemd journal</text>
+  <text x="410" y="290" class="small">the site's log</text>
+
+  <rect x="228" y="360" width="312" height="150" rx="8" fill="#fff7ed" stroke="#c2410c"/>
+  <text x="244" y="384" class="name">Grafana Alloy</text>
+  <text x="244" y="408" class="text">fetches /metrics every minute</text>
+  <text x="244" y="427" class="text">reads the journal as it grows</text>
+  <text x="244" y="446" class="text">measures the server: processor,</text>
+  <text x="244" y="464" class="text">memory, disks, network</text>
+  <text x="244" y="492" class="small">holds the addresses and the token</text>
+
+  <!-- Grafana Cloud or your own -->
+  <rect x="640" y="40" width="300" height="530" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="656" y="62" class="group">GRAFANA CLOUD</text>
+  <text x="656" y="80" class="small">or your own Grafana, Loki and Prometheus</text>
+
+  <rect x="656" y="100" width="270" height="58" rx="8" fill="#ffffff" stroke="#0e7490"/>
+  <text x="672" y="122" class="name">Synthetic Monitoring</text>
+  <text x="672" y="141" class="small">probes in several cities request /healthz</text>
+
+  <rect x="656" y="360" width="125" height="52" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="672" y="382" class="name">Prometheus</text>
+  <text x="672" y="400" class="small">the metrics</text>
+
+  <rect x="656" y="450" width="125" height="52" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="672" y="472" class="name">Loki</text>
+  <text x="672" y="490" class="small">the log</text>
+
+  <rect x="810" y="350" width="116" height="160" rx="8" fill="#ffffff" stroke="#475569"/>
+  <text x="826" y="374" class="name">Grafana</text>
+  <text x="826" y="396" class="text">dashboards</text>
+  <text x="826" y="414" class="text">Explore</text>
+  <text x="826" y="432" class="text">alerts</text>
+  <text x="826" y="458" class="small">stores nothing,</text>
+  <text x="826" y="474" class="small">reads Prometheus</text>
+  <text x="826" y="490" class="small">and Loki</text>
+
+  <rect x="810" y="528" width="116" height="28" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="868" y="547" class="text" text-anchor="middle">e-mail</text>
+
+  <!-- Pages -->
+  <path d="M170,104 L226,104" class="edge" marker-end="url(#arrow)"/>
+  <text x="176" y="96" class="label">pages</text>
+  <path d="M358,104 L376,104 L376,136 L393,136" class="edge" marker-end="url(#arrow)"/>
+
+  <!-- The log -->
+  <path d="M468,200 L468,248" class="edge" marker-end="url(#arrow)"/>
+  <text x="476" y="229" class="label">writes its log</text>
+  <path d="M468,302 L468,358" class="edge" marker-end="url(#arrow)"/>
+  <text x="476" y="335" class="label">Alloy reads it</text>
+
+  <!-- The metrics, fetched by Alloy -->
+  <path d="M395,162 L330,162 L330,358" class="edge" marker-end="url(#arrow)"/>
+  <text x="322" y="250" class="label" text-anchor="end">Alloy fetches</text>
+  <text x="322" y="265" class="label" text-anchor="end">/metrics</text>
+  <text x="322" y="280" class="label" text-anchor="end">every minute</text>
+
+  <!-- Alloy sends on -->
+  <path d="M540,386 L654,386" class="edge" marker-end="url(#arrow)"/>
+  <text x="552" y="378" class="label">sends metrics</text>
+  <path d="M540,476 L654,476" class="edge" marker-end="url(#arrow)"/>
+  <text x="552" y="468" class="label">sends the log</text>
+
+  <!-- Grafana reads -->
+  <path d="M781,386 L808,386" class="edge" marker-end="url(#arrow)"/>
+  <path d="M781,476 L808,476" class="edge" marker-end="url(#arrow)"/>
+  <path d="M868,510 L868,526" class="edge" marker-end="url(#arrow)"/>
+  <text x="858" y="522" class="label" text-anchor="end">alerts</text>
+
+  <!-- From outside -->
+  <path d="M915,100 L915,22 L293,22 L293,78" class="edge-out" marker-end="url(#arrow-out)"/>
+  <text x="400" y="16" class="label-out">GET /healthz from outside, every few minutes</text>
+  <path d="M868,158 L868,348" class="edge-out" marker-end="url(#arrow-out)"/>
+  <text x="874" y="262" class="label-out">results</text>
+
+  <!-- Legend -->
+  <text x="20" y="597" class="small">Arrows show where the data goes. Alloy fetches the metrics and reads the journal itself and sends them on; the site sends nothing anywhere.</text>
+  <text x="20" y="615" class="small">Grafana only reads Prometheus and Loki. Dashed: requests from outside the server.</text>
+</svg>
