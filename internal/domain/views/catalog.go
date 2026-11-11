@@ -121,12 +121,15 @@ var (
 		fields: []entity.ViewFieldBuiltinField{
 			entity.ViewFieldBuiltinTitle,
 			entity.ViewFieldBuiltinContentType,
+			entity.ViewFieldBuiltinStatus,
 			entity.ViewFieldBuiltinCreatedAt,
+			entity.ViewFieldBuiltinUpdatedAt,
 			entity.ViewFieldBuiltinViewCount,
 			entity.ViewFieldBuiltinCommentCount,
 			entity.ViewFieldBuiltinReadingTime,
 			entity.ViewFieldBuiltinAuthor,
 			entity.ViewFieldBuiltinLink,
+			entity.ViewFieldBuiltinEditLink,
 		},
 		sorts: []entity.ViewSortBuiltin{
 			entity.ViewSortBuiltinCreatedAt,
@@ -226,6 +229,12 @@ func FieldBuiltinLabel(ctx context.Context, b entity.ViewFieldBuiltinField) stri
 		return i18n.T(ctx, "Author")
 	case entity.ViewFieldBuiltinLink:
 		return i18n.T(ctx, "Link to content")
+	case entity.ViewFieldBuiltinStatus:
+		return i18n.T(ctx, "Status")
+	case entity.ViewFieldBuiltinUpdatedAt:
+		return i18n.T(ctx, "Update date")
+	case entity.ViewFieldBuiltinEditLink:
+		return i18n.T(ctx, "Link to edit the content")
 	case entity.ViewFieldBuiltinCommentSubject:
 		return i18n.T(ctx, "Subject")
 	case entity.ViewFieldBuiltinCommentContent:

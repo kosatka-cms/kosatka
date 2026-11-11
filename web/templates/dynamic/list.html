@@ -37,7 +37,8 @@
 {{define "dynamic_list_field_value_raw"}}
 {{/* link_to (entity.ViewFieldLinkTarget): "content" links the value to the
      node, "file" (image fields) to the original image, "author" (the
-     builtin author field) to the author's profile. Skipped for
+     builtin author field) to the author's profile, "edit" (the builtin
+     edit link) to the node's edit form. Skipped for
      taxonomy, link, user, e-mail and phone fields, which render their own
      links - wrapping
      would nest <a>.
@@ -46,7 +47,7 @@
 {{$linkTo := index .Field.Config "link_to"}}
 {{$href := ""}}
 {{if and (ne (print .Field.FieldType) "taxonomy") (ne (print .Field.FieldType) "link") (ne (print .Field.FieldType) "user") (ne (print .Field.FieldType) "email") (ne (print .Field.FieldType) "phone")}}
-{{if eq $linkTo "content"}}{{$href = .Item.Node.URL}}{{else if eq $linkTo "file"}}{{$href = index .Item.ImageFieldOriginalURLs .Field.ID}}{{else if and (eq $linkTo "author") .Item.Node.CreatedBy.Slug}}{{$href = userURL .Item.Node.CreatedBy.Slug}}{{end}}
+{{if eq $linkTo "content"}}{{$href = .Item.Node.URL}}{{else if eq $linkTo "file"}}{{$href = index .Item.ImageFieldOriginalURLs .Field.ID}}{{else if and (eq $linkTo "author") .Item.Node.CreatedBy.Slug}}{{$href = userURL .Item.Node.CreatedBy.Slug}}{{else if eq $linkTo "edit"}}{{$href = printf "/node/%d/edit" .Item.Node.ID}}{{end}}
 {{end}}
 {{if $href}}<a href="{{$href}}" class="item-field-link">{{end}}
 {{if eq (print .Field.FieldType) "text"}}

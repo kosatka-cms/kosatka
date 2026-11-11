@@ -22,7 +22,7 @@
                             <optgroup label="{{t "Built-in"}}">
                                 {{range .fieldBuiltinFields}}
                                 {{$label := index $.fieldBuiltinLabels .}}
-                                <option value="{{printf "builtin:%s" .}}" data-field-type="{{if or (eq (print .) "comment_created_at") (eq (print .) "created_at")}}date{{end}}" data-label="{{$label}}">{{$label}} ({{.}})</option>
+                                <option value="{{printf "builtin:%s" .}}" data-field-type="{{if .IsDate}}date{{end}}" data-label="{{$label}}">{{$label}} ({{.}})</option>
                                 {{end}}
                             </optgroup>
                             {{if .moduleFields}}
