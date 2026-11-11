@@ -476,6 +476,20 @@ func (r NodeRepository) TrashedBefore(ctx context.Context, before time.Time) ([]
 	return ids, nil
 }
 
+// SetPublishing - see entity.NodesRepository.SetPublishing: updated_at
+// set to what it was (the schema's update default would make it now).
+func (r NodeRepository) SetPublishing(ctx context.Context, nodeID, status, onModeration int) error {
+	client := GetClient(ctx, r.client)
+	n, err := client.Node.Query().Where(node.ID(nodeID)).Select(node.FieldUpdatedAt).Only(ctx)
+	if err != nil {
+		return notFoundAs(err, "node with id %d", nodeID)
+	}
+	if err := client.Node.UpdateOneID(nodeID).SetStatus(status).SetOnModeration(onModeration).SetUpdatedAt(n.UpdatedAt).Exec(ctx); err != nil {
+		return fmt.Errorf("setting the publishing of node %d: %w", nodeID, err)
+	}
+	return nil
+}
+
 // UpdateOnModeration sets whether the node waits on moderation (1) or not
 // (0).
 func (r NodeRepository) UpdateOnModeration(ctx context.Context, nodeID int, onModeration int) error {

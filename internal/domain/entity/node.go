@@ -206,6 +206,10 @@ type NodesRepository interface {
 	AltTitles(ctx context.Context, nodes Nodes) (map[int]string, error)
 	UpdateStatus(ctx context.Context, nodeID int, status int) error
 	UpdateOnModeration(ctx context.Context, nodeID int, onModeration int) error
+	// SetPublishing sets the node's publishing (status) and moderation as
+	// a change of the site's, not an edit: its last save (UpdatedAt) and
+	// its schedule stay - a type joining an editorial workflow, say.
+	SetPublishing(ctx context.Context, nodeID, status, onModeration int) error
 	// SetLangcode sets the node's language (Node.Langcode); its words in
 	// the search index are stemmed in it again.
 	SetLangcode(ctx context.Context, nodeID int, code string) error
