@@ -11,3 +11,20 @@ func TestRoleLabel(t *testing.T) {
 		t.Errorf("without a readable name: %q", got)
 	}
 }
+
+// TestRoleGrants - a permission granted (true) or not; full access isn't
+// every permission here.
+func TestRoleGrants(t *testing.T) {
+	r := Role{Permissions: map[string]any{PermFullAccess: true, "edit": false, "odd": "yes"}}
+	if !r.Grants(PermFullAccess) {
+		t.Error("full access granted")
+	}
+	for _, perm := range []string{"edit", "odd", "view"} {
+		if r.Grants(perm) {
+			t.Errorf("%s isn't granted", perm)
+		}
+	}
+	if (Role{}).Grants(PermFullAccess) {
+		t.Error("a role without permissions grants nothing")
+	}
+}

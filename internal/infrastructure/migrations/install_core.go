@@ -75,7 +75,7 @@ func installCore(ctx context.Context, env Env) error {
 					SetPermissions(map[string]any{"use_text_format_plain_text": true}).
 					SetCreatedAt(now).SetUpdatedAt(now),
 				c.Role.Create().SetName(entity.RoleAdmin).SetDescription(i18n.N("Administrator")).
-					SetPermissions(map[string]any{"full_access": true}).
+					SetPermissions(map[string]any{entity.PermFullAccess: true}).
 					SetCreatedAt(now).SetUpdatedAt(now),
 			).Exec(ctx)
 		}},
