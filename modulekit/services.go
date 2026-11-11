@@ -137,6 +137,10 @@ type UserRepository interface {
 	ByID(ctx context.Context, id int) (*User, error)
 	// ByIDs - the users with these ids, by id (a missing one is absent).
 	ByIDs(ctx context.Context, ids []int) (map[int]User, error)
+	// UsersWithRoles - the active users whose role is one of roleIDs
+	// (Deps.Roles gives the roles), by id: whom to tell about what a role
+	// does, such as a module's e-mail to it.
+	UsersWithRoles(ctx context.Context, roleIDs []int) ([]User, error)
 }
 
 // SiteInformationRepository - the site's name, e-mail and languages

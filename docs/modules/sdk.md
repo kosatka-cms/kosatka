@@ -160,8 +160,10 @@ The core's rows an install or data step changes go through
   replies); a comment's `Status` is `CommentPublished`, `CommentPending`
   or `CommentSpam`.
 - **Files:** `Files`, `FileUpload`, `UploadSettings`, `ImageStyles`.
-- **Users and mail:** `Users`, `Roles` - the site's roles
-  (`Roles(ctx)`: a module's choice of who may do something), `Mail`.
+- **Users and mail:** `Users` (by id, or the active users of some roles -
+  `UsersWithRoles(ctx, roleIDs)`: whom to tell what a role should do),
+  `Roles` - the site's roles (`Roles(ctx)`: a module's choice of who may
+  do something), `Mail`.
   `UserRoleNames(user)` - a user's roles (`RoleUser` - every signed-in
   user's, `RoleAnonymous` - a guest's), `PermFullAccess` - the
   administrator role's permission.
