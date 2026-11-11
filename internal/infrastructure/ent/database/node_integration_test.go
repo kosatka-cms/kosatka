@@ -4,6 +4,7 @@ package database_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"slices"
 	"testing"
@@ -285,6 +286,37 @@ func TestDeletionGuardsSeeTrash(t *testing.T) {
 		}
 		if ids, err := database.NewModuleUninstallRepository(db.DB).NodeIDsOfTypes(ctx, []string{"event"}, 10); err != nil || len(ids) != 1 {
 			t.Errorf("NodeIDsOfTypes: %v %v", ids, err)
+		}
+	})
+}
+
+// TestSetPublishing - the node's publishing and moderation change as the
+// site's change, not an edit: its last save and its schedule stay; an
+// unknown node is not found.
+func TestSetPublishing(t *testing.T) {
+	schemaDB(t, func(t *testing.T, db testdb.DB) {
+		ctx := context.Background()
+		seedUser(t, db)
+		seedNode(t, db, 1, "news", "Waiting", "news/waiting")
+		saved := time.Date(2026, 11, 3, 10, 0, 0, 0, time.UTC)
+		publishOn := time.Date(2026, 12, 1, 9, 0, 0, 0, time.UTC)
+		if _, err := db.DB.ExecContext(ctx, db.Dialect.Rebind(`UPDATE nodes SET status = ?, on_moderation = ?, updated_at = ?, publish_on = ? WHERE id = ?`), 1, 1, saved, publishOn, 1); err != nil {
+			t.Fatal(err)
+		}
+		nodes := database.NewNodeRepository(entClient(db))
+		if err := nodes.SetPublishing(ctx, 1, 0, 0); err != nil {
+			t.Fatal(err)
+		}
+		var status, moderation int
+		var updated, scheduled time.Time
+		if err := db.DB.QueryRowContext(ctx, `SELECT status, on_moderation, updated_at, publish_on FROM nodes WHERE id = 1`).Scan(&status, &moderation, &updated, &scheduled); err != nil {
+			t.Fatal(err)
+		}
+		if status != 0 || moderation != 0 || !updated.Equal(saved) || !scheduled.Equal(publishOn) {
+			t.Errorf("status %d, moderation %d, updated %v (want %v), publish_on %v", status, moderation, updated, saved, scheduled)
+		}
+		if err := nodes.SetPublishing(ctx, 99, 1, 0); !errors.Is(err, entity.ErrEntityNotFound) {
+			t.Errorf("an unknown node: %v", err)
 		}
 	})
 }

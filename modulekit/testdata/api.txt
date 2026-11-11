@@ -744,6 +744,7 @@ package modulekit
 		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
 		method SetLangcode(ctx context.Context, nodeID int, code string) error
 		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error
+		method SetPublishing(ctx context.Context, nodeID int, status int, onModeration int) error
 		method SlugExists(ctx context.Context, slug string) (bool, error)
 		method SlugExistsExcludingNode(ctx context.Context, slug string, excludeNodeID int) (bool, error)
 		method URLsByIDs(ctx context.Context, ids []int) (map[int]string, error)
@@ -1455,6 +1456,7 @@ package modulekit/testkit
 		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
 		method SetLangcode(ctx context.Context, nodeID int, code string) error
 		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error
+		method SetPublishing(ctx context.Context, nodeID int, status int, onModeration int) error
 		method SlugExists(ctx context.Context, slug string) (bool, error)
 		method SlugExistsExcludingNode(ctx context.Context, slug string, excludeNodeID int) (bool, error)
 		method URLsByIDs(ctx context.Context, ids []int) (map[int]string, error)
