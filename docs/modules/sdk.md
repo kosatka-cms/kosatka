@@ -270,6 +270,7 @@ renders `<hook>_<module>` of every enabled module, with the page's data):
 | `page_end` | The end of every page of the site (not the admin's), before the footer |
 | `node_workflow` | A content item's form, the side column's first card - the workflow's state and transitions (`SetNodeWorkflow`) |
 | `node_form_top` | A content item's form, over its fields - a note about the item (the page's data) |
+| `node_notice` | A content item's page, over the item, where its *Pending moderation* notice is - a note about the item (`.moduleNode.<module>` of `AddNodePage`), e.g. the editorial workflow's state for its author and editors |
 | `node_links`, `node_actions` | A content item's page: under the item, next to *Edit* (`AddNodePage`). Something bigger on the page (a gallery, a list) is a plugin block placed in a theme region |
 | `comments_actions` | A content item's comments, under their heading - e.g. a subscription button (`.moduleNode.<module>` of `AddNodePage`) |
 | `comments` | A content item's comments, in place of the core's - only the module whose `AddNodePage` part says `Comments: true` for the item; `.commentsModule` is its name |

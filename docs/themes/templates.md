@@ -220,7 +220,7 @@ assembled from parts a theme can reuse in its own layouts:
 
 | Part | What |
 |---|---|
-| `node_moderation_notice` | the "awaiting moderation" notice |
+| `node_moderation_notice` | the "awaiting moderation" notice, after the modules' notes about the item (the editorial workflow's state for its author and editors) |
 | `node_status_class` | the wrapper's status class (` node-unpublished`…) |
 | `node_header` | `node_title`, `node_actions` (edit, delete, the modules' actions) and the submitted line |
 | `node_sections` | the fields, called as `(dict "Ctx" . "Sections" <sections> "Lead" <HTML>)` |
