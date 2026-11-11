@@ -320,13 +320,16 @@
 }
 
 /* The picker's window (Kosatka.window, overlays.css): bigger, the
-   browser filling it. */
+   browser filling it. The browser is mounted on the window's body itself
+   (.kosatka-window-body.kfb): a column, so its files scroll in .kfb-main
+   under the toolbar instead of running past the window's bottom. */
 .kosatka-window.kfb-window {
     width: 980px;
     height: min(85vh, 720px);
 }
 .kfb-window .kosatka-window-body {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 @media (max-width: 700px) {
