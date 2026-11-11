@@ -120,6 +120,17 @@ const (
 	// ViewFieldBuiltinLink - a link to the node, its text the field's
 	// label ("Read more" when empty).
 	ViewFieldBuiltinLink ViewFieldBuiltinField = "link"
+	// ViewFieldBuiltinStatus - whether the node is published, unpublished
+	// or published but on moderation, as text.
+	ViewFieldBuiltinStatus ViewFieldBuiltinField = "status"
+	// ViewFieldBuiltinUpdatedAt - the node's UpdatedAt (its last save),
+	// rendered as a date field.
+	ViewFieldBuiltinUpdatedAt ViewFieldBuiltinField = "updated_at"
+	// ViewFieldBuiltinEditLink - a link to the node's edit form, its text
+	// the field's label ("Edit" when empty). Shown to every viewer of the
+	// list: the form itself refuses who may not edit the node (a list of
+	// one's own content, an editors' list).
+	ViewFieldBuiltinEditLink ViewFieldBuiltinField = "edit_link"
 
 	// Comment base entity builtins.
 	ViewFieldBuiltinCommentSubject   ViewFieldBuiltinField = "comment_subject"
@@ -202,5 +213,5 @@ func ValidViewGroupDateFormat(f string) bool {
 
 // IsDate - the builtin is a date (a date format applies to it).
 func (b ViewFieldBuiltinField) IsDate() bool {
-	return b == ViewFieldBuiltinCreatedAt || b == ViewFieldBuiltinCommentCreatedAt
+	return b == ViewFieldBuiltinCreatedAt || b == ViewFieldBuiltinUpdatedAt || b == ViewFieldBuiltinCommentCreatedAt
 }

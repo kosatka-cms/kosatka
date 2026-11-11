@@ -118,7 +118,7 @@
             {{/* A module's field: its label; its module off - none, its key shown. */}}
             {{if and (not $fieldStorageLabel) $.moduleLabels}}{{$fieldStorageLabel = index $.moduleLabels (print .BuiltinField)}}{{end}}
             {{$fieldStorageType := ""}}
-            {{if or (eq (print .BuiltinField) "comment_created_at") (eq (print .BuiltinField) "created_at")}}{{$fieldStorageType = "date"}}{{end}}
+            {{if .BuiltinField.IsDate}}{{$fieldStorageType = "date"}}{{end}}
             {{if $fsID}}{{$fieldStorageLabel = index $.fieldStorageLabels $fsID}}{{$fieldStorageType = index $.fieldStorageTypes $fsID}}{{end}}
             {{$linkToLabel := "-"}}
             {{if eq (print .LinkTo) "content"}}{{$linkToLabel = (t "To content")}}{{else if eq (print .LinkTo) "file"}}{{$linkToLabel = (t "To the original image")}}{{end}}

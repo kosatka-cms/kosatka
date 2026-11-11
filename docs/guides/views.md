@@ -297,13 +297,22 @@ module removes them from every View.
 ## What each row shows: fields
 
 The *Fields* card lists what a row shows, in order (drag to reorder).
-Built-in fields: `Title`, `Content type`, `Creation date`,
-`Page views`, `Comments` (their number), `Reading time` ("5 min
-read": the item's long text fields shown on its page at 200 words a
-minute; nothing for an item without text), `Author` (a link to the
-profile) and `Link to content` (a "Read more" link; its text is the
-field's *Label*). Any field of the catalog can be added, except groups,
-files and blocks fields.
+Built-in fields: `Title`, `Content type`, `Status` (*Published*,
+*Unpublished* or *On moderation*), `Creation date`, `Update date` (its
+last save), `Page views`, `Comments` (their number), `Reading time`
+("5 min read": the item's long text fields shown on its page at 200
+words a minute; nothing for an item without text), `Author` (a link to
+the profile), `Link to content` (a "Read more" link; its text is the
+field's *Label*) and `Link to edit the content` (an "Edit" link to its
+form; shown to everyone who sees the list, the form opens only for who
+may edit the item - for a list of one's own content or an editors'
+list). Any field of the catalog can be added, except groups, files and
+blocks fields.
+
+A list of a user's own content with drafts - a *Profile tab* visible to
+the *Profile owner and administrators*, the contextual `created_by`
+filter and no `status` filter - shows each item's state with `Status`,
+`Update date` and `Link to edit the content`.
 
 `Title` shows an item's alternative title when its type has one
 ([Content types](./content-types.md#type-settings)) - everywhere but on

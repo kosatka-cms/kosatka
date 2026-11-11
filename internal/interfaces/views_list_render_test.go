@@ -562,6 +562,47 @@ func TestContentViewFragment(t *testing.T) {
 	}
 }
 
+// TestContentViewFragmentStatus - a list with the status, update date and
+// edit link fields: each item's status in words (published, unpublished,
+// on moderation), its last save's date, a link to its edit form.
+func TestContentViewFragmentStatus(t *testing.T) {
+	fields := entity.ViewFieldDefs{
+		{ID: 1, BuiltinField: entity.ViewFieldBuiltinTitle, SortOrder: 1},
+		{ID: 2, BuiltinField: entity.ViewFieldBuiltinStatus, SortOrder: 2},
+		{ID: 3, BuiltinField: entity.ViewFieldBuiltinUpdatedAt, SortOrder: 3},
+		{ID: 4, BuiltinField: entity.ViewFieldBuiltinEditLink, SortOrder: 4},
+	}
+	c := &DynamicContentController{
+		BaseController:  &BaseController{templateService: service.NewTemplateService(false), logger: slog.New(slog.DiscardHandler)},
+		viewService:     fakeFragmentViews{fields: fields},
+		contentTypeRepo: fakeFragmentTypes{},
+		nodeRepo:        fakeFragmentNodes{},
+	}
+	updated := time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC)
+	nodes := entity.Nodes{
+		{ID: 1, Type: "article", Title: "Out", Slug: "article/out", Status: 1, UpdatedAt: updated},
+		{ID: 2, Type: "article", Title: "Draft", Slug: "article/draft", Status: 0, UpdatedAt: updated},
+		{ID: 3, Type: "article", Title: "Waiting", Slug: "article/waiting", Status: 1, OnModeration: 1, UpdatedAt: updated},
+	}
+	cfg := views.Config{View: entity.ViewDisplayDef{ID: 9, DisplayStyle: entity.ViewDisplayStyleList}, Fields: fields}
+	html, err := c.renderContentViewFragment(t.Context(), cfg, nodes, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := strings.Join(strings.Fields(string(html)), " ")
+	for _, want := range []string{
+		`<span class="item-field-value">Published</span>`,
+		`<span class="item-field-value">Unpublished</span>`,
+		`<span class="item-field-value">On moderation</span>`,
+		`<span class="item-field-value">09.11.2026</span>`,
+		`<a href="/node/2/edit" class="item-field-link"> <span class="item-field-value">Edit</span>`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the fragment has no %s:\n%s", want, out)
+		}
+	}
+}
+
 // TestGridCardTitle - a grid card's title is the built-in title when the
 // View shows it, though a field before it has a value (a verdict over a
 // review's title); a list field's options carry their places.

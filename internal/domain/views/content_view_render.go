@@ -26,6 +26,9 @@ const (
 	contentViewBuiltinAuthorID       = -7
 	contentViewBuiltinLinkID         = -8
 	contentViewBuiltinReadingTimeID  = -9
+	contentViewBuiltinStatusID       = -10
+	contentViewBuiltinUpdatedAtID    = -11
+	contentViewBuiltinEditLinkID     = -12
 	// A module's field: moduleFieldIDBase minus its position among the
 	// View's fields.
 	moduleFieldIDBase = -1000
@@ -462,6 +465,9 @@ type listBatch struct {
 	// readingTimes - node → its reading time as the list shows it ("5
 	// min read"), when the list has the reading time field.
 	readingTimes map[int]string
+	// statusLabels - the status field's words (statusKey), when the list
+	// has it.
+	statusLabels map[string]string
 
 	// batched - node → field → its value (FieldValuesForNodes).
 	batched map[int]map[int]any
@@ -494,6 +500,13 @@ func (b *listBatch) load(ctx context.Context, contentTypeRepo entity.ContentType
 	var err error
 	if b.termIDs, b.termsByID, err = viewRowTerms(ctx, contentTypeRepo, terms, nodes, taxonomyFields); err != nil {
 		return err
+	}
+	if slices.ContainsFunc(b.fields, func(f entity.FieldInstanceDef) bool { return f.ID == contentViewBuiltinStatusID }) {
+		b.statusLabels = map[string]string{
+			"published":   i18n.T(ctx, "Published"),
+			"unpublished": i18n.T(ctx, "Unpublished"),
+			"moderation":  i18n.T(ctx, "On moderation"),
+		}
 	}
 	if slices.ContainsFunc(b.fields, func(f entity.FieldInstanceDef) bool { return f.ID == contentViewBuiltinReadingTimeID }) {
 		if b.readingTimes, err = readingTimes(ctx, contentTypeRepo, nodes); err != nil {
@@ -636,7 +649,7 @@ type viewBuiltin struct {
 // instance - the builtin's field instance for View field vf.
 func (bi viewBuiltin) instance(ctx context.Context, vf entity.ViewFieldDef) entity.FieldInstanceDef {
 	if bi.nodeLink {
-		return NodeLinkFieldInstance(ctx, vf, contentViewBuiltinAuthorID, contentViewBuiltinLinkID)
+		return NodeLinkFieldInstance(ctx, vf, contentViewBuiltinAuthorID, contentViewBuiltinLinkID, contentViewBuiltinEditLinkID)
 	}
 	var extra map[string]any
 	if bi.config != nil {
@@ -677,6 +690,27 @@ var viewBuiltins = map[entity.ViewFieldBuiltinField]viewBuiltin{
 		value: func(_ *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return n.CreatedBy.Username }},
 	entity.ViewFieldBuiltinLink: {id: contentViewBuiltinLinkID, nodeLink: true,
 		value: func(_ *listBatch, _ entity.Node, lf entity.FieldInstanceDef) any { return lf.Label }},
+	entity.ViewFieldBuiltinStatus: {id: contentViewBuiltinStatusID, fieldType: entity.FieldTypeText,
+		value: func(b *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return b.statusLabels[statusKey(n)] }},
+	entity.ViewFieldBuiltinUpdatedAt: {id: contentViewBuiltinUpdatedAtID, fieldType: entity.FieldTypeDate,
+		config: func(vf entity.ViewFieldDef) map[string]any {
+			return map[string]any{"date_format": vf.DateFormat, "timestamp": true}
+		},
+		value: func(_ *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return n.UpdatedAt }},
+	entity.ViewFieldBuiltinEditLink: {id: contentViewBuiltinEditLinkID, nodeLink: true,
+		value: func(_ *listBatch, _ entity.Node, lf entity.FieldInstanceDef) any { return lf.Label }},
+}
+
+// statusKey - the status field's word for n: published, unpublished, or
+// published but on moderation.
+func statusKey(n entity.Node) string {
+	switch {
+	case n.Status != 1:
+		return "unpublished"
+	case n.OnModeration != 0:
+		return "moderation"
+	}
+	return "published"
 }
 
 // readingTimes - each node's reading time (entity.ReadingMinutesOf its
@@ -853,14 +887,24 @@ func moduleFieldInstance(ctx context.Context, vf entity.ViewFieldDef, mf entity.
 	})
 }
 
-// NodeLinkFieldInstance - the field instance of the builtin author or
-// link field (vf), for View blocks and View pages alike: the author's
-// name linking their profile (link_to "author", dynamic/list.html), or a
-// link to the node whose text is the field's label ("Read more" when
+// NodeLinkFieldInstance - the field instance of the builtin author, link
+// or edit link field (vf), for View blocks and View pages alike: the
+// author's name linking their profile (link_to "author",
+// dynamic/list.html), or a link to the node (to its edit form: link_to
+// "edit") whose text is the field's label ("Read more", "Edit" when
 // empty; no label shown before it).
-// authorID/linkID - the caller's sentinel IDs for them.
-func NodeLinkFieldInstance(ctx context.Context, vf entity.ViewFieldDef, authorID, linkID int) entity.FieldInstanceDef {
+// authorID/linkID/editLinkID - the caller's sentinel IDs for them.
+func NodeLinkFieldInstance(ctx context.Context, vf entity.ViewFieldDef, authorID, linkID, editLinkID int) entity.FieldInstanceDef {
 	config := map[string]any{"css_class": vf.CSSClass, "rewrite_html": vf.RewriteHTML, "hide_in_overflow": vf.HideInOverflow}
+	if vf.BuiltinField == entity.ViewFieldBuiltinEditLink {
+		label := vf.Label
+		if label == "" {
+			label = i18n.T(ctx, "Edit")
+		}
+		config["link_to"] = "edit"
+		return entity.FieldInstanceDef{ID: editLinkID, FieldStorageID: editLinkID, MachineName: string(entity.ViewFieldBuiltinEditLink), Label: label,
+			FieldType: entity.FieldTypeText, ExcludeFromDisplay: vf.ExcludeFromDisplay, Config: config}
+	}
 	if vf.BuiltinField == entity.ViewFieldBuiltinLink {
 		label := vf.Label
 		if label == "" {

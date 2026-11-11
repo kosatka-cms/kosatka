@@ -1558,6 +1558,7 @@
   {"source":"Link title"},
   {"source":"Link title (optional)"},
   {"source":"Link to content"},
+  {"source":"Link to edit the content"},
   {"source":"Link to the privacy policy, e.g. /privacy (optional)","module":"forms"},
   {"source":"Link to the video","module":"video_embed"},
   {"source":"Link type"},
