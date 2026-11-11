@@ -41,15 +41,15 @@ func (c *DynamicContentController) attachContextualViewBlocks(ctx context.Contex
 			default:
 				continue
 			}
-			filters, err := c.viewService.EffectiveFiltersByView(ctx, *bp.ViewDisplay)
+			cfg, err := c.viewService.PublishedConfig(ctx, *bp.ViewDisplay)
 			if err != nil {
-				c.LogFailure(err, "error loading view filters for contextual block", "placementID", bp.Placement.ID, "nodeID", n.ID)
+				c.LogFailure(err, "error loading view settings for contextual block", "placementID", bp.Placement.ID, "nodeID", n.ID)
 				continue
 			}
-			if !filters.HasContextual() {
+			if !cfg.Filters.HasContextual() {
 				continue
 			}
-			html, err := c.renderContextualViewBlock(ctx, *bp.ViewDisplay, n)
+			html, _, err := c.renderContextualView(ctx, cfg, n)
 			if err != nil {
 				c.LogFailure(err, "error rendering contextual view block", "placementID", bp.Placement.ID, "nodeID", n.ID)
 				continue
@@ -59,7 +59,7 @@ func (c *DynamicContentController) attachContextualViewBlocks(ctx context.Contex
 				maps.Copy(out, raw)
 			}
 			out[bp.Placement.ID] = html
-			c.markCarousel(ctx, data, *bp.ViewDisplay)
+			markCarousel(data, cfg.View)
 		}
 	}
 	if out != nil {
@@ -91,7 +91,12 @@ func (c *DynamicContentController) attachViewAttachments(ctx context.Context, da
 		if !d.MatchesContentType(string(n.Type)) {
 			continue
 		}
-		html, count, err := c.renderContextualView(ctx, d, n)
+		cfg, err := c.viewService.PublishedConfig(ctx, d)
+		if err != nil {
+			c.LogFailure(err, "error loading view attachment settings", "viewID", d.ID, "nodeID", n.ID)
+			continue
+		}
+		html, count, err := c.renderContextualView(ctx, cfg, n)
 		if err != nil {
 			c.LogFailure(err, "error rendering view attachment", "viewID", d.ID, "nodeID", n.ID)
 			continue
@@ -99,7 +104,7 @@ func (c *DynamicContentController) attachViewAttachments(ctx context.Context, da
 		if count == 0 {
 			continue
 		}
-		c.markCarousel(ctx, data, d)
+		markCarousel(data, cfg.View)
 		title := d.AttachTitle
 		if title == "" {
 			title = d.Label
@@ -111,32 +116,26 @@ func (c *DynamicContentController) attachViewAttachments(ctx context.Context, da
 	}
 }
 
-// markCarousel sets data["needsSwiperCSS"] when view renders as a
-// carousel, so header.html loads the Swiper stylesheet for this page.
-func (c *DynamicContentController) markCarousel(ctx context.Context, data map[string]any, view entity.ViewDisplayDef) {
-	effective, err := c.viewService.EffectiveSettings(ctx, view)
-	if err == nil && effective.DisplayStyle == entity.ViewDisplayStyleCarousel {
+// markCarousel sets data["needsSwiperCSS"] when view (its settings
+// resolved) renders as a carousel, so header.html loads the Swiper
+// stylesheet for this page.
+func markCarousel(data map[string]any, view entity.ViewDisplayDef) {
+	if view.DisplayStyle == entity.ViewDisplayStyleCarousel {
 		data["needsSwiperCSS"] = true
 	}
 }
 
-// renderContextualViewBlock renders a View block like
-// CacheService.renderContentViewBlock, but runs the View live with n as the
-// current node.
-func (c *DynamicContentController) renderContextualViewBlock(ctx context.Context, view entity.ViewDisplayDef, n entity.Node) (template.HTML, error) {
-	html, _, err := c.renderContextualView(ctx, view, n)
-	return html, err
-}
-
-// renderContextualView is renderContextualViewBlock that also reports
-// how many nodes the View returned - an attachment with no results is
-// skipped entirely (attachViewAttachments), not shown as a bare heading.
-func (c *DynamicContentController) renderContextualView(ctx context.Context, view entity.ViewDisplayDef, n entity.Node) (template.HTML, int, error) {
-	nodes, _, err := c.viewService.RunViewWithContext(ctx, view, n.CreatedBy.ID, n.ID)
+// renderContextualView renders a View block like
+// CacheService.renderContentViewBlock, but runs the View (cfg - as
+// visitors see it) per request with n as the current node, and reports
+// how many nodes it returned - an attachment with no results is skipped
+// entirely (attachViewAttachments), not shown as a bare heading.
+func (c *DynamicContentController) renderContextualView(ctx context.Context, cfg views.Config, n entity.Node) (template.HTML, int, error) {
+	nodes, _, err := c.viewService.RunConfig(ctx, cfg, views.RunContext{Page: 1, CreatedByID: n.CreatedBy.ID, NodeID: n.ID})
 	if err != nil {
 		return "", 0, fmt.Errorf("error running contextual content view for block: %w", err)
 	}
-	html, err := c.renderContentViewFragment(ctx, view, nodes, nil)
+	html, err := c.renderContentViewFragment(ctx, cfg, nodes, nil)
 	return html, len(nodes), err
 }
 
@@ -179,9 +178,13 @@ func (c *DynamicContentController) viewFeedItems(ctx context.Context, view entit
 	if c.teasers == nil {
 		return nil, image, nil
 	}
+	cfg, err := c.viewService.PublishedConfig(ctx, view)
+	if err != nil {
+		return nil, image, err
+	}
 	var nodes entity.Nodes
 	for page := 1; len(nodes) < limit; page++ {
-		batch, total, err := c.viewService.RunView(ctx, view, nil, page)
+		batch, total, err := c.viewService.RunConfig(ctx, cfg, views.RunContext{Page: page})
 		if err != nil {
 			return nil, image, err
 		}
@@ -197,11 +200,7 @@ func (c *DynamicContentController) viewFeedItems(ctx context.Context, view entit
 	if err != nil {
 		return nil, image, err
 	}
-	fields, err := c.viewService.EffectiveFieldsByView(ctx, view)
-	if err != nil {
-		return nil, image, err
-	}
-	for _, f := range fields.SortBySortOrder() {
+	for _, f := range cfg.Fields.SortBySortOrder() {
 		if f.FieldStorageID == nil {
 			continue
 		}
@@ -232,22 +231,22 @@ func (c *DynamicContentController) enabledViewByMachineName(ctx context.Context,
 // created_by contextual filter (0 - none). Returns the total number of
 // results.
 func (c *DynamicContentController) renderEmbeddedView(ctx context.Context, view entity.ViewDisplayDef, userID, page int, basePath string, query url.Values) (template.HTML, int, error) {
-	effective, err := c.viewService.EffectiveSettings(ctx, view)
+	cfg, err := c.viewService.PublishedConfig(ctx, view)
 	if err != nil {
 		return "", 0, fmt.Errorf("error resolving profile tab view settings: %w", err)
 	}
-	if effective.IsComment() {
-		return c.renderProfileCommentTab(ctx, effective, userID, page, basePath, query)
+	if cfg.View.IsComment() {
+		return c.renderProfileCommentTab(ctx, cfg, userID, page, basePath, query)
 	}
-	nodes, total, err := c.viewService.RunViewForUser(ctx, view, userID, page)
+	nodes, total, err := c.viewService.RunConfig(ctx, cfg, views.RunContext{Page: page, CreatedByID: userID})
 	if err != nil {
 		return "", 0, fmt.Errorf("error running profile tab view: %w", err)
 	}
 	var pager *pagination.Pagination
-	if effective.ShowPagination {
-		pager = pagination.New(page, total, effective.PageSize, basePath, query)
+	if cfg.View.ShowPagination {
+		pager = pagination.New(page, total, cfg.View.PageSize, basePath, query)
 	}
-	html, err := c.renderContentViewFragment(ctx, effective, nodes, pager)
+	html, err := c.renderContentViewFragment(ctx, cfg, nodes, pager)
 	return html, total, err
 }
 
@@ -264,14 +263,11 @@ func (c *DynamicContentController) ProfileTabCount(ctx context.Context, view ent
 
 // renderProfileCommentTab - RenderProfileTab for a comment View
 // (dynamic/comment_list.html's "content", like the comment View page).
-func (c *DynamicContentController) renderProfileCommentTab(ctx context.Context, view entity.ViewDisplayDef, userID, page int, basePath string, query url.Values) (template.HTML, int, error) {
-	comments, total, err := c.viewService.RunCommentViewForUser(ctx, view, userID, page)
+func (c *DynamicContentController) renderProfileCommentTab(ctx context.Context, cfg views.Config, userID, page int, basePath string, query url.Values) (template.HTML, int, error) {
+	view, viewFields := cfg.View, cfg.Fields
+	comments, total, err := c.viewService.RunCommentConfig(ctx, cfg, views.RunContext{Page: page, CreatedByID: userID})
 	if err != nil {
 		return "", 0, fmt.Errorf("error running profile comment tab view: %w", err)
-	}
-	viewFields, err := c.viewService.EffectiveFieldsByView(ctx, view)
-	if err != nil {
-		return "", 0, fmt.Errorf("error loading profile comment tab view fields: %w", err)
 	}
 	pager := pagination.New(page, total, view.PageSize, basePath, query)
 	if view.ThemeTemplate != "" {
@@ -326,18 +322,16 @@ func (c *DynamicContentController) renderThemeView(ctx context.Context, name str
 }
 
 // renderContentViewFragment - a content View's list markup for nodes
-// (dynamic/list.html's "content"), with page links when pager is set.
-func (c *DynamicContentController) renderContentViewFragment(ctx context.Context, view entity.ViewDisplayDef, nodes entity.Nodes, pager *pagination.Pagination) (template.HTML, error) {
+// (dynamic/list.html's "content") by cfg, with page links when pager is
+// set.
+func (c *DynamicContentController) renderContentViewFragment(ctx context.Context, cfg views.Config, nodes entity.Nodes, pager *pagination.Pagination) (template.HTML, error) {
+	view := cfg.View
 	if view.ThemeTemplate != "" {
 		if html, ok, err := c.renderThemeViewList(ctx, view.ThemeTemplate, nodes, pager); ok {
 			return views.WithViewTexts(view, html), err
 		}
 	}
-	viewFields, err := c.viewService.EffectiveFieldsByView(ctx, view)
-	if err != nil {
-		return "", fmt.Errorf("error loading contextual content view fields for block: %w", err)
-	}
-	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, viewFields, nodes, views.ContentListOptions{AltTitles: true})
+	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, cfg.Fields, nodes, views.ContentListOptions{AltTitles: true})
 	if err != nil {
 		return "", fmt.Errorf("error building contextual content view block items: %w", err)
 	}

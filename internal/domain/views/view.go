@@ -109,10 +109,8 @@ type Service interface {
 	// /articles/<alias>).
 	ViewByURLArgument(ctx context.Context, path string) (*entity.ViewDisplayDef, string, error)
 	// RunViewForPage - RunView on a page whose URL argument is a user:
-	// the created_by contextual filter resolves to contextUserID;
-	// RunViewFromSnapshotForPage - the same on a published snapshot.
+	// the created_by contextual filter resolves to contextUserID.
 	RunViewForPage(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page, contextUserID int) (entity.Nodes, int, error)
-	RunViewFromSnapshotForPage(ctx context.Context, view entity.ViewDisplayDef, snap entity.ViewSnapshot, queryParams map[string]string, page, contextUserID int) (entity.Nodes, int, error)
 	CreateView(ctx context.Context, v entity.ViewDisplayDef) (*entity.ViewDisplayDef, error)
 	UpdateView(ctx context.Context, v entity.ViewDisplayDef) (*entity.ViewDisplayDef, error)
 	DeleteView(ctx context.Context, id int) error
@@ -135,8 +133,26 @@ type Service interface {
 	UpdateViewField(ctx context.Context, f entity.ViewFieldDef) (*entity.ViewFieldDef, error)
 	DeleteViewField(ctx context.Context, id int) error
 
-	// RunView resolves its filters' field storages, then delegates the
-	// query to entity.ViewQuery.RunView.
+	// PublishedConfig - the display as visitors see it, on every page,
+	// block, embed, profile tab, term page and feed: once published, its
+	// published snapshot; never published (or the snapshot unreadable -
+	// logged), its live configuration. The Run* functions and Glossary
+	// run on it.
+	PublishedConfig(ctx context.Context, view entity.ViewDisplayDef) (Config, error)
+	// LiveConfig - the display's live configuration (the admin's
+	// editor and preview).
+	LiveConfig(ctx context.Context, view entity.ViewDisplayDef) (Config, error)
+	// RunConfig runs a content display's configuration cfg (its filters'
+	// field storages resolved; one no longer there is left out, logged)
+	// for rc; RunCommentConfig - a comment display's.
+	RunConfig(ctx context.Context, cfg Config, rc RunContext) (entity.Nodes, int, error)
+	RunCommentConfig(ctx context.Context, cfg Config, rc RunContext) (entity.Comments, int, error)
+	// GlossaryOf - the glossary letters of cfg (none when it shows no
+	// glossary).
+	GlossaryOf(ctx context.Context, cfg Config, queryParams map[string]string) (entity.GlossaryData, error)
+
+	// RunView - the display's results as visitors see them
+	// (PublishedConfig, RunConfig).
 	RunView(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page int) (entity.Nodes, int, error)
 	// RunViewWithContext - RunView for a contextual View block:
 	// contextCreatedByID/contextNodeID come from the node being rendered;
@@ -149,19 +165,15 @@ type Service interface {
 	RunViewForTerm(ctx context.Context, view entity.ViewDisplayDef, termID, page int) (entity.Nodes, int, error)
 
 	// RunCommentView - RunView for a base_entity=="comment" display
-	// (entity.ViewBaseEntity). Comment views are always rendered live; there
-	// is no snapshot variant.
+	// (entity.ViewBaseEntity).
 	RunCommentView(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page int) (entity.Comments, int, error)
 	// RunCommentViewForUser - a comment user_tab display's results for
 	// the profile of userID (comment_created_by contextual = userID).
 	RunCommentViewForUser(ctx context.Context, view entity.ViewDisplayDef, userID, page int) (entity.Comments, int, error)
 
 	// Glossary computes a view's letter-index bar data
-	// (entity.ViewDisplayDef.ShowGlossary).
+	// (entity.ViewDisplayDef.ShowGlossary) as visitors see the display.
 	Glossary(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string) (entity.GlossaryData, error)
-	// GlossaryFromSnapshot - Glossary on a published snapshot, as
-	// RunViewFromSnapshotForPage runs the view on it.
-	GlossaryFromSnapshot(ctx context.Context, view entity.ViewDisplayDef, snap entity.ViewSnapshot, queryParams map[string]string) (entity.GlossaryData, error)
 
 	// PreviewView is RunView for the admin live preview. Filters/fields
 	// are read from the DB (the admin UI saves them immediately), but page

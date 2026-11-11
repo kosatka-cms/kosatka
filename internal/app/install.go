@@ -411,6 +411,10 @@ func createSite(ctx context.Context, r migrations.Runner, client *generated.Clie
 	if err := setModuleStates(ctx, client, installed); err != nil {
 		return password, err
 	}
+	// Its Views published: what visitors see, the admin's edits drafts.
+	if err := publishInstalledViews(ctx, client, slog.Default()); err != nil {
+		return password, err
+	}
 	// The starter and demo content, written past the repositories: its
 	// words for the search.
 	if _, err := database.RebuildSearchIndex(ctx, client); err != nil {

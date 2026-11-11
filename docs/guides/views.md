@@ -16,7 +16,7 @@ Views are managed in the admin under **Structure → Views (lists)**
 
 ## Create a View
 
-![The page of a View, the front page feed: its settings (a block, a list, pagination, ten items a page), its unpublished changes, and its filters](../assets/screens/views-edit.webp)
+![The page of a View, the front page feed: its settings (a block, a list, pagination, ten items a page), when it was published, and its filters](../assets/screens/views-edit.webp)
 
 1. Open `/admin/config/views`.
 2. Under *Add view* enter a *Name*, choose the *Type* of the display
@@ -414,20 +414,21 @@ all articles and a block of the latest five.
 
 ## Publishing changes
 
-Edits are saved at once. For a *Page* display of content, the site keeps
-showing the last published version once there is one, to everyone,
-administrators included:
+Edits are saved at once, but visitors keep seeing a display's last
+published version wherever it shows - its page, a block, an attachment,
+a term page, a profile tab, the front page feed, an embedded list, the
+front page's RSS - everyone, administrators included:
 
 - *Publish changes* makes the current configuration the public one;
   *Discard changes* goes back to the published one. The bar at the top
   of the View page says when there are unpublished changes; in a group,
   a `*` on a display's tab marks them.
-- Until the first publishing, visitors see the current version.
+- A new site's Views come published. A display added in the admin shows
+  its current version until it is published for the first time.
 - The address, machine name, status, type and theme template apply at
   once.
-
-Blocks, attachments, term pages, profile tabs, the front page feed,
-embedded lists and comment Views always show the current configuration.
+- A field deleted since the publishing drops out of the published
+  version's filters and sorting.
 
 *Preview* at the bottom of the View page shows the list with the
 current, unsaved settings, in the site's theme; with *Refresh

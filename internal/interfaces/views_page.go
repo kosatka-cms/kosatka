@@ -332,14 +332,14 @@ func (c *DynamicContentController) ViewPageFallback(w http.ResponseWriter, r *ht
 		return true
 	}
 	// The View in the page's language: its title and meta description.
-	localized := entity.LocalizeView(i18n.FromContext(ctx), state.view)
+	localized := entity.LocalizeView(i18n.FromContext(ctx), state.View)
 	view = &localized
 
 	page := c.GetPageNumber(r)
 	isAjax := r.Header.Get("X-Requested-With") == "XMLHttpRequest"
 	queryParams := queryFilterValues(r.URL.Query())
 
-	nodes, total, err := state.run(ctx, queryParams, page, contextUserID)
+	nodes, total, err := c.viewService.RunConfig(ctx, state, views.RunContext{QueryParams: queryParams, Page: page, CreatedByID: contextUserID})
 	if err != nil {
 		c.LogFailure(err, "error running view", "viewID", view.ID)
 		httputil.InternalServerError(w)
@@ -348,33 +348,16 @@ func (c *DynamicContentController) ViewPageFallback(w http.ResponseWriter, r *ht
 	// The list - the View's fields and each node's values for them
 	// (views.BuildContentList, as for its block and its preview); a page
 	// shows the nodes' titles, not their alternative titles.
-	viewFields, err := state.fields(ctx)
-	if err != nil {
-		c.LogFailure(err, "error loading view fields", "viewID", view.ID)
-		httputil.InternalServerError(w)
-		return true
-	}
+	viewFields := state.Fields
 	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, viewFields, nodes, views.ContentListOptions{})
 	if err != nil {
 		c.LogFailure(err, "error building the view's list", "viewID", view.ID)
 		httputil.InternalServerError(w)
 		return true
 	}
-	// filters: needed only to build the exposed-filters form; RunView applies
-	// them internally.
-	filters, err := state.filters(ctx)
-	if err != nil {
-		c.LogFailure(err, "error loading view filters", "viewID", view.ID)
-		httputil.InternalServerError(w)
-		return true
-	}
-
-	sorts, err := state.sorts(ctx)
-	if err != nil {
-		c.LogFailure(err, "error loading view sorts", "viewID", view.ID)
-		httputil.InternalServerError(w)
-		return true
-	}
+	// filters and sorts: needed only to build the exposed-filters form;
+	// the run applies them.
+	filters, sorts := state.Filters, state.Sorts
 
 	// Exposed-filters form (and the visitors' choice of sort, last);
 	// skipped for AJAX requests since the form is outside the re-rendered
@@ -477,84 +460,22 @@ func (c *DynamicContentController) viewPageOf(ctx context.Context, path string) 
 	return view, u, true
 }
 
-// viewState - a View display as its page shows it: once published, its
-// published snapshot for every viewer (admins included: the live state
-// only through the admin preview); never published, or its snapshot
-// unreadable, live. view - its settings resolved against the View's
-// defaults or the snapshot's (identity fields unchanged).
-type viewState struct {
-	viewService views.Service
-	view        entity.ViewDisplayDef
-	snap        entity.ViewSnapshot
-	published   bool
-}
-
-// viewStateOf - view's viewState.
-func (c *DynamicContentController) viewStateOf(ctx context.Context, view entity.ViewDisplayDef) (viewState, error) {
-	st := viewState{viewService: c.viewService}
-	if view.PublishedAt != nil {
-		snap, err := c.viewService.DecodePublishedSnapshot(view)
-		if err == nil {
-			st.snap, st.published, st.view = snap, true, snap.Settings.ApplyTo(view)
-			return st, nil
-		}
-		c.LogFailure(err, "error decoding published view snapshot, falling back to live", "viewID", view.ID)
-	}
-	effective, err := c.viewService.EffectiveSettings(ctx, view)
-	if err != nil {
-		return st, err
-	}
-	st.view = effective
-	return st, nil
-}
-
-// run runs the display for a page.
-func (st viewState) run(ctx context.Context, queryParams map[string]string, page, contextUserID int) (entity.Nodes, int, error) {
-	if st.published {
-		return st.viewService.RunViewFromSnapshotForPage(ctx, st.view, st.snap, queryParams, page, contextUserID)
-	}
-	return st.viewService.RunViewForPage(ctx, st.view, queryParams, page, contextUserID)
-}
-
-// fields - the display's fields.
-func (st viewState) fields(ctx context.Context) (entity.ViewFieldDefs, error) {
-	if st.published {
-		return st.snap.Fields, nil
-	}
-	return st.viewService.EffectiveFieldsByView(ctx, st.view)
-}
-
-// filters - the display's filters.
-func (st viewState) filters(ctx context.Context) (entity.ViewFilterDefs, error) {
-	if st.published {
-		return st.snap.Filters, nil
-	}
-	return st.viewService.EffectiveFiltersByView(ctx, st.view)
-}
-
-// sorts - the display's sort criteria.
-func (st viewState) sorts(ctx context.Context) (entity.ViewSortDefs, error) {
-	if st.published {
-		return st.snap.Sorts, nil
-	}
-	return st.viewService.EffectiveSortsByView(ctx, st.view)
-}
-
-// glossary - the display's glossary letters.
-func (st viewState) glossary(ctx context.Context, queryParams map[string]string) (entity.GlossaryData, error) {
-	if st.published {
-		return st.viewService.GlossaryFromSnapshot(ctx, st.view, st.snap, queryParams)
-	}
-	return st.viewService.Glossary(ctx, st.view, queryParams)
+// viewStateOf - view as its page shows it (views.Service.PublishedConfig:
+// once published, its published snapshot for every viewer, admins
+// included - the live state only through the admin preview; never
+// published, live): View - its settings resolved (identity fields
+// unchanged).
+func (c *DynamicContentController) viewStateOf(ctx context.Context, view entity.ViewDisplayDef) (views.Config, error) {
+	return c.viewService.PublishedConfig(ctx, view)
 }
 
 // viewGlossaryBar - the glossary bar's letters with their links (base -
 // the page's address, current - its query); false - it failed (logged:
 // the page shows without the bar).
-func (c *DynamicContentController) viewGlossaryBar(ctx context.Context, st viewState, queryParams map[string]string, base string, current url.Values) ([]viewGlossaryItem, bool) {
-	glossary, err := st.glossary(ctx, queryParams)
+func (c *DynamicContentController) viewGlossaryBar(ctx context.Context, st views.Config, queryParams map[string]string, base string, current url.Values) ([]viewGlossaryItem, bool) {
+	glossary, err := c.viewService.GlossaryOf(ctx, st, queryParams)
 	if err != nil {
-		c.LogFailure(err, "error computing view glossary", "viewID", st.view.ID)
+		c.LogFailure(err, "error computing view glossary", "viewID", st.View.ID)
 		return nil, false
 	}
 	items := make([]viewGlossaryItem, len(glossary))
@@ -587,16 +508,24 @@ func viewPageSEO(view *entity.ViewDisplayDef, argUser *entity.User, exposedParam
 	return label, pageSEO
 }
 
-// renderCommentViewPage is ViewPageFallback's path for comment-based Views. It
-// is intentionally simpler: always live (no published snapshot), no glossary,
-// no AJAX pagination and no exposed-filters form.
-func (c *DynamicContentController) renderCommentViewPage(w http.ResponseWriter, r *http.Request, view *entity.ViewDisplayDef, unpublishedPreview bool) bool {
+// renderCommentViewPage is ViewPageFallback's path for comment-based Views
+// (as visitors see them: views.Service.PublishedConfig). It is
+// intentionally simpler: no glossary, no AJAX pagination and no
+// exposed-filters form.
+func (c *DynamicContentController) renderCommentViewPage(w http.ResponseWriter, r *http.Request, display *entity.ViewDisplayDef, unpublishedPreview bool) bool {
 	ctx := r.Context()
 
 	page := c.GetPageNumber(r)
 	queryParams := queryFilterValues(r.URL.Query())
 
-	comments, total, err := c.viewService.RunCommentView(ctx, *view, queryParams, page)
+	cfg, err := c.viewService.PublishedConfig(ctx, *display)
+	if err != nil {
+		c.LogFailure(err, "error resolving comment view settings", "viewID", display.ID)
+		httputil.InternalServerError(w)
+		return true
+	}
+	view := &cfg.View
+	comments, total, err := c.viewService.RunCommentConfig(ctx, cfg, views.RunContext{QueryParams: queryParams, Page: page})
 	if err != nil {
 		c.LogFailure(err, "error running comment view", "viewID", view.ID)
 		httputil.InternalServerError(w)
@@ -605,12 +534,7 @@ func (c *DynamicContentController) renderCommentViewPage(w http.ResponseWriter, 
 
 	// viewFields - the display's field selection, used by both list and
 	// table styles in comment_list.html.
-	viewFields, err := c.viewService.EffectiveFieldsByView(ctx, *view)
-	if err != nil {
-		c.LogFailure(err, "error loading comment view fields", "viewID", view.ID)
-		httputil.InternalServerError(w)
-		return true
-	}
+	viewFields := cfg.Fields
 
 	pageSEO := entity.PageSEO{Title: view.Label}
 	if view.MetaTitle != "" {

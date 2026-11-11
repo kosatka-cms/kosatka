@@ -175,8 +175,9 @@ func (c *TaxonomyController) termPageData(ctx context.Context, r *http.Request, 
 }
 
 // termItems - the term's items as teaser cards via the term display View
-// for its vocabulary (lowest weight wins), which supplies filters, sort and
-// page size. Without such a View the list is empty.
+// for its vocabulary (lowest weight wins; as visitors see it -
+// PublishedConfig), which supplies filters, sort and page size. Without
+// such a View the list is empty.
 func (c *TaxonomyController) termItems(ctx context.Context, term *entity.TaxonomyTerm, page int) ([]entity.TeaserItem, int, int, error) {
 	displays, err := c.viewService.TermDisplays(ctx)
 	if err != nil {
@@ -186,11 +187,11 @@ func (c *TaxonomyController) termItems(ctx context.Context, term *entity.Taxonom
 		if !d.MatchesVocabulary(term.Vocabulary.ID) {
 			continue
 		}
-		effective, err := c.viewService.EffectiveSettings(ctx, d)
+		cfg, err := c.viewService.PublishedConfig(ctx, d)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		nodes, total, err := c.viewService.RunViewForTerm(ctx, d, term.ID, page)
+		nodes, total, err := c.viewService.RunConfig(ctx, cfg, views.RunContext{Page: page, TermID: term.ID})
 		if err != nil {
 			return nil, 0, 0, err
 		}
@@ -198,7 +199,7 @@ func (c *TaxonomyController) termItems(ctx context.Context, term *entity.Taxonom
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		return items, total, effective.PageSize, nil
+		return items, total, cfg.View.PageSize, nil
 	}
 	return nil, 0, 0, nil
 }

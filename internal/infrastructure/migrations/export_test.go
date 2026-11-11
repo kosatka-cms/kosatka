@@ -22,3 +22,6 @@ var (
 // KeepNodePageReferences - keepNodePageReferences for the external tests
 // (update_core_references_integration_test.go).
 var KeepNodePageReferences = keepNodePageReferences
+
+// KeepLiveViewsLive - keepLiveViewsLive for the external tests.
+var KeepLiveViewsLive = keepLiveViewsLive

@@ -2,16 +2,19 @@ package views
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
+	"github.com/kosatka-cms/kosatka/internal/domain/fallback"
 )
 
 // runPlan - a View's filters and sorts as the query runs them: the field
 // storages they reference, the core's filters, the modules' filters
 // (their modules on) and the sorts in order, a module's whose module is
-// off left out.
+// off left out, and so is a criterion whose field is gone (a published
+// snapshot can name a field deleted since).
 type runPlan struct {
 	fieldStorages map[int]entity.FieldStorageDef
 	filters       entity.ViewFilterDefs
@@ -20,40 +23,54 @@ type runPlan struct {
 }
 
 // planRun resolves filters and sorts (sorted by SortOrder already) for
-// RunView/PreviewView/Glossary.
+// the query (runPlan).
 func (s *DefaultService) planRun(ctx context.Context, filters entity.ViewFilterDefs, sorts entity.ViewSortDefs) (runPlan, error) {
 	plan := runPlan{fieldStorages: map[int]entity.FieldStorageDef{}}
-	for _, f := range filters {
-		if !IsModuleKey(string(f.BuiltinField)) {
-			plan.filters = append(plan.filters, f)
-		} else if mf, ok := ModuleFilter(string(f.BuiltinField)); ok {
-			plan.moduleFilters = append(plan.moduleFilters, entity.ViewRunModuleFilter{Def: f, Filter: mf})
-		}
-	}
-	load := func(id int) error {
+	// load - the field storage id into the plan; false - it is gone (the
+	// criterion is left out, logged).
+	load := func(id int) (bool, error) {
 		if _, ok := plan.fieldStorages[id]; ok {
-			return nil
+			return true, nil
 		}
 		fs, err := s.contentTypeRepo.FieldStorageByID(ctx, id)
+		if errors.Is(err, entity.ErrEntityNotFound) {
+			fallback.Log(s.logger, err, "a View criterion's field is gone (the criterion left out)", "fieldStorageID", id)
+			return false, nil
+		}
 		if err != nil {
-			return err
+			return false, err
 		}
 		plan.fieldStorages[id] = *fs
-		return nil
+		return true, nil
 	}
-	for _, f := range plan.filters {
-		if f.FieldStorageID != nil {
-			if err := load(*f.FieldStorageID); err != nil {
+	for _, f := range filters {
+		switch {
+		case IsModuleKey(string(f.BuiltinField)):
+			if mf, ok := ModuleFilter(string(f.BuiltinField)); ok {
+				plan.moduleFilters = append(plan.moduleFilters, entity.ViewRunModuleFilter{Def: f, Filter: mf})
+			}
+		case f.FieldStorageID != nil:
+			ok, err := load(*f.FieldStorageID)
+			if err != nil {
 				return runPlan{}, err
 			}
+			if ok {
+				plan.filters = append(plan.filters, f)
+			}
+		default:
+			plan.filters = append(plan.filters, f)
 		}
 	}
 	for _, sd := range sorts {
 		rs := entity.ViewRunSort{Builtin: sd.BuiltinField, Direction: sd.Direction}
 		switch {
 		case sd.FieldStorageID != nil:
-			if err := load(*sd.FieldStorageID); err != nil {
+			ok, err := load(*sd.FieldStorageID)
+			if err != nil {
 				return runPlan{}, err
+			}
+			if !ok {
+				continue
 			}
 			fs := plan.fieldStorages[*sd.FieldStorageID]
 			rs.FieldStorage = &fs
@@ -89,31 +106,12 @@ func glossaryLetterFilter(view entity.ViewDisplayDef, letter string) entity.View
 
 // RunView - see Service.RunView.
 func (s *DefaultService) RunView(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page int) (entity.Nodes, int, error) {
-	return s.RunViewForPage(ctx, view, queryParams, page, 0)
+	return s.runPublished(ctx, view, RunContext{QueryParams: queryParams, Page: page})
 }
 
 // RunViewForPage - see Service.RunViewForPage.
 func (s *DefaultService) RunViewForPage(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page, contextUserID int) (entity.Nodes, int, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("resolving effective settings (viewID %v): %w", view.ID, err)
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view filters (viewID %v): %w", view.ID, err)
-	}
-	sorts, err := s.EffectiveSortsByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view sorts (viewID %v): %w", view.ID, err)
-	}
-	return s.runView(ctx, effective, filters, sorts, queryParams, page, contextUserID, 0, 0)
-}
-
-// RunViewFromSnapshotForPage - RunViewForPage on a published snapshot:
-// its settings, filters and sort criteria instead of the live rows.
-func (s *DefaultService) RunViewFromSnapshotForPage(ctx context.Context, view entity.ViewDisplayDef, snap entity.ViewSnapshot, queryParams map[string]string, page, contextUserID int) (entity.Nodes, int, error) {
-	effective := snap.Settings.ApplyTo(view)
-	return s.runView(ctx, effective, snap.Filters, snap.Sorts, queryParams, page, contextUserID, 0, 0)
+	return s.runPublished(ctx, view, RunContext{QueryParams: queryParams, Page: page, CreatedByID: contextUserID})
 }
 
 // ViewByURLArgument - see the Service interface's doc comment.
@@ -134,54 +132,18 @@ func (s *DefaultService) ViewByURLArgument(ctx context.Context, path string) (*e
 // request query string for exposed filters), always page 1 (blocks don't
 // paginate).
 func (s *DefaultService) RunViewWithContext(ctx context.Context, view entity.ViewDisplayDef, contextCreatedByID, contextNodeID int) (entity.Nodes, int, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("resolving effective settings (viewID %v): %w", view.ID, err)
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view filters (viewID %v): %w", view.ID, err)
-	}
-	sorts, err := s.EffectiveSortsByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view sorts (viewID %v): %w", view.ID, err)
-	}
-	return s.runView(ctx, effective, filters, sorts, nil, 1, contextCreatedByID, contextNodeID, 0)
+	return s.runPublished(ctx, view, RunContext{Page: 1, CreatedByID: contextCreatedByID, NodeID: contextNodeID})
 }
 
 // RunViewForTerm - see Service. No QueryParams, same as
 // RunViewWithContext.
 func (s *DefaultService) RunViewForTerm(ctx context.Context, view entity.ViewDisplayDef, termID, page int) (entity.Nodes, int, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("resolving effective settings (viewID %v): %w", view.ID, err)
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view filters (viewID %v): %w", view.ID, err)
-	}
-	sorts, err := s.EffectiveSortsByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view sorts (viewID %v): %w", view.ID, err)
-	}
-	return s.runView(ctx, effective, filters, sorts, nil, page, 0, 0, termID)
+	return s.runPublished(ctx, view, RunContext{Page: page, TermID: termID})
 }
 
 // RunViewForUser - see Service.
 func (s *DefaultService) RunViewForUser(ctx context.Context, view entity.ViewDisplayDef, userID, page int) (entity.Nodes, int, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("resolving effective settings (viewID %v): %w", view.ID, err)
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view filters (viewID %v): %w", view.ID, err)
-	}
-	sorts, err := s.EffectiveSortsByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view sorts (viewID %v): %w", view.ID, err)
-	}
-	return s.runView(ctx, effective, filters, sorts, nil, page, userID, 0, 0)
+	return s.runPublished(ctx, view, RunContext{Page: page, CreatedByID: userID})
 }
 
 func (s *DefaultService) runView(ctx context.Context, effective entity.ViewDisplayDef, filters entity.ViewFilterDefs, sorts entity.ViewSortDefs, queryParams map[string]string, page, contextCreatedByID, contextNodeID, contextTermID int) (entity.Nodes, int, error) {
@@ -219,28 +181,16 @@ func (s *DefaultService) runView(ctx context.Context, effective entity.ViewDispl
 // glossary and no field storages (comments have none); resolves
 // Filters/Sorts and delegates to the repository.
 func (s *DefaultService) RunCommentView(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page int) (entity.Comments, int, error) {
-	return s.runCommentView(ctx, view, queryParams, page, 0)
+	return s.runPublishedComments(ctx, view, RunContext{QueryParams: queryParams, Page: page})
 }
 
 // RunCommentViewForUser - RunCommentView on the profile of userID: the
 // comment_created_by contextual filter resolves to userID.
 func (s *DefaultService) RunCommentViewForUser(ctx context.Context, view entity.ViewDisplayDef, userID, page int) (entity.Comments, int, error) {
-	return s.runCommentView(ctx, view, nil, page, userID)
+	return s.runPublishedComments(ctx, view, RunContext{Page: page, CreatedByID: userID})
 }
 
-func (s *DefaultService) runCommentView(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string, page, contextCreatedByID int) (entity.Comments, int, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("resolving effective settings (viewID %v): %w", view.ID, err)
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view filters (viewID %v): %w", view.ID, err)
-	}
-	sorts, err := s.EffectiveSortsByView(ctx, view)
-	if err != nil {
-		return nil, 0, fmt.Errorf("loading view sorts (viewID %v): %w", view.ID, err)
-	}
+func (s *DefaultService) runCommentView(ctx context.Context, effective entity.ViewDisplayDef, filters entity.ViewFilterDefs, sorts entity.ViewSortDefs, queryParams map[string]string, page, contextCreatedByID int) (entity.Comments, int, error) {
 	sorts = sorts.SortBySortOrder().WithChoice(queryParams[entity.ViewSortParam])
 	runSorts := make([]entity.ViewRunSort, len(sorts))
 	for i, sd := range sorts {
@@ -263,32 +213,16 @@ func (s *DefaultService) runCommentView(ctx context.Context, view entity.ViewDis
 }
 
 // Glossary computes a view's letter-index bar data
-// (entity.ViewDisplayDef.ShowGlossary): the same filters RunView would
-// apply except the letter constraint itself, so every letter stays
-// clickable while other active filters still narrow the counts.
+// (entity.ViewDisplayDef.ShowGlossary) as visitors see the display: the
+// same filters RunView would apply except the letter constraint itself,
+// so every letter stays clickable while other active filters still narrow
+// the counts.
 func (s *DefaultService) Glossary(ctx context.Context, view entity.ViewDisplayDef, queryParams map[string]string) (entity.GlossaryData, error) {
-	effective, err := s.EffectiveSettings(ctx, view)
+	cfg, err := s.publishedConfig(ctx, view, false)
 	if err != nil {
-		return nil, fmt.Errorf("resolving effective settings for glossary (viewID %v): %w", view.ID, err)
+		return nil, err
 	}
-	if !effective.ShowGlossary {
-		return entity.GlossaryData{}, nil
-	}
-	filters, err := s.EffectiveFiltersByView(ctx, view)
-	if err != nil {
-		return nil, fmt.Errorf("loading view filters for glossary (viewID %v): %w", view.ID, err)
-	}
-	return s.glossary(ctx, effective, filters, queryParams)
-}
-
-// GlossaryFromSnapshot - Glossary on a published snapshot, as
-// RunViewFromSnapshotForPage runs the view on it.
-func (s *DefaultService) GlossaryFromSnapshot(ctx context.Context, view entity.ViewDisplayDef, snap entity.ViewSnapshot, queryParams map[string]string) (entity.GlossaryData, error) {
-	effective := snap.Settings.ApplyTo(view)
-	if !effective.ShowGlossary {
-		return entity.GlossaryData{}, nil
-	}
-	return s.glossary(ctx, effective, snap.Filters, queryParams)
+	return s.GlossaryOf(ctx, cfg, queryParams)
 }
 
 func (s *DefaultService) glossary(ctx context.Context, effective entity.ViewDisplayDef, filters entity.ViewFilterDefs, queryParams map[string]string) (entity.GlossaryData, error) {
@@ -302,6 +236,11 @@ func (s *DefaultService) glossary(ctx context.Context, effective entity.ViewDisp
 	if effective.GlossaryFieldStorageID != nil {
 		if _, ok := fieldStorages[*effective.GlossaryFieldStorageID]; !ok {
 			fs, err := s.contentTypeRepo.FieldStorageByID(ctx, *effective.GlossaryFieldStorageID)
+			if errors.Is(err, entity.ErrEntityNotFound) {
+				// Its field is gone (a published snapshot's): no bar.
+				fallback.Log(s.logger, err, "a View's glossary field is gone (no glossary shown)", "viewID", effective.ID)
+				return entity.GlossaryData{}, nil
+			}
 			if err != nil {
 				return nil, fmt.Errorf("loading glossary target field storage (viewID %v): %w", effective.ID, err)
 			}

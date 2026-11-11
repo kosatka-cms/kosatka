@@ -539,16 +539,19 @@ func (s *CacheService) resolveViewBlockContent(ctx context.Context, blockPlaceme
 			if !bp.Placement.IsView() || bp.ViewDisplay == nil {
 				continue
 			}
+			// The display as visitors see it (its published version).
+			cfg, err := s.viewService.PublishedConfig(ctx, *bp.ViewDisplay)
+			if err != nil {
+				s.logger.Error("error loading view settings for block", "error", err, "viewDisplayID", bp.ViewDisplay.ID, "placementID", bp.Placement.ID)
+				continue
+			}
 			// Displays with contextual filters depend on the viewed node,
 			// so they are skipped here and rendered per request by
 			// DynamicContentController.attachContextualViewBlocks.
-			if filters, err := s.viewService.EffectiveFiltersByView(ctx, *bp.ViewDisplay); err != nil {
-				s.logger.Error("error loading view filters for block", "error", err, "viewDisplayID", bp.ViewDisplay.ID, "placementID", bp.Placement.ID)
-				continue
-			} else if filters.HasContextual() {
+			if cfg.Filters.HasContextual() {
 				continue
 			}
-			html, err := s.renderViewBlock(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil)
+			html, err := s.renderViewBlock(ctx, cfg, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil)
 			if err != nil {
 				s.logger.Error("error rendering view block", "error", err, "viewDisplayID", bp.ViewDisplay.ID, "placementID", bp.Placement.ID)
 				continue
@@ -557,7 +560,7 @@ func (s *CacheService) resolveViewBlockContent(ctx context.Context, blockPlaceme
 			// Does the block show times? Render it in a far-off zone too:
 			// a different output means it does (user time zones only).
 			if probe != nil {
-				if probed, err := s.renderViewBlock(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, probe); err == nil && probed != html {
+				if probed, err := s.renderViewBlock(ctx, cfg, viewBlockPart{placementID: bp.Placement.ID, page: 1}, probe); err == nil && probed != html {
 					dependent[bp.Placement.ID] = true
 				}
 			}
@@ -565,11 +568,11 @@ func (s *CacheService) resolveViewBlockContent(ctx context.Context, blockPlaceme
 			// a visitor who may view every type: a different output (or
 			// none) means it does.
 			if allCtx != nil {
-				if all, err := s.renderViewBlock(allCtx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil); err != nil || all != html {
+				if all, err := s.renderViewBlock(allCtx, cfg, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil); err != nil || all != html {
 					accessDependent[bp.Placement.ID] = true
 				}
 			}
-			if eff, err := s.viewService.EffectiveSettings(ctx, *bp.ViewDisplay); err == nil && eff.DisplayStyle == entity.ViewDisplayStyleCarousel {
+			if cfg.View.DisplayStyle == entity.ViewDisplayStyleCarousel {
 				carousels[bp.Placement.ID] = true
 			}
 		}
@@ -613,21 +616,14 @@ func ViewBlockPagePath(placementID int) string {
 // (a sidebar is narrow).
 const viewBlockPageSize = 5
 
-// viewBlockPager - the pager of a View block whose display pages (its
-// effective settings), or nil: its links load the pages through
+// viewBlockPager - the pager of a View block whose display pages (view -
+// its settings resolved), or nil: its links load the pages through
 // ViewBlockPagePath, in place (app.js, data-ajax-pagination).
-func (s *CacheService) viewBlockPager(ctx context.Context, view entity.ViewDisplayDef, part viewBlockPart, total int) (*pagination.Pagination, error) {
-	if part.placementID == 0 {
-		return nil, nil
+func viewBlockPager(view entity.ViewDisplayDef, part viewBlockPart, total int) *pagination.Pagination {
+	if part.placementID == 0 || !view.ShowPagination || view.PageSize <= 0 {
+		return nil
 	}
-	eff, err := s.viewService.EffectiveSettings(ctx, view)
-	if err != nil {
-		return nil, fmt.Errorf("loading the settings of a View block (display %d): %w", view.ID, err)
-	}
-	if !eff.ShowPagination || eff.PageSize <= 0 {
-		return nil, nil
-	}
-	return pagination.NewWithOptions(part.page, total, eff.PageSize, viewBlockPageSize, ViewBlockPagePath(part.placementID), nil, ""), nil
+	return pagination.NewWithOptions(part.page, total, view.PageSize, viewBlockPageSize, ViewBlockPagePath(part.placementID), nil, "")
 }
 
 // pagedThemeBlock - a theme template's output of a paged View block in
@@ -639,12 +635,22 @@ func pagedThemeBlock(html template.HTML, pager *pagination.Pagination, part view
 	return template.HTML(`<div class="view-block-pages" data-ajax-pagination="1">`) + html + template.HTML(`</div>`)
 }
 
-// renderViewBlock - part of one View block in zone (nil - the site's).
-func (s *CacheService) renderViewBlock(ctx context.Context, view entity.ViewDisplayDef, part viewBlockPart, zone *time.Location) (template.HTML, error) {
-	if view.IsComment() {
-		return s.renderCommentViewBlock(ctx, view, part, zone)
+// renderViewBlockOf - renderViewBlock of display as visitors see it.
+func (s *CacheService) renderViewBlockOf(ctx context.Context, display entity.ViewDisplayDef, part viewBlockPart, zone *time.Location) (template.HTML, error) {
+	cfg, err := s.viewService.PublishedConfig(ctx, display)
+	if err != nil {
+		return "", fmt.Errorf("loading the settings of a View block (display %d): %w", display.ID, err)
 	}
-	return s.renderContentViewBlock(ctx, view, part, zone)
+	return s.renderViewBlock(ctx, cfg, part, zone)
+}
+
+// renderViewBlock - part of one View block (cfg - its display as visitors
+// see it: views.Service.PublishedConfig) in zone (nil - the site's).
+func (s *CacheService) renderViewBlock(ctx context.Context, cfg views.Config, part viewBlockPart, zone *time.Location) (template.HTML, error) {
+	if cfg.View.IsComment() {
+		return s.renderCommentViewBlock(ctx, cfg, part, zone)
+	}
+	return s.renderContentViewBlock(ctx, cfg, part, zone)
 }
 
 // ViewBlockPage - page of the View block of placement placementID for
@@ -655,18 +661,18 @@ func (s *CacheService) ViewBlockPage(ctx context.Context, view entity.ViewDispla
 	if s.viewService == nil || s.templateService == nil {
 		return "", false, nil
 	}
-	filters, err := s.viewService.EffectiveFiltersByView(ctx, view)
+	cfg, err := s.viewService.PublishedConfig(ctx, view)
 	if err != nil {
-		return "", false, fmt.Errorf("loading the filters of a View block (display %d): %w", view.ID, err)
+		return "", false, fmt.Errorf("loading the settings of a View block (display %d): %w", view.ID, err)
 	}
-	if filters.HasContextual() {
+	if cfg.Filters.HasContextual() {
 		return "", false, nil
 	}
 	part := viewBlockPart{placementID: placementID, page: page, body: true}
-	if pager, err := s.viewBlockPager(ctx, view, part, 0); err != nil || pager == nil {
-		return "", false, err
+	if viewBlockPager(cfg.View, part, 0) == nil {
+		return "", false, nil
 	}
-	html, err := s.renderViewBlock(ctx, view, part, zone)
+	html, err := s.renderViewBlock(ctx, cfg, part, zone)
 	return html, err == nil, err
 }
 
@@ -710,7 +716,7 @@ func (s *CacheService) ViewBlockContentFor(ctx context.Context, zone *time.Locat
 			if bp.ViewDisplay == nil || (!otherLang && !data.ZoneDependent[bp.Placement.ID]) {
 				continue
 			}
-			html, err := s.renderViewBlock(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, zone)
+			html, err := s.renderViewBlockOf(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, zone)
 			if err != nil {
 				s.logger.Error("error rendering view block for a time zone", "error", err, "placementID", bp.Placement.ID, "zone", key)
 				continue
@@ -727,24 +733,18 @@ func (s *CacheService) ViewBlockContentFor(ctx context.Context, zone *time.Locat
 // render and admin preview use (part.body: its "comment_list_body"). No
 // draft banner (only published View blocks reach here); a pager when the
 // display pages (viewBlockPager).
-func (s *CacheService) renderCommentViewBlock(ctx context.Context, view entity.ViewDisplayDef, part viewBlockPart, zone *time.Location) (template.HTML, error) {
-	comments, total, err := s.viewService.RunCommentView(ctx, view, nil, part.page)
+func (s *CacheService) renderCommentViewBlock(ctx context.Context, cfg views.Config, part viewBlockPart, zone *time.Location) (template.HTML, error) {
+	view := cfg.View
+	comments, total, err := s.viewService.RunCommentConfig(ctx, cfg, views.RunContext{Page: part.page})
 	if err != nil {
 		return "", fmt.Errorf("error running comment view for block: %w", err)
 	}
-	pager, err := s.viewBlockPager(ctx, view, part, total)
-	if err != nil {
-		return "", err
-	}
+	pager := viewBlockPager(view, part, total)
 	if view.ThemeTemplate != "" && views.ThemeTemplateExists(ctx, view.ThemeTemplate) {
 		html, err := views.RenderThemeTemplate(ctx, s.templateService, view.ThemeTemplate, map[string]any{"comments": comments, "pagerCompact": true, RequestLocationKey: zone, RequestLanguageKey: i18n.FromContext(ctx), RequestThemeKey: RequestTheme(ctx)}, pager)
 		return pagedThemeBlock(views.WithViewTexts(view, html), pager, part), err
 	}
-	viewFields, err := s.viewService.EffectiveFieldsByView(ctx, view)
-	if err != nil {
-		return "", fmt.Errorf("error loading comment view fields for block: %w", err)
-	}
-	data := views.CommentListData(ctx, view, viewFields, comments)
+	data := views.CommentListData(ctx, view, cfg.Fields, comments)
 	data["viewUnpublished"] = false
 	data["showPagination"] = pager != nil
 	data["pagination"] = pager
@@ -771,18 +771,16 @@ func (s *CacheService) renderCommentViewBlock(ctx context.Context, view entity.V
 
 // renderContentViewBlock renders a content-based View block through the
 // "content" define of dynamic/list.html (part.body: its "view_list_body"),
-// as ViewPageFallback does for a page, but without snapshot, glossary or
-// exposed filters; a pager when the display pages (viewBlockPager). Field
+// as ViewPageFallback does for a page, but without glossary or exposed
+// filters; a pager when the display pages (viewBlockPager). Field
 // metadata is resolved once per block, not per node.
-func (s *CacheService) renderContentViewBlock(ctx context.Context, view entity.ViewDisplayDef, part viewBlockPart, zone *time.Location) (template.HTML, error) {
-	nodes, total, err := s.viewService.RunView(ctx, view, nil, part.page)
+func (s *CacheService) renderContentViewBlock(ctx context.Context, cfg views.Config, part viewBlockPart, zone *time.Location) (template.HTML, error) {
+	view := cfg.View
+	nodes, total, err := s.viewService.RunConfig(ctx, cfg, views.RunContext{Page: part.page})
 	if err != nil {
 		return "", fmt.Errorf("error running content view for block: %w", err)
 	}
-	pager, err := s.viewBlockPager(ctx, view, part, total)
-	if err != nil {
-		return "", err
-	}
+	pager := viewBlockPager(view, part, total)
 	// A theme template (ViewDisplayDef.ThemeTemplate) renders the block
 	// instead of the field list, as on View pages.
 	if view.ThemeTemplate != "" && s.teasers != nil && views.ThemeTemplateExists(ctx, view.ThemeTemplate) {
@@ -793,10 +791,7 @@ func (s *CacheService) renderContentViewBlock(ctx context.Context, view entity.V
 		html, err := views.RenderThemeTemplate(ctx, s.templateService, view.ThemeTemplate, map[string]any{"items": items, "pagerCompact": true, RequestLocationKey: zone, RequestLanguageKey: i18n.FromContext(ctx), RequestThemeKey: RequestTheme(ctx)}, pager)
 		return pagedThemeBlock(views.WithViewTexts(view, html), pager, part), err
 	}
-	viewFields, err := s.viewService.EffectiveFieldsByView(ctx, view)
-	if err != nil {
-		return "", fmt.Errorf("error loading content view fields for block: %w", err)
-	}
+	viewFields := cfg.Fields
 	// A block shows the nodes' alternative titles (their types'
 	// AltTitleField); a View page shows the titles.
 	listFields, items, err := views.BuildContentList(ctx, views.ContentListSources{Nodes: s.nodeRepo, Types: s.contentTypeRepo,
@@ -960,7 +955,7 @@ func (s *CacheService) forAccess(ctx context.Context, data SidebarData) SidebarD
 				if !data.AccessDependent[bp.Placement.ID] || bp.ViewDisplay == nil {
 					continue
 				}
-				html, err := s.renderViewBlock(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil)
+				html, err := s.renderViewBlockOf(ctx, *bp.ViewDisplay, viewBlockPart{placementID: bp.Placement.ID, page: 1}, nil)
 				if err != nil {
 					LogFallback(s.logger, err, "rendering a View block for a visitor's content types (as for a guest)", "placementID", bp.Placement.ID)
 					complete = false
@@ -1090,9 +1085,11 @@ func (s *CacheService) ViewEmbed() EmbedKind {
 		if view.DisplayType != entity.ViewDisplayTypeBlock || view.Status != 1 {
 			return "", nil
 		}
-		if filters, err := s.viewService.EffectiveFiltersByView(ctx, *view); err != nil {
-			return "", fmt.Errorf("loading the filters of the embedded View %q: %w", name, err)
-		} else if filters.HasContextual() {
+		cfg, err := s.viewService.PublishedConfig(ctx, *view)
+		if err != nil {
+			return "", fmt.Errorf("loading the settings of the embedded View %q: %w", name, err)
+		}
+		if cfg.Filters.HasContextual() {
 			return "", nil
 		}
 		// The refresh it is rendered after (kept for it only).
@@ -1110,7 +1107,7 @@ func (s *CacheService) ViewEmbed() EmbedKind {
 		if html, ok := s.embedded.get(gen, key); ok {
 			return html, nil
 		}
-		html, err := s.renderViewBlock(ctx, *view, viewBlockPart{page: 1}, zone)
+		html, err := s.renderViewBlock(ctx, cfg, viewBlockPart{page: 1}, zone)
 		if err != nil {
 			return "", fmt.Errorf("rendering the embedded View %q: %w", name, err)
 		}
@@ -1125,8 +1122,8 @@ func (s *CacheService) embeddableView(ctx context.Context, view entity.ViewDispl
 	if view.DisplayType != entity.ViewDisplayTypeBlock || view.Status != 1 || view.IsDefault {
 		return false
 	}
-	filters, err := s.viewService.EffectiveFiltersByView(ctx, view)
-	return err == nil && !filters.HasContextual()
+	cfg, err := s.viewService.PublishedConfig(ctx, view)
+	return err == nil && !cfg.Filters.HasContextual()
 }
 
 // searchViewEmbeds - the View block displays a text can embed whose label

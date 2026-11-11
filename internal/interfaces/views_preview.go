@@ -154,7 +154,10 @@ func (c *DynamicContentController) ViewPreview(w http.ResponseWriter, r *http.Re
 	activeLetter := strings.ToUpper(strings.TrimSpace(req.Letter))
 	var glossary entity.GlossaryData
 	if view.ShowGlossary {
-		glossary, err = c.viewService.Glossary(ctx, *view, map[string]string{})
+		var live views.Config
+		if live, err = c.viewService.LiveConfig(ctx, *view); err == nil {
+			glossary, err = c.viewService.GlossaryOf(ctx, live, map[string]string{})
+		}
 		if err != nil {
 			c.LogFailure(err, "error computing view glossary for preview", "viewID", id)
 			// Non-fatal: render without the glossary bar.
@@ -243,9 +246,9 @@ func (c *DynamicContentController) viewPreviewHead(r *http.Request, modules []st
 }
 
 // renderCommentViewPreview is ViewPreview's path for comment-based Views, with
-// the same scope as renderCommentViewPage. RunCommentView reads page size and
-// other settings from the stored view, since the settings modal saves on
-// change.
+// the same scope as renderCommentViewPage, on the live configuration
+// (LiveConfig): page size and other settings from the stored view, since
+// the settings modal saves on change.
 func (c *DynamicContentController) renderCommentViewPreview(w http.ResponseWriter, r *http.Request, view *entity.ViewDisplayDef, req viewPreviewRequest) {
 	ctx := r.Context()
 	page := req.Page
@@ -253,19 +256,19 @@ func (c *DynamicContentController) renderCommentViewPreview(w http.ResponseWrite
 		page = 1
 	}
 
-	comments, total, err := c.viewService.RunCommentView(ctx, *view, map[string]string{}, page)
+	live, err := c.viewService.LiveConfig(ctx, *view)
+	if err != nil {
+		c.LogFailure(err, "error loading comment view settings for preview", "viewID", view.ID)
+		httputil.InternalServerError(w)
+		return
+	}
+	comments, total, err := c.viewService.RunCommentConfig(ctx, live, views.RunContext{QueryParams: map[string]string{}, Page: page})
 	if err != nil {
 		c.LogFailure(err, "error previewing comment view", "viewID", view.ID)
 		httputil.InternalServerError(w)
 		return
 	}
-
-	viewFields, err := c.viewService.EffectiveFieldsByView(ctx, *view)
-	if err != nil {
-		c.LogFailure(err, "error loading comment view fields for preview", "viewID", view.ID)
-		httputil.InternalServerError(w)
-		return
-	}
+	viewFields := live.Fields
 	// draft - the view with the settings modal's unsaved values.
 	draft := *view
 	draft.DisplayStyle = entity.ViewDisplayStyle(req.DisplayStyle)
