@@ -388,8 +388,8 @@ func (s *NodeRevisionService) Recent(ctx context.Context, f entity.RecentRevisio
 
 // RecentScope - which nodes' revisions a viewer may see (has - their
 // permissions), as a filter's AnyTypes/OwnTypes/OwnerID: every node of
-// the types they may edit any of, their own published ones of those they
-// may edit only their own of (as AuthService.CanEditNode).
+// the types they may edit any of, their own ones of those they may edit
+// only their own of (as AuthService.CanEditNode).
 func (s *NodeRevisionService) RecentScope(ctx context.Context, userID int, has func(permission string) bool) (entity.RecentRevisionsFilter, error) {
 	f := entity.RecentRevisionsFilter{OwnerID: userID}
 	defs, err := s.d.Types.ContentTypes(ctx)

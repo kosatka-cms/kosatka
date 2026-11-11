@@ -84,8 +84,8 @@ private keeps its earlier files public.
 ## Unpublished content
 
 Content that isn't public yet - a draft, an item waiting on moderation -
-is shown only to those who may view unpublished content and, while it
-waits on moderation, to its author. For everyone else it is missing
+is shown only to those who may view unpublished content or edit it, and
+to its author while it waits on moderation. For everyone else it is missing
 everywhere, not just from its page: the comments on it, the comment
 lists, the forum, the blocks embedding it (a poll, a form, galleries)
 and the editors' title search leave it out

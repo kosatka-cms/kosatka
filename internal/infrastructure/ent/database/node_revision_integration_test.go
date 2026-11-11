@@ -85,12 +85,16 @@ func TestRecentRevisions(t *testing.T) {
 				t.Errorf("%s: %d, want %d", name, n, tc.want)
 			}
 		}
-		// Their own, but unpublished: not theirs to see.
+		// Their own unpublished: theirs to see too (they may edit it).
 		if _, err := db.DB.Exec(db.Dialect.Rebind(`UPDATE nodes SET status = 0 WHERE id = ?`), 11); err != nil {
 			t.Fatal(err)
 		}
-		if n := count(entity.RecentRevisionsFilter{OwnTypes: []string{"page"}, OwnerID: 2}); n != 0 {
-			t.Errorf("own unpublished: %d", n)
+		if n := count(entity.RecentRevisionsFilter{OwnTypes: []string{"page"}, OwnerID: 2}); n != 1 {
+			t.Errorf("own unpublished: %d, want 1", n)
+		}
+		// Another's own: not.
+		if n := count(entity.RecentRevisionsFilter{OwnTypes: []string{"page"}, OwnerID: 3}); n != 0 {
+			t.Errorf("another's own: %d", n)
 		}
 	})
 }

@@ -774,8 +774,8 @@ a part of the name of who saved it and the days.
 Only the types keeping their history get there: the page names those
 that don't, with a link to the content types. A user sees the saves of
 the content whose history they may see (below): all of a type's when
-they may edit any of its content, their own published items when they
-may edit only their own.
+they may edit any of its content, their own items when they may edit
+only their own.
 
 Seeing the history takes the *View the history of changes of content
 they may edit* permission, bringing a version back *Bring back an earlier
