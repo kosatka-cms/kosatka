@@ -89,9 +89,11 @@ from the module; such types have no pattern.
 In the content form, the **Address** section (shown to users with
 the *administer content* permission) has:
 
-- **Generate the URL alias automatically** - on: the address is rebuilt
-  from the pattern each time the item is saved. Off: the address is the
-  one typed in the field below.
+- **Generate the URL alias automatically** - on: the address is made
+  from the pattern when the item is created, then it stays - renaming
+  the item or changing its terms doesn't move it. Off: the address is
+  the one typed in the field below; ticking it again on an address typed
+  by hand makes the address from the pattern at once.
 - **Slug (URL)** - the address without the leading `/`. On a new item it
   may be left empty to generate it. A typed address another page of the
   site already answers - a View's page, a term's page, one of the
@@ -110,9 +112,8 @@ link redirects (302, as the address may change) to the item's current
 address, for whoever may see the item. The action log links to content
 this way. An item whose own address is `node/<number>` keeps it.
 
-A changed pattern applies to new content and to automatic addresses the
-next time their content is saved. Existing addresses stay as they are
-until you rebuild them.
+A changed pattern applies to new content. Existing addresses stay as
+they are until you rebuild them.
 
 ### The list of addresses
 

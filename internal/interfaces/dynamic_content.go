@@ -425,9 +425,13 @@ func (c *DynamicContentController) slugTaken(ctx context.Context, slug string) (
 // by the type's pattern while it is automatic (PathAuto: the form's
 // checkbox, or the node's own setting when the form had none; a new node
 // without a typed slug too), else the typed one (an emptied one keeps the
-// current slug). Sets e.Node.PathAuto.
+// current slug). Sets e.Node.PathAuto. The pattern makes a node's address
+// once: when it is created, or when its address set by hand is made
+// automatic; a saved automatic address stays - renaming the node or
+// changing its terms doesn't move it (an address typed instead does).
 func (c *DynamicContentController) nodeSlug(ctx context.Context, def entity.ContentTypeDef, f *form.DynamicForm, e *entity.DynamicContent) (string, error) {
 	typed := strings.Trim(f.Slug, "/ ")
+	wasAuto := e.Node.ID != 0 && e.Node.PathAuto
 	auto := e.Node.ID == 0 || e.Node.PathAuto
 	if f.PathAutoShown {
 		auto = f.PathAuto
@@ -441,6 +445,9 @@ func (c *DynamicContentController) nodeSlug(ctx context.Context, def entity.Cont
 			return e.Node.Slug, nil
 		}
 		return typed, nil
+	}
+	if wasAuto && e.Node.Slug != "" {
+		return e.Node.Slug, nil
 	}
 	return c.paths.Path(ctx, def, *e)
 }

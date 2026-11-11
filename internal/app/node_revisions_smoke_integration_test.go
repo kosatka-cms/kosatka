@@ -86,15 +86,15 @@ func TestNodeRevisions(t *testing.T) {
 			t.Fatalf("bulk publish: %v %v", err, resp)
 		}
 		_ = resp.Body.Close()
-		// The title's edit moves the automatic address with it.
-		want := []string{"create", `edit["title","slug"]`, `edit["field:field_body"]`, `edit["status"]`, `edit["status"]`}
+		// The title's edit leaves the address.
+		want := []string{"create", `edit["title"]`, `edit["field:field_body"]`, `edit["status"]`, `edit["status"]`}
 		if got := revisions(); strings.Join(got, " ") != strings.Join(want, " ") {
 			t.Errorf("revisions %v, want %v", got, want)
 		}
 		// One more beyond the keep of 5: the first one goes.
 		save(edit, "History final", "<p>One two four</p>")
 		got := revisions()
-		if len(got) != 5 || got[0] != `edit["title","slug"]` {
+		if len(got) != 5 || got[0] != `edit["title"]` {
 			t.Errorf("after the keep: %v", got)
 		}
 
