@@ -216,7 +216,10 @@ required field is empty is sent to fill it in first.
 - **Forgotten password**: `/user/password` sends a reset link (valid 24
   hours) to the address, if an account has it. The page says the same
   whether it does or not. A password set by the link confirms the
-  address.
+  address. It is open to signed-in users too, and the profile links to it
+  by the *Current password* field: a password is changed there with the
+  current one, so who forgot it - or never had one, signed up through
+  social login - sets a new one by the link.
 - **A new e-mail address** in the profile isn't confirmed until its
   confirmation link is followed: where the site signs in confirmed
   addresses only, the link is mailed to it, and signing in waits for it.
