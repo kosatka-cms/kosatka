@@ -61,6 +61,7 @@ role's column is always ticked and can't be changed.
 | Moderation (moderation queue) | the *Pending moderation* list (`/admin/moderation`) |
 | View the history of changes of content they may edit | a content item's *History* and its comparisons; see [History of changes](./content-types.md#history-of-changes) |
 | Bring back an earlier version of content they may edit | bringing an earlier version of a content item back |
+| Make copies of content they may edit (and create) | *Make a copy* among a content item's actions; see [Copying content](./content-types.md#copying-content) |
 | Administer users' files: view and manage any user's files | the users' files in *Content → Users' files* |
 | Upload documents to files (without it - images only) | uploading documents, not just images, to one's own files |
 | Access the site in maintenance mode | using the site while it is in maintenance mode |

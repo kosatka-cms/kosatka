@@ -324,8 +324,8 @@ func (c *DynamicContentController) Delete(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// Clone handles POST /node/{id}/clone: a copy of the node (who may edit
-// it and create its type's content) - its fields' values, the blocks of
+// Clone handles POST /node/{id}/clone: a copy of the node (who may copy
+// content, edit it and create its type's content: mayCopy) - its fields' values, the blocks of
 // its blocks fields copied too, its flags, comment mode and view roles -
 // titled "Copy of …", unpublished, by the user, with an address of its
 // own; its form opens.
@@ -345,7 +345,7 @@ func (c *DynamicContentController) Clone(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	if cf.def.Embedded || !c.authService.CanCreateNode(ctx, node.Type, user) {
+	if cf.def.Embedded || !c.mayCopy(ctx, node.Type, user) {
 		c.RenderForbidden(w, r)
 		return
 	}
@@ -357,6 +357,12 @@ func (c *DynamicContentController) Clone(w http.ResponseWriter, r *http.Request)
 	}
 	c.logger.Info("node copied", "from", node.ID, "nodeID", id)
 	http.Redirect(w, r, fmt.Sprintf("/node/%d/edit", id), http.StatusSeeOther)
+}
+
+// mayCopy - whether user may "Make a copy" of content of contentType
+// they may edit: the copying permission and creating the type's content.
+func (c *DynamicContentController) mayCopy(ctx context.Context, contentType entity.ContentType, user *entity.User) bool {
+	return c.authService.HasPermission(ctx, user, service.PermCopyContent) && c.authService.CanCreateNode(ctx, contentType, user)
 }
 
 // copyNode creates a copy of node (an admin-created type's, cf its form)

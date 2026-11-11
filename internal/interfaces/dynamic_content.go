@@ -205,8 +205,9 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 		canEdit, canDelete = c.EditDeletePermissions(ctx, &dc.Node, user)
 		// The node's history: a type keeping one, for who may see it.
 		canViewRevisions = canEdit && def.Revisions && c.MayViewRevisions(ctx, &dc.Node, user)
-		// A copy (Clone): who may edit it and create its type's content.
-		canClone = canEdit && user != nil && !def.Embedded && c.authService.CanCreateNode(ctx, dc.Node.Type, user)
+		// A copy (Clone): who may copy content, edit it and create its
+		// type's content.
+		canClone = canEdit && user != nil && !def.Embedded && c.mayCopy(ctx, dc.Node.Type, user)
 	}
 
 	// Title and description from SEOService templates, over the built-in

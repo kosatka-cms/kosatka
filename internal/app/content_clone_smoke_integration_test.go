@@ -15,7 +15,8 @@ import (
 
 // TestContentClone - "Make a copy" on an article: a new unpublished one,
 // "Copy of …", with the same text, an address of its own, its form opened;
-// the original stays as it was.
+// the original stays as it was. An author who may edit their own article
+// copies it only with the "copy content" permission.
 func TestContentClone(t *testing.T) {
 	testdb.Each(t, func(t *testing.T, db testdb.DB) {
 		s := serveSite(t, db)
@@ -63,6 +64,47 @@ func TestContentClone(t *testing.T) {
 		}
 		if code, _ := s.visitor().get("/" + copySlug); code == http.StatusOK {
 			t.Errorf("a guest opens the unpublished copy: %d", code)
+		}
+
+		// An author of their own article: no copy without the permission.
+		if _, err := db.DB.Exec(db.Dialect.Rebind(`INSERT INTO roles (name, permissions, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`),
+			"writers", `{"create article content": true, "edit own article content": true}`); err != nil {
+			t.Fatal(err)
+		}
+		var writers int
+		if err := db.DB.QueryRow(`SELECT id FROM roles WHERE name = 'writers'`).Scan(&writers); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := s.submit("/admin/users/create", "/admin/users/create", url.Values{"password_mode": {"set"}, "username": {"writer"}, "email": {"writer@example.com"},
+			"password": {memberPassword}, "password_confirm": {memberPassword}, "status": {"1"}, "role_id": {fmt.Sprint(writers)}}); !ok {
+			t.Fatal("create the writer")
+		}
+		writer := s.visitor()
+		writer.signInAs("writer", memberPassword)
+		if resp := writer.postMultipart("/create/article", url.Values{"csrf_token": {writer.csrf("/create/article")}, "title": {"Mine to copy"}, body[1]: {"<p>Text</p>"}}); resp.StatusCode != http.StatusFound {
+			t.Fatalf("the writer's article: %d", resp.StatusCode)
+		}
+		var ownID int
+		var ownSlug string
+		if err := db.DB.QueryRow(`SELECT id, slug FROM nodes WHERE title = 'Mine to copy'`).Scan(&ownID, &ownSlug); err != nil {
+			t.Fatal(err)
+		}
+		ownClone := fmt.Sprintf("/node/%d/clone", ownID)
+		if _, page := writer.get("/" + ownSlug); strings.Contains(page, `action="`+ownClone+`"`) {
+			t.Error("the writer has a copy button without the permission")
+		}
+		if resp := writer.post(ownClone, url.Values{"csrf_token": {writer.csrf("/" + ownSlug)}}); resp.StatusCode != http.StatusForbidden {
+			t.Errorf("the writer copying without the permission: %d", resp.StatusCode)
+		}
+		if _, err := db.DB.Exec(db.Dialect.Rebind(`UPDATE roles SET permissions = ? WHERE id = ?`),
+			`{"create article content": true, "edit own article content": true, "copy content": true}`, writers); err != nil {
+			t.Fatal(err)
+		}
+		if _, page := writer.get("/" + ownSlug); !strings.Contains(page, `action="`+ownClone+`"`) {
+			t.Error("the writer has no copy button with the permission")
+		}
+		if resp := writer.post(ownClone, url.Values{"csrf_token": {writer.csrf("/" + ownSlug)}}); resp.StatusCode != http.StatusSeeOther {
+			t.Errorf("the writer copying with the permission: %d", resp.StatusCode)
 		}
 	})
 }
