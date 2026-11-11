@@ -893,6 +893,7 @@ package modulekit
 		field Permissions map[string]any
 		field CreatedAt time.Time
 		field UpdatedAt time.Time
+		method Grants(perm string) bool
 		method Label() string
 	const modulekit.RoleAnonymous untyped string
 	const modulekit.RoleUser untyped string
@@ -1300,6 +1301,7 @@ package modulekit/manifestkit
 	func modulekit/manifestkit.Driver(env modulekit/manifestkit.InstallEnv) entgo.io/ent/dialect.Driver
 	func modulekit/manifestkit.EnableTextFilter(ctx context.Context, env modulekit/manifestkit.InstallEnv, name string) error
 	func modulekit/manifestkit.EnsureImageStyle(ctx context.Context, env modulekit/manifestkit.InstallEnv, st modulekit/manifestkit.ImageStyle) error
+	func modulekit/manifestkit.FullAccessRoles(ctx context.Context, env modulekit/manifestkit.InstallEnv) ([]string, error)
 	func modulekit/manifestkit.GrantPermission(ctx context.Context, env modulekit/manifestkit.InstallEnv, role string, perm string) error
 	type ImageStyle struct
 		field Name string

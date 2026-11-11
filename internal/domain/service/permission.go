@@ -24,7 +24,7 @@ import (
 // /admin/users/permissions page edits the role × permission matrix.
 const (
 	// PermFullAccess - every permission (the administrator role).
-	PermFullAccess = "full_access"
+	PermFullAccess = entity.PermFullAccess
 
 	PermAccessAdmin       = "access administration pages"
 	PermAdministerContent = "administer content"
@@ -457,13 +457,9 @@ func (s *PermissionService) CreatableNodeTypes(ctx context.Context, user *entity
 	return out
 }
 
-// HasGrant - whether role grants key.
+// HasGrant - whether role grants key (nil - no role, nothing).
 func HasGrant(role *entity.Role, key string) bool {
-	if role == nil {
-		return false
-	}
-	v, _ := role.Permissions[key].(bool)
-	return v
+	return role != nil && role.Grants(key)
 }
 
 // permissionChecker - the check of a user's permission (AuthService,

@@ -125,6 +125,10 @@ The core's rows an install or data step changes go through
   named `role` (`manifestkit.RoleUser` - every signed-in user's) the
   permission `perm`: who may use the module by default. A site without
   the role is left as it is.
+- `manifestkit.FullAccessRoles(ctx, env)` - the names of the roles with
+  full access (the administrator's): an install step names them where its
+  settings give something to roles, so what only they may do shows in the
+  settings as theirs.
 - `manifestkit.PlaceModuleBlocks(ctx, env, name)` - places the module's
   blocks that name a `Region`, as installing it does: for a data step
   when an installed module gets such a block.
@@ -166,7 +170,9 @@ The core's rows an install or data step changes go through
   do something), `Mail`.
   `UserRoleNames(user)` - a user's roles (`RoleUser` - every signed-in
   user's, `RoleAnonymous` - a guest's), `PermFullAccess` - the
-  administrator role's permission.
+  administrator role's permission; `role.Grants(perm)` - whether a role
+  grants a permission itself (`role.Grants(modulekit.PermFullAccess)` -
+  the roles with full access).
 - **Addresses:** `Redirects` - the site's redirects (the *Redirects*
   page's): `GetRedirect(path)` - where one sends a path, if one does;
   `Create(ctx, from, to)` adds one.

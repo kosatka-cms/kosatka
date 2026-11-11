@@ -25,6 +25,17 @@ func (r Role) Label() string {
 	return r.Name
 }
 
+// PermFullAccess - the permission of every permission (the administrator
+// role's).
+const PermFullAccess = "full_access"
+
+// Grants - whether the role grants perm itself; a role with
+// PermFullAccess may do everything, but Grants checks perm alone.
+func (r Role) Grants(perm string) bool {
+	v, _ := r.Permissions[perm].(bool)
+	return v
+}
+
 // Roles is a slice of Role
 type Roles []Role
 

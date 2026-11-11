@@ -182,6 +182,24 @@ func EnsureImageStyle(ctx context.Context, env InstallEnv, st ImageStyle) error 
 	return nil
 }
 
+// FullAccessRoles - the names of the roles with full access (on a usual
+// site, the administrator's), by name: an install step names them where
+// its settings give something to roles, so what only they may do shows
+// in the settings as theirs.
+func FullAccessRoles(ctx context.Context, env InstallEnv) ([]string, error) {
+	rows, err := env.core().Client.Role.Query().Order(entrole.ByName()).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("the roles: %w", err)
+	}
+	var out []string
+	for _, r := range rows {
+		if (entity.Role{Permissions: r.Permissions}).Grants(entity.PermFullAccess) {
+			out = append(out, r.Name)
+		}
+	}
+	return out, nil
+}
+
 // GrantPermission gives the role named role (RoleUser - every signed-in
 // user's) the permission perm, keeping its others - an install step's
 // default of who may use the module. A site without the role - nothing.
