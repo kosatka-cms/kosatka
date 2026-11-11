@@ -106,10 +106,12 @@ type fakeUninstallStore struct {
 	viewPrefix string
 	// mailTransports - the ways of sending whose settings were deleted.
 	mailTransports []string
-	textFilters    []string
-	formatters     []string
-	columns        [][2]string
-	log            *[]string
+	// mailPrefix - the emails whose texts were deleted.
+	mailPrefix  string
+	textFilters []string
+	formatters  []string
+	columns     [][2]string
+	log         *[]string
 }
 
 func (f *fakeUninstallStore) NodeIDsOfTypes(_ context.Context, _ []string, limit int) ([]int, error) {
@@ -132,6 +134,11 @@ func (f *fakeUninstallStore) DeleteNodeTypeSettings(_ context.Context, types []s
 
 func (f *fakeUninstallStore) DeleteMailTransportSettings(_ context.Context, transports []string) error {
 	f.mailTransports = transports
+	return nil
+}
+
+func (f *fakeUninstallStore) DeleteMailTexts(_ context.Context, prefix string) error {
+	f.mailPrefix = prefix
 	return nil
 }
 
@@ -226,6 +233,9 @@ func TestModuleUninstallContent(t *testing.T) {
 	// Its ways of sending email's settings.
 	if !slices.Equal(store.mailTransports, []string{"poll_mail"}) {
 		t.Errorf("mail transports' settings deleted %v", store.mailTransports)
+	}
+	if store.mailPrefix != "polls." {
+		t.Errorf("mail texts deleted %q", store.mailPrefix)
 	}
 	if store.viewPrefix != "polls." {
 		t.Errorf("View criteria removed by prefix %q, want %q", store.viewPrefix, "polls.")

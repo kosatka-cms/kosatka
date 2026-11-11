@@ -17,6 +17,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldvaluetaxonomy"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldvaluetaxonomymulti"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailsettings"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtemplate"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/mailtransportsetting"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/node"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/searchtype"
@@ -109,6 +110,18 @@ func (r *ModuleUninstallRepository) DeleteMailTransportSettings(ctx context.Cont
 		}
 		return nil
 	})
+}
+
+// DeleteMailTexts forgets what the Mail page changed of the emails whose
+// key starts with prefix (a module's): their texts and switches.
+func (r *ModuleUninstallRepository) DeleteMailTexts(ctx context.Context, prefix string) error {
+	if prefix == "" {
+		return nil
+	}
+	if _, err := GetClient(ctx, r.client).MailTemplate.Delete().Where(mailtemplate.MailKeyHasPrefix(prefix)).Exec(ctx); err != nil {
+		return fmt.Errorf("deleting the texts of the emails %s*: %w", prefix, err)
+	}
+	return nil
 }
 
 // DeleteNodeTypeSettings removes what core settings keep for the content

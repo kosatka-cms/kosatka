@@ -109,7 +109,8 @@ Running in production).
 This removes the module's block placements, the menu links to its
 pages, its permissions and its content types' permissions in roles, the
 search, SEO, breadcrumb and block visibility settings of its content
-types, its sort criteria, filters and fields in Views, its processing
+types, its sort criteria, filters and fields in Views, the texts of its
+emails changed on the *Mail* page, its processing
 in the text formats, its choices in the fields' *How to show* (those
 fields show as the core shows them), whatever its own uninstall step
 removes, its tables, its records of applied migrations and the files
