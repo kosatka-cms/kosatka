@@ -41,6 +41,10 @@ type ModuleUninstallStore interface {
 	// DeleteViewCriteria - the Views' sort criteria, filters and fields
 	// whose key starts with prefix (a module's, views.ModuleKeyPrefix).
 	DeleteViewCriteria(ctx context.Context, prefix string) error
+	// DeleteMailTexts - what the Mail page changed of the emails whose
+	// key starts with prefix (a module's, "<module>."): their texts and
+	// switches.
+	DeleteMailTexts(ctx context.Context, prefix string) error
 	// RemoveTextFilters takes the text filters out of the text formats
 	// that have them on; returns those formats' filters left, by ID.
 	RemoveTextFilters(ctx context.Context, names []string) (map[int][]string, error)
@@ -55,7 +59,8 @@ type ModuleUninstallStore interface {
 // (Module.Paths), its permissions (and those of
 // its content types) in roles, its content types' settings, its criteria
 // in Views (views.AddModuleSort…), its ways of sending email's settings
-// (MailTransport), its text filters in the text formats
+// (MailTransport), its emails' texts changed on the Mail page (AddMail),
+// its text filters in the text formats
 // (AddTextFilter), its field formatters in the fields' settings
 // (AddFieldFormatter), its own steps
 // (Steps), its tables and
@@ -215,6 +220,9 @@ func (u ModuleUninstall) Run(ctx context.Context, name string) error {
 			return err
 		}
 		if err := u.Store.DeleteMailTransportSettings(ctx, MailTransportsOfModule(name)); err != nil {
+			return err
+		}
+		if err := u.Store.DeleteMailTexts(ctx, name+"."); err != nil {
 			return err
 		}
 		if err := u.Store.DeleteViewCriteria(ctx, views.ModuleKeyPrefix(name)); err != nil {

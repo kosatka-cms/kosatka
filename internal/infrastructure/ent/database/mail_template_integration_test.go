@@ -44,5 +44,15 @@ func TestMailTemplateRepository(t *testing.T) {
 		if len(all) != 2 || all["mod.a"] != want["mod.a"] || all["mod.b"] != want["mod.b"] {
 			t.Errorf("rows: %+v", all)
 		}
+		// The module uninstalled: its emails' rows go, another's stay.
+		if err := repo.SaveText(ctx, "module.c", entity.MailTemplate{Subject: "C"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := database.NewModuleUninstallRepository(db.DB).DeleteMailTexts(ctx, "mod."); err != nil {
+			t.Fatal(err)
+		}
+		if all, err := repo.All(ctx); err != nil || len(all) != 1 || all["module.c"].Subject != "C" {
+			t.Errorf("after uninstalling mod: %+v %v", all, err)
+		}
 	})
 }
