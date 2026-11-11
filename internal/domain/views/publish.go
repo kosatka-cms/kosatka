@@ -166,10 +166,9 @@ func stripSnapshotAuditFields(snap entity.ViewSnapshot) entity.ViewSnapshot {
 }
 
 // DecodePublishedSnapshot decodes display.PublishedSnapshot - the one
-// place ViewPageFallback needs to turn the stored blob back into an
-// entity.ViewSnapshot before calling RunViewFromSnapshotForPage/
-// GlossaryFromSnapshot. Errors with ErrNoPublishedSnapshot if
-// display was never published.
+// place the stored blob turns back into an entity.ViewSnapshot
+// (PublishedConfig, discarding, comparing). Errors with
+// ErrNoPublishedSnapshot if display was never published.
 func (s *DefaultService) DecodePublishedSnapshot(display entity.ViewDisplayDef) (entity.ViewSnapshot, error) {
 	var snap entity.ViewSnapshot
 	if display.PublishedAt == nil || display.PublishedSnapshot == "" {

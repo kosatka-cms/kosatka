@@ -87,14 +87,14 @@ func zzRenderViewTemplatesWithPartials(t *testing.T) {
 	}
 }
 
-// fakeBlockViewService - RunView only (a theme-template View block
+// fakeBlockViewService - RunConfig only (a theme-template View block
 // needs nothing else).
 type fakeBlockViewService struct {
 	views.Service
 	nodes entity.Nodes
 }
 
-func (f fakeBlockViewService) RunView(context.Context, entity.ViewDisplayDef, map[string]string, int) (entity.Nodes, int, error) {
+func (f fakeBlockViewService) RunConfig(context.Context, views.Config, views.RunContext) (entity.Nodes, int, error) {
 	return f.nodes, len(f.nodes), nil
 }
 
@@ -109,7 +109,7 @@ func TestCacheViewBlockThemeTemplate(t *testing.T) {
 		templateService: NewTemplateService(false),
 		teasers:         NewTeaserBuilder(ct, &fakeTeaserTaxonomy{}, fakeTeaserComments{}),
 	}
-	html, err := s.renderContentViewBlock(t.Context(), entity.ViewDisplayDef{ID: 1, ThemeTemplate: "cards"}, viewBlockPart{page: 1}, nil)
+	html, err := s.renderContentViewBlock(t.Context(), views.Config{View: entity.ViewDisplayDef{ID: 1, ThemeTemplate: "cards"}}, viewBlockPart{page: 1}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -42,9 +42,10 @@ func (c *Controller) jsonOrRedirectError(w http.ResponseWriter, r *http.Request,
 // jsonOrRedirectSuccess answers a successful mutation with a redirect
 // carrying ?success=1 or, when wantsJSON, JSON {"success": true, "html":
 // "<fragment>"}; the JS swaps the fragment into the affected card. The
-// View blocks' cache is rebuilt (CacheService.ForceUpdate): a published
-// View's blocks show the change at once, as does a View never published
-// (the site shows its live version).
+// View blocks' cache is rebuilt (CacheService.ForceUpdate): a View never
+// published shows the change at once (the site shows its live version),
+// a published one its published version, new on publishing or
+// discarding.
 func (c *Controller) jsonOrRedirectSuccess(w http.ResponseWriter, r *http.Request, redirectURL string, renderFragment func(io.Writer) error) {
 	c.refreshViewBlocks()
 	if !c.wantsJSON(r) {

@@ -472,10 +472,6 @@ type fakeFragmentViews struct {
 	fields entity.ViewFieldDefs
 }
 
-func (f fakeFragmentViews) EffectiveFieldsByView(context.Context, entity.ViewDisplayDef) (entity.ViewFieldDefs, error) {
-	return f.fields, nil
-}
-
 type fakeFragmentTypes struct {
 	entity.ContentTypeRepository
 	storages map[int]entity.FieldStorageDef
@@ -543,7 +539,8 @@ func TestContentViewFragment(t *testing.T) {
 		nodeRepo: fakeFragmentNodes{alt: map[int]string{1: "The Whale"}},
 	}
 	nodes := entity.Nodes{{ID: 1, Type: "article", Title: "Moby", Slug: "article/moby"}, {ID: 2, Type: "article", Title: "Pequod", Slug: "article/pequod"}}
-	html, err := c.renderContentViewFragment(t.Context(), entity.ViewDisplayDef{ID: 9, DisplayStyle: entity.ViewDisplayStyleList}, nodes,
+	cfg := views.Config{View: entity.ViewDisplayDef{ID: 9, DisplayStyle: entity.ViewDisplayStyleList}, Fields: c.viewService.(fakeFragmentViews).fields}
+	html, err := c.renderContentViewFragment(t.Context(), cfg, nodes,
 		pagination.New(1, 4, 2, "/article/moby", nil))
 	if err != nil {
 		t.Fatal(err)

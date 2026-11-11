@@ -17,12 +17,22 @@ type fakeListViewService struct {
 	fields entity.ViewFieldDefs
 }
 
-func (f fakeListViewService) RunView(context.Context, entity.ViewDisplayDef, map[string]string, int) (entity.Nodes, int, error) {
+func (f fakeListViewService) RunConfig(context.Context, views.Config, views.RunContext) (entity.Nodes, int, error) {
 	return f.nodes, len(f.nodes), nil
 }
 
-func (f fakeListViewService) EffectiveFieldsByView(context.Context, entity.ViewDisplayDef) (entity.ViewFieldDefs, error) {
-	return f.fields, nil
+func (f fakeListViewService) PublishedConfig(_ context.Context, d entity.ViewDisplayDef) (views.Config, error) {
+	return views.Config{View: d, Fields: f.fields}, nil
+}
+
+// publishedOf - display's configuration as s's Views service gives it.
+func publishedOf(t *testing.T, s *CacheService, d entity.ViewDisplayDef) views.Config {
+	t.Helper()
+	cfg, err := s.viewService.PublishedConfig(t.Context(), d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cfg
 }
 
 // fakeListContentTypes - fakeContentTypeRepoForBlocks plus which text
@@ -79,7 +89,7 @@ func TestCacheViewBlockList(t *testing.T) {
 		nodeRepo:        fakeListAltTitles{titles: map[int]string{1: "The Whale"}},
 		logger:          slog.New(slog.DiscardHandler),
 	}
-	html, err := s.renderContentViewBlock(t.Context(), entity.ViewDisplayDef{ID: 7, DisplayStyle: entity.ViewDisplayStyleList}, viewBlockPart{page: 1}, nil)
+	html, err := s.renderContentViewBlock(t.Context(), publishedOf(t, s, entity.ViewDisplayDef{ID: 7, DisplayStyle: entity.ViewDisplayStyleList}), viewBlockPart{page: 1}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,23 +108,19 @@ func TestCacheViewBlockList(t *testing.T) {
 }
 
 // fakePagedViewService - fakeListViewService with total results, the
-// display's own settings as its effective ones and its filters.
+// display's own settings as its published ones and its filters.
 type fakePagedViewService struct {
 	fakeListViewService
 	total   int
 	filters entity.ViewFilterDefs
 }
 
-func (f fakePagedViewService) RunView(context.Context, entity.ViewDisplayDef, map[string]string, int) (entity.Nodes, int, error) {
+func (f fakePagedViewService) RunConfig(context.Context, views.Config, views.RunContext) (entity.Nodes, int, error) {
 	return f.nodes, f.total, nil
 }
 
-func (f fakePagedViewService) EffectiveSettings(_ context.Context, d entity.ViewDisplayDef) (entity.ViewDisplayDef, error) {
-	return d, nil
-}
-
-func (f fakePagedViewService) EffectiveFiltersByView(context.Context, entity.ViewDisplayDef) (entity.ViewFilterDefs, error) {
-	return f.filters, nil
+func (f fakePagedViewService) PublishedConfig(_ context.Context, d entity.ViewDisplayDef) (views.Config, error) {
+	return views.Config{View: d, Fields: f.fields, Filters: f.filters}, nil
 }
 
 // TestCacheViewBlockPager - a View block whose display pages has a
@@ -139,7 +145,7 @@ func TestCacheViewBlockPager(t *testing.T) {
 		logger:          slog.New(slog.DiscardHandler),
 	}
 	paged := entity.ViewDisplayDef{ID: 7, DisplayStyle: entity.ViewDisplayStyleList, ShowPagination: true, PageSize: 5}
-	html, err := s.renderContentViewBlock(t.Context(), paged, viewBlockPart{placementID: 9, page: 1}, nil)
+	html, err := s.renderContentViewBlock(t.Context(), publishedOf(t, s, paged), viewBlockPart{placementID: 9, page: 1}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +169,7 @@ func TestCacheViewBlockPager(t *testing.T) {
 
 	unpaged := paged
 	unpaged.ShowPagination = false
-	if html, _ := s.renderContentViewBlock(t.Context(), unpaged, viewBlockPart{placementID: 9, page: 1}, nil); strings.Contains(string(html), "pagination") || strings.Contains(string(html), "data-ajax-pagination") {
+	if html, _ := s.renderContentViewBlock(t.Context(), publishedOf(t, s, unpaged), viewBlockPart{placementID: 9, page: 1}, nil); strings.Contains(string(html), "pagination") || strings.Contains(string(html), "data-ajax-pagination") {
 		t.Errorf("a block that doesn't page has a pager:\n%s", html)
 	}
 	if _, ok, err := s.ViewBlockPage(t.Context(), unpaged, 9, 2, nil); ok || err != nil {
