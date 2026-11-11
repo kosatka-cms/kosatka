@@ -10,8 +10,11 @@
 
 {{/* node_moderation_notice - shown above content pending moderation;
      to its editors, the content's schedule too (entity.Node.PublishOn,
-     UnpublishOn). */}}
+     UnpublishOn); first the modules' notes about the item
+     ("node_notice_<module>", e.g. the editorial workflow's state for its
+     author and editors). */}}
 {{define "node_moderation_notice"}}
+{{moduleHook "node_notice" .}}
 {{if eq .item.Node.OnModeration 1}}
 <div class="moderation-notice">
     <strong>⚠ {{t "Pending moderation"}}</strong>
