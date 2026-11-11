@@ -134,7 +134,8 @@ func IndexTerm(ctx context.Context, env Env, nodeID, tid int, at time.Time) erro
 }
 
 // CreateComments adds the comments (and their replies) to node nodeID,
-// from at on; it returns how many and the last one's time.
+// from at on, spaced so that none is dated after env's Now; it returns how
+// many and the last one's time.
 func CreateComments(ctx context.Context, env Env, nodeID int, list []Comment, at time.Time) (int, time.Time, error) {
 	return demo.CreateComments(ctx, env.core, nodeID, list, at)
 }
