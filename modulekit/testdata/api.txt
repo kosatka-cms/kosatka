@@ -1070,6 +1070,7 @@ package modulekit
 	type UserRepository interface
 		method ByID(ctx context.Context, id int) (*modulekit.User, error)
 		method ByIDs(ctx context.Context, ids []int) (map[int]modulekit.User, error)
+		method UsersWithRoles(ctx context.Context, roleIDs []int) ([]modulekit.User, error)
 	func modulekit.UserRoleNames(u *modulekit.User) []string
 	type UserService = internal/domain/service.UserService
 		method BumpSessionVersion(ctx context.Context, id int) (int, error)

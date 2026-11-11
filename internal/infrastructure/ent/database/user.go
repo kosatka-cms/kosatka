@@ -154,6 +154,23 @@ func (r UserRepository) ByIDs(ctx context.Context, ids []int) (map[int]entity.Us
 	return out, nil
 }
 
+// UsersWithRoles - the active users whose role is one of roleIDs, by id
+// (who to tell about what a role does: a module's e-mail to a role).
+func (r UserRepository) UsersWithRoles(ctx context.Context, roleIDs []int) ([]entity.User, error) {
+	if len(roleIDs) == 0 {
+		return nil, nil
+	}
+	rows, err := r.users(ctx).Query().Where(user.RoleIDIn(roleIDs...), user.Status(entity.UserStatusActive)).WithRole().Order(user.ByID()).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("loading the users of roles %v: %w", roleIDs, err)
+	}
+	out := make([]entity.User, len(rows))
+	for i, row := range rows {
+		out[i] = dao.ToUserEntity(row)
+	}
+	return out, nil
+}
+
 // Create adds the user (an empty e-mail address is stored as none) and
 // returns it with its ID.
 func (r UserRepository) Create(ctx context.Context, ct entity.User) (*entity.User, error) {

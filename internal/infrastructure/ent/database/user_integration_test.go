@@ -118,6 +118,31 @@ func TestUserSearchInRoles(t *testing.T) {
 	})
 }
 
+// TestUsersWithRoles - the active users of the roles, by id: a blocked
+// one, one of another role and one without a role left out; no roles -
+// none.
+func TestUsersWithRoles(t *testing.T) {
+	schemaDB(t, func(t *testing.T, db testdb.DB) {
+		seedRow(t, db, `INSERT INTO roles (id, name, created_at, updated_at) VALUES (5, 'editor', '2026-01-01 00:00:00', '2026-01-01 00:00:00'), (6, 'author', '2026-01-01 00:00:00', '2026-01-01 00:00:00'), (7, 'reviewer', '2026-01-01 00:00:00', '2026-01-01 00:00:00')`)
+		seedRow(t, db, `INSERT INTO users (id, username, slug, password_hash, email, status, role_id) VALUES
+			(4, 'vera', 'users/vera', '', 'vera@example.com', 1, 7), (2, 'marta', 'users/marta', '', 'marta@example.com', 1, 5),
+			(3, 'mark', 'users/mark', '', 'mark@example.com', 1, 6), (5, 'gleb', 'users/gleb', '', 'gleb@example.com', 0, 5),
+			(6, 'nina', 'users/nina', '', 'nina@example.com', 1, NULL)`)
+		repo := database.NewUserRepository(entClient(db).User, nil)
+		ctx := context.Background()
+		users, err := repo.UsersWithRoles(ctx, []int{5, 7})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(users) != 2 || users[0].Username != "marta" || users[1].Username != "vera" || users[0].Email != "marta@example.com" {
+			t.Errorf("editors and reviewers: %+v", users)
+		}
+		if users, err := repo.UsersWithRoles(ctx, nil); err != nil || len(users) != 0 {
+			t.Errorf("no roles: %+v %v", users, err)
+		}
+	})
+}
+
 // TestUserSessionVersion - a new account's sessions are at version 0;
 // ending them raises it, and an edit of the account keeps it.
 func TestUserSessionVersion(t *testing.T) {
