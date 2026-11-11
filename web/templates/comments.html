@@ -15,10 +15,12 @@
 {{end}}
 
 {{define "comments-placeholder"}}
-{{/* .commentsModule - a module showing the node's comments in place of
+{{/* .unsavedPreview - the item previewed from its form: no comments (a new
+     item has none to load, nor may one be posted to what isn't saved).
+     .commentsModule - a module showing the node's comments in place of
      the core's (a comments service, NodePageParts.Comments): its
      "comments_<module>" with the page's data. */}}
-{{if .commentsModule}}{{renderOptional "comments" .commentsModule .}}{{else}}
+{{if .unsavedPreview}}{{else if .commentsModule}}{{renderOptional "comments" .commentsModule .}}{{else}}
 {{/* .item.Node.CommentMode: "closed" shows existing comments read-only
      with a notice and no add form; "hidden" never renders this template
      (see dynamic/page.html); "open" (or empty) shows the add-comment UI.
