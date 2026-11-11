@@ -74,6 +74,9 @@ func TestCanViewNode(t *testing.T) {
 		{"unpublished, admin", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, adminUser(), true},
 		{"unpublished, moderator", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, moderatorUser(), true},
 		{"pending own content, author", entity.Node{Type: "article", Status: 1, OnModeration: 1, CreatedBy: *author}, author, true},
+		{"unpublished own content, author who may edit it", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, author, true},
+		{"unpublished content, another user", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, other, false},
+		{"unpublished own content, author who may not edit it", entity.Node{Type: "slide", Status: 0, CreatedBy: *author}, author, false},
 		{"pending content, different user", entity.Node{Type: "article", Status: 1, OnModeration: 1, CreatedBy: *author}, other, false},
 		{"pending content, anonymous", entity.Node{Type: "article", Status: 1, OnModeration: 1, CreatedBy: *author}, nil, false},
 	}
@@ -101,7 +104,7 @@ func TestCanEditNode(t *testing.T) {
 		{"admin can always edit", entity.Node{Type: "article", Status: 1, CreatedBy: *author}, adminUser(), true},
 		{"moderator can always edit", entity.Node{Type: "article", Status: 1, CreatedBy: *author}, moderatorUser(), true},
 		{"author can edit own published content", entity.Node{Type: "article", Status: 1, CreatedBy: *author}, author, true},
-		{"author cannot edit own unpublished content", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, author, false},
+		{"author can edit own unpublished content", entity.Node{Type: "article", Status: 0, CreatedBy: *author}, author, true},
 		{"non-author cannot edit", entity.Node{Type: "article", Status: 1, CreatedBy: *author}, other, false},
 	}
 	for _, tc := range cases {

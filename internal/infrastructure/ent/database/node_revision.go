@@ -168,7 +168,7 @@ func (r NodeRevisionRepository) Recent(ctx context.Context, f entity.RecentRevis
 		scope = append(scope, noderevision.HasNodeWith(node.TypeIn(f.AnyTypes...)))
 	}
 	if len(f.OwnTypes) > 0 && f.OwnerID > 0 {
-		scope = append(scope, noderevision.HasNodeWith(node.TypeIn(f.OwnTypes...), node.CreatedBy(f.OwnerID), node.Status(1)))
+		scope = append(scope, noderevision.HasNodeWith(node.TypeIn(f.OwnTypes...), node.CreatedBy(f.OwnerID)))
 	}
 	if len(scope) == 0 {
 		return nil, 0, nil

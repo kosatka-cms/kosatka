@@ -77,7 +77,7 @@ automatically:
 | Permission | What it allows |
 |---|---|
 | Create | creating content of the type; the type appears in the user's *Create content* menu |
-| Edit own | editing one's own content of the type, unless it is unpublished (waiting on moderation counts as published) |
+| Edit own | editing one's own content of the type, published or not (a draft); its author then sees it unpublished too. Publishing it takes another permission |
 | Edit any | editing anyone's content of the type |
 | Delete any | deleting content of the type |
 
@@ -426,8 +426,9 @@ left out wherever the site shows content, not just its page: its
 comments and the comment lists, the forum's lists and counts, the
 title search of the editors' forms and the blocks that embed it (a
 poll, a form, galleries) show only public content. Those who may see
-it (its author while it waits, those who may view unpublished content)
-open it by its page; moderators find it in the queue.
+it (its author while it waits or while they may edit it, those who may
+view unpublished content) open it by its page; moderators find it in
+the queue.
 
 **Comments.** Signed-in users can comment where a content item's
 comments are open; authors can edit their own. A new author's first

@@ -531,7 +531,8 @@ func (s *DefaultAuthService) CreatableNodeTypes(ctx context.Context, user *entit
 // CanViewNode - the node's type lets user view its content (or they may
 // edit the node), so do its own view roles (or it is theirs, or they may
 // edit it or view every content), and it is published, or they may view
-// unpublished content, or it is their own on moderation.
+// unpublished content, or they may edit it (an author their own draft),
+// or it is their own on moderation.
 func (s *DefaultAuthService) CanViewNode(ctx context.Context, node *entity.Node, user *entity.User) bool {
 	// In the trash: nobody's (the trash's page lists it, nothing shows it).
 	if node.InTrash() {
@@ -555,7 +556,7 @@ func (s *DefaultAuthService) CanViewNode(ctx context.Context, node *entity.Node,
 		return true
 	}
 
-	if s.HasPermission(ctx, user, PermViewUnpublished) {
+	if s.HasPermission(ctx, user, PermViewUnpublished) || s.CanEditNode(ctx, node, user) {
 		return true
 	}
 
@@ -567,7 +568,8 @@ func (s *DefaultAuthService) CanViewNode(ctx context.Context, node *entity.Node,
 }
 
 // CanEditNode - "edit any <type> content", or "edit own <type>
-// content" for the author of a published node.
+// content" for the node's author, published or not (a draft of theirs,
+// one sent back to them); publishing it is another permission's.
 func (s *DefaultAuthService) CanEditNode(ctx context.Context, node *entity.Node, user *entity.User) bool {
 	if user == nil {
 		return false
@@ -576,7 +578,7 @@ func (s *DefaultAuthService) CanEditNode(ctx context.Context, node *entity.Node,
 	if s.HasPermission(ctx, user, PermEditAny(nodeType)) {
 		return true
 	}
-	return node.CreatedBy.ID == user.ID && node.Status == 1 && s.HasPermission(ctx, user, PermEditOwn(nodeType))
+	return node.CreatedBy.ID == user.ID && s.HasPermission(ctx, user, PermEditOwn(nodeType))
 }
 
 // CanCreateNode - "create <type> content".
