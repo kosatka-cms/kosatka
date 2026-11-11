@@ -20,6 +20,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/database"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/blockplacementdef"
+	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/comment"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/contenttypedef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/fieldinstancedef"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/generated/imagestyle"
@@ -338,6 +339,12 @@ func TestInstallDemoEveryLanguage(t *testing.T) {
 				client := generated.NewClient(generated.Driver(entsql.OpenDB(string(db.Dialect), db.DB)))
 				if _, err := createSite(ctx, r, client, "Demo", "Admin", "admin@example.com", lang, siteOptions{demoSet: defaultDemoSet}); err != nil {
 					t.Fatal(err)
+				}
+				// No demo comment is dated in the future.
+				after := time.Now()
+				future, err := client.Comment.Query().Where(comment.CreatedAtGT(after)).Count(ctx)
+				if err != nil || future > 0 {
+					t.Errorf("comments dated after the install: %d %v", future, err)
 				}
 			})
 		})

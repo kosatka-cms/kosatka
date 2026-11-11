@@ -160,8 +160,12 @@ type demoFields struct {
 }
 
 // demoArticleStep - the time between two demo articles: the first is the
-// newest, the rest go back from it.
+// newest (demoNewestAge old), the rest go back from it.
 const demoArticleStep = 19 * time.Hour
+
+// demoNewestAge - how old the newest demo article is: its comments come
+// after it, and they are never dated in the future.
+const demoNewestAge = 5 * time.Hour
 
 // createDemoContent adds the demo content: users, the section and tag
 // vocabularies with their Article fields, the articles with their covers
@@ -203,7 +207,7 @@ func createDemoContent(ctx context.Context, c *generated.Client, createdBy int, 
 		return fmt.Errorf("term fields: %w", err)
 	}
 	for i, a := range content.Articles {
-		at := now.Add(-time.Duration(i) * demoArticleStep)
+		at := now.Add(-demoNewestAge - time.Duration(i)*demoArticleStep)
 		nodeID, err := createDemoNode(ctx, c, articleType, a.demoNode, entity.CommentModeOpen, true, createdBy, at, fields.body, basicHTML)
 		if err != nil {
 			return fmt.Errorf("article %q: %w", a.Title, err)

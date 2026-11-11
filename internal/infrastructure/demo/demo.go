@@ -274,14 +274,18 @@ type Comment struct {
 	Replies []Comment `json:"replies"`
 }
 
-// commentStep - the time between a node's comments.
+// commentStep - the time between a node's comments, when they fit before
+// env.Now.
 const commentStep = 47 * time.Minute
 
 // CreateComments adds a node's comments and their replies (through the
-// comment repository, which sets the thread path), the first one
-// commentStep after at and each a commentStep after the previous one.
-// Returns how many it added and when the last one was posted.
+// comment repository, which sets the thread path), the first one a step
+// after at and each a step after the previous one: commentStep, or less
+// when that would take the last one past env.Now - a demo comment is never
+// dated in the future. Returns how many it added and when the last one was
+// posted.
 func CreateComments(ctx context.Context, env Env, nodeID int, list []Comment, at time.Time) (int, time.Time, error) {
+	step := commentSpacing(at, env.Now, countComments(list))
 	repo := database.NewCommentRepository(env.Client)
 	count := 0
 	var add func(parent *int, list []Comment) error
@@ -295,7 +299,7 @@ func CreateComments(ctx context.Context, env Env, nodeID int, list []Comment, at
 			if err != nil {
 				return err
 			}
-			at = at.Add(commentStep)
+			at = at.Add(step)
 			count++
 			if err := env.Client.Comment.UpdateOneID(created.ID).SetCreatedAt(at).SetUpdatedAt(at).Exec(ctx); err != nil {
 				return err
@@ -309,6 +313,29 @@ func CreateComments(ctx context.Context, env Env, nodeID int, list []Comment, at
 	}
 	err := add(nil, list)
 	return count, at, err
+}
+
+// countComments - the comments of list with all their replies.
+func countComments(list []Comment) int {
+	n := 0
+	for _, c := range list {
+		n += 1 + countComments(c.Replies)
+	}
+	return n
+}
+
+// commentSpacing - the time between n comments posted after at: commentStep,
+// or an even share of the time from at to now when n of them wouldn't fit
+// (none after now; at itself when at is now or later). A zero now - no
+// limit.
+func commentSpacing(at, now time.Time, n int) time.Duration {
+	if n == 0 || now.IsZero() || !at.Add(time.Duration(n)*commentStep).After(now) {
+		return commentStep
+	}
+	if !now.After(at) {
+		return 0
+	}
+	return now.Sub(at) / time.Duration(n+1)
 }
 
 // Placement - a block placement in the site's theme: its region, title
