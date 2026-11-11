@@ -16,7 +16,7 @@ import (
 // them, marked loaded, without the loading skeleton; without them the
 // skeleton waits for ajax; a module showing the comments (commentsModule)
 // replaces the section; a type hiding empty comments shows nothing while
-// the page has none.
+// the page has none; an item previewed from its form, nothing.
 func TestCommentsInPage(t *testing.T) {
 	root, _ := filepath.Abs(filepath.Join("..", ".."))
 	t.Chdir(root)
@@ -63,5 +63,14 @@ func TestCommentsInPage(t *testing.T) {
 	}
 	if out := render(map[string]any{"item": item, "contentType": hiding, "commentsList": list(entity.Comments{comment})}); !strings.Contains(out, `id="comments"`) {
 		t.Error("a type hiding empty comments hides them when there are some")
+	}
+
+	// Previewed from the form (a new item: no ID): no section to load
+	// comments into, no form to post one.
+	draft := &entity.DynamicContent{Node: entity.Node{Type: "article", CommentMode: entity.CommentModeOpen}}
+	for _, it := range []*entity.DynamicContent{draft, item} {
+		if out := render(map[string]any{"item": it, "unsavedPreview": &UnsavedPreview{}}); strings.TrimSpace(out) != "" {
+			t.Errorf("a preview of node %d: %s", it.Node.ID, out)
+		}
 	}
 }
