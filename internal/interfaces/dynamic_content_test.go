@@ -32,9 +32,11 @@ func TestPageDataPathPattern(t *testing.T) {
 }
 
 // TestNodeSlug - a new node's slug follows the pattern unless one is typed
-// with "automatically" off; an edited node keeps its own setting when the
-// form has no checkbox (URL settings hidden from the editor), follows the
-// pattern when it is on, keeps or takes the typed slug when it is off.
+// with "automatically" off; an edited node keeps its automatic address
+// (renamed, it stays) and its own setting when the form has no checkbox
+// (URL settings hidden from the editor), takes a typed slug when
+// "automatically" is off and keeps its own when none is typed; one set by
+// hand that is made automatic follows the pattern at once.
 func TestNodeSlug(t *testing.T) {
 	c := &DynamicContentController{paths: service.NewNodePathService(noTerms{}, slugsTaken{taken: map[string]bool{}})}
 	def := entity.ContentTypeDef{MachineName: "news"}
@@ -52,9 +54,11 @@ func TestNodeSlug(t *testing.T) {
 		{"new, typed", form.DynamicForm{PathAutoShown: true, Slug: "/my/page/"}, node(0, "", false), "my/page", false},
 		{"new, nothing typed", form.DynamicForm{PathAutoShown: true}, node(0, "", false), "news/hello-world", true},
 		{"new, no URL settings", form.DynamicForm{Slug: "ignored"}, node(0, "", false), "news/hello-world", true},
-		{"edited, automatic", form.DynamicForm{PathAutoShown: true, PathAuto: true}, node(7, "news/old", false), "news/hello-world", true},
+		{"edited, automatic", form.DynamicForm{PathAutoShown: true, PathAuto: true}, node(7, "news/old", true), "news/old", true},
+		{"edited, by hand made automatic", form.DynamicForm{PathAutoShown: true, PathAuto: true}, node(7, "news/old", false), "news/hello-world", true},
 		{"edited, typed", form.DynamicForm{PathAutoShown: true, Slug: "news/new"}, node(7, "news/old", true), "news/new", false},
-		{"edited, no URL settings, automatic node", form.DynamicForm{}, node(7, "news/old", true), "news/hello-world", true},
+		{"edited, nothing typed", form.DynamicForm{PathAutoShown: true}, node(7, "news/old", true), "news/old", false},
+		{"edited, no URL settings, automatic node", form.DynamicForm{}, node(7, "news/old", true), "news/old", true},
 		{"edited, no URL settings, node by hand", form.DynamicForm{}, node(7, "news/old", false), "news/old", false},
 	} {
 		got, err := c.nodeSlug(context.Background(), def, &tc.f, tc.e)
