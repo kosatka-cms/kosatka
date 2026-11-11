@@ -365,8 +365,8 @@ func RegisterNodeRoutes(
 
 	r.Handle("GET /node/{id}/delete", authRequired(nodeDeleteAccessByID(http.HandlerFunc(nodeController.DeleteConfirm))))
 	r.Handle("POST /node/{id}/delete", authRequired(nodeDeleteAccessByID(http.HandlerFunc(nodeDispatcher.Delete))))
-	// A copy: who may edit the node (and create its type's content, the
-	// handler checks).
+	// A copy: who may edit the node (and copy content, create its type's
+	// content: the handler checks).
 	r.Handle("POST /node/{id}/clone", authRequired(nodeEditAccessByID(http.HandlerFunc(nodeDispatcher.Clone))))
 	// Preview links: made and revoked by who may edit the node, opened by
 	// whoever has one.

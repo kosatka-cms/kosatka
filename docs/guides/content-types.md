@@ -608,8 +608,9 @@ out.
 
 ## Copying content
 
-*Make a copy* among a content item's actions (for those who may edit it
-and create content of its type) makes a new item of the same type: the
+*Make a copy* among a content item's actions (for those with the *Make
+copies of content* permission who may edit the item and create content
+of its type) makes a new item of the same type: the
 same field values - the blocks of a blocks field copied too, the files
 shared - the same flags, comment mode and *Access*, titled *Copy of …*,
 unpublished, by you, with an address of its own. The site asks first,

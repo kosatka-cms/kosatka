@@ -45,6 +45,9 @@ const (
 	// PermCancelOwnAccount - deleting one's own account from the profile
 	// (UserDeletionService.Cancel; never an administrator's).
 	PermCancelOwnAccount = "cancel own account"
+	// PermCopyContent - "Make a copy" of content one may edit and create
+	// (DynamicContentController.Clone).
+	PermCopyContent      = "copy content"
 	permTextFormatPrefix = "use_text_format_"
 )
 
@@ -123,6 +126,7 @@ func generalPermissions(ctx context.Context) []PermissionDef {
 		{PermModerateContent, i18n.T(ctx, "Moderation (moderation queue)")},
 		{PermViewRevisions, i18n.T(ctx, "View the history of changes of content they may edit")},
 		{PermRevertRevisions, i18n.T(ctx, "Bring back an earlier version of content they may edit")},
+		{PermCopyContent, i18n.T(ctx, "Make copies of content they may edit (and create)")},
 		{PermAdministerUserFiles, i18n.T(ctx, "Administer users' files: view and manage any user's files")},
 		{PermUploadDocuments, i18n.T(ctx, "Upload documents to files (without it - images only)")},
 		{PermUseMaintenance, i18n.T(ctx, "Access the site in maintenance mode")},

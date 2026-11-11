@@ -1609,6 +1609,7 @@
   {"source":"Make a copy of \"@title\"? It will be an unpublished draft."},
   {"source":"Make a link"},
   {"source":"Make a new link"},
+  {"source":"Make copies of content they may edit (and create)"},
   {"source":"Make default","module":"languages"},
   {"source":"Manage"},
   {"source":"Manage terms of this vocabulary →"},
