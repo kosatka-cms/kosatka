@@ -49,6 +49,20 @@ func (r *SiteInformationRepository) Get(ctx context.Context) (*entity.SiteInform
 	return site, nil
 }
 
+// Cached - the site information kept in memory, nil when none is (not
+// read since it was written): for a page made without the database (it is
+// gone).
+func (r *SiteInformationRepository) Cached() *entity.SiteInformation {
+	c := r.cached.Load()
+	if c == nil {
+		return nil
+	}
+	cp := *c
+	cp.Languages = slices.Clone(c.Languages)
+	cp.SchemaOrg.SameAs = slices.Clone(c.SchemaOrg.SameAs)
+	return &cp
+}
+
 // forget drops the kept site information: it was written (afterWrite).
 func (r *SiteInformationRepository) forget() { r.cached.Store(nil) }
 

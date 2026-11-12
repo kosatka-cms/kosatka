@@ -124,8 +124,10 @@ type CacheService struct {
 	// guestVisitor - what of the content a guest may not view
 	// (SetGuestVisitor); nil - nothing.
 	guestVisitor func(ctx context.Context) (entity.ContentVisitor, error)
-	data         SidebarData
-	mu           sync.RWMutex
+	// paused - the refresh skips its turns while it says so (SetPaused).
+	paused func() bool
+	data   SidebarData
+	mu     sync.RWMutex
 	// gen - the last refresh's number (SidebarData.gen).
 	gen atomic.Uint64
 	// refreshTimeout - one refresh cycle's limit (0 - the default).
@@ -237,6 +239,9 @@ func (s *CacheService) Start(ctx context.Context) error {
 		for {
 			select {
 			case <-ticker.C:
+				if s.paused != nil && s.paused() {
+					continue
+				}
 				if err := s.update(work); err != nil {
 					s.logger.Error("Error updating cache", "error", err)
 				}
@@ -277,6 +282,10 @@ func (s *CacheService) asGuest(ctx context.Context) (context.Context, error) {
 	}
 	return entity.WithContentVisitor(ctx, v), nil
 }
+
+// SetPaused - the refresh skips its turns while paused says so (the
+// database doesn't answer): the cache keeps what it has. Before Start.
+func (s *CacheService) SetPaused(paused func() bool) { s.paused = paused }
 
 // SetGuestVisitor sets what of the content a guest may not view
 // (AuthService.ContentVisitor for nil), left out of what the cache

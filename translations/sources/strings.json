@@ -2705,6 +2705,7 @@
   {"source":"The site has an address like this prefix (@owner): a prefix would hide it.","module":"languages"},
   {"source":"The site has no such string."},
   {"source":"The site in several languages: each language besides the default one at its own address prefix (/en/…), with the interface in it, a language switcher block and the pages' addresses in the other languages for search engines.","module":"languages"},
+  {"source":"The site is temporarily unavailable. Please try again in a few minutes."},
   {"source":"The site is under maintenance."},
   {"source":"The site sends email for account confirmation, password reset, account notifications and error reports. Without email these don't work."},
   {"source":"The site sends no e-mail: registration confirmations and password resets don't arrive. Set it up on the <a href=\":url\">Mail</a> page."},

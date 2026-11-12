@@ -25,6 +25,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/ent/database"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/middleware"
+	"github.com/kosatka-cms/kosatka/internal/lib/dbwatch"
 	"github.com/kosatka-cms/kosatka/internal/lib/requestid"
 	"github.com/kosatka-cms/kosatka/internal/lib/slogquiet"
 	"github.com/kosatka-cms/kosatka/internal/modules/manifests"
@@ -104,9 +105,13 @@ func Main() {
 	// scheduler) run until it ends.
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx()
-	reg := newMetricsRegistry(cfg, drv.DB())
+	// Whether the database answers, pinged every few seconds: while it
+	// doesn't, the site answers 503 at once and the background work waits.
+	watch := dbwatch.New(drv.DB().PingContext, log.With("component", "dbwatch"))
+	watch.Start(ctx)
+	reg := newMetricsRegistry(cfg, drv.DB(), watch)
 	observer := middleware.NewHTTPObserver(reg, requestLogger(cfg, log))
-	handler, jobs := buildHandler(ctx, mux, drv, cfg, log, observer)
+	handler, jobs := buildHandler(ctx, mux, drv, cfg, log, observer, watch)
 	metricsServer := startMetricsServer(cfg.Metrics.Listen, reg, log)
 
 	serverOne := &http.Server{

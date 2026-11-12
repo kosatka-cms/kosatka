@@ -87,6 +87,7 @@ The request lines and the error lines written while answering a page
 | `kosatka_http_requests_in_flight` | gauge | the requests being answered |
 | `kosatka_db_open_connections`, `kosatka_db_in_use_connections`, `kosatka_db_idle_connections`, `kosatka_db_max_open_connections` | gauge | the database connection pool |
 | `kosatka_db_wait_count_total`, `kosatka_db_wait_duration_seconds_total` | counter | the times a query waited for a free connection, and how long |
+| `kosatka_db_up` | gauge | 1 while the database answers the site's pings, 0 while it doesn't |
 | `kosatka_build_info{version, commit}` | gauge | the engine's release the binary was built from |
 | `go_goroutines`, `go_memstats_heap_alloc_bytes`, `go_gc_cycles_total`, `process_start_time_seconds`… | | the Go runtime, under the usual names |
 
@@ -437,6 +438,29 @@ sources*. A Prometheus can also scrape `/metrics` itself; the log still
 needs Alloy. Grafana, Loki and Prometheus want a machine of their own
 rather than a small server running the sites.
 
+## When the database is gone
+
+The site pings its database every 5 seconds. Two failed pings in a row
+(the database down, its host unreachable, its connections all taken)
+and, until it answers again:
+
+- every request gets a 503 at once - a page "The site is temporarily
+  unavailable" titled with the site's name, `Retry-After: 30`, never
+  cached; JSON for `/api/` - instead of each waiting for a connection
+  and failing with a 500 a minute later;
+- the background jobs and the refresh of the cached blocks wait - no
+  error in the log every minute;
+- `kosatka_db_up` is 0 and `/healthz` answers 503;
+- the log has one line at the start (level ERROR, "the database doesn't
+  answer") and one at the end, with how long it lasted ("the database
+  answers again").
+
+Nothing needs restarting: the site comes back by itself with its
+database. A new connection may take `db.connect_timeout` seconds (10)
+([Configuration](../reference/configuration.md)); the requests already
+waiting on the database when it went keep waiting up to
+`timeouts.database_query`.
+
 ## Elasticsearch
 
 The Elastic Agent (or Filebeat) reads the journal - the `journald`
@@ -456,6 +480,8 @@ queries from.
 - The site not answering: a check of `https://<site>/healthz` from
   outside the server (it answers `ok` while the database does) -
   [step 10](#10-checking-the-site-from-outside).
+- The database not answering: `kosatka_db_up` at 0 for a minute (see
+  [When the database is gone](#when-the-database-is-gone)).
 - A site's `/metrics` not answering: its process is down.
 - The share of server errors above, say, 1% for 10 minutes.
 - The 95th percentile of the answer time above a second.

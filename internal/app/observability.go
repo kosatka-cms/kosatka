@@ -9,6 +9,7 @@ import (
 
 	"github.com/kosatka-cms/kosatka/internal/buildinfo"
 	"github.com/kosatka-cms/kosatka/internal/config"
+	"github.com/kosatka-cms/kosatka/internal/lib/dbwatch"
 	"github.com/kosatka-cms/kosatka/internal/lib/metrics"
 )
 
@@ -18,7 +19,7 @@ const MetricsPath = "/metrics"
 // newMetricsRegistry - the service's metrics (the engine's build, the Go
 // runtime, the database pool; the requests' are added by
 // middleware.NewHTTPObserver) when metrics.listen is set, else nil.
-func newMetricsRegistry(cfg *config.Config, db *sql.DB) *metrics.Registry {
+func newMetricsRegistry(cfg *config.Config, db *sql.DB, watch *dbwatch.Watch) *metrics.Registry {
 	if cfg.Metrics.Listen == "" {
 		return nil
 	}
@@ -30,6 +31,12 @@ func newMetricsRegistry(cfg *config.Config, db *sql.DB) *metrics.Registry {
 		})
 	metrics.RegisterRuntime(reg)
 	metrics.RegisterDBStats(reg, "kosatka", db.Stats)
+	reg.GaugeFunc("kosatka_db_up", "1 while the database answers the site's pings, 0 while it doesn't.", func() float64 {
+		if watch.Down() {
+			return 0
+		}
+		return 1
+	})
 	return reg
 }
 

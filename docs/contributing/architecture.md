@@ -114,6 +114,9 @@ Two conventions keep ent out of the domain:
      (`HealthMiddleware`);
    - a handler's panic becomes a 500 with its stack in the log
      (`RecoverMiddleware`);
+   - a 503 at once while the database doesn't answer
+     (`DatabaseDownMiddleware`; `internal/lib/dbwatch` pings it every
+     5 seconds and pauses the scheduler and the cache refresh too);
    - a user read by ID once per request (`UserMemoMiddleware`, see
      [Caches](#caches));
    - page cache for guests (`PageCacheMiddleware`, on while

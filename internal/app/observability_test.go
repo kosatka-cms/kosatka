@@ -14,7 +14,7 @@ import (
 )
 
 func TestNewMetricsRegistryOff(t *testing.T) {
-	if reg := newMetricsRegistry(&config.Config{}, nil); reg != nil {
+	if reg := newMetricsRegistry(&config.Config{}, nil, nil); reg != nil {
 		t.Error("metrics without metrics.listen")
 	}
 	if startMetricsServer("127.0.0.1:0", nil, slog.New(slog.DiscardHandler)) != nil {
@@ -28,7 +28,7 @@ func TestMetricsHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = db.Close() }()
-	reg := newMetricsRegistry(&config.Config{Metrics: config.MetricsConfig{Listen: "127.0.0.1:0"}}, db)
+	reg := newMetricsRegistry(&config.Config{Metrics: config.MetricsConfig{Listen: "127.0.0.1:0"}}, db, nil)
 	h := metricsHandler(reg, slog.New(slog.DiscardHandler))
 
 	rec := httptest.NewRecorder()
@@ -37,7 +37,7 @@ func TestMetricsHandler(t *testing.T) {
 	if rec.Code != http.StatusOK || rec.Header().Get("Content-Type") != metrics.ContentType {
 		t.Fatalf("%d %q", rec.Code, rec.Header().Get("Content-Type"))
 	}
-	for _, want := range []string{"kosatka_build_info{", "go_goroutines ", "kosatka_db_open_connections "} {
+	for _, want := range []string{"kosatka_build_info{", "go_goroutines ", "kosatka_db_open_connections ", "kosatka_db_up 1"} {
 		if !strings.Contains(string(body), "\n"+want) {
 			t.Errorf("no %s in\n%s", want, body)
 		}

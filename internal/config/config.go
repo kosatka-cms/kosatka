@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -261,6 +262,10 @@ type DBConfig struct {
 	// is recycled (before the server drops it) or closed when idle.
 	ConnMaxLifetime int `yaml:"conn_max_lifetime" env:"DB_CONN_MAX_LIFETIME" env-default:"5"`
 	ConnMaxIdleTime int `yaml:"conn_max_idle_time" env:"DB_CONN_MAX_IDLE_TIME" env-default:"5"`
+	// ConnectTimeout - seconds a new connection may take (0 - the
+	// system's own, minutes): a database gone doesn't keep each request
+	// waiting; long enough to outlast a few lost packets.
+	ConnectTimeout int `yaml:"connect_timeout" env:"DB_CONNECT_TIMEOUT" env-default:"10"`
 	// TLS - MySQL: go-sql-driver/mysql's tls=... (e.g. true, skip-verify,
 	// preferred), needed when the server uses require_secure_transport=ON
 	// (many managed MySQL hosts). PostgreSQL: the sslmode (disable,
@@ -317,6 +322,9 @@ func (c DBConfig) DSN() string {
 	if tls := strings.TrimSpace(c.TLS); tls != "" {
 		dsn += "&tls=" + tls
 	}
+	if c.ConnectTimeout > 0 {
+		dsn += "&timeout=" + strconv.Itoa(c.ConnectTimeout) + "s"
+	}
 	if mode := strings.TrimSpace(c.SQLMode); mode != "" && mode != SQLModeServerDefault {
 		// Unknown DSN params are sent by the driver as SET <name>=<value>
 		// on connect; the value must be a quoted SQL string.
@@ -333,9 +341,14 @@ func (c DBConfig) postgresDSN() string {
 		Host:   fmt.Sprintf("%s:%d", c.Host, c.Port),
 		Path:   "/" + c.Scheme,
 	}
+	q := url.Values{}
 	if mode := strings.TrimSpace(c.TLS); mode != "" {
-		u.RawQuery = url.Values{"sslmode": {mode}}.Encode()
+		q.Set("sslmode", mode)
 	}
+	if c.ConnectTimeout > 0 {
+		q.Set("connect_timeout", strconv.Itoa(c.ConnectTimeout))
+	}
+	u.RawQuery = q.Encode()
 	return u.String()
 }
 

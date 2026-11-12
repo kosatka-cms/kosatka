@@ -99,7 +99,10 @@ func maintenanceSEOFromSite(site *entity.SiteInformation) (title, description st
 	return title, slogan
 }
 
-func maintenance503HTML(msg string, site *entity.SiteInformation) []byte {
+// unavailableHTML - the page of a 503 (maintenance, the database gone):
+// msg (HTML) on a page of its own, titled by the site, needing nothing
+// but what is in memory.
+func unavailableHTML(msg string, site *entity.SiteInformation) []byte {
 	title, desc := maintenanceSEOFromSite(site)
 	titleEsc := html.EscapeString(title)
 	descEsc := html.EscapeString(desc)
@@ -169,7 +172,7 @@ func MaintenanceMiddleware(
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusServiceUnavailable)
-			_, _ = w.Write(maintenance503HTML(msg+button, site))
+			_, _ = w.Write(unavailableHTML(msg+button, site))
 		})
 	}
 }

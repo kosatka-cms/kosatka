@@ -15,6 +15,15 @@ groups:
           summary: "{{ $labels.site }}: /metrics isn't answering"
           description: The site's process is down, or its metrics.listen address changed.
 
+      - alert: KosatkaDatabaseDown
+        expr: kosatka_db_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.site }}: the database isn't answering"
+          description: The site answers 503 until its database does; the log says since when (component dbwatch).
+
       - alert: KosatkaServerErrors
         expr: |
           sum by (site) (rate(kosatka_http_requests_total{code=~"5.."}[5m]))
