@@ -1,0 +1,22 @@
+package [[.Package]]
+
+import (
+	"net/http"
+
+	"github.com/kosatka-cms/kosatka/modulekit"
+	"github.com/kosatka-cms/kosatka/pkg/i18n"
+)
+
+// Controller - the module's page.
+type Controller struct {
+	*modulekit.BaseController
+}
+
+// Page handles GET /[[.URLPath]].
+func (c *Controller) Page(w http.ResponseWriter, r *http.Request) {
+	title := i18n.T(r.Context(), "[[.Label]]")
+	data := c.GetCommonData(r)
+	data["title"] = title
+	data["pageSEO"] = modulekit.PageSEOForList(title, r.URL.Path)
+	c.RenderOrFail(w, r, "[[.Name]]/page.html", data)
+}

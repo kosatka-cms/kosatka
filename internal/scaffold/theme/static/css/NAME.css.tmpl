@@ -1,0 +1,13 @@
+/* The [[.Label]] theme. The engine's markup is Bootstrap 5: a theme sets
+   Bootstrap's variables and styles the engine's classes (site-header,
+   site-name…). --[[.Name]]-accent comes from the theme's settings.
+   Pages load [[.Name]].min.css when there is one: minify this file into
+   it before a release (e.g. minify -o [[.Name]].min.css [[.Name]].css). */
+:root {
+    --bs-link-color: var(--[[.Name]]-accent, #0d6efd);
+    --bs-link-hover-color: var(--[[.Name]]-accent, #0d6efd);
+}
+
+.site-header {
+    border-bottom: 3px solid var(--[[.Name]]-accent, #0d6efd);
+}

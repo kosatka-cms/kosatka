@@ -113,6 +113,7 @@ Installed versions and checksums are kept in `themes/themes.lock`.
 
 | Command | |
 |---|---|
+| `app theme new <name> [-label <label>] [-dir <dir>]` | start a theme: a manifest with the engine's regions and an accent colour setting, a stylesheet, a Russian catalog of its strings and a README, in `themes/<name>` (or `-dir`, e.g. `../kosatka-theme-<name>` for a repository of its own). `-label` - its name on the Appearance page (by default from `<name>`: `sea-breeze` - *Sea breeze*). It passes `app theme check`; see [Create a theme](../themes/create-a-theme.md#a-quick-start) |
 | `app theme list [-updates]` | the themes under `themes/`: those installed from a repository with their version and source, the others as shipped with the project; `-updates` also asks each installed theme's repository for a newer release |
 | `app theme add <repository>[@v1.2.0] [-name <dir>]` | install a theme from its git repository: its newest release, or the one given. `-name` - the directory under `themes/` (by default the repository's name) |
 | `app theme update <name>[@v1.2.0]` | move an installed theme to a release (its newest by default) |
@@ -132,6 +133,7 @@ Rebuild the binary after them.
 
 | Command | |
 |---|---|
+| `app module new <path> [-name <name>] [-dir <dir>]` | start a module in a Go module of its own (`<path>`, e.g. `github.com/you/kosatka-module-notes`): a page with its test, a stylesheet, a Russian catalog and a README, requiring the engine release the binary is of. `-name` - its machine name (by default from the path: `notes`), `-dir` - where to write it (by default the path's last part). Needs no site; see [Write a module](../modules/write-a-module.md#a-quick-start) |
 | `app module list` | the modules the binary has: the engine's and those from outside it, with their Go modules' versions; then its [file storages](../guides/file-storage.md) |
 | `app module add <path>[@version]` | add a module, or a file storage (`go get`; the latest version without one) |
 | `app module remove [-force] <path>` | remove it. It refuses while the module is installed in the site's database (the config: `-config` or `CONFIG_PATH`): uninstall it on the Modules page first; a storage - while `files.storage` or `files.private_storage` names it. When the database or the config can't be checked it warns and removes it; `-force` removes it anyway |

@@ -1,0 +1,6 @@
+module [[.Path]]
+
+go [[.GoVersion]]
+[[if .EngineVersion]]
+require github.com/kosatka-cms/kosatka [[.EngineVersion]]
+[[end -]]

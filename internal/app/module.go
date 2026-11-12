@@ -10,6 +10,8 @@ import (
 	"maps"
 	"os"
 	"os/exec"
+	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -22,15 +24,19 @@ import (
 
 	"github.com/kosatka-cms/kosatka/internal/config"
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
+	"github.com/kosatka-cms/kosatka/internal/domain/themes"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/filestorage"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/migrations"
 	"github.com/kosatka-cms/kosatka/internal/infrastructure/sqldialect"
+	"github.com/kosatka-cms/kosatka/internal/scaffold"
 	"github.com/kosatka-cms/kosatka/modulekit"
 )
 
 // moduleUsage - "app module" (the modules from outside the engine,
 // docs/modules/using-modules.md).
 const moduleUsage = `usage:
+  app module new <path> [-name n] [-dir d] start a module in a Go module of its own (path: e.g. github.com/you/kosatka-module-notes):
+                                    a page, its test, styles, translations, README (default dir: the path's last part)
   app module list                   the modules the binary has: the engine's and those from outside it, with their Go modules' versions; then its file storages
   app module add <path>[@version]   add a module from its Go module to the site (go get; latest without a version)
   app module remove [-force] <path> remove it from the site: refused while it is installed in the site's database (-config or CONFIG_PATH; uninstall it on the Modules page first), -force removes it anyway
@@ -75,6 +81,9 @@ func moduleCommand(args []string, dir string, stdout, stderr io.Writer) int {
 	cmd, rest := args[0], args[1:]
 	fs := flag.NewFlagSet("module "+cmd, flag.ContinueOnError)
 	fs.SetOutput(stderr)
+	if cmd == "new" {
+		return moduleNew(fs, rest, dir, stdout, stderr)
+	}
 	force := false
 	if cmd == "remove" {
 		fs.BoolVar(&force, "force", false, "remove the module even if it is installed in the site's database")
@@ -140,6 +149,54 @@ func moduleCommand(args []string, dir string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintln(stderr, moduleUsage)
 		return 2
 	}
+}
+
+// goVersionRe - the Go release of a toolchain's version (go1.27.3 - 1.27).
+var goVersionRe = regexp.MustCompile(`^go(\d+\.\d+)`)
+
+// moduleNew writes a new module's files (scaffold.ModuleFiles) into a
+// directory of its own under dir (-dir; default: its path's last part),
+// requiring the engine release this binary is of.
+func moduleNew(fs *flag.FlagSet, args []string, dir string, stdout, stderr io.Writer) int {
+	name := fs.String("name", "", "its machine name (default: from the path, kosatka-module-notes - notes)")
+	target := fs.String("dir", "", "where to write it (default: the path's last part)")
+	positional, err := parseInterleaved(fs, args)
+	if err != nil {
+		return 2
+	}
+	if len(positional) != 1 {
+		_, _ = fmt.Fprintln(stderr, moduleUsage)
+		return 2
+	}
+	m := goVersionRe.FindStringSubmatch(runtime.Version())
+	if m == nil {
+		_, _ = fmt.Fprintf(stderr, "module: can't tell the Go release from %s\n", runtime.Version())
+		return 1
+	}
+	engine := ""
+	if r := themes.EngineRelease(); r != "" {
+		engine = "v" + r
+	}
+	modPath := positional[0]
+	files, err := scaffold.ModuleFiles(scaffold.Module{Path: modPath, Name: *name, EngineVersion: engine, GoVersion: m[1]})
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "module:", err)
+		return 2
+	}
+	out := *target
+	if out == "" {
+		out = filepath.Join(dir, path.Base(modPath))
+	}
+	written, err := scaffold.Write(out, files)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "module:", err)
+		return 1
+	}
+	for _, f := range written {
+		_, _ = fmt.Fprintln(stdout, filepath.Join(out, filepath.FromSlash(f)))
+	}
+	_, _ = fmt.Fprintf(stdout, "next: cd %s && go mod tidy && go test ./... ; then, in a site, app module add %s@<its release>\n", out, modPath)
+	return 0
 }
 
 // siteModulesInstalled - which of the modules are installed in the site's

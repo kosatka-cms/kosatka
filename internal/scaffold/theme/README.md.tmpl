@@ -1,0 +1,30 @@
+# [[.Label]]
+
+A theme for [Kosatka](https://github.com/kosatka-cms/kosatka): the
+engine's layout in colours of its own, with an accent colour the site's
+administrator chooses.
+
+## Install
+
+From the site's project directory:
+
+```bash
+app theme add <this repository's address>
+```
+
+Then choose it on the **Appearance** page.
+
+## Develop
+
+| Path | What's there |
+|---|---|
+| `theme.yaml` | the manifest: name, regions, blocks, settings |
+| `static/css/[[.Name]].css` | the stylesheet |
+| `templates/` | the engine's templates the theme replaces (same relative path) |
+| `translations/` | the theme's strings in other languages |
+
+- [Create a theme](https://kosatka-cms.github.io/kosatka/themes/create-a-theme/),
+  [Templates](https://kosatka-cms.github.io/kosatka/themes/templates/).
+- Before a release: `app theme check` in the theme's directory, a
+  screenshot (`static/screenshot.jpg`), then
+  [Distributing a theme](https://kosatka-cms.github.io/kosatka/themes/distribute/).

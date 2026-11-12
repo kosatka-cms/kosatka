@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -217,3 +218,33 @@ func TestModuleRemoveStorage(t *testing.T) {
 // testStorePublic - a file storage's Public in this package
 // (TestModuleRemoveStorage).
 func testStorePublic(filestorage.Config) (filestore.Store, string, error) { return nil, "", nil }
+
+// TestModuleNew - app module new writes a module of its own Go module
+// into the path's last part (or -dir), requiring no site; a bad path
+// exits 2, an existing directory with files 1.
+func TestModuleNew(t *testing.T) {
+	dir := t.TempDir()
+	var out, errOut bytes.Buffer
+	if code := moduleCommand([]string{"new", "example.com/kosatka-module-sea-notes"}, dir, &out, &errOut); code != 0 {
+		t.Fatalf("exit %d: %s", code, errOut.String())
+	}
+	mod, err := os.ReadFile(filepath.Join(dir, "kosatka-module-sea-notes", "go.mod"))
+	if err != nil || !strings.HasPrefix(string(mod), "module example.com/kosatka-module-sea-notes\n") {
+		t.Fatalf("go.mod: %v\n%s", err, mod)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "kosatka-module-sea-notes", "sea_notes.go")); err != nil {
+		t.Error(err)
+	}
+	if code := moduleCommand([]string{"new", "example.com/kosatka-module-sea-notes"}, dir, io.Discard, io.Discard); code != 1 {
+		t.Errorf("over a module: exit %d", code)
+	}
+	if code := moduleCommand([]string{"new", "-name", "notes", "example.com/x", "-dir", filepath.Join(dir, "x")}, dir, io.Discard, io.Discard); code != 0 {
+		t.Errorf("-name, -dir: exit %d", code)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "x", "notes.go")); err != nil {
+		t.Error(err)
+	}
+	if code := moduleCommand([]string{"new", "notes"}, dir, io.Discard, io.Discard); code != 2 {
+		t.Errorf("a bad path: exit %d", code)
+	}
+}

@@ -1,0 +1,9 @@
+{{template "layout.html" .}}
+
+{{define "title"}}<h1>{{.title}}</h1>{{end}}
+
+{{define "content"}}{{attach "[[.Name]]"}}
+<section class="[[.CSSClass]]">
+    <p class="[[.CSSClass]]-lead">{{t "This page comes from a module of its own repository."}}</p>
+</section>
+{{end}}

@@ -24,6 +24,20 @@ MySQL and PostgreSQL to generate migrations and run the database tests,
 and the engine's `web/` and `themes/` (a checkout of its repository) to
 run a site.
 
+## A quick start
+
+`app module new` writes a module's starting files - a Go module of its
+own with one page, its test, a stylesheet, a Russian catalog and a
+README - requiring the engine release the binary is of:
+
+```bash
+app module new github.com/you/kosatka-module-notes   # in ./kosatka-module-notes, name "notes"
+cd kosatka-module-notes && go mod tidy && go test ./...
+```
+
+It has no table of its own yet: the steps below add one (steps 2, 3 and
+10), with an install step, demo content and a block.
+
 ## What you will build
 
 ```text
