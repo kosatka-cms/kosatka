@@ -471,7 +471,11 @@
         display: none;
     }
 }
-.profile-edit-two-factor {
+/* The profile's two-factor sign-in and social networks: a section each
+   under a line - its label, the hint, the buttons; a social network a
+   row - its icon and name, connected or not, the button. */
+.profile-edit-two-factor,
+.profile-edit-oauth {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -479,8 +483,25 @@
     padding-top: 12px;
     border-top: 1px solid var(--kosatka-line, var(--bs-border-color));
 }
+.profile-edit-two-factor .alert,
+.profile-edit-oauth .alert {
+    align-self: stretch;
+    margin: 0;
+}
 .profile-edit-two-factor-label {
     font-weight: 600;
+}
+.profile-edit-oauth-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0 0;
+}
+.profile-edit-oauth-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
 }
 
 /* The login page (user/login.html): a card in the middle of the page -
