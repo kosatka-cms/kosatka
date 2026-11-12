@@ -17,7 +17,10 @@ page sends a small request when it is opened, and the view is counted
 three ways: in all, today, and in that day's views. Only published
 content that isn't waiting on moderation is counted, and one view of an
 item from the same address in 30 minutes: reloading a page doesn't
-inflate the figures.
+inflate the figures. Neither do crawlers: search engines open pages in
+a browser that runs their scripts, from many addresses, so a view sent
+by a client that calls itself a bot, crawler or spider (or a headless
+browser, or one that leaves out its name) isn't counted.
 
 Turning counting off keeps what was counted; the figures just stop
 growing.
