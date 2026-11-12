@@ -141,7 +141,7 @@ files:
 	// database closes.
 	jobsCtx, stopJobs := context.WithCancel(context.Background())
 	var jobs backgroundJobs
-	ts.Config.Handler, jobs = buildHandler(jobsCtx, http.NewServeMux(), drv, cfg, logger, nil)
+	ts.Config.Handler, jobs = buildHandler(jobsCtx, http.NewServeMux(), drv, cfg, logger, nil, nil)
 	ts.Start()
 
 	s := &site{t: t, base: base, password: password, log: logs}

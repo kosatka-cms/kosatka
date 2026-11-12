@@ -29,6 +29,7 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/interfaces"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/admin"
 	"github.com/kosatka-cms/kosatka/internal/interfaces/middleware"
+	"github.com/kosatka-cms/kosatka/internal/lib/dbwatch"
 	"github.com/kosatka-cms/kosatka/internal/lib/debounce"
 	"github.com/kosatka-cms/kosatka/internal/lib/htmlimages"
 	"github.com/kosatka-cms/kosatka/internal/modules"
@@ -185,8 +186,8 @@ func newBackgroundServices(drv *sql.Driver, baseLogger *slog.Logger) backgroundS
 // (bootSiteSettings…) and the cache has had its first refresh. Its
 // background loops (the cache's refresh, the scheduler) run until ctx
 // ends; the jobs it returns tells when they have returned.
-func buildHandler(ctx context.Context, mux *http.ServeMux, drv *sql.Driver, cfg *config.Config, baseLogger *slog.Logger, observer *middleware.HTTPObserver) (http.Handler, backgroundJobs) {
-	s := &wiring{ctx: ctx, mux: mux, drv: drv, cfg: cfg, baseLogger: baseLogger, observer: observer}
+func buildHandler(ctx context.Context, mux *http.ServeMux, drv *sql.Driver, cfg *config.Config, baseLogger *slog.Logger, observer *middleware.HTTPObserver, watch *dbwatch.Watch) (http.Handler, backgroundJobs) {
+	s := &wiring{ctx: ctx, mux: mux, drv: drv, cfg: cfg, baseLogger: baseLogger, observer: observer, dbWatch: watch}
 	s.store = newSessionStore(cfg, baseLogger)
 
 	// The modules register their hooks below; none of an earlier wiring
@@ -205,7 +206,11 @@ func buildHandler(ctx context.Context, mux *http.ServeMux, drv *sql.Driver, cfg 
 	s.wireModuleLifecycle()
 	s.wireControllers()
 
-	return s.withMiddleware(), backgroundJobs{s.cacheService.Done(), s.scheduler.Done()}
+	jobs := backgroundJobs{s.cacheService.Done(), s.scheduler.Done()}
+	if watch != nil {
+		jobs = append(jobs, watch.Done())
+	}
+	return s.withMiddleware(), jobs
 }
 
 // backgroundJobs - the background loops' Done channels.
@@ -236,6 +241,7 @@ func (s *wiring) withMiddleware() http.Handler {
 		Logger:        s.baseLogger,
 		TwoFactor:     s.twoFactorService,
 		Ping:          s.drv.DB().PingContext,
+		DatabaseDown:  s.dbWatch.Down,
 		Observer:      s.observer,
 	})
 }
@@ -252,8 +258,10 @@ type wiring struct {
 	baseLogger *slog.Logger
 	// observer - the requests' metrics and log lines (nil - none).
 	observer *middleware.HTTPObserver
-	store    *sessions.CookieStore
-	client   *generated.Client
+	// dbWatch - whether the database answers (nil - always taken as up).
+	dbWatch *dbwatch.Watch
+	store   *sessions.CookieStore
+	client  *generated.Client
 
 	// wireData
 	images             imageStack
@@ -546,6 +554,7 @@ func (s *wiring) wirePresentation() {
 	// modules add their kinds.
 	service.RegisterEmbedKind(service.BlockEmbed(s.blockService, s.templateService))
 	service.RegisterEmbedKind(s.cacheService.ViewEmbed())
+	s.cacheService.SetPaused(s.dbWatch.Down)
 	if err := s.cacheService.Start(s.ctx); err != nil {
 		s.baseLogger.Error("failed to start cache service", "error", err)
 		panic(err)
@@ -897,6 +906,7 @@ func (s *wiring) wireModuleLifecycle() {
 	s.scheduler.Add(service.SpamPurgeJob(s.commentSettingsRepo, s.commentsRepo, s.commentsService, time.Now))
 	s.scheduler.Add(s.viewCountingService.ViewDaysPurgeJob(time.Now))
 	s.scheduler.Add(s.emailSender.LogPurgeJob(time.Now))
+	s.scheduler.SetPaused(s.dbWatch.Down)
 	s.scheduler.Start(s.ctx)
 
 	setupStatusReport(statusDeps{
@@ -1116,6 +1126,8 @@ type middlewareDeps struct {
 	TwoFactor *twofactor.Service
 	// Ping - whether the database answers (/healthz).
 	Ping func(context.Context) error
+	// DatabaseDown - the database doesn't answer (dbwatch): a 503 at once.
+	DatabaseDown func() bool
 	// Observer - the requests' metrics and log lines (nil - none).
 	Observer *middleware.HTTPObserver
 }
@@ -1188,6 +1200,12 @@ func withMiddleware(routes http.Handler, d middlewareDeps) http.Handler {
 	handler = middleware.PageCacheMiddleware(d.Config.PageCacheMaxAge, csrf.SessionName)(handler)
 	// Every layer inside reads a user by ID once a request.
 	handler = middleware.UserMemoMiddleware(handler)
+	// The database gone: a 503 before any layer inside needs it.
+	var site func() *entity.SiteInformation
+	if d.Site != nil {
+		site = d.Site.Cached
+	}
+	handler = middleware.DatabaseDownMiddleware(d.DatabaseDown, site)(handler)
 	// A panic anywhere inside: a 500 and the stack in the log.
 	handler = middleware.RecoverMiddleware(d.Logger)(handler)
 	// The requests' metrics and log lines see every answer of the layers

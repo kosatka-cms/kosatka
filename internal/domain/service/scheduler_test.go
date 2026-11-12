@@ -53,6 +53,33 @@ func TestSchedulerTick(t *testing.T) {
 	}
 }
 
+// TestSchedulerPaused - no job runs while the scheduler is paused (the
+// database gone); the due ones run on the first tick after.
+func TestSchedulerPaused(t *testing.T) {
+	now := time.Date(2026, 11, 13, 10, 0, 0, 0, time.UTC)
+	s := NewScheduler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	s.now = func() time.Time { return now }
+	runs := 0
+	s.Add(Job{Name: "hourly", Every: time.Hour, Run: func(context.Context) error { runs++; return nil }})
+	down := true
+	s.SetPaused(func() bool { return down })
+	s.Tick(context.Background())
+	now = now.Add(time.Minute)
+	s.Tick(context.Background())
+	if runs != 0 {
+		t.Fatalf("ran %d times while paused", runs)
+	}
+	down = false
+	now = now.Add(time.Minute)
+	s.Tick(context.Background())
+	if runs != 1 {
+		t.Errorf("ran %d times after the pause, want 1", runs)
+	}
+	if !s.LastTick().Equal(now) {
+		t.Errorf("last tick %v, want %v", s.LastTick(), now)
+	}
+}
+
 // TestRegisterJobReplaces - a job registered again under its name (the
 // app wired again in one process) replaces the earlier one.
 func TestRegisterJobReplaces(t *testing.T) {

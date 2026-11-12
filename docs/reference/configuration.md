@@ -55,6 +55,7 @@ set).
 | `max_idle_conns` | `DB_MAX_IDLE_CONNS` | `5` | |
 | `conn_max_lifetime` | `DB_CONN_MAX_LIFETIME` | `5` | minutes before a connection is recycled |
 | `conn_max_idle_time` | `DB_CONN_MAX_IDLE_TIME` | `5` | minutes before an idle connection is closed |
+| `connect_timeout` | `DB_CONNECT_TIMEOUT` | `10` | seconds a new connection may take; `0` - the system's own (minutes) |
 
 With `tls` unset, `env` not `local` and the database on another host (not
 `localhost` or `127.0.0.1`), the connection is encrypted without checking

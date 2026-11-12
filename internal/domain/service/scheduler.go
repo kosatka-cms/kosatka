@@ -59,6 +59,17 @@ type Scheduler struct {
 	tick time.Time
 	// done - closed when the loop Start began has returned.
 	done chan struct{}
+	// paused - no job runs while it says so (the database gone, SetPaused).
+	paused func() bool
+}
+
+// SetPaused - no job runs while paused says so (the database doesn't
+// answer: each run would only fail and log it); the jobs due run on the
+// first tick after.
+func (s *Scheduler) SetPaused(paused func() bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.paused = paused
 }
 
 // NewScheduler - a scheduler with no jobs yet, logging to logger.
@@ -108,7 +119,11 @@ func (s *Scheduler) Tick(ctx context.Context) {
 	now := s.now()
 	s.mu.Lock()
 	jobs := append([]Job(nil), s.jobs...)
+	paused := s.paused
 	s.mu.Unlock()
+	if paused != nil && paused() {
+		jobs = nil
+	}
 	for _, j := range jobs {
 		if j.Module != "" && !ModuleEnabled(j.Module) {
 			continue

@@ -13,7 +13,7 @@ func TestDBConfigDSN(t *testing.T) {
 	c := DBConfig{Host: "db", Port: 3306, Username: "u", Password: "p", Scheme: "site", TLS: "skip-verify",
 		SQLMode: "STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"}
 	dsn := c.DSN()
-	if !strings.HasPrefix(dsn, "u:p@tcp(db:3306)/site?parseTime=true&charset=utf8mb4&clientFoundRows=true&tls=skip-verify&sql_mode=") {
+	if !strings.HasPrefix(dsn, "u:p@tcp(db:3306)/site?parseTime=true&charset=utf8mb4&clientFoundRows=true&tls=skip-verify&sql_mode=") || strings.Contains(dsn, "timeout") {
 		t.Fatalf("unexpected DSN: %s", dsn)
 	}
 	q, err := url.ParseQuery(dsn[strings.Index(dsn, "?")+1:])
@@ -30,6 +30,10 @@ func TestDBConfigDSN(t *testing.T) {
 			t.Fatalf("mode %q must not set a session sql_mode: %s", mode, c.DSN())
 		}
 	}
+	c.ConnectTimeout = 5
+	if dsn := c.DSN(); !strings.Contains(dsn, "&timeout=5s") {
+		t.Fatalf("no connect timeout: %s", dsn)
+	}
 }
 
 func TestDBConfigPostgresDSN(t *testing.T) {
@@ -44,6 +48,10 @@ func TestDBConfigPostgresDSN(t *testing.T) {
 	c.TLS = ""
 	if got := c.DSN(); strings.Contains(got, "sslmode") {
 		t.Fatalf("no TLS must leave the driver's sslmode: %s", got)
+	}
+	c.ConnectTimeout = 5
+	if got, want := c.DSN(), "postgres://u:p%40ss@db:5432/site?connect_timeout=5"; got != want {
+		t.Fatalf("DSN = %q, want %q", got, want)
 	}
 	if (DBConfig{}).SQLDriver() != "mysql" || (DBConfig{Driver: "mysql"}).IsPostgres() {
 		t.Fatal("MySQL is the default")
