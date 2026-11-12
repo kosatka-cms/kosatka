@@ -47,6 +47,10 @@ var imgAppearanceStyle = regexp.MustCompile(`(?i)^(?:\s*(?:` +
 	`|border\s*:\s*0` +
 	`)\s*;?)*\s*$`)
 
+// targetBlank - the one target a link keeps: a new tab (the editor's
+// "Open link in new window"); bluemonday adds rel="noopener" to it.
+var targetBlank = regexp.MustCompile(`^_blank$`)
+
 // adminPolicy - policy plus "class" (AllowStyling) and a "style" attribute
 // restricted to imgAppearanceStyle. Only for rich text authored by trusted
 // admins/moderators (e.g. Views' HeaderText/FooterText), where the editor's
@@ -61,7 +65,7 @@ func newAdminPolicy() *bluemonday.Policy {
 	p.AllowElements("kbd")
 	// target="_blank" on <a> (links opening in a new tab); exactly
 	// "_blank", and rel="nofollow" is still forced on every link.
-	p.AllowAttrs("target").Matching(regexp.MustCompile(`^_blank$`)).OnElements("a")
+	p.AllowAttrs("target").Matching(targetBlank).OnElements("a")
 	// aria-label - accessibility text (e.g. icon-only links); values are
 	// always escaped.
 	p.AllowAttrs("aria-label").Globally()
@@ -256,6 +260,7 @@ func formatPolicy(tags []string, allowClass bool) *bluemonday.Policy {
 	}
 	if tagSet["a"] {
 		p.AllowAttrs("href").OnElements("a")
+		p.AllowAttrs("target").Matching(targetBlank).OnElements("a")
 		p.AllowStandardURLs()
 		p.RequireNoFollowOnLinks(true)
 	}

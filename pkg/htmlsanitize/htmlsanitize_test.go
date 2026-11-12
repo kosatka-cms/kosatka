@@ -183,6 +183,22 @@ func TestSanitizeWithFormatImageAndLinkTagsGetURLValidation(t *testing.T) {
 	}
 }
 
+// TestSanitizeWithFormatKeepsLinkTargetBlank: a format with links keeps
+// the editor's "Open link in new window" (target="_blank", with
+// rel="nofollow noopener"); any other target goes.
+func TestSanitizeWithFormatKeepsLinkTargetBlank(t *testing.T) {
+	got := SanitizeWithFormat(`<p><a href="https://vk.com/club1" target="_blank">VK</a> <a href="https://example.com" target="_self">x</a></p>`, "p a", false)
+	if !strings.Contains(got, `<a href="https://vk.com/club1" target="_blank" rel="nofollow noopener">VK</a>`) {
+		t.Errorf("target=_blank: %q", got)
+	}
+	if strings.Contains(got, "_self") {
+		t.Errorf("another target kept: %q", got)
+	}
+	if got := SanitizeWithFormat(`<a href="https://vk.com/club1" target="_blank">VK</a>`, "p", false); strings.Contains(got, "target") {
+		t.Errorf("a format without links: %q", got)
+	}
+}
+
 // TestSanitizeWithFormatKeepsCombinedImageSizeAndFloatStyle: width, height
 // and float in one style value survive together (see imgAppearanceStyle).
 func TestSanitizeWithFormatKeepsCombinedImageSizeAndFloatStyle(t *testing.T) {
