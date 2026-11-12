@@ -108,6 +108,12 @@ func TestUserFacing(t *testing.T) {
 			t.Errorf("a reply to another node's comment: %d, want 400", code)
 		}
 
+		// The member's own profile: by the current password, the way to
+		// reset a forgotten one.
+		if _, page := commenter.get("/me/edit"); !strings.Contains(page, `href="/user/password"`) {
+			t.Error("the profile edit has no link to reset a forgotten password")
+		}
+
 		// The member's profile edit: another user's name; then an email in
 		// capitals; then without the current password.
 		edit := func(set url.Values) {

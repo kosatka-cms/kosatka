@@ -99,11 +99,12 @@
                 {{template "password_strength" "password"}}
                 {{if .isSelf}}
                 {{/* The current password: only to change the e-mail or the
-                     password (self-edit only). */}}
+                     password (self-edit only). Forgotten - or never set, an
+                     account of social login - the reset by e-mail sets one. */}}
                 <div class="form-group profile-edit-current">
                     <label for="current_password">{{t "Current password"}}</label>
                     <input type="password" class="form-control" id="current_password" name="current_password" autocomplete="current-password">
-                    <small class="form-text text-muted">{{t "Needed to change the e-mail or the password."}}</small>
+                    <small class="form-text text-muted">{{t "Needed to change the e-mail or the password."}} <a href="/user/password">{{t "Forgot your password?"}}</a></small>
                 </div>
                 {{end}}
                 {{if .twoFactor}}
