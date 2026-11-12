@@ -1,0 +1,47 @@
+# The [[.Label]] theme for Kosatka CMS. Every key:
+# https://kosatka-cms.github.io/kosatka/themes/manifest/
+name: [[.Label]]
+description: A theme for Kosatka CMS - the engine's layout in colours of its own.
+version: 0.1.0
+[[- if .MinVersion]]
+min_version: [[.MinVersion]]
+[[- end]]
+# Fill these in before the first release (app theme check asks for them):
+# author: Your name
+# license: MIT
+# tags: [light, responsive]
+# screenshot: screenshot.jpg   # static/screenshot.jpg
+# default_region - where a new block goes.
+default_region: sidebar
+# The engine's regions: blocks placed for another theme stay where they
+# were when a site switches to this one.
+regions:
+  - id: header
+    label: Header
+  - id: sidebar
+    label: Sidebar
+  - id: content_top
+    label: Content top
+  - id: content_bottom
+    label: Content bottom
+  - id: content_inline
+    label: Inside content (content page)
+  - id: footer
+    label: Footer
+  - id: footer_bottom
+    label: Footer bottom line
+# The blocks placed when the theme gets its block layout the first time.
+blocks:
+  - plugin: copyright
+    region: footer_bottom
+# Options on the theme's settings page: the colour becomes the CSS
+# variable --[[.Name]]-accent.
+settings:
+  - id: accent
+    label: Accent colour
+    type: color
+    default: "#0d6efd"
+    css_var: --[[.Name]]-accent
+# static/css/[[.Name]].css, linked after the engine's styles.
+stylesheets:
+  - [[.Name]]

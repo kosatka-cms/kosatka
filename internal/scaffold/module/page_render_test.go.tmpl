@@ -1,0 +1,19 @@
+package [[.Package]]
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/kosatka-cms/kosatka/modulekit/testkit"
+)
+
+// TestPageRender - the module's page renders from its embedded templates
+// (testkit.UseEngineRoot serves a registered module's assets, as a site
+// does).
+func TestPageRender(t *testing.T) {
+	testkit.UseEngineRoot(t)
+	out := testkit.RenderPageContent(t, "[[.Name]]/page.html", map[string]any{})
+	if want := "This page comes from a module of its own repository."; !strings.Contains(out, want) {
+		t.Errorf("missing %q in\n%s", want, out)
+	}
+}

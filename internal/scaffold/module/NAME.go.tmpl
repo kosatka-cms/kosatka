@@ -1,0 +1,30 @@
+// Package [[.Package]] - the [[.Label]] module for Kosatka CMS: a page at
+// /[[.URLPath]]. Importing the package registers it (init); a site that
+// imports it (app module add) enables it on its Modules page.
+package [[.Package]]
+
+import (
+	"embed"
+	"io/fs"
+
+	"github.com/kosatka-cms/kosatka/modulekit"
+)
+
+//go:embed templates static
+var assets embed.FS
+
+//go:embed translations/*.json
+var translations embed.FS
+
+func init() {
+	catalog, err := fs.Sub(translations, "translations")
+	if err != nil {
+		panic(err) // a constant, valid path
+	}
+	modulekit.Register(modulekit.Registration{
+		Module:  Module(),
+		Wire:    Wire,
+		Catalog: catalog,
+		Assets:  assets,
+	})
+}

@@ -1,0 +1,22 @@
+package [[.Package]]
+
+import (
+	"github.com/kosatka-cms/kosatka/modulekit/manifestkit"
+	"github.com/kosatka-cms/kosatka/pkg/i18n"
+)
+
+// Name - the module's machine name.
+const Name = "[[.Name]]"
+
+// Module - the module's registry entry: its name, label and description
+// on the Modules page, its stylesheet (static/[[.Name]].css). Its tables,
+// permissions, blocks and admin pages go here too (manifestkit.Module).
+func Module() manifestkit.Module {
+	return manifestkit.Module{
+		Name:        Name,
+		Label:       i18n.N("[[.Label]]"),
+		Description: i18n.N("The [[.Label]] page (/[[.URLPath]])."),
+		Category:    manifestkit.CategoryOther,
+		CSS:         []string{Name},
+	}
+}

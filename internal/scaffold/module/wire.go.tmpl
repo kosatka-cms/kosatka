@@ -1,0 +1,19 @@
+package [[.Package]]
+
+import (
+	"net/http"
+
+	"github.com/kosatka-cms/kosatka/modulekit"
+)
+
+// Wire - the module's controller and route. modulekit.Parts holds the
+// rest a module may add: hooks, background jobs, its lines of the status
+// report.
+func Wire(d modulekit.Deps) modulekit.Parts {
+	c := &Controller{BaseController: modulekit.NewBaseController(d.Base)}
+	return modulekit.Parts{
+		Routes: func(r modulekit.Routes) {
+			r.Mux.Handle("GET /[[.URLPath]]", http.HandlerFunc(c.Page))
+		},
+	}
+}

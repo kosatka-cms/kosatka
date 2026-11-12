@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/kosatka-cms/kosatka/internal/domain/themes"
 	"github.com/kosatka-cms/kosatka/internal/paths"
+	"github.com/kosatka-cms/kosatka/internal/scaffold"
 	"github.com/kosatka-cms/kosatka/internal/themeinstall"
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
 	"github.com/kosatka-cms/kosatka/translations"
@@ -21,6 +23,8 @@ import (
 
 // themeUsage - "app theme" without a known command.
 const themeUsage = `usage:
+  app theme new <name> [-label l] [-dir d]    start a theme: manifest, stylesheet, translations, README (in themes/<name>,
+                                              or -dir: ../kosatka-theme-<name> for a repository of its own)
   app theme list [-updates]                   the themes: installed ones with their version and source
   app theme add <repository>[@v1.2.0] [-name n] install a theme from its git repository (its newest release by default)
   app theme update <name>[@v1.2.0]            move an installed theme to a release (its newest by default)
@@ -64,19 +68,23 @@ func themeCommand(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 		return themeList(ctx, in, *updates, stdout, stderr)
+	case "new":
+		label := fs.String("label", "", "its name on the Appearance page (default: from <name>, sea-breeze - Sea breeze)")
+		dir := fs.String("dir", "", "where to write it (default: themes/<name>)")
+		positional, err := parseInterleaved(fs, rest)
+		if err != nil {
+			return 2
+		}
+		if len(positional) != 1 {
+			_, _ = fmt.Fprintln(stderr, themeUsage)
+			return 2
+		}
+		return themeNew(positional[0], *label, *dir, stdout, stderr)
 	case "add":
 		name := fs.String("name", "", "the theme's directory under themes/ (default: the repository's name)")
-		// The flags may come after the repository too.
-		var positional []string
-		for len(rest) > 0 {
-			if err := fs.Parse(rest); err != nil {
-				return 2
-			}
-			if fs.NArg() == 0 {
-				break
-			}
-			positional = append(positional, fs.Arg(0))
-			rest = fs.Args()[1:]
+		positional, err := parseInterleaved(fs, rest)
+		if err != nil {
+			return 2
 		}
 		if len(positional) != 1 {
 			_, _ = fmt.Fprintln(stderr, themeUsage)
@@ -110,16 +118,9 @@ func themeCommand(args []string, stdout, stderr io.Writer) int {
 		return 0
 	case "search":
 		catalogURL := fs.String("catalog", os.Getenv("THEMES_CATALOG_URL"), "the catalog's address (an index.json URL or file)")
-		var words []string
-		for len(rest) > 0 {
-			if err := fs.Parse(rest); err != nil {
-				return 2
-			}
-			if fs.NArg() == 0 {
-				break
-			}
-			words = append(words, fs.Arg(0))
-			rest = fs.Args()[1:]
+		words, err := parseInterleaved(fs, rest)
+		if err != nil {
+			return 2
 		}
 		if *catalogURL == "" {
 			return fail(fmt.Errorf("no catalog: -catalog <url> or THEMES_CATALOG_URL"))
@@ -208,6 +209,51 @@ func themeCheck(ctx context.Context, in themeinstall.Installer, dir string, stdo
 	if problems > 0 {
 		return 1
 	}
+	return 0
+}
+
+// parseInterleaved parses args with fs, the flags before or after the
+// positional arguments, which it returns.
+func parseInterleaved(fs *flag.FlagSet, args []string) ([]string, error) {
+	var positional []string
+	for len(args) > 0 {
+		if err := fs.Parse(args); err != nil {
+			return nil, err
+		}
+		if fs.NArg() == 0 {
+			break
+		}
+		positional = append(positional, fs.Arg(0))
+		args = fs.Args()[1:]
+	}
+	return positional, nil
+}
+
+// themeNew writes a new theme's files (scaffold.ThemeFiles) into dir
+// (default: themes/<name>), which must not exist or be empty.
+func themeNew(name, label, dir string, stdout, stderr io.Writer) int {
+	files, err := scaffold.ThemeFiles(scaffold.Theme{Name: name, Label: label, MinVersion: themes.EngineRelease()})
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "theme:", err)
+		return 2
+	}
+	if dir == "" {
+		root, err := paths.ThemesDir()
+		if err != nil {
+			_, _ = fmt.Fprintln(stderr, "theme:", err)
+			return 1
+		}
+		dir = filepath.Join(root, name)
+	}
+	written, err := scaffold.Write(dir, files)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "theme:", err)
+		return 1
+	}
+	for _, f := range written {
+		_, _ = fmt.Fprintln(stdout, filepath.Join(dir, filepath.FromSlash(f)))
+	}
+	_, _ = fmt.Fprintf(stdout, "next: preview it on the Appearance page; replace the engine's templates under templates/; app theme check %s before a release\n", dir)
 	return 0
 }
 

@@ -1,0 +1,34 @@
+# [[.Label]]
+
+A module for [Kosatka CMS](https://github.com/kosatka-cms/kosatka): a page
+at `/[[.URLPath]]`.
+
+## Develop
+
+```bash
+go mod tidy
+go test ./...
+```
+
+| Path | What's there |
+|---|---|
+| `[[.Name]].go` | registers the module when the package is imported |
+| `manifest.go` | its name, label and description on the Modules page |
+| `wire.go`, `controller.go` | its route and page |
+| `templates/`, `static/`, `translations/` | built into the binary |
+
+Next steps - a table of its own, an install step, blocks, demo content:
+[Write a module](https://kosatka-cms.github.io/kosatka/modules/write-a-module/),
+[The module SDK](https://kosatka-cms.github.io/kosatka/modules/sdk/).
+
+## Add it to a site
+
+In the site's own main package (its binary calls `kosatka.Main`):
+
+```bash
+app module add [[.Path]]@v0.1.0
+```
+
+Before a release, try it from its directory: `replace [[.Path]] => ../<its directory>`
+in the site's `go.mod`. Rebuild the binary and deploy it, then enable the
+module on the Modules page.

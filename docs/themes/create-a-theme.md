@@ -11,6 +11,20 @@ administrator can change. It takes a site running from source
 ([Run from source](../getting-started/from-source.md)) with
 `env: local`, so template edits show up without a restart.
 
+## A quick start
+
+`app theme new` writes such a theme's starting files - a manifest with
+the engine's regions and an accent colour, a stylesheet, a Russian
+catalog of its strings and a README:
+
+```bash
+app theme new sand                                    # in themes/sand
+app theme new sand -dir ../kosatka-theme-sand         # a repository of its own
+```
+
+It is ready to preview on the Appearance page and passes `app theme
+check`. The steps below build a theme by hand and explain each part.
+
 ## 1. Make the directory
 
 In the project's directory:
