@@ -257,6 +257,9 @@ values the field already holds.
 Only a field with text formats holds HTML. A plain text field is shown
 exactly as typed, with any markup escaped. If you need to store markup
 (an embedded video, for example), give the field a format that allows it.
+A format that allows links (`a`) keeps their address and the editor's
+*Open link in new window* (`target="_blank"`); every link gets
+`rel="nofollow"`, one opening a new window `noopener` too.
 
 A text format can also process its texts when they are shown: the
 format's page (*Text formats*, *Edit*) has a **Processing when shown**
