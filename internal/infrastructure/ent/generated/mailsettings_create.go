@@ -61,20 +61,6 @@ func (_c *MailSettingsCreate) SetNillableFromAddress(v *string) *MailSettingsCre
 	return _c
 }
 
-// SetResendAPIKey sets the "resend_api_key" field.
-func (_c *MailSettingsCreate) SetResendAPIKey(v string) *MailSettingsCreate {
-	_c.mutation.SetResendAPIKey(v)
-	return _c
-}
-
-// SetNillableResendAPIKey sets the "resend_api_key" field if the given value is not nil.
-func (_c *MailSettingsCreate) SetNillableResendAPIKey(v *string) *MailSettingsCreate {
-	if v != nil {
-		_c.SetResendAPIKey(*v)
-	}
-	return _c
-}
-
 // SetSMTPHost sets the "smtp_host" field.
 func (_c *MailSettingsCreate) SetSMTPHost(v string) *MailSettingsCreate {
 	_c.mutation.SetSMTPHost(v)
@@ -198,10 +184,6 @@ func (_c *MailSettingsCreate) defaults() {
 		v := mailsettings.DefaultFromAddress
 		_c.mutation.SetFromAddress(v)
 	}
-	if _, ok := _c.mutation.ResendAPIKey(); !ok {
-		v := mailsettings.DefaultResendAPIKey
-		_c.mutation.SetResendAPIKey(v)
-	}
 	if _, ok := _c.mutation.SMTPHost(); !ok {
 		v := mailsettings.DefaultSMTPHost
 		_c.mutation.SetSMTPHost(v)
@@ -243,14 +225,6 @@ func (_c *MailSettingsCreate) check() error {
 	if v, ok := _c.mutation.FromAddress(); ok {
 		if err := mailsettings.FromAddressValidator(v); err != nil {
 			return &ValidationError{Name: "from_address", err: fmt.Errorf(`generated: validator failed for field "MailSettings.from_address": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.ResendAPIKey(); !ok {
-		return &ValidationError{Name: "resend_api_key", err: errors.New(`generated: missing required field "MailSettings.resend_api_key"`)}
-	}
-	if v, ok := _c.mutation.ResendAPIKey(); ok {
-		if err := mailsettings.ResendAPIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "resend_api_key", err: fmt.Errorf(`generated: validator failed for field "MailSettings.resend_api_key": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.SMTPHost(); !ok {
@@ -326,10 +300,6 @@ func (_c *MailSettingsCreate) createSpec() (*MailSettings, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.FromAddress(); ok {
 		_spec.SetField(mailsettings.FieldFromAddress, field.TypeString, value)
 		_node.FromAddress = value
-	}
-	if value, ok := _c.mutation.ResendAPIKey(); ok {
-		_spec.SetField(mailsettings.FieldResendAPIKey, field.TypeString, value)
-		_node.ResendAPIKey = value
 	}
 	if value, ok := _c.mutation.SMTPHost(); ok {
 		_spec.SetField(mailsettings.FieldSMTPHost, field.TypeString, value)

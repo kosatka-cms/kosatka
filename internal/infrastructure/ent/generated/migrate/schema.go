@@ -1340,7 +1340,6 @@ var (
 		{Name: "enabled", Type: field.TypeBool, Default: true},
 		{Name: "transport", Type: field.TypeString, Size: 16, Default: ""},
 		{Name: "from_address", Type: field.TypeString, Size: 255, Default: ""},
-		{Name: "resend_api_key", Type: field.TypeString, Size: 512, Default: ""},
 		{Name: "smtp_host", Type: field.TypeString, Size: 255, Default: ""},
 		{Name: "smtp_port", Type: field.TypeInt, Default: 0, SchemaType: map[string]string{"mysql": "int"}},
 		{Name: "smtp_user", Type: field.TypeString, Size: 255, Default: ""},

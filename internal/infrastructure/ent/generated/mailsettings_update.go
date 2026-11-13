@@ -69,20 +69,6 @@ func (_u *MailSettingsUpdate) SetNillableFromAddress(v *string) *MailSettingsUpd
 	return _u
 }
 
-// SetResendAPIKey sets the "resend_api_key" field.
-func (_u *MailSettingsUpdate) SetResendAPIKey(v string) *MailSettingsUpdate {
-	_u.mutation.SetResendAPIKey(v)
-	return _u
-}
-
-// SetNillableResendAPIKey sets the "resend_api_key" field if the given value is not nil.
-func (_u *MailSettingsUpdate) SetNillableResendAPIKey(v *string) *MailSettingsUpdate {
-	if v != nil {
-		_u.SetResendAPIKey(*v)
-	}
-	return _u
-}
-
 // SetSMTPHost sets the "smtp_host" field.
 func (_u *MailSettingsUpdate) SetSMTPHost(v string) *MailSettingsUpdate {
 	_u.mutation.SetSMTPHost(v)
@@ -211,11 +197,6 @@ func (_u *MailSettingsUpdate) check() error {
 			return &ValidationError{Name: "from_address", err: fmt.Errorf(`generated: validator failed for field "MailSettings.from_address": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ResendAPIKey(); ok {
-		if err := mailsettings.ResendAPIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "resend_api_key", err: fmt.Errorf(`generated: validator failed for field "MailSettings.resend_api_key": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.SMTPHost(); ok {
 		if err := mailsettings.SMTPHostValidator(v); err != nil {
 			return &ValidationError{Name: "smtp_host", err: fmt.Errorf(`generated: validator failed for field "MailSettings.smtp_host": %w`, err)}
@@ -254,9 +235,6 @@ func (_u *MailSettingsUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.FromAddress(); ok {
 		_spec.SetField(mailsettings.FieldFromAddress, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.ResendAPIKey(); ok {
-		_spec.SetField(mailsettings.FieldResendAPIKey, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.SMTPHost(); ok {
 		_spec.SetField(mailsettings.FieldSMTPHost, field.TypeString, value)
@@ -337,20 +315,6 @@ func (_u *MailSettingsUpdateOne) SetFromAddress(v string) *MailSettingsUpdateOne
 func (_u *MailSettingsUpdateOne) SetNillableFromAddress(v *string) *MailSettingsUpdateOne {
 	if v != nil {
 		_u.SetFromAddress(*v)
-	}
-	return _u
-}
-
-// SetResendAPIKey sets the "resend_api_key" field.
-func (_u *MailSettingsUpdateOne) SetResendAPIKey(v string) *MailSettingsUpdateOne {
-	_u.mutation.SetResendAPIKey(v)
-	return _u
-}
-
-// SetNillableResendAPIKey sets the "resend_api_key" field if the given value is not nil.
-func (_u *MailSettingsUpdateOne) SetNillableResendAPIKey(v *string) *MailSettingsUpdateOne {
-	if v != nil {
-		_u.SetResendAPIKey(*v)
 	}
 	return _u
 }
@@ -496,11 +460,6 @@ func (_u *MailSettingsUpdateOne) check() error {
 			return &ValidationError{Name: "from_address", err: fmt.Errorf(`generated: validator failed for field "MailSettings.from_address": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.ResendAPIKey(); ok {
-		if err := mailsettings.ResendAPIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "resend_api_key", err: fmt.Errorf(`generated: validator failed for field "MailSettings.resend_api_key": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.SMTPHost(); ok {
 		if err := mailsettings.SMTPHostValidator(v); err != nil {
 			return &ValidationError{Name: "smtp_host", err: fmt.Errorf(`generated: validator failed for field "MailSettings.smtp_host": %w`, err)}
@@ -556,9 +515,6 @@ func (_u *MailSettingsUpdateOne) sqlSave(ctx context.Context) (_node *MailSettin
 	}
 	if value, ok := _u.mutation.FromAddress(); ok {
 		_spec.SetField(mailsettings.FieldFromAddress, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.ResendAPIKey(); ok {
-		_spec.SetField(mailsettings.FieldResendAPIKey, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.SMTPHost(); ok {
 		_spec.SetField(mailsettings.FieldSMTPHost, field.TypeString, value)

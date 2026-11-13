@@ -1028,36 +1028,30 @@ func init() {
 	mailsettings.DefaultFromAddress = mailsettingsDescFromAddress.Default.(string)
 	// mailsettings.FromAddressValidator is a validator for the "from_address" field. It is called by the builders before save.
 	mailsettings.FromAddressValidator = mailsettingsDescFromAddress.Validators[0].(func(string) error)
-	// mailsettingsDescResendAPIKey is the schema descriptor for resend_api_key field.
-	mailsettingsDescResendAPIKey := mailsettingsFields[4].Descriptor()
-	// mailsettings.DefaultResendAPIKey holds the default value on creation for the resend_api_key field.
-	mailsettings.DefaultResendAPIKey = mailsettingsDescResendAPIKey.Default.(string)
-	// mailsettings.ResendAPIKeyValidator is a validator for the "resend_api_key" field. It is called by the builders before save.
-	mailsettings.ResendAPIKeyValidator = mailsettingsDescResendAPIKey.Validators[0].(func(string) error)
 	// mailsettingsDescSMTPHost is the schema descriptor for smtp_host field.
-	mailsettingsDescSMTPHost := mailsettingsFields[5].Descriptor()
+	mailsettingsDescSMTPHost := mailsettingsFields[4].Descriptor()
 	// mailsettings.DefaultSMTPHost holds the default value on creation for the smtp_host field.
 	mailsettings.DefaultSMTPHost = mailsettingsDescSMTPHost.Default.(string)
 	// mailsettings.SMTPHostValidator is a validator for the "smtp_host" field. It is called by the builders before save.
 	mailsettings.SMTPHostValidator = mailsettingsDescSMTPHost.Validators[0].(func(string) error)
 	// mailsettingsDescSMTPPort is the schema descriptor for smtp_port field.
-	mailsettingsDescSMTPPort := mailsettingsFields[6].Descriptor()
+	mailsettingsDescSMTPPort := mailsettingsFields[5].Descriptor()
 	// mailsettings.DefaultSMTPPort holds the default value on creation for the smtp_port field.
 	mailsettings.DefaultSMTPPort = mailsettingsDescSMTPPort.Default.(int)
 	// mailsettingsDescSMTPUser is the schema descriptor for smtp_user field.
-	mailsettingsDescSMTPUser := mailsettingsFields[7].Descriptor()
+	mailsettingsDescSMTPUser := mailsettingsFields[6].Descriptor()
 	// mailsettings.DefaultSMTPUser holds the default value on creation for the smtp_user field.
 	mailsettings.DefaultSMTPUser = mailsettingsDescSMTPUser.Default.(string)
 	// mailsettings.SMTPUserValidator is a validator for the "smtp_user" field. It is called by the builders before save.
 	mailsettings.SMTPUserValidator = mailsettingsDescSMTPUser.Validators[0].(func(string) error)
 	// mailsettingsDescSMTPPassword is the schema descriptor for smtp_password field.
-	mailsettingsDescSMTPPassword := mailsettingsFields[8].Descriptor()
+	mailsettingsDescSMTPPassword := mailsettingsFields[7].Descriptor()
 	// mailsettings.DefaultSMTPPassword holds the default value on creation for the smtp_password field.
 	mailsettings.DefaultSMTPPassword = mailsettingsDescSMTPPassword.Default.(string)
 	// mailsettings.SMTPPasswordValidator is a validator for the "smtp_password" field. It is called by the builders before save.
 	mailsettings.SMTPPasswordValidator = mailsettingsDescSMTPPassword.Validators[0].(func(string) error)
 	// mailsettingsDescLogKeepDays is the schema descriptor for log_keep_days field.
-	mailsettingsDescLogKeepDays := mailsettingsFields[9].Descriptor()
+	mailsettingsDescLogKeepDays := mailsettingsFields[8].Descriptor()
 	// mailsettings.DefaultLogKeepDays holds the default value on creation for the log_keep_days field.
 	mailsettings.DefaultLogKeepDays = mailsettingsDescLogKeepDays.Default.(int)
 	mailtemplateFields := schema.MailTemplate{}.Fields()

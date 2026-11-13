@@ -51,11 +51,12 @@ func showLastCommentsTitle(ctx context.Context, env Env) error {
 // "api_key"): the key saved in the admin is copied from
 // mail_settings.resend_api_key to that setting in mail_transport_settings
 // as it is (sealed with the site's key or not, both columns are). The old
-// column stays as it was - the older binary, still running while the
-// migrations apply before the restart, sends with it, and so does one
-// rolled back to - and is dropped in the next minor release. The saved
-// transport stays "resend": the site sends through the module once its
-// binary has it.
+// column stayed as it was for an older binary - the one still running
+// while the migrations apply before the restart, one rolled back to - and
+// went in 0.2.1 (the drop_resend_key schema file, after this step: a site
+// coming from before 0.1.1 has its key moved before the column goes).
+// The saved transport stays "resend": the site sends through the module
+// once its binary has it.
 func moveResendKey(ctx context.Context, env Env) error {
 	tx, err := env.DB.BeginTx(ctx, nil)
 	if err != nil {

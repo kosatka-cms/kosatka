@@ -11,10 +11,12 @@ import (
 	"github.com/kosatka-cms/kosatka/internal/testdb"
 )
 
-// TestMoveResendKey - the Resend key saved in the admin is copied, as it
-// is, to the Resend module's setting, its old column left as it was (an
-// older binary still sends with it); a second run changes nothing, a
-// database without a key or a row is left alone.
+// TestMoveResendKey - on the schema the step runs on (the files before
+// it), the Resend key saved in the admin is copied, as it is, to the
+// Resend module's setting, its old column left as it was (an older binary
+// still sends with it); a second run changes nothing, a database without
+// a key or a row is left alone. The files after the step drop the column
+// and keep the moved key.
 func TestMoveResendKey(t *testing.T) {
 	testdb.Each(t, func(t *testing.T, db testdb.DB) {
 		ctx := context.Background()
@@ -26,7 +28,13 @@ func TestMoveResendKey(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		const stepVersion = "20261106173400"
+		var later []migrations.File
 		for _, f := range files {
+			if f.Version > stepVersion {
+				later = append(later, f)
+				continue
+			}
 			if err := r.Apply(ctx, migrations.CoreSet, f); err != nil {
 				t.Fatal(err)
 			}
@@ -53,6 +61,18 @@ func TestMoveResendKey(t *testing.T) {
 			if n != 1 || value != "sealed:re_key" || old != "sealed:re_key" || transport != "resend" {
 				t.Errorf("run %d: %d %q, old %q, transport %q", run, n, value, old, transport)
 			}
+		}
+		for _, f := range later {
+			if err := r.Apply(ctx, migrations.CoreSet, f); err != nil {
+				t.Fatal(err)
+			}
+		}
+		var value string
+		if err := db.DB.QueryRowContext(ctx, db.Dialect.Rebind("SELECT value FROM mail_transport_settings WHERE transport = ? AND name = ?"), "resend", "api_key").Scan(&value); err != nil || value != "sealed:re_key" {
+			t.Errorf("the moved key after the later files: %q, %v", value, err)
+		}
+		if _, err := db.DB.ExecContext(ctx, "SELECT resend_api_key FROM mail_settings"); err == nil {
+			t.Error("the old column is still there")
 		}
 	})
 }

@@ -29215,7 +29215,6 @@ type MailSettingsMutation struct {
 	enabled          *bool
 	transport        *string
 	from_address     *string
-	resend_api_key   *string
 	smtp_host        *string
 	smtp_port        *int
 	addsmtp_port     *int
@@ -29439,42 +29438,6 @@ func (m *MailSettingsMutation) OldFromAddress(ctx context.Context) (v string, er
 // ResetFromAddress resets all changes to the "from_address" field.
 func (m *MailSettingsMutation) ResetFromAddress() {
 	m.from_address = nil
-}
-
-// SetResendAPIKey sets the "resend_api_key" field.
-func (m *MailSettingsMutation) SetResendAPIKey(s string) {
-	m.resend_api_key = &s
-}
-
-// ResendAPIKey returns the value of the "resend_api_key" field in the mutation.
-func (m *MailSettingsMutation) ResendAPIKey() (r string, exists bool) {
-	v := m.resend_api_key
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldResendAPIKey returns the old "resend_api_key" field's value of the MailSettings entity.
-// If the MailSettings object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MailSettingsMutation) OldResendAPIKey(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldResendAPIKey is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldResendAPIKey requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldResendAPIKey: %w", err)
-	}
-	return oldValue.ResendAPIKey, nil
-}
-
-// ResetResendAPIKey resets all changes to the "resend_api_key" field.
-func (m *MailSettingsMutation) ResetResendAPIKey() {
-	m.resend_api_key = nil
 }
 
 // SetSMTPHost sets the "smtp_host" field.
@@ -29731,7 +29694,7 @@ func (m *MailSettingsMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MailSettingsMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 8)
 	if m.enabled != nil {
 		fields = append(fields, mailsettings.FieldEnabled)
 	}
@@ -29740,9 +29703,6 @@ func (m *MailSettingsMutation) Fields() []string {
 	}
 	if m.from_address != nil {
 		fields = append(fields, mailsettings.FieldFromAddress)
-	}
-	if m.resend_api_key != nil {
-		fields = append(fields, mailsettings.FieldResendAPIKey)
 	}
 	if m.smtp_host != nil {
 		fields = append(fields, mailsettings.FieldSMTPHost)
@@ -29773,8 +29733,6 @@ func (m *MailSettingsMutation) Field(name string) (ent.Value, bool) {
 		return m.Transport()
 	case mailsettings.FieldFromAddress:
 		return m.FromAddress()
-	case mailsettings.FieldResendAPIKey:
-		return m.ResendAPIKey()
 	case mailsettings.FieldSMTPHost:
 		return m.SMTPHost()
 	case mailsettings.FieldSMTPPort:
@@ -29800,8 +29758,6 @@ func (m *MailSettingsMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldTransport(ctx)
 	case mailsettings.FieldFromAddress:
 		return m.OldFromAddress(ctx)
-	case mailsettings.FieldResendAPIKey:
-		return m.OldResendAPIKey(ctx)
 	case mailsettings.FieldSMTPHost:
 		return m.OldSMTPHost(ctx)
 	case mailsettings.FieldSMTPPort:
@@ -29841,13 +29797,6 @@ func (m *MailSettingsMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetFromAddress(v)
-		return nil
-	case mailsettings.FieldResendAPIKey:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetResendAPIKey(v)
 		return nil
 	case mailsettings.FieldSMTPHost:
 		v, ok := value.(string)
@@ -29968,9 +29917,6 @@ func (m *MailSettingsMutation) ResetField(name string) error {
 		return nil
 	case mailsettings.FieldFromAddress:
 		m.ResetFromAddress()
-		return nil
-	case mailsettings.FieldResendAPIKey:
-		m.ResetResendAPIKey()
 		return nil
 	case mailsettings.FieldSMTPHost:
 		m.ResetSMTPHost()
