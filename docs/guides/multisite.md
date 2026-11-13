@@ -86,7 +86,7 @@ own, as in [Running in production](./production.md).
    cp ./kosatka "$stage/"
    rsync -a ./web/templates ./web/static "$stage/web/"
    rsync -a ./themes "$stage/"
-   go run ./cmd/app assets export "$stage/web/static"   # the modules' static files
+   go run ./cmd/app assets export "$stage/web/static"   # the modules' and the themes' static files
    ssh root@example.com mkdir -p /opt/kosatka/releases/v0.2.0
    rsync -avz "$stage/" root@example.com:/opt/kosatka/releases/v0.2.0/
    rm -rf "$stage"

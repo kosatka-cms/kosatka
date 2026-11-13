@@ -51,8 +51,8 @@ The workflow starts only on a tag of three numbers
   `kosatka-<tag>-linux-arm64.tar.gz` (`kosatka-v0.3.0-linux-amd64.tar.gz`),
   laid out as a release directory of [multisite](../guides/multisite.md):
   the binary `kosatka` (with the tag as its version), `web/templates`,
-  `web/static` (minified, with the modules' static files from
-  `app assets export`), `themes/`, `LICENSE` and `README.md`. The binary
+  `web/static` (minified, with the modules' and the themes' static files
+  from `app assets export`), `themes/`, `LICENSE` and `README.md`. The binary
   is for a Linux with glibc (Debian, Ubuntu and the like): the WebP
   encoder loads `libwebp` when the server has it, so the binary links
   dynamically. On Alpine, use the image.
