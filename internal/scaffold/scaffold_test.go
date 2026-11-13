@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/mod/modfile"
+
 	"github.com/kosatka-cms/kosatka/internal/themeinstall"
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
 	"github.com/kosatka-cms/kosatka/translations"
@@ -100,7 +102,7 @@ func TestModuleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	files["go.mod"] = append(files["go.mod"], []byte("\nreplace github.com/kosatka-cms/kosatka => "+root+"\n")...)
+	files["go.mod"] = withEngine(t, files["go.mod"], root)
 	sum, err := os.ReadFile(filepath.Join(root, "go.sum"))
 	if err != nil {
 		t.Fatal(err)
@@ -119,6 +121,40 @@ func TestModuleFiles(t *testing.T) {
 			t.Fatalf("go %s: %v\n%s", strings.Join(args, " "), err, out)
 		}
 	}
+}
+
+// withEngine - the module's go.mod (mod) on the engine in root: required
+// and replaced by it, with the engine's requirements as its indirect ones,
+// as go mod tidy would list them. Without them the go command would
+// read the go.mod files of versions the engine's build never needs (an
+// old dependency's own requirements), absent from a cache without the
+// network (CI).
+func withEngine(t *testing.T, mod []byte, root string) []byte {
+	t.Helper()
+	engineMod, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine, err := modfile.Parse("go.mod", engineMod, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := modfile.Parse("go.mod", mod, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.AddNewRequire(engine.Module.Mod.Path, "v0.0.0", false)
+	for _, r := range engine.Require {
+		f.AddNewRequire(r.Mod.Path, r.Mod.Version, true)
+	}
+	if err := f.AddReplace(engine.Module.Mod.Path, "", root, ""); err != nil {
+		t.Fatal(err)
+	}
+	out, err := f.Format()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
 }
 
 // TestWriteRefusesFull - nothing is written over a directory with files.
