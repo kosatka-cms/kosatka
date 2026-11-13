@@ -100,21 +100,12 @@ type CommentCounter interface {
 // it would supply is left out (the styleguide builds a list with none).
 // Logger records the parts that fail and are left out.
 type ContentListSources struct {
-	Nodes    entity.NodesRepository
 	Types    entity.ContentTypeRepository
 	Terms    TermsLoader
 	Files    FileLoader
 	Comments CommentCounter
 	Users    UsersLoader
 	Logger   *slog.Logger
-}
-
-// ContentListOptions - how BuildContentList builds a list.
-type ContentListOptions struct {
-	// AltTitles - the builtin title is the node's alternative title (its
-	// type's AltTitleField) when it has one, as View blocks show it; a View
-	// page shows the title itself.
-	AltTitles bool
 }
 
 // BuildContentList builds a content View's list of nodes - the one way
@@ -124,7 +115,7 @@ type ContentListOptions struct {
 // and each node's values (BuildContentListItems, batched across the
 // nodes). A part that fails to load is logged and left out (a field, the
 // labels, the counts); a failure to load the values is returned.
-func BuildContentList(ctx context.Context, src ContentListSources, viewID int, viewFields entity.ViewFieldDefs, nodes entity.Nodes, opts ContentListOptions) (entity.FieldInstanceDefs, []ContentListItem, error) {
+func BuildContentList(ctx context.Context, src ContentListSources, viewID int, viewFields entity.ViewFieldDefs, nodes entity.Nodes) (entity.FieldInstanceDefs, []ContentListItem, error) {
 	sorted := viewFields.SortBySortOrder()
 	storages := make(map[int]entity.FieldStorageDef, len(sorted))
 	var storageIDs []int
@@ -161,7 +152,7 @@ func BuildContentList(ctx context.Context, src ContentListSources, viewID int, v
 			typeLabels[ct.MachineName] = ct.Label
 		}
 	}
-	var commentCounts, altTitles = map[int]int{}, map[int]string(nil)
+	commentCounts := map[int]int{}
 	if len(nodes) > 0 {
 		nodeIDs := make([]int, len(nodes))
 		for i, n := range nodes {
@@ -174,14 +165,9 @@ func BuildContentList(ctx context.Context, src ContentListSources, viewID int, v
 				commentCounts = counts
 			}
 		}
-		if opts.AltTitles && src.Nodes != nil {
-			titles, err := src.Nodes.AltTitles(ctx, nodes)
-			fallback.Log(src.Logger, err, "loading the nodes' alternative titles (their titles shown)", "viewID", viewID)
-			altTitles = titles
-		}
 	}
 	listFields := BuildContentFieldInstances(ctx, sorted, storages, labels, rich)
-	items, err := BuildContentListItems(ctx, src.Types, nodes, listFields, typeLabels, src.Terms, commentCounts, src.Files, altTitles)
+	items, err := BuildContentListItems(ctx, src.Types, nodes, listFields, typeLabels, src.Terms, commentCounts, src.Files)
 	if err != nil {
 		return listFields, items, err
 	}
@@ -439,12 +425,12 @@ func BuildContentFieldInstances(ctx context.Context, viewFields entity.ViewField
 //     there is no derivative to point at);
 //   - taxonomy term IDs per field, names via one terms.TermsByIDs call
 //     (IDs go to Values so FallbackFieldKey sees empty fields as empty);
-//   - Title - altTitles[node] when set, else n.Title;
+//   - Title - n.Title;
 //   - ContentType from contentTypeLabels (machine name → label).
 //
 // commentCounts is nodeID → count; a nil map means 0 for every node.
-func BuildContentListItems(ctx context.Context, contentTypeRepo entity.ContentTypeRepository, nodes entity.Nodes, listFields entity.FieldInstanceDefs, contentTypeLabels map[string]string, terms TermsLoader, commentCounts map[int]int, files FileLoader, altTitles map[int]string) ([]ContentListItem, error) {
-	b := &listBatch{fields: listFields, contentTypeLabels: contentTypeLabels, commentCounts: commentCounts, altTitles: altTitles}
+func BuildContentListItems(ctx context.Context, contentTypeRepo entity.ContentTypeRepository, nodes entity.Nodes, listFields entity.FieldInstanceDefs, contentTypeLabels map[string]string, terms TermsLoader, commentCounts map[int]int, files FileLoader) ([]ContentListItem, error) {
+	b := &listBatch{fields: listFields, contentTypeLabels: contentTypeLabels, commentCounts: commentCounts}
 	if err := b.load(ctx, contentTypeRepo, nodes, terms, files); err != nil {
 		return nil, err
 	}
@@ -461,7 +447,6 @@ type listBatch struct {
 	fields            entity.FieldInstanceDefs
 	contentTypeLabels map[string]string
 	commentCounts     map[int]int
-	altTitles         map[int]string
 	// readingTimes - node → its reading time as the list shows it ("5
 	// min read"), when the list has the reading time field.
 	readingTimes map[int]string
@@ -662,13 +647,7 @@ func (bi viewBuiltin) instance(ctx context.Context, vf entity.ViewFieldDef) enti
 // (TestContentViewBuiltinsHandled: every content builtin is here).
 var viewBuiltins = map[entity.ViewFieldBuiltinField]viewBuiltin{
 	entity.ViewFieldBuiltinTitle: {id: contentViewBuiltinTitleID, fieldType: entity.FieldTypeText,
-		// The alternative title when set (a page shows the nodes' own).
-		value: func(b *listBatch, n entity.Node, _ entity.FieldInstanceDef) any {
-			if alt := b.altTitles[n.ID]; alt != "" {
-				return alt
-			}
-			return n.Title
-		}},
+		value: func(_ *listBatch, n entity.Node, _ entity.FieldInstanceDef) any { return n.Title }},
 	entity.ViewFieldBuiltinContentType: {id: contentViewBuiltinContentTypeID, fieldType: entity.FieldTypeText,
 		value: func(b *listBatch, n entity.Node, _ entity.FieldInstanceDef) any {
 			return b.contentTypeLabels[string(n.Type)]

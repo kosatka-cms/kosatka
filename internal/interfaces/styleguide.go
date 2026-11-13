@@ -109,7 +109,7 @@ func (c *StyleguideController) sampleList(r *http.Request, user *entity.User) (t
 		{ID: 2, Slug: slug, Title: "Consectetur adipiscing elit", CreatedBy: author, CreatedAt: now.AddDate(0, 0, -1), Counter: entity.Counter{TotalCount: 256}},
 		{ID: 3, Slug: slug, Title: "Sed do eiusmod tempor", CreatedBy: author, CreatedAt: now.AddDate(0, 0, -2), Counter: entity.Counter{TotalCount: 64}},
 	}
-	items, err := views.BuildContentListItems(ctx, nil, nodes, builtins, nil, nil, map[int]int{1: 12, 2: 3}, nil, nil)
+	items, err := views.BuildContentListItems(ctx, nil, nodes, builtins, nil, nil, map[int]int{1: 12, 2: 3}, nil)
 	if err != nil {
 		return "", err
 	}

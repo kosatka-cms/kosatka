@@ -37,10 +37,6 @@ type ContentTypeDef struct {
 	DefaultPublishing string `json:"default_publishing,omitempty"`
 	// HideEmptyComments holds the value of the "hide_empty_comments" field.
 	HideEmptyComments bool `json:"hide_empty_comments,omitempty"`
-	// TitleDisplay holds the value of the "title_display" field.
-	TitleDisplay string `json:"title_display,omitempty"`
-	// AltTitleField holds the value of the "alt_title_field" field.
-	AltTitleField string `json:"alt_title_field,omitempty"`
 	// RedirectField holds the value of the "redirect_field" field.
 	RedirectField string `json:"redirect_field,omitempty"`
 	// ShowSubmitted holds the value of the "show_submitted" field.
@@ -75,7 +71,7 @@ func (*ContentTypeDef) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case contenttypedef.FieldID, contenttypedef.FieldStatus, contenttypedef.FieldRevisionsKeep, contenttypedef.FieldCreatedBy:
 			values[i] = new(sql.NullInt64)
-		case contenttypedef.FieldMachineName, contenttypedef.FieldLabel, contenttypedef.FieldPathPattern, contenttypedef.FieldDescription, contenttypedef.FieldDefaultCommentMode, contenttypedef.FieldDefaultPublishing, contenttypedef.FieldTitleDisplay, contenttypedef.FieldAltTitleField, contenttypedef.FieldRedirectField, contenttypedef.FieldViewRoles:
+		case contenttypedef.FieldMachineName, contenttypedef.FieldLabel, contenttypedef.FieldPathPattern, contenttypedef.FieldDescription, contenttypedef.FieldDefaultCommentMode, contenttypedef.FieldDefaultPublishing, contenttypedef.FieldRedirectField, contenttypedef.FieldViewRoles:
 			values[i] = new(sql.NullString)
 		case contenttypedef.FieldCreatedAt, contenttypedef.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -159,18 +155,6 @@ func (_m *ContentTypeDef) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field hide_empty_comments", values[i])
 			} else if value.Valid {
 				_m.HideEmptyComments = value.Bool
-			}
-		case contenttypedef.FieldTitleDisplay:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field title_display", values[i])
-			} else if value.Valid {
-				_m.TitleDisplay = value.String
-			}
-		case contenttypedef.FieldAltTitleField:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field alt_title_field", values[i])
-			} else if value.Valid {
-				_m.AltTitleField = value.String
 			}
 		case contenttypedef.FieldRedirectField:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -303,12 +287,6 @@ func (_m *ContentTypeDef) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("hide_empty_comments=")
 	builder.WriteString(fmt.Sprintf("%v", _m.HideEmptyComments))
-	builder.WriteString(", ")
-	builder.WriteString("title_display=")
-	builder.WriteString(_m.TitleDisplay)
-	builder.WriteString(", ")
-	builder.WriteString("alt_title_field=")
-	builder.WriteString(_m.AltTitleField)
 	builder.WriteString(", ")
 	builder.WriteString("redirect_field=")
 	builder.WriteString(_m.RedirectField)

@@ -46,24 +46,9 @@
 {{end}}
 {{end}}
 
-{{/* node_title - the title as the type's title display says (original,
-     translation, both). */}}
+{{/* node_title - the title. */}}
 {{define "node_title"}}
-{{$titleDisplay := print .contentType.TitleDisplay}}
-{{$translatedFirst := eq $titleDisplay "translated_first"}}
-<h1 class="node-title">
-    {{if $translatedFirst}}
-    {{if .altTitle}}{{.altTitle}}{{else}}{{.item.Node.Title}}{{end}}
-    {{else}}
-    {{.item.Node.Title}}
-    {{if and .altTitle (eq $titleDisplay "original_with_translation")}}
-    ({{.altTitle}})
-    {{end}}
-    {{end}}
-</h1>
-{{if and $translatedFirst .altTitle (ne .altTitle .item.Node.Title)}}
-<h2 class="node-subtitle">{{.item.Node.Title}}</h2>
-{{end}}
+<h1 class="node-title">{{.item.Node.Title}}</h1>
 {{end}}
 
 {{/* node_body_value - a body section's value (dict "Field" "Value"

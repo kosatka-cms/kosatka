@@ -83,32 +83,6 @@
     <details class="admin-settings-group admin-settings-fold" data-settings-fold>
         <summary class="admin-settings-fold-head"><h2 class="admin-settings-fold-title">{{t "Content page"}}</h2><span class="admin-settings-fold-summary" data-settings-summary></span></summary>
         <div class="admin-settings-card">
-            {{$titleDisplay := print .contentType.TitleDisplay}}
-            <div class="admin-setting">
-                <div class="admin-setting-text">
-                    <label for="title_display" class="admin-setting-label">{{t "Title"}}</label>
-                    <span class="admin-setting-help">{{t "The title and the alternative title in the page heading."}}</span>
-                </div>
-                <div class="admin-setting-control">
-                    <select id="title_display" name="title_display" class="form-select">
-                        <option value="original_with_translation" {{if eq $titleDisplay "original_with_translation"}}selected{{end}}>{{t "Title (alternative title)"}}</option>
-                        <option value="translated_first" {{if eq $titleDisplay "translated_first"}}selected{{end}}>{{t "Alternative title, with the title below"}}</option>
-                        <option value="original_only" {{if eq $titleDisplay "original_only"}}selected{{end}}>{{t "Title only"}}</option>
-                    </select>
-                </div>
-            </div>
-            <div class="admin-setting">
-                <div class="admin-setting-text">
-                    <label for="alt_title_field" class="admin-setting-label">{{t "Alternative title"}}</label>
-                    <span class="admin-setting-help">{{t "A text field of the type holding another title of the content item (for example, a translation). Used in the page heading, in the default title, in the \"Title\" field in Views and in cards."}}</span>
-                </div>
-                <div class="admin-setting-control">
-                    <select id="alt_title_field" name="alt_title_field" class="form-select">
-                        <option value="">{{t "- none -"}}</option>
-                        {{range .textFields}}<option value="{{.MachineName}}" {{if eq .MachineName $.contentType.AltTitleField}}selected{{end}}>{{.Label}} ({{.MachineName}})</option>{{end}}
-                    </select>
-                </div>
-            </div>
             <div class="admin-setting">
                 <div class="admin-setting-text">
                     <label for="redirect_field" class="admin-setting-label">{{t "Redirect to the address from field"}}</label>

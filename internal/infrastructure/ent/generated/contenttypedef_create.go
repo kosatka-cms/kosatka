@@ -144,34 +144,6 @@ func (_c *ContentTypeDefCreate) SetNillableHideEmptyComments(v *bool) *ContentTy
 	return _c
 }
 
-// SetTitleDisplay sets the "title_display" field.
-func (_c *ContentTypeDefCreate) SetTitleDisplay(v string) *ContentTypeDefCreate {
-	_c.mutation.SetTitleDisplay(v)
-	return _c
-}
-
-// SetNillableTitleDisplay sets the "title_display" field if the given value is not nil.
-func (_c *ContentTypeDefCreate) SetNillableTitleDisplay(v *string) *ContentTypeDefCreate {
-	if v != nil {
-		_c.SetTitleDisplay(*v)
-	}
-	return _c
-}
-
-// SetAltTitleField sets the "alt_title_field" field.
-func (_c *ContentTypeDefCreate) SetAltTitleField(v string) *ContentTypeDefCreate {
-	_c.mutation.SetAltTitleField(v)
-	return _c
-}
-
-// SetNillableAltTitleField sets the "alt_title_field" field if the given value is not nil.
-func (_c *ContentTypeDefCreate) SetNillableAltTitleField(v *string) *ContentTypeDefCreate {
-	if v != nil {
-		_c.SetAltTitleField(*v)
-	}
-	return _c
-}
-
 // SetRedirectField sets the "redirect_field" field.
 func (_c *ContentTypeDefCreate) SetRedirectField(v string) *ContentTypeDefCreate {
 	_c.mutation.SetRedirectField(v)
@@ -371,14 +343,6 @@ func (_c *ContentTypeDefCreate) defaults() {
 		v := contenttypedef.DefaultHideEmptyComments
 		_c.mutation.SetHideEmptyComments(v)
 	}
-	if _, ok := _c.mutation.TitleDisplay(); !ok {
-		v := contenttypedef.DefaultTitleDisplay
-		_c.mutation.SetTitleDisplay(v)
-	}
-	if _, ok := _c.mutation.AltTitleField(); !ok {
-		v := contenttypedef.DefaultAltTitleField
-		_c.mutation.SetAltTitleField(v)
-	}
 	if _, ok := _c.mutation.RedirectField(); !ok {
 		v := contenttypedef.DefaultRedirectField
 		_c.mutation.SetRedirectField(v)
@@ -471,22 +435,6 @@ func (_c *ContentTypeDefCreate) check() error {
 	}
 	if _, ok := _c.mutation.HideEmptyComments(); !ok {
 		return &ValidationError{Name: "hide_empty_comments", err: errors.New(`generated: missing required field "ContentTypeDef.hide_empty_comments"`)}
-	}
-	if _, ok := _c.mutation.TitleDisplay(); !ok {
-		return &ValidationError{Name: "title_display", err: errors.New(`generated: missing required field "ContentTypeDef.title_display"`)}
-	}
-	if v, ok := _c.mutation.TitleDisplay(); ok {
-		if err := contenttypedef.TitleDisplayValidator(v); err != nil {
-			return &ValidationError{Name: "title_display", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.title_display": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.AltTitleField(); !ok {
-		return &ValidationError{Name: "alt_title_field", err: errors.New(`generated: missing required field "ContentTypeDef.alt_title_field"`)}
-	}
-	if v, ok := _c.mutation.AltTitleField(); ok {
-		if err := contenttypedef.AltTitleFieldValidator(v); err != nil {
-			return &ValidationError{Name: "alt_title_field", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.alt_title_field": %w`, err)}
-		}
 	}
 	if _, ok := _c.mutation.RedirectField(); !ok {
 		return &ValidationError{Name: "redirect_field", err: errors.New(`generated: missing required field "ContentTypeDef.redirect_field"`)}
@@ -602,14 +550,6 @@ func (_c *ContentTypeDefCreate) createSpec() (*ContentTypeDef, *sqlgraph.CreateS
 	if value, ok := _c.mutation.HideEmptyComments(); ok {
 		_spec.SetField(contenttypedef.FieldHideEmptyComments, field.TypeBool, value)
 		_node.HideEmptyComments = value
-	}
-	if value, ok := _c.mutation.TitleDisplay(); ok {
-		_spec.SetField(contenttypedef.FieldTitleDisplay, field.TypeString, value)
-		_node.TitleDisplay = value
-	}
-	if value, ok := _c.mutation.AltTitleField(); ok {
-		_spec.SetField(contenttypedef.FieldAltTitleField, field.TypeString, value)
-		_node.AltTitleField = value
 	}
 	if value, ok := _c.mutation.RedirectField(); ok {
 		_spec.SetField(contenttypedef.FieldRedirectField, field.TypeString, value)

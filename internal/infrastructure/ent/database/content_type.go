@@ -97,13 +97,8 @@ func (r ContentTypeRepository) CreateContentType(ctx context.Context, ct entity.
 	if ct.DefaultPublishing.Valid() {
 		create = create.SetDefaultPublishing(string(ct.DefaultPublishing))
 	}
-	// Display settings aren't submitted by the create form - a zero value
-	// keeps the column defaults.
-	if ct.TitleDisplay != "" {
-		create = create.SetTitleDisplay(string(ct.TitleDisplay)).
-			SetShowSubmitted(ct.ShowSubmitted).
-			SetShowViewCount(ct.ShowViewCount)
-	}
+	// Display settings (ShowSubmitted, ShowViewCount) aren't submitted by
+	// the create form: the column defaults.
 	// The history: on when the type asks (the starter's types), with the
 	// column's keep unless set.
 	if ct.Revisions {
@@ -142,8 +137,6 @@ func (r ContentTypeRepository) UpdateContentType(ctx context.Context, ct entity.
 		SetDefaultPromote(ct.DefaultPromote).
 		SetDefaultSticky(ct.DefaultSticky).
 		SetDefaultPublishing(string(ct.DefaultPublishing)).
-		SetTitleDisplay(string(ct.TitleDisplay)).
-		SetAltTitleField(ct.AltTitleField).
 		SetRedirectField(ct.RedirectField).
 		SetShowSubmitted(ct.ShowSubmitted).
 		SetShowViewCount(ct.ShowViewCount).

@@ -245,7 +245,6 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 	taxonomyFieldTerms := c.taxonomyFieldTerms(ctx, displayFields, dc.Values)
 	userFieldUsers := c.userFieldUsers(ctx, displayFields, dc.Values)
 	referenceFieldNodes := c.publicReferenceNodes(ctx, displayFields, dc.Values)
-	altTitle := dc.GetAltTitle()
 	// displaySections: one block per section, in display order (see
 	// displaySectionsOf); a reference field's line - its public nodes.
 	displaySections := displaySectionsOf(displayFields, dc, taxonomyFieldTerms, imageFieldURLs, referenceFieldNodes)
@@ -274,7 +273,6 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 		// referenceFieldNodes - the content the reference fields name,
 		// the public only (field_line_reference links to it).
 		"referenceFieldNodes": referenceFieldNodes,
-		"altTitle":            altTitle,
 		"displaySections":     displaySections,
 		"blockViews":          c.blockViews(ctx, displayFields, dc.Values),
 		"pageSEO":             pageSEO,
@@ -335,14 +333,10 @@ func (c *DynamicContentController) renderItem(w http.ResponseWriter, r *http.Req
 	if n, ok := c.nodeCommentCount(ctx, dc.Node, moduleParts.comments); ok {
 		data["commentCount"] = n
 	}
-	// Breadcrumb trail; the last item is the heading title shown on the page.
-	trailTitle := dc.Node.Title
-	if def.TitleDisplay == entity.TitleDisplayTranslatedFirst && altTitle != "" {
-		trailTitle = altTitle
-	}
+	// Breadcrumb trail; the last item is the node's title.
 	trailNode := *dc
 	trailNode.ContentType = *def
-	c.setNodeTrail(ctx, data, trailNode, trailTitle)
+	c.setNodeTrail(ctx, data, trailNode, dc.Node.Title)
 	if preview != nil {
 		data["unsavedPreview"] = preview
 		c.RenderOrFail(w, r, "dynamic/page.html", data)

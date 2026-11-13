@@ -337,8 +337,6 @@ var (
 		{Name: "default_sticky", Type: field.TypeBool, Default: false},
 		{Name: "default_publishing", Type: field.TypeString, Size: 16, Default: "moderation"},
 		{Name: "hide_empty_comments", Type: field.TypeBool, Default: false},
-		{Name: "title_display", Type: field.TypeString, Size: 32, Default: "original_with_translation"},
-		{Name: "alt_title_field", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "redirect_field", Type: field.TypeString, Size: 64, Default: ""},
 		{Name: "show_submitted", Type: field.TypeBool, Default: true},
 		{Name: "show_view_count", Type: field.TypeBool, Default: false},

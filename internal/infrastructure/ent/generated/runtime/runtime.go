@@ -502,50 +502,38 @@ func init() {
 	contenttypedefDescHideEmptyComments := contenttypedefFields[10].Descriptor()
 	// contenttypedef.DefaultHideEmptyComments holds the default value on creation for the hide_empty_comments field.
 	contenttypedef.DefaultHideEmptyComments = contenttypedefDescHideEmptyComments.Default.(bool)
-	// contenttypedefDescTitleDisplay is the schema descriptor for title_display field.
-	contenttypedefDescTitleDisplay := contenttypedefFields[11].Descriptor()
-	// contenttypedef.DefaultTitleDisplay holds the default value on creation for the title_display field.
-	contenttypedef.DefaultTitleDisplay = contenttypedefDescTitleDisplay.Default.(string)
-	// contenttypedef.TitleDisplayValidator is a validator for the "title_display" field. It is called by the builders before save.
-	contenttypedef.TitleDisplayValidator = contenttypedefDescTitleDisplay.Validators[0].(func(string) error)
-	// contenttypedefDescAltTitleField is the schema descriptor for alt_title_field field.
-	contenttypedefDescAltTitleField := contenttypedefFields[12].Descriptor()
-	// contenttypedef.DefaultAltTitleField holds the default value on creation for the alt_title_field field.
-	contenttypedef.DefaultAltTitleField = contenttypedefDescAltTitleField.Default.(string)
-	// contenttypedef.AltTitleFieldValidator is a validator for the "alt_title_field" field. It is called by the builders before save.
-	contenttypedef.AltTitleFieldValidator = contenttypedefDescAltTitleField.Validators[0].(func(string) error)
 	// contenttypedefDescRedirectField is the schema descriptor for redirect_field field.
-	contenttypedefDescRedirectField := contenttypedefFields[13].Descriptor()
+	contenttypedefDescRedirectField := contenttypedefFields[11].Descriptor()
 	// contenttypedef.DefaultRedirectField holds the default value on creation for the redirect_field field.
 	contenttypedef.DefaultRedirectField = contenttypedefDescRedirectField.Default.(string)
 	// contenttypedef.RedirectFieldValidator is a validator for the "redirect_field" field. It is called by the builders before save.
 	contenttypedef.RedirectFieldValidator = contenttypedefDescRedirectField.Validators[0].(func(string) error)
 	// contenttypedefDescShowSubmitted is the schema descriptor for show_submitted field.
-	contenttypedefDescShowSubmitted := contenttypedefFields[14].Descriptor()
+	contenttypedefDescShowSubmitted := contenttypedefFields[12].Descriptor()
 	// contenttypedef.DefaultShowSubmitted holds the default value on creation for the show_submitted field.
 	contenttypedef.DefaultShowSubmitted = contenttypedefDescShowSubmitted.Default.(bool)
 	// contenttypedefDescShowViewCount is the schema descriptor for show_view_count field.
-	contenttypedefDescShowViewCount := contenttypedefFields[15].Descriptor()
+	contenttypedefDescShowViewCount := contenttypedefFields[13].Descriptor()
 	// contenttypedef.DefaultShowViewCount holds the default value on creation for the show_view_count field.
 	contenttypedef.DefaultShowViewCount = contenttypedefDescShowViewCount.Default.(bool)
 	// contenttypedefDescRevisions is the schema descriptor for revisions field.
-	contenttypedefDescRevisions := contenttypedefFields[16].Descriptor()
+	contenttypedefDescRevisions := contenttypedefFields[14].Descriptor()
 	// contenttypedef.DefaultRevisions holds the default value on creation for the revisions field.
 	contenttypedef.DefaultRevisions = contenttypedefDescRevisions.Default.(bool)
 	// contenttypedefDescRevisionsKeep is the schema descriptor for revisions_keep field.
-	contenttypedefDescRevisionsKeep := contenttypedefFields[17].Descriptor()
+	contenttypedefDescRevisionsKeep := contenttypedefFields[15].Descriptor()
 	// contenttypedef.DefaultRevisionsKeep holds the default value on creation for the revisions_keep field.
 	contenttypedef.DefaultRevisionsKeep = contenttypedefDescRevisionsKeep.Default.(int)
 	// contenttypedefDescNoPreview is the schema descriptor for no_preview field.
-	contenttypedefDescNoPreview := contenttypedefFields[18].Descriptor()
+	contenttypedefDescNoPreview := contenttypedefFields[16].Descriptor()
 	// contenttypedef.DefaultNoPreview holds the default value on creation for the no_preview field.
 	contenttypedef.DefaultNoPreview = contenttypedefDescNoPreview.Default.(bool)
 	// contenttypedefDescEmbedded is the schema descriptor for embedded field.
-	contenttypedefDescEmbedded := contenttypedefFields[19].Descriptor()
+	contenttypedefDescEmbedded := contenttypedefFields[17].Descriptor()
 	// contenttypedef.DefaultEmbedded holds the default value on creation for the embedded field.
 	contenttypedef.DefaultEmbedded = contenttypedefDescEmbedded.Default.(bool)
 	// contenttypedefDescViewRoles is the schema descriptor for view_roles field.
-	contenttypedefDescViewRoles := contenttypedefFields[20].Descriptor()
+	contenttypedefDescViewRoles := contenttypedefFields[18].Descriptor()
 	// contenttypedef.DefaultViewRoles holds the default value on creation for the view_roles field.
 	contenttypedef.DefaultViewRoles = contenttypedefDescViewRoles.Default.(string)
 	// contenttypedef.ViewRolesValidator is a validator for the "view_roles" field. It is called by the builders before save.

@@ -76,11 +76,6 @@ func (b *TeaserBuilder) Build(ctx context.Context, nodes entity.Nodes) ([]entity
 	if err := t.resolveTerms(ctx); err != nil {
 		return nil, err
 	}
-	for i := range t.items {
-		if f := t.defByType[string(t.items[i].Node.Type)].AltTitleField; f != "" {
-			t.items[i].AltTitle = t.items[i].Text(f)
-		}
-	}
 	if err := t.countComments(ctx); err != nil {
 		return nil, err
 	}

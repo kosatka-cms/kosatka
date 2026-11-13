@@ -187,7 +187,6 @@ A teaser is a content item's card in the engine's term pages
 | Field | What |
 |---|---|
 | `.Node` | the item: `.Title`, `.URL`, `.Type`, `.CreatedAt`… |
-| `.AltTitle` | the alternative title, if the type has one |
 | `.TypeLabel` | the content type's name |
 | `.Body` | the body text (HTML) |
 | `.MainImage`, `.ImageStyle` | the type's first image field's file and its image style in lists (`{{img (styledPicture .MainImage .ImageStyle) .Node.Title}}`) |
@@ -205,7 +204,7 @@ A teaser is a content item's card in the engine's term pages
     {{with .MainImage}}{{if .URI}}
     {{img (styledPicture . $.ImageStyle) ""}}
     {{end}}{{end}}
-    <h3><a href="{{.Node.URL}}">{{or .AltTitle .Node.Title}}</a></h3>
+    <h3><a href="{{.Node.URL}}">{{.Node.Title}}</a></h3>
     <p class="sand-meta">{{date .Node.CreatedAt ""}} · {{.TypeLabel}}</p>
     {{with plainPreview .Body 300}}<p>{{.}}</p>{{end}}
 </article>
@@ -238,7 +237,6 @@ Data on a content page:
 | `.fieldFormats` | a text value's text format (its ID) by machine name, for `processText` |
 | `.fieldTerms` | a taxonomy field's terms by machine name (each `.Name`, `.Slug`, `.HasPublicPage`) |
 | `.fieldImages` | an image field's `.File` and `.URI` (in the field's image style) by machine name, for fields shown on the page; a field with several images gives its first there and every one, in order, in `.All` (each with `.File` and `.URI`) |
-| `.altTitle` | the alternative title |
 | `.readingTime` | the minutes reading the item takes, 0 when it has nothing to read |
 | `.commentCount` | the number of published comments; absent while the page doesn't show the engine's comments (they are hidden, or a module shows its own in their place) |
 
@@ -404,7 +402,7 @@ the display style; without the file the display style is used.
 {{define "view_cards"}}
 <ul class="sand-cards">
     {{range .items}}
-    <li><a href="{{.Node.URL}}">{{or .AltTitle .Node.Title}}</a></li>
+    <li><a href="{{.Node.URL}}">{{.Node.Title}}</a></li>
     {{else}}
     <li>{{t "Nothing here yet"}}</li>
     {{end}}

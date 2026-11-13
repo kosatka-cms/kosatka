@@ -170,7 +170,7 @@ func (c *DynamicContentController) ViewPreview(w http.ResponseWriter, r *http.Re
 		httputil.InternalServerError(w)
 		return
 	}
-	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), id, viewFields, nodes, views.ContentListOptions{})
+	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), id, viewFields, nodes)
 	if err != nil {
 		c.LogFailure(err, "error building the view's list", "viewID", id)
 		httputil.InternalServerError(w)

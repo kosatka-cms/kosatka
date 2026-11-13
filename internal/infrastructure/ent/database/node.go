@@ -3,8 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"maps"
-	"slices"
 	"strings"
 	"time"
 
@@ -284,65 +282,6 @@ func (r NodeRepository) UpsertPageSEO(ctx context.Context, nodeID int, metaTitle
 	}
 	_, err = upd.Save(ctx)
 	return err
-}
-
-// ProfileMaterialDisplayTitle returns the node's alternative title (its
-// type's AltTitleField) when set, else its title. Used by the Views title
-// field and the modules' pages under a node.
-func (r NodeRepository) ProfileMaterialDisplayTitle(ctx context.Context, n entity.Node) string {
-	if alt := strings.TrimSpace(r.altTitle(ctx, n)); alt != "" {
-		return alt
-	}
-	return strings.TrimSpace(n.Title)
-}
-
-// AltTitles - the alternative titles (their type's AltTitleField) of the
-// nodes that have one, by node ID: ProfileMaterialDisplayTitle for a whole
-// list, one query per content type instead of two per node.
-func (r NodeRepository) AltTitles(ctx context.Context, nodes entity.Nodes) (map[int]string, error) {
-	out := map[int]string{}
-	byType := map[string][]int{}
-	for _, n := range nodes {
-		byType[string(n.Type)] = append(byType[string(n.Type)], n.ID)
-	}
-	if len(byType) == 0 {
-		return out, nil
-	}
-	client := GetClient(ctx, r.client)
-	types, err := client.ContentTypeDef.Query().
-		Where(contenttypedef.MachineNameIn(slices.Collect(maps.Keys(byType))...), contenttypedef.AltTitleFieldNEQ("")).
-		Select(contenttypedef.FieldMachineName, contenttypedef.FieldAltTitleField).
-		All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("loading the content types' alternative title fields: %w", err)
-	}
-	for _, ct := range types {
-		values, err := textFieldValues(ctx, client, ct.AltTitleField, byType[ct.MachineName])
-		if err != nil {
-			return nil, fmt.Errorf("loading the alternative titles of %s: %w", ct.MachineName, err)
-		}
-		for id, v := range values {
-			if v = strings.TrimSpace(v); v != "" {
-				out[id] = v
-			}
-		}
-	}
-	return out, nil
-}
-
-// altTitle returns the value of the node type's AltTitleField ("" if none).
-func (r NodeRepository) altTitle(ctx context.Context, n entity.Node) string {
-	client := GetClient(ctx, r.client)
-	ct, err := client.ContentTypeDef.Query().
-		Where(contenttypedef.MachineName(string(n.Type))).
-		Select(contenttypedef.FieldAltTitleField).
-		Only(ctx)
-	if err != nil || ct.AltTitleField == "" {
-		return ""
-	}
-	// A title to show: without its alternative one the node shows its own.
-	values, _ := textFieldValues(ctx, client, ct.AltTitleField, []int{n.ID})
-	return values[n.ID]
 }
 
 // CountByType counts all nodes of the given type (any status, the trash

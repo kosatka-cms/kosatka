@@ -22,9 +22,6 @@ type TeaserItem struct {
 	// DefaultImages - the default image (FieldInstanceDef.DefaultImageID)
 	// of each image field the node leaves empty, by machine_name.
 	DefaultImages map[string]File
-	// AltTitle - the alternative title: the value of the type's
-	// AltTitleField ("" - none).
-	AltTitle string
 	// BodyField - machine_name of the type's body text field (the first one
 	// shown in the detail page body), "" when none.
 	BodyField string

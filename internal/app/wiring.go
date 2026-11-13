@@ -472,7 +472,6 @@ func (s *wiring) wirePresentation() {
 		s.blockService,
 		s.viewService,
 		s.templateService,
-		s.nodeRepo,
 		s.contentTypeRepo,
 		s.taxonomyService,
 		s.baseLogger,

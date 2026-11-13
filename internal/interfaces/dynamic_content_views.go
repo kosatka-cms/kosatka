@@ -331,7 +331,7 @@ func (c *DynamicContentController) renderContentViewFragment(ctx context.Context
 			return views.WithViewTexts(view, html), err
 		}
 	}
-	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, cfg.Fields, nodes, views.ContentListOptions{AltTitles: true})
+	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, cfg.Fields, nodes)
 	if err != nil {
 		return "", fmt.Errorf("error building contextual content view block items: %w", err)
 	}

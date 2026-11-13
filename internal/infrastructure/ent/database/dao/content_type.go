@@ -24,8 +24,6 @@ func ToContentTypeDefEntity(v *generated.ContentTypeDef) entity.ContentTypeDef {
 		DefaultPromote:     v.DefaultPromote,
 		DefaultSticky:      v.DefaultSticky,
 		DefaultPublishing:  entity.NodePublishing(v.DefaultPublishing),
-		TitleDisplay:       entity.TitleDisplay(v.TitleDisplay),
-		AltTitleField:      v.AltTitleField,
 		RedirectField:      v.RedirectField,
 		ShowSubmitted:      v.ShowSubmitted,
 		ShowViewCount:      v.ShowViewCount,

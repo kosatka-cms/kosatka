@@ -42,12 +42,8 @@ func (ContentTypeDef) Fields() []ent.Field {
 		// (entity.ContentTypeDef.DefaultPublishing).
 		field.String("default_publishing").MaxLen(16).Default("moderation"),
 		field.Bool("hide_empty_comments").Default(false),
-		// title_display / show_submitted / show_view_count -
-		// node detail page display settings, see
-		// entity.ContentTypeDef.
-		field.String("title_display").MaxLen(32).Default("original_with_translation"),
-		// alt_title_field - entity.ContentTypeDef.AltTitleField.
-		field.String("alt_title_field").MaxLen(64).Default(""),
+		// show_submitted / show_view_count - node detail page display
+		// settings, see entity.ContentTypeDef.
 		// redirect_field - entity.ContentTypeDef.RedirectField.
 		field.String("redirect_field").MaxLen(64).Default(""),
 		field.Bool("show_submitted").Default(true),

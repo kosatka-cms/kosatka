@@ -1066,7 +1066,7 @@ func TestContentListTemplate_TitleFieldLinksToNode(t *testing.T) {
 		{ID: 1, Title: "Who would win if", Slug: "kto-pobedit-esli"},
 		{ID: 2, Title: "Second topic", Slug: "vtoroy-topik"},
 	}
-	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil, nil)
+	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1115,7 +1115,7 @@ func TestContentListTemplate_ModuleNodeLinkGetsPathPrefix(t *testing.T) {
 	nodes := entity.Nodes{
 		{ID: 1, Type: entity.ContentType("board_topic"), Title: "Spam topic", Slug: "24bba67"},
 	}
-	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil, nil)
+	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1152,7 +1152,7 @@ func TestContentListTemplate_ImageFieldLinksToNode(t *testing.T) {
 	nodes := entity.Nodes{
 		{ID: 1, Title: "Heading", Slug: "foo-bar"},
 	}
-	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil, nil)
+	items, err := views.BuildContentListItems(context.Background(), nil, nodes, listFields, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

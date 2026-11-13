@@ -299,9 +299,7 @@ package modulekit
 		field DefaultPublishing internal/domain/entity.NodePublishing
 		field DefaultCommentMode internal/domain/entity.CommentMode
 		field HideEmptyComments bool
-		field TitleDisplay internal/domain/entity.TitleDisplay
 		field RedirectField string
-		field AltTitleField string
 		field ShowSubmitted bool
 		field ShowViewCount bool
 		field Revisions bool
@@ -390,7 +388,6 @@ package modulekit
 		field TextFormats map[int]int
 		field Tags internal/domain/entity.TaxonomyTerms
 		method FieldValueByMachineName(machineName string) any
-		method GetAltTitle() string
 		method GetContent() string
 		method GetNode() internal/domain/entity.Node
 	type EmbedKind = internal/domain/service.EmbedKind
@@ -726,7 +723,6 @@ package modulekit
 		field Apply func(ctx context.Context, node internal/domain/entity.Node, user *internal/domain/entity.User, r *net/http.Request, isNew bool) error
 	type Nodes = internal/domain/entity.Nodes
 	type NodesRepository = internal/domain/entity.NodesRepository
-		method AltTitles(ctx context.Context, nodes internal/domain/entity.Nodes) (map[int]string, error)
 		method ByID(ctx context.Context, nodeID int) (*internal/domain/entity.Node, error)
 		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.Node, error)
 		method BySlug(ctx context.Context, slug string) (*internal/domain/entity.Node, error)
@@ -740,7 +736,6 @@ package modulekit
 		method ListPublicSitemapNodes(ctx context.Context, excludeTypes []string, limit int, offset int) ([]internal/domain/entity.SitemapNodeRow, error)
 		method PageSEO(ctx context.Context, nodeID int) (internal/domain/entity.PageSEO, error)
 		method PathBatch(ctx context.Context, nodeType string, afterID int, limit int, onlyAuto bool) (internal/domain/entity.Nodes, error)
-		method ProfileMaterialDisplayTitle(ctx context.Context, n internal/domain/entity.Node) string
 		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
 		method SetLangcode(ctx context.Context, nodeID int, code string) error
 		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error
@@ -994,7 +989,6 @@ package modulekit
 		field ReadingTime int
 		field Images map[string]internal/domain/entity.File
 		field DefaultImages map[string]internal/domain/entity.File
-		field AltTitle string
 		field BodyField string
 		field ImageField string
 		field ImageStyle string
@@ -1441,7 +1435,6 @@ package modulekit/testkit
 	type Nodes struct
 		field NodesRepository modulekit.NodesRepository
 		field Known map[int]*modulekit.Node
-		method AltTitles(ctx context.Context, nodes internal/domain/entity.Nodes) (map[int]string, error)
 		method ByID(_ context.Context, id int) (*modulekit.Node, error)
 		method ByIDs(ctx context.Context, ids []int) (map[int]internal/domain/entity.Node, error)
 		method BySlug(ctx context.Context, slug string) (*internal/domain/entity.Node, error)
@@ -1455,7 +1448,6 @@ package modulekit/testkit
 		method ListPublicSitemapNodes(ctx context.Context, excludeTypes []string, limit int, offset int) ([]internal/domain/entity.SitemapNodeRow, error)
 		method PageSEO(ctx context.Context, nodeID int) (internal/domain/entity.PageSEO, error)
 		method PathBatch(ctx context.Context, nodeType string, afterID int, limit int, onlyAuto bool) (internal/domain/entity.Nodes, error)
-		method ProfileMaterialDisplayTitle(ctx context.Context, n internal/domain/entity.Node) string
 		method SearchByTitle(ctx context.Context, query string, types []string, limit int) ([]internal/domain/entity.NodeSearchHit, error)
 		method SetLangcode(ctx context.Context, nodeID int, code string) error
 		method SetPath(ctx context.Context, nodeID int, slug string, auto bool) error

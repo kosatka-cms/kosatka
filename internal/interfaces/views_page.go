@@ -349,7 +349,7 @@ func (c *DynamicContentController) ViewPageFallback(w http.ResponseWriter, r *ht
 	// (views.BuildContentList, as for its block and its preview); a page
 	// shows the nodes' titles, not their alternative titles.
 	viewFields := state.Fields
-	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, viewFields, nodes, views.ContentListOptions{})
+	listFields, items, err := views.BuildContentList(ctx, c.contentListSources(), view.ID, viewFields, nodes)
 	if err != nil {
 		c.LogFailure(err, "error building the view's list", "viewID", view.ID)
 		httputil.InternalServerError(w)

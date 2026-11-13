@@ -198,12 +198,6 @@ type NodesRepository interface {
 	// Slugs share one URL space (nodes.slug is unique across all types).
 	SlugExists(ctx context.Context, slug string) (bool, error)
 	SlugExistsExcludingNode(ctx context.Context, slug string, excludeNodeID int) (bool, error)
-	// ProfileMaterialDisplayTitle - the title for lists: the type's alternative
-	// title field (ContentTypeDef.AltTitleField) if set, otherwise n.Title.
-	ProfileMaterialDisplayTitle(ctx context.Context, n Node) string
-	// AltTitles - ProfileMaterialDisplayTitle's alternative titles for a
-	// list of nodes, by node ID (those without one left out).
-	AltTitles(ctx context.Context, nodes Nodes) (map[int]string, error)
 	UpdateStatus(ctx context.Context, nodeID int, status int) error
 	UpdateOnModeration(ctx context.Context, nodeID int, onModeration int) error
 	// SetPublishing sets the node's publishing (status) and moderation as

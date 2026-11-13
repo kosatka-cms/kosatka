@@ -251,9 +251,8 @@ The first one with a value wins:
 3. **The content type's template** - *Content types* table, the pencil
    (*Change*).
 4. **The default template** - *Default for all content*.
-5. **The built-in value**: the title - the content's title, or "Title
-   (Alternative title)" when the type has an *Alternative title* field
-   set; the description - the beginning of the text.
+5. **The built-in value**: the title - the content's title; the
+   description - the beginning of the text.
 
 If the chosen template renders empty (it has nothing but tokens, all of
 them empty), the built-in value is used. The description is stripped of

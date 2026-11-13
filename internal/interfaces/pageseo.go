@@ -18,7 +18,6 @@ import (
 type SEOProvider interface {
 	GetNode() entity.Node
 	GetContent() string
-	GetAltTitle() string // may be empty
 }
 
 // PageSEO builds a PageSEO from an entity's data.
@@ -27,9 +26,6 @@ func PageSEO(provider SEOProvider) entity.PageSEO {
 	pageSEO := entity.PageSEO{}
 
 	title := node.Title
-	if altTitle := provider.GetAltTitle(); altTitle != "" {
-		title = fmt.Sprintf("%s (%s)", title, altTitle)
-	}
 	if node.PageSEO.Title != "" {
 		title = node.PageSEO.Title
 	}
