@@ -18,3 +18,9 @@ regexes = [
 description = "The demo sets' item keys (machine names): a list item's '- key: <name>' line"
 regexTarget = "line"
 regexes = ['''^\s*- key: [a-z0-9_]+$''']
+
+[[allowlists]]
+# A migration file named after what it drops ("drop_resend_key") puts
+# "key" before its hash, which the generic rule takes for an API key.
+description = "Migration directories' checksums (atlas.sum): file names and their hashes"
+paths = ['''(^|/)atlas\.sum$''']
