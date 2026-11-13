@@ -513,17 +513,12 @@ func (f fakeFragmentTypes) FieldValuesForNodes(_ context.Context, nodeIDs []int,
 
 type fakeFragmentNodes struct {
 	entity.NodesRepository
-	alt map[int]string
-}
-
-func (f fakeFragmentNodes) AltTitles(context.Context, entity.Nodes) (map[int]string, error) {
-	return f.alt, nil
 }
 
 // TestContentViewFragment - a contextual View block (a fragment on a
 // node's page) builds its list as the View's page and its cached block
-// do (views.BuildContentList): the nodes' alternative titles, a list
-// field's values, its own container id and its pager.
+// do (views.BuildContentList): the nodes' titles, a list field's values,
+// its own container id and its pager.
 func TestContentViewFragment(t *testing.T) {
 	kind := 31
 	c := &DynamicContentController{
@@ -536,7 +531,7 @@ func TestContentViewFragment(t *testing.T) {
 			storages: map[int]entity.FieldStorageDef{kind: {ID: kind, MachineName: "kind", FieldType: entity.FieldTypeList}},
 			values:   map[int]map[int]any{2: {kind: "Sloop"}},
 		},
-		nodeRepo: fakeFragmentNodes{alt: map[int]string{1: "The Whale"}},
+		nodeRepo: fakeFragmentNodes{},
 	}
 	nodes := entity.Nodes{{ID: 1, Type: "article", Title: "Moby", Slug: "article/moby"}, {ID: 2, Type: "article", Title: "Pequod", Slug: "article/pequod"}}
 	cfg := views.Config{View: entity.ViewDisplayDef{ID: 9, DisplayStyle: entity.ViewDisplayStyleList}, Fields: c.viewService.(fakeFragmentViews).fields}
@@ -548,7 +543,7 @@ func TestContentViewFragment(t *testing.T) {
 	out := strings.Join(strings.Fields(string(html)), " ")
 	for _, want := range []string{
 		`id="view-list-container-block-9"`,
-		`<span class="item-field-value">The Whale</span>`,
+		`<span class="item-field-value">Moby</span>`,
 		`<span class="item-field-value">Pequod</span>`,
 		`<span class="item-field-label">Kind:</span> <span class="item-field-value"><span class="list-values"><span class="list-value list-value-0" data-list-value="Sloop">Sloop</span></span></span>`,
 		`page=2`,
@@ -556,9 +551,6 @@ func TestContentViewFragment(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("the fragment has no %s:\n%s", want, out)
 		}
-	}
-	if strings.Contains(out, ">Moby<") {
-		t.Errorf("the fragment shows the title, not the alternative title:\n%s", out)
 	}
 }
 

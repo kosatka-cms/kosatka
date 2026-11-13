@@ -5,7 +5,7 @@
      body text. A theme can override this file. */}}
 {{define "teaser_default"}}
 {{$it := .}}
-{{$title := or $it.AltTitle $it.Node.Title}}
+{{$title := $it.Node.Title}}
 {{$href := $it.Node.URL}}
 <article class="node node-teaser">
     {{with $it.MainImage}}{{if .URI}}

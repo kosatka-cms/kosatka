@@ -162,7 +162,7 @@ func TestBuildContentListModuleField(t *testing.T) {
 		{ID: 3, BuiltinField: "votes.total"},
 	}
 	nodes := entity.Nodes{{ID: 1, Title: "Moby"}, {ID: 2, Title: "Dick"}}
-	fields, items, err := BuildContentList(t.Context(), ContentListSources{}, 1, viewFields, nodes, ContentListOptions{})
+	fields, items, err := BuildContentList(t.Context(), ContentListSources{}, 1, viewFields, nodes)
 	if err != nil {
 		t.Fatal(err)
 	}

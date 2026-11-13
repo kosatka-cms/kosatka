@@ -140,9 +140,9 @@ func (c *GalleryController) GalleriesList(w http.ResponseWriter, r *http.Request
 	data["imageStyles"] = imageStyles
 	data["coverStyle"] = coverStyle(imageStyles)
 	data["defaultSmallStyle"], data["defaultMediumStyle"] = schema.DefaultPreviewSmallStyle, schema.DefaultPreviewMediumStyle
-	nodeTitle := c.NodeRepo().ProfileMaterialDisplayTitle(ctx, *node)
+	nodeTitle := strings.TrimSpace(node.Title)
 	data["title"] = i18n.T(ctx, "Galleries - @title", "@title", nodeTitle)
-	c.SetNodeSubpageTrail(ctx, data, nodeWithTitle(*node, nodeTitle), i18n.T(ctx, "Galleries"))
+	c.SetNodeSubpageTrail(ctx, data, *node, i18n.T(ctx, "Galleries"))
 	data["pageSEO"] = pageSEOForNodeGalleriesList(ctx, *node, nodeTitle, len(galleries), r.URL.Path)
 
 	c.RenderOrFail(w, r, "node/galleries_list.html", data)
@@ -525,10 +525,10 @@ func (c *GalleryController) ViewGallery(w http.ResponseWriter, r *http.Request) 
 		title = i18n.T(ctx, "Image gallery")
 	}
 	data["title"] = title
-	nodeTitle := c.NodeRepo().ProfileMaterialDisplayTitle(ctx, *node)
+	nodeTitle := strings.TrimSpace(node.Title)
 	data["pageSEO"] = pageSEOForGalleryView(ctx, *gallery, node, nodeTitle, r.URL.Path)
 	c.SetViewTrackNID(data, *node)
-	c.SetNodeSubpageTrail(ctx, data, nodeWithTitle(*node, nodeTitle), title, galleriesTrailItem(ctx, node.ID))
+	c.SetNodeSubpageTrail(ctx, data, *node, title, galleriesTrailItem(ctx, node.ID))
 
 	c.RenderOrFail(w, r, "gallery/view.html", data)
 }
@@ -649,12 +649,4 @@ func (c *GalleryController) GalleryDeletePage(w http.ResponseWriter, r *http.Req
 // galleriesTrailItem - a node's galleries page as a trail link.
 func galleriesTrailItem(ctx context.Context, nodeID int) modulekit.BreadcrumbItem {
 	return modulekit.BreadcrumbItem{URL: "/node/" + strconv.Itoa(nodeID) + "/galleries", Label: i18n.T(ctx, "Galleries")}
-}
-
-// nodeWithTitle - node with its display title (for the trail link).
-func nodeWithTitle(node modulekit.Node, title string) modulekit.Node {
-	if title != "" {
-		node.Title = title
-	}
-	return node
 }

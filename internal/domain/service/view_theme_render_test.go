@@ -24,8 +24,8 @@ func TestViewThemeTemplate(t *testing.T) {
 		items []entity.TeaserItem
 		want  string
 	}{
-		{[]entity.TeaserItem{{Node: entity.Node{Title: "Foo Bar", Slug: "articles/foo"}}, {Node: entity.Node{Title: "Baz", Slug: "articles/baz"}, AltTitle: "Baz alt"}},
-			`<li><a href="/articles/foo">Foo Bar</a></li><li><a href="/articles/baz">Baz alt</a></li>`},
+		{[]entity.TeaserItem{{Node: entity.Node{Title: "Foo Bar", Slug: "articles/foo"}}, {Node: entity.Node{Title: "Baz", Slug: "articles/baz"}}},
+			`<li><a href="/articles/foo">Foo Bar</a></li><li><a href="/articles/baz">Baz</a></li>`},
 		{nil, "<li>Nothing here yet</li>"},
 	} {
 		var buf strings.Builder

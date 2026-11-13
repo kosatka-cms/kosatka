@@ -40,17 +40,10 @@ type ContentTypeDef struct {
 	// HideEmptyComments hides the comments section (including the form)
 	// while the node has no comments.
 	HideEmptyComments bool
-	// TitleDisplay - how the page heading combines the title and the
-	// alternative title (AltTitleField).
-	TitleDisplay TitleDisplay
 	// RedirectField - machine_name of a text field holding a URL; the node
 	// page redirects there instead of rendering. "" or an empty value
 	// renders the page normally.
 	RedirectField string
-	// AltTitleField - machine_name of a text field holding the alternative
-	// (e.g. translated) title, "" - none. Used by TitleDisplay, the default
-	// page title, the Views title field and TeaserItem.AltTitle.
-	AltTitleField string
 	// ShowSubmitted shows author and dates on the node page.
 	ShowSubmitted bool
 	// ShowViewCount shows the view counter next to author and dates.
@@ -103,29 +96,6 @@ func (d ContentTypeDef) Creatable() bool {
 
 // ContentTypeDefs - a list of content types.
 type ContentTypeDefs []ContentTypeDef
-
-// TitleDisplay - see ContentTypeDef.TitleDisplay.
-type TitleDisplay string
-
-const (
-	// TitleDisplayOriginalWithTranslation - "Title (Translated)".
-	TitleDisplayOriginalWithTranslation TitleDisplay = "original_with_translation"
-	// TitleDisplayTranslatedFirst - the heading is the translated title,
-	// the original goes into a subtitle (the breadcrumb shows the
-	// translated one).
-	TitleDisplayTranslatedFirst TitleDisplay = "translated_first"
-	// TitleDisplayOriginalOnly - just the title.
-	TitleDisplayOriginalOnly TitleDisplay = "original_only"
-)
-
-// IsValidTitleDisplay reports whether v is one of the TitleDisplay values.
-func IsValidTitleDisplay(v string) bool {
-	switch TitleDisplay(v) {
-	case TitleDisplayOriginalWithTranslation, TitleDisplayTranslatedFirst, TitleDisplayOriginalOnly:
-		return true
-	}
-	return false
-}
 
 // Template-friendly string accessors for the admin field form
 // (content_type_field_edit.html): html/template can't call methods

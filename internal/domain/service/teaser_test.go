@@ -75,7 +75,7 @@ func TestTeaserBuilderBuild(t *testing.T) {
 	// Video 1 and news 2 (free tags on a multi-value "tags" field).
 	ct := &fakeTeaserContentTypes{
 		defs: entity.ContentTypeDefs{
-			{ID: 13, MachineName: "video", Label: "Video", AltTitleField: "title_alt"},
+			{ID: 13, MachineName: "video", Label: "Video"},
 			{ID: 21, MachineName: "news", Label: "News"},
 		},
 		fields: map[int]entity.FieldInstanceDefs{
@@ -120,9 +120,6 @@ func TestTeaserBuilderBuild(t *testing.T) {
 	}
 	if _, isImage := video.Fields["cover_image"]; isImage {
 		t.Fatal("an image field is not a text value")
-	}
-	if video.AltTitle != "Title" || news.AltTitle != "" {
-		t.Fatalf("alt titles = %q, %q", video.AltTitle, news.AltTitle)
 	}
 	if video.TypeLabel != "Video" || video.Text("title_alt") != "Title" || video.Labels["date_global"] != "World date" {
 		t.Fatalf("video item = %+v", video)

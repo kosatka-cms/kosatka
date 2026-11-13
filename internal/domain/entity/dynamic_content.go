@@ -29,7 +29,7 @@ type DynamicContent struct {
 	Tags        TaxonomyTerms
 }
 
-// GetNode (with GetContent and GetAltTitle) implements
+// GetNode (with GetContent) implements
 // interfaces.SEOProvider, so DynamicContent works with the generic
 // PageSEO() helper.
 func (d DynamicContent) GetNode() Node { return d.Node }
@@ -48,16 +48,6 @@ func (d DynamicContent) GetContent() string {
 		}
 	}
 	return ""
-}
-
-// GetAltTitle - the alternative title: the value of the type's
-// AltTitleField ("" when the type has none or it is empty).
-func (d DynamicContent) GetAltTitle() string {
-	if d.ContentType.AltTitleField == "" {
-		return ""
-	}
-	s, _ := d.FieldValueByMachineName(d.ContentType.AltTitleField).(string)
-	return s
 }
 
 // FieldValueByMachineName returns the stored value of the field with the

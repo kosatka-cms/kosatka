@@ -159,17 +159,6 @@ func (f *fakeListTypes) FieldsByContentTypeID(_ context.Context, id int) (entity
 	return f.fieldsByType[id], nil
 }
 
-type fakeListNodes struct {
-	entity.NodesRepository
-	alt   map[int]string
-	calls int
-}
-
-func (f *fakeListNodes) AltTitles(context.Context, entity.Nodes) (map[int]string, error) {
-	f.calls++
-	return f.alt, nil
-}
-
 type fakeListComments map[int]int
 
 func (f fakeListComments) CountByNodeIDs(context.Context, []int, int8, bool) (map[int]int, error) {
@@ -179,7 +168,7 @@ func (f fakeListComments) CountByNodeIDs(context.Context, []int, int8, bool) (ma
 // TestBuildContentList - the one list of a content View: fields with
 // their labels and HTML-ness from the storages, values batched across the
 // nodes, builtins from the node; a View field whose storage is gone is
-// left out; alternative titles only when asked (View blocks).
+// left out.
 func TestBuildContentList(t *testing.T) {
 	premiere := time.Date(2026, 12, 25, 0, 0, 0, 0, time.UTC)
 	types := &fakeListTypes{
@@ -203,22 +192,16 @@ func TestBuildContentList(t *testing.T) {
 	nodes := entity.Nodes{{ID: 1, Type: "movie", Title: "Moby"}, {ID: 2, Type: "movie", Title: "Ahab"}}
 
 	for _, tc := range []struct {
-		name      string
-		altTitles bool
-		want      [2]string
+		name string
+		want [2]string
 	}{
-		{"page", false, [2]string{"Moby", "Ahab"}},
-		{"block", true, [2]string{"The Whale", "Ahab"}},
+		{"page", [2]string{"Moby", "Ahab"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			nodeRepo := &fakeListNodes{alt: map[int]string{1: "The Whale"}}
-			src := ContentListSources{Nodes: nodeRepo, Types: types, Comments: fakeListComments{2: 7}}
-			fields, items, err := BuildContentList(t.Context(), src, 1, viewFields, nodes, ContentListOptions{AltTitles: tc.altTitles})
+			src := ContentListSources{Types: types, Comments: fakeListComments{2: 7}}
+			fields, items, err := BuildContentList(t.Context(), src, 1, viewFields, nodes)
 			if err != nil {
 				t.Fatal(err)
-			}
-			if tc.altTitles != (nodeRepo.calls == 1) {
-				t.Fatalf("AltTitles calls = %d with AltTitles %v", nodeRepo.calls, tc.altTitles)
 			}
 			var names []string
 			for _, f := range fields {
@@ -254,14 +237,14 @@ func TestBuildContentList(t *testing.T) {
 		boom := errors.New("boom")
 		failing := *types
 		failing.valueErr = boom
-		_, _, err := BuildContentList(t.Context(), ContentListSources{Types: &failing}, 1, viewFields, nodes, ContentListOptions{})
+		_, _, err := BuildContentList(t.Context(), ContentListSources{Types: &failing}, 1, viewFields, nodes)
 		if !errors.Is(err, boom) {
 			t.Fatalf("err = %v, want boom", err)
 		}
 	})
 
 	t.Run("without sources only builtins are listed", func(t *testing.T) {
-		fields, items, err := BuildContentList(t.Context(), ContentListSources{}, 1, viewFields, nodes, ContentListOptions{AltTitles: true})
+		fields, items, err := BuildContentList(t.Context(), ContentListSources{}, 1, viewFields, nodes)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -278,7 +261,7 @@ func TestBuildContentListItemsImageWithoutStyle(t *testing.T) {
 	listFields := BuildContentFieldInstances(t.Context(), entity.ViewFieldDefs{{ID: 1, FieldStorageID: storageID(17)}},
 		map[int]entity.FieldStorageDef{17: {ID: 17, MachineName: "cover", FieldType: entity.FieldTypeImage}}, nil, nil)
 	files := fakeListFiles{90: {ID: 90, URI: "public://cover.png"}}
-	items, err := BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files, nil)
+	items, err := BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +270,7 @@ func TestBuildContentListItemsImageWithoutStyle(t *testing.T) {
 	}
 
 	listFields[0].ListImageStyle = "thumbnail"
-	items, err = BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files, nil)
+	items, err = BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,7 +290,7 @@ func TestBuildContentListItemsSeveralImages(t *testing.T) {
 		map[int]entity.FieldStorageDef{17: {ID: 17, MachineName: "photos", FieldType: entity.FieldTypeImage, Config: map[string]any{"multiple": true}}}, nil, nil)
 	listFields[0].ListImageStyle = "thumbnail"
 	files := fakeListFiles{90: {ID: 90, URI: "public://a.png", Alt: "A"}, 92: {ID: 92, URI: "public://b.png", Alt: "B"}}
-	items, err := BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files, nil)
+	items, err := BuildContentListItems(t.Context(), types, entity.Nodes{{ID: 1, Type: "movie"}}, listFields, nil, nil, nil, files)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +344,7 @@ func TestBuildContentListReadingTime(t *testing.T) {
 	}
 	viewFields := entity.ViewFieldDefs{{ID: 1, BuiltinField: entity.ViewFieldBuiltinReadingTime}}
 	nodes := entity.Nodes{{ID: 1, Type: "article"}, {ID: 2, Type: "article"}, {ID: 3, Type: "link"}}
-	fields, items, err := BuildContentList(t.Context(), ContentListSources{Types: types}, 1, viewFields, nodes, ContentListOptions{})
+	fields, items, err := BuildContentList(t.Context(), ContentListSources{Types: types}, 1, viewFields, nodes)
 	if err != nil {
 		t.Fatal(err)
 	}

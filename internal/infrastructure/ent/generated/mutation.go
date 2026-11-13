@@ -9022,8 +9022,6 @@ type ContentTypeDefMutation struct {
 	default_sticky       *bool
 	default_publishing   *string
 	hide_empty_comments  *bool
-	title_display        *string
-	alt_title_field      *string
 	redirect_field       *string
 	show_submitted       *bool
 	show_view_count      *bool
@@ -9540,78 +9538,6 @@ func (m *ContentTypeDefMutation) ResetHideEmptyComments() {
 	m.hide_empty_comments = nil
 }
 
-// SetTitleDisplay sets the "title_display" field.
-func (m *ContentTypeDefMutation) SetTitleDisplay(s string) {
-	m.title_display = &s
-}
-
-// TitleDisplay returns the value of the "title_display" field in the mutation.
-func (m *ContentTypeDefMutation) TitleDisplay() (r string, exists bool) {
-	v := m.title_display
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldTitleDisplay returns the old "title_display" field's value of the ContentTypeDef entity.
-// If the ContentTypeDef object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ContentTypeDefMutation) OldTitleDisplay(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldTitleDisplay is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldTitleDisplay requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTitleDisplay: %w", err)
-	}
-	return oldValue.TitleDisplay, nil
-}
-
-// ResetTitleDisplay resets all changes to the "title_display" field.
-func (m *ContentTypeDefMutation) ResetTitleDisplay() {
-	m.title_display = nil
-}
-
-// SetAltTitleField sets the "alt_title_field" field.
-func (m *ContentTypeDefMutation) SetAltTitleField(s string) {
-	m.alt_title_field = &s
-}
-
-// AltTitleField returns the value of the "alt_title_field" field in the mutation.
-func (m *ContentTypeDefMutation) AltTitleField() (r string, exists bool) {
-	v := m.alt_title_field
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAltTitleField returns the old "alt_title_field" field's value of the ContentTypeDef entity.
-// If the ContentTypeDef object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ContentTypeDefMutation) OldAltTitleField(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAltTitleField is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAltTitleField requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAltTitleField: %w", err)
-	}
-	return oldValue.AltTitleField, nil
-}
-
-// ResetAltTitleField resets all changes to the "alt_title_field" field.
-func (m *ContentTypeDefMutation) ResetAltTitleField() {
-	m.alt_title_field = nil
-}
-
 // SetRedirectField sets the "redirect_field" field.
 func (m *ContentTypeDefMutation) SetRedirectField(s string) {
 	m.redirect_field = &s
@@ -10082,7 +10008,7 @@ func (m *ContentTypeDefMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ContentTypeDefMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 21)
 	if m.machine_name != nil {
 		fields = append(fields, contenttypedef.FieldMachineName)
 	}
@@ -10112,12 +10038,6 @@ func (m *ContentTypeDefMutation) Fields() []string {
 	}
 	if m.hide_empty_comments != nil {
 		fields = append(fields, contenttypedef.FieldHideEmptyComments)
-	}
-	if m.title_display != nil {
-		fields = append(fields, contenttypedef.FieldTitleDisplay)
-	}
-	if m.alt_title_field != nil {
-		fields = append(fields, contenttypedef.FieldAltTitleField)
 	}
 	if m.redirect_field != nil {
 		fields = append(fields, contenttypedef.FieldRedirectField)
@@ -10180,10 +10100,6 @@ func (m *ContentTypeDefMutation) Field(name string) (ent.Value, bool) {
 		return m.DefaultPublishing()
 	case contenttypedef.FieldHideEmptyComments:
 		return m.HideEmptyComments()
-	case contenttypedef.FieldTitleDisplay:
-		return m.TitleDisplay()
-	case contenttypedef.FieldAltTitleField:
-		return m.AltTitleField()
 	case contenttypedef.FieldRedirectField:
 		return m.RedirectField()
 	case contenttypedef.FieldShowSubmitted:
@@ -10235,10 +10151,6 @@ func (m *ContentTypeDefMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldDefaultPublishing(ctx)
 	case contenttypedef.FieldHideEmptyComments:
 		return m.OldHideEmptyComments(ctx)
-	case contenttypedef.FieldTitleDisplay:
-		return m.OldTitleDisplay(ctx)
-	case contenttypedef.FieldAltTitleField:
-		return m.OldAltTitleField(ctx)
 	case contenttypedef.FieldRedirectField:
 		return m.OldRedirectField(ctx)
 	case contenttypedef.FieldShowSubmitted:
@@ -10339,20 +10251,6 @@ func (m *ContentTypeDefMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetHideEmptyComments(v)
-		return nil
-	case contenttypedef.FieldTitleDisplay:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetTitleDisplay(v)
-		return nil
-	case contenttypedef.FieldAltTitleField:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAltTitleField(v)
 		return nil
 	case contenttypedef.FieldRedirectField:
 		v, ok := value.(string)
@@ -10557,12 +10455,6 @@ func (m *ContentTypeDefMutation) ResetField(name string) error {
 		return nil
 	case contenttypedef.FieldHideEmptyComments:
 		m.ResetHideEmptyComments()
-		return nil
-	case contenttypedef.FieldTitleDisplay:
-		m.ResetTitleDisplay()
-		return nil
-	case contenttypedef.FieldAltTitleField:
-		m.ResetAltTitleField()
 		return nil
 	case contenttypedef.FieldRedirectField:
 		m.ResetRedirectField()

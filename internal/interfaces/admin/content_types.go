@@ -216,11 +216,7 @@ func (c *Controller) ContentTypeUpdate(w http.ResponseWriter, r *http.Request) {
 		status = 1
 	}
 	hideEmptyComments := r.FormValue("hide_empty_comments") == "1"
-	titleDisplay := existing.TitleDisplay
-	if v := r.FormValue("title_display"); entity.IsValidTitleDisplay(v) {
-		titleDisplay = entity.TitleDisplay(v)
-	}
-	// altTitleField/redirectField - only the type's own text fields.
+	// redirectField - only the type's own text fields.
 	textFields, _ := c.searchTypeFields(ctx, existing.MachineName)
 	ownTextField := func(name string) string {
 		name = strings.TrimSpace(name)
@@ -231,7 +227,6 @@ func (c *Controller) ContentTypeUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 		return ""
 	}
-	altTitleField := ownTextField(r.FormValue("alt_title_field"))
 	redirectField := ownTextField(r.FormValue("redirect_field"))
 	showSubmitted := r.FormValue("show_submitted") == "1"
 	showViewCount := r.FormValue("show_view_count") == "1"
@@ -283,8 +278,6 @@ func (c *Controller) ContentTypeUpdate(w http.ResponseWriter, r *http.Request) {
 		DefaultPromote:     defaultPromote,
 		DefaultSticky:      defaultSticky,
 		DefaultPublishing:  publishing,
-		TitleDisplay:       titleDisplay,
-		AltTitleField:      altTitleField,
 		RedirectField:      redirectField,
 		ShowSubmitted:      showSubmitted,
 		ShowViewCount:      showViewCount,

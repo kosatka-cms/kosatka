@@ -83,7 +83,7 @@ func TestBuildContentListItems_GenericDateFieldAndContentTypeBuiltin(t *testing.
 	nodes := entity.Nodes{{ID: 1, Type: "video", Title: "Test video"}}
 	contentTypeLabels := map[string]string{"video": "Video"}
 
-	items, err := views.BuildContentListItems(context.Background(), repo, nodes, listFields, contentTypeLabels, nil, nil, nil, nil)
+	items, err := views.BuildContentListItems(context.Background(), repo, nodes, listFields, contentTypeLabels, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -271,7 +271,7 @@ func TestBuildContentListItemsTaxonomyWithFallback(t *testing.T) {
 	repo := fakeViewTaxonomyRepo{single: map[int]map[int]int{storageID: {1: 2848}}}
 	terms := fakeViewTerms{2848: {ID: 2848, Name: "Kind A", Slug: "vidy/vid-a"}}
 	labels := map[string]string{"video": "Video", "product": "Products"}
-	items, err := views.BuildContentListItems(context.Background(), repo, nodes, listFields, labels, terms, nil, nil, nil)
+	items, err := views.BuildContentListItems(context.Background(), repo, nodes, listFields, labels, terms, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,7 +354,7 @@ func TestContentListDefaultImage(t *testing.T) {
 	viewFields := entity.ViewFieldDefs{{ID: 1, FieldStorageID: &storageID, ImageStyle: "thumbnail"}}
 	listFields := views.BuildContentFieldInstances(t.Context(), viewFields, map[int]entity.FieldStorageDef{storageID: {ID: storageID, MachineName: "cover_image", FieldType: entity.FieldTypeImage}}, nil, nil)
 	files := fakeTeaserFiles{90: {ID: 90, URI: "public://default.png"}}
-	items, err := views.BuildContentListItems(t.Context(), ct, entity.Nodes{{ID: 1, Type: "article"}, {ID: 2, Type: "page"}}, listFields, nil, nil, nil, files, nil)
+	items, err := views.BuildContentListItems(t.Context(), ct, entity.Nodes{{ID: 1, Type: "article"}, {ID: 2, Type: "page"}}, listFields, nil, nil, nil, files)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,7 +383,7 @@ func TestContentListAuthorAndLink(t *testing.T) {
 		{ID: 1, Type: "article", Slug: "article/whale", CreatedBy: entity.User{Username: "ishmael", Slug: "ishmael"}},
 		{ID: 2, Type: "article", Slug: "article/sea", CreatedBy: entity.User{Username: "starbuck"}},
 	}
-	items, err := views.BuildContentListItems(t.Context(), &fakeContentTypeRepoForBlocks{}, nodes, listFields, nil, nil, nil, nil, nil)
+	items, err := views.BuildContentListItems(t.Context(), &fakeContentTypeRepoForBlocks{}, nodes, listFields, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("BuildContentListItems: %v", err)
 	}

@@ -10,7 +10,7 @@ import (
 // contentListSources - what views.BuildContentList reads to build a
 // content View's list (its page, its preview, a contextual fragment).
 func (c *DynamicContentController) contentListSources() views.ContentListSources {
-	return views.ContentListSources{Nodes: c.nodeRepo, Types: c.contentTypeRepo, Terms: c.taxonomyService,
+	return views.ContentListSources{Types: c.contentTypeRepo, Terms: c.taxonomyService,
 		Files: c.fileRepo, Comments: c.commentsService, Users: c.userService, Logger: c.logger}
 }
 

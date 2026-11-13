@@ -68,8 +68,6 @@ switches on, the choices made), and *Expand all* opens them all.
 
 | Setting | What it does |
 |---|---|
-| Title | What the page heading shows: *Title (alternative title)*, *Alternative title, with the title below*, or *Title only*. |
-| Alternative title | A text field of the type holding a second title (for example, a translation or an original name). Used in the heading, the default page title, cards and the *Title* field of Views - except on a View's own page, which shows the title. |
 | Redirect to the address from field | A text field of the type. If a content item has a site path (`/…`) or an `http(s)` address in it, its page isn't shown and redirects there instead; an empty value gives a normal page. Useful for slides or teasers that link elsewhere. All content of such a type is left out of the sitemap, the field filled or not. |
 | Display author and dates | Shows the author and dates on the page. |
 | Display view count | Shows the view counter next to the author and dates. A visitor's address counts once in 30 minutes for a content item; crawlers aren't counted ([Statistics](./statistics.md)). |

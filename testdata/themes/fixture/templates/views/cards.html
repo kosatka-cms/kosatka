@@ -1,6 +1,6 @@
 {{/* A View's theme template (ViewDisplayDef.ThemeTemplate = "cards"). */}}
 {{define "view_cards"}}
 <ul class="fixture-cards">
-    {{range .items}}<li><a href="{{.Node.URL}}">{{or .AltTitle .Node.Title}}</a></li>{{else}}<li>{{t "Nothing here yet"}}</li>{{end}}
+    {{range .items}}<li><a href="{{.Node.URL}}">{{.Node.Title}}</a></li>{{else}}<li>{{t "Nothing here yet"}}</li>{{end}}
 </ul>
 {{end}}

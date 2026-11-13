@@ -46,18 +46,9 @@ func (f fakeListContentTypes) RichTextFieldStorageIDs(context.Context, []int) (m
 	return f.rich, nil
 }
 
-type fakeListAltTitles struct {
-	entity.NodesRepository
-	titles map[int]string
-}
-
-func (f fakeListAltTitles) AltTitles(context.Context, entity.Nodes) (map[int]string, error) {
-	return f.titles, nil
-}
-
 // TestCacheViewBlockList - a View block in the block cache builds its
-// list as its page does (views.BuildContentList): the nodes' alternative
-// titles linking them, a rich text field as HTML, a plain one escaped, a
+// list as its page does (views.BuildContentList): the nodes' titles
+// linking them, a rich text field as HTML, a plain one escaped, a
 // container id of its own.
 func TestCacheViewBlockList(t *testing.T) {
 	zzChdirToProjectRoot(t)
@@ -86,7 +77,6 @@ func TestCacheViewBlockList(t *testing.T) {
 		},
 		templateService: NewTemplateService(false),
 		contentTypeRepo: types,
-		nodeRepo:        fakeListAltTitles{titles: map[int]string{1: "The Whale"}},
 		logger:          slog.New(slog.DiscardHandler),
 	}
 	html, err := s.renderContentViewBlock(t.Context(), publishedOf(t, s, entity.ViewDisplayDef{ID: 7, DisplayStyle: entity.ViewDisplayStyleList}), viewBlockPart{page: 1}, nil)
@@ -96,7 +86,7 @@ func TestCacheViewBlockList(t *testing.T) {
 	out := strings.Join(strings.Fields(string(html)), " ")
 	for _, want := range []string{
 		`id="view-list-container-block-7"`,
-		`<a href="/article/moby" class="item-field-link"> <span class="item-field-value">The Whale</span>`,
+		`<a href="/article/moby" class="item-field-link"> <span class="item-field-value">Moby</span>`,
 		`<a href="/article/pequod" class="item-field-link"> <span class="item-field-value">Pequod</span>`,
 		`<p>Call me <em>Ishmael</em></p>`,
 		`&lt;b&gt;bold&lt;/b&gt;`,
@@ -141,7 +131,6 @@ func TestCacheViewBlockPager(t *testing.T) {
 		viewService:     fake,
 		templateService: NewTemplateService(false),
 		contentTypeRepo: fakeListContentTypes{fakeContentTypeRepoForBlocks: &fakeContentTypeRepoForBlocks{contentTypes: entity.ContentTypeDefs{{MachineName: "article", Label: "Article"}}}},
-		nodeRepo:        fakeListAltTitles{},
 		logger:          slog.New(slog.DiscardHandler),
 	}
 	paged := entity.ViewDisplayDef{ID: 7, DisplayStyle: entity.ViewDisplayStyleList, ShowPagination: true, PageSize: 5}

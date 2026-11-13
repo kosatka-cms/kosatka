@@ -31,10 +31,6 @@ const (
 	FieldDefaultPublishing = "default_publishing"
 	// FieldHideEmptyComments holds the string denoting the hide_empty_comments field in the database.
 	FieldHideEmptyComments = "hide_empty_comments"
-	// FieldTitleDisplay holds the string denoting the title_display field in the database.
-	FieldTitleDisplay = "title_display"
-	// FieldAltTitleField holds the string denoting the alt_title_field field in the database.
-	FieldAltTitleField = "alt_title_field"
 	// FieldRedirectField holds the string denoting the redirect_field field in the database.
 	FieldRedirectField = "redirect_field"
 	// FieldShowSubmitted holds the string denoting the show_submitted field in the database.
@@ -74,8 +70,6 @@ var Columns = []string{
 	FieldDefaultSticky,
 	FieldDefaultPublishing,
 	FieldHideEmptyComments,
-	FieldTitleDisplay,
-	FieldAltTitleField,
 	FieldRedirectField,
 	FieldShowSubmitted,
 	FieldShowViewCount,
@@ -126,14 +120,6 @@ var (
 	DefaultPublishingValidator func(string) error
 	// DefaultHideEmptyComments holds the default value on creation for the "hide_empty_comments" field.
 	DefaultHideEmptyComments bool
-	// DefaultTitleDisplay holds the default value on creation for the "title_display" field.
-	DefaultTitleDisplay string
-	// TitleDisplayValidator is a validator for the "title_display" field. It is called by the builders before save.
-	TitleDisplayValidator func(string) error
-	// DefaultAltTitleField holds the default value on creation for the "alt_title_field" field.
-	DefaultAltTitleField string
-	// AltTitleFieldValidator is a validator for the "alt_title_field" field. It is called by the builders before save.
-	AltTitleFieldValidator func(string) error
 	// DefaultRedirectField holds the default value on creation for the "redirect_field" field.
 	DefaultRedirectField string
 	// RedirectFieldValidator is a validator for the "redirect_field" field. It is called by the builders before save.
@@ -212,16 +198,6 @@ func ByDefaultPublishing(opts ...sql.OrderTermOption) OrderOption {
 // ByHideEmptyComments orders the results by the hide_empty_comments field.
 func ByHideEmptyComments(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHideEmptyComments, opts...).ToFunc()
-}
-
-// ByTitleDisplay orders the results by the title_display field.
-func ByTitleDisplay(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTitleDisplay, opts...).ToFunc()
-}
-
-// ByAltTitleField orders the results by the alt_title_field field.
-func ByAltTitleField(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAltTitleField, opts...).ToFunc()
 }
 
 // ByRedirectField orders the results by the redirect_field field.

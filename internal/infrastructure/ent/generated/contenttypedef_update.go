@@ -181,34 +181,6 @@ func (_u *ContentTypeDefUpdate) SetNillableHideEmptyComments(v *bool) *ContentTy
 	return _u
 }
 
-// SetTitleDisplay sets the "title_display" field.
-func (_u *ContentTypeDefUpdate) SetTitleDisplay(v string) *ContentTypeDefUpdate {
-	_u.mutation.SetTitleDisplay(v)
-	return _u
-}
-
-// SetNillableTitleDisplay sets the "title_display" field if the given value is not nil.
-func (_u *ContentTypeDefUpdate) SetNillableTitleDisplay(v *string) *ContentTypeDefUpdate {
-	if v != nil {
-		_u.SetTitleDisplay(*v)
-	}
-	return _u
-}
-
-// SetAltTitleField sets the "alt_title_field" field.
-func (_u *ContentTypeDefUpdate) SetAltTitleField(v string) *ContentTypeDefUpdate {
-	_u.mutation.SetAltTitleField(v)
-	return _u
-}
-
-// SetNillableAltTitleField sets the "alt_title_field" field if the given value is not nil.
-func (_u *ContentTypeDefUpdate) SetNillableAltTitleField(v *string) *ContentTypeDefUpdate {
-	if v != nil {
-		_u.SetAltTitleField(*v)
-	}
-	return _u
-}
-
 // SetRedirectField sets the "redirect_field" field.
 func (_u *ContentTypeDefUpdate) SetRedirectField(v string) *ContentTypeDefUpdate {
 	_u.mutation.SetRedirectField(v)
@@ -441,16 +413,6 @@ func (_u *ContentTypeDefUpdate) check() error {
 			return &ValidationError{Name: "default_publishing", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.default_publishing": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.TitleDisplay(); ok {
-		if err := contenttypedef.TitleDisplayValidator(v); err != nil {
-			return &ValidationError{Name: "title_display", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.title_display": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.AltTitleField(); ok {
-		if err := contenttypedef.AltTitleFieldValidator(v); err != nil {
-			return &ValidationError{Name: "alt_title_field", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.alt_title_field": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.RedirectField(); ok {
 		if err := contenttypedef.RedirectFieldValidator(v); err != nil {
 			return &ValidationError{Name: "redirect_field", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.redirect_field": %w`, err)}
@@ -511,12 +473,6 @@ func (_u *ContentTypeDefUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.HideEmptyComments(); ok {
 		_spec.SetField(contenttypedef.FieldHideEmptyComments, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.TitleDisplay(); ok {
-		_spec.SetField(contenttypedef.FieldTitleDisplay, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.AltTitleField(); ok {
-		_spec.SetField(contenttypedef.FieldAltTitleField, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.RedirectField(); ok {
 		_spec.SetField(contenttypedef.FieldRedirectField, field.TypeString, value)
@@ -726,34 +682,6 @@ func (_u *ContentTypeDefUpdateOne) SetHideEmptyComments(v bool) *ContentTypeDefU
 func (_u *ContentTypeDefUpdateOne) SetNillableHideEmptyComments(v *bool) *ContentTypeDefUpdateOne {
 	if v != nil {
 		_u.SetHideEmptyComments(*v)
-	}
-	return _u
-}
-
-// SetTitleDisplay sets the "title_display" field.
-func (_u *ContentTypeDefUpdateOne) SetTitleDisplay(v string) *ContentTypeDefUpdateOne {
-	_u.mutation.SetTitleDisplay(v)
-	return _u
-}
-
-// SetNillableTitleDisplay sets the "title_display" field if the given value is not nil.
-func (_u *ContentTypeDefUpdateOne) SetNillableTitleDisplay(v *string) *ContentTypeDefUpdateOne {
-	if v != nil {
-		_u.SetTitleDisplay(*v)
-	}
-	return _u
-}
-
-// SetAltTitleField sets the "alt_title_field" field.
-func (_u *ContentTypeDefUpdateOne) SetAltTitleField(v string) *ContentTypeDefUpdateOne {
-	_u.mutation.SetAltTitleField(v)
-	return _u
-}
-
-// SetNillableAltTitleField sets the "alt_title_field" field if the given value is not nil.
-func (_u *ContentTypeDefUpdateOne) SetNillableAltTitleField(v *string) *ContentTypeDefUpdateOne {
-	if v != nil {
-		_u.SetAltTitleField(*v)
 	}
 	return _u
 }
@@ -1003,16 +931,6 @@ func (_u *ContentTypeDefUpdateOne) check() error {
 			return &ValidationError{Name: "default_publishing", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.default_publishing": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.TitleDisplay(); ok {
-		if err := contenttypedef.TitleDisplayValidator(v); err != nil {
-			return &ValidationError{Name: "title_display", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.title_display": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.AltTitleField(); ok {
-		if err := contenttypedef.AltTitleFieldValidator(v); err != nil {
-			return &ValidationError{Name: "alt_title_field", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.alt_title_field": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.RedirectField(); ok {
 		if err := contenttypedef.RedirectFieldValidator(v); err != nil {
 			return &ValidationError{Name: "redirect_field", err: fmt.Errorf(`generated: validator failed for field "ContentTypeDef.redirect_field": %w`, err)}
@@ -1090,12 +1008,6 @@ func (_u *ContentTypeDefUpdateOne) sqlSave(ctx context.Context) (_node *ContentT
 	}
 	if value, ok := _u.mutation.HideEmptyComments(); ok {
 		_spec.SetField(contenttypedef.FieldHideEmptyComments, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.TitleDisplay(); ok {
-		_spec.SetField(contenttypedef.FieldTitleDisplay, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.AltTitleField(); ok {
-		_spec.SetField(contenttypedef.FieldAltTitleField, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.RedirectField(); ok {
 		_spec.SetField(contenttypedef.FieldRedirectField, field.TypeString, value)

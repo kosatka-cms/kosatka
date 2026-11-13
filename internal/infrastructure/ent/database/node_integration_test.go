@@ -5,7 +5,6 @@ package database_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"slices"
 	"testing"
 	"time"
@@ -32,44 +31,6 @@ func TestSlugExistsAcrossTypes(t *testing.T) {
 		}
 		if ok, err := nodes.SlugExistsExcludingNode(ctx, "about", 1); err != nil || ok {
 			t.Errorf("its own slug: %v %v", ok, err)
-		}
-	})
-}
-
-// TestNodeAltTitles - the nodes' alternative titles (their types'
-// AltTitleField) for a View list, every type at once: a node without
-// one, or of a type without the field, is left out.
-func TestNodeAltTitles(t *testing.T) {
-	schemaDB(t, func(t *testing.T, db testdb.DB) {
-		ctx := context.Background()
-		seedUser(t, db)
-		client := entClient(db)
-		now := time.Now()
-		for name, alt := range map[string]string{"hero": "field_real_name", "page": ""} {
-			if _, err := client.ContentTypeDef.Create().SetMachineName(name).SetLabel(name).SetAltTitleField(alt).
-				SetStatus(1).SetCreatedBy(1).SetCreatedAt(now).SetUpdatedAt(now).Save(ctx); err != nil {
-				t.Fatal(err)
-			}
-		}
-		st, err := client.FieldStorageDef.Create().SetMachineName("field_real_name").SetFieldType(string(entity.FieldTypeText)).
-			SetConfig(map[string]any{}).SetCreatedAt(now).SetUpdatedAt(now).Save(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		seedNode(t, db, 1, "hero", "Captain", "hero/captain")
-		seedNode(t, db, 2, "hero", "Mate", "hero/mate")
-		seedNode(t, db, 3, "page", "About", "about")
-		for nid, v := range map[int]string{1: "Ahab", 3: "Not an alternative title"} {
-			if _, err := client.FieldValueText.Create().SetNodeID(nid).SetFieldID(st.ID).SetValue(v).Save(ctx); err != nil {
-				t.Fatal(err)
-			}
-		}
-		got, err := database.NewNodeRepository(client).AltTitles(ctx, entity.Nodes{{ID: 1, Type: "hero"}, {ID: 2, Type: "hero"}, {ID: 3, Type: "page"}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !reflect.DeepEqual(got, map[int]string{1: "Ahab"}) {
-			t.Fatalf("alternative titles = %v, want only node 1's", got)
 		}
 	})
 }

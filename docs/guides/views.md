@@ -314,10 +314,11 @@ the *Profile owner and administrators*, the contextual `created_by`
 filter and no `status` filter - shows each item's state with `Status`,
 `Update date` and `Link to edit the content`.
 
-`Title` shows an item's alternative title when its type has one
-([Content types](./content-types.md#type-settings)) - everywhere but on
-the View's own page and in its preview, which show the title. A date
-field with times or periods shows them as on the content page.
+A date field with times or periods shows them as on the content page.
+To show a second title (a translation, an original name) where an item
+has one and its title where it doesn't, add that text field with
+*Fallback field* set to `title` and the built-in `Title` hidden
+(*Exclude from display*).
 
 | Field setting | What it does |
 |---|---|

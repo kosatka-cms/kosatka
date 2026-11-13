@@ -179,10 +179,6 @@ type CacheService struct {
 	// files - View-block image fields' files (SetFiles).
 	files views.FileLoader
 	users views.UsersLoader
-	// nodeRepo - lets a View block's Title field show the type's
-	// alternative title (ProfileMaterialDisplayTitle); nil falls back to
-	// n.Title.
-	nodeRepo entity.NodesRepository
 	// contentTypeRepo - resolves generic View block fields and the
 	// content type builtin field; when nil, such fields render empty.
 	contentTypeRepo entity.ContentTypeRepository
@@ -200,7 +196,6 @@ func NewCacheService(
 	blockService BlockService,
 	viewService views.Service,
 	templateService TemplateService,
-	nodeRepo entity.NodesRepository,
 	contentTypeRepo entity.ContentTypeRepository,
 	taxonomyService TaxonomyService,
 	baseLogger *slog.Logger,
@@ -214,7 +209,6 @@ func NewCacheService(
 		blockService:    blockService,
 		viewService:     viewService,
 		templateService: templateService,
-		nodeRepo:        nodeRepo,
 		contentTypeRepo: contentTypeRepo,
 		taxonomyService: taxonomyService,
 		logger:          baseLogger.With("component", "cache.service"),
@@ -801,10 +795,8 @@ func (s *CacheService) renderContentViewBlock(ctx context.Context, cfg views.Con
 		return pagedThemeBlock(views.WithViewTexts(view, html), pager, part), err
 	}
 	viewFields := cfg.Fields
-	// A block shows the nodes' alternative titles (their types'
-	// AltTitleField); a View page shows the titles.
-	listFields, items, err := views.BuildContentList(ctx, views.ContentListSources{Nodes: s.nodeRepo, Types: s.contentTypeRepo,
-		Terms: s.taxonomyService, Files: s.files, Comments: s.commentsService, Users: s.users, Logger: s.logger}, view.ID, viewFields, nodes, views.ContentListOptions{AltTitles: true})
+	listFields, items, err := views.BuildContentList(ctx, views.ContentListSources{Types: s.contentTypeRepo,
+		Terms: s.taxonomyService, Files: s.files, Comments: s.commentsService, Users: s.users, Logger: s.logger}, view.ID, viewFields, nodes)
 	if err != nil {
 		return "", fmt.Errorf("error building content view block items: %w", err)
 	}
