@@ -17,8 +17,6 @@ const (
 	FieldTransport = "transport"
 	// FieldFromAddress holds the string denoting the from_address field in the database.
 	FieldFromAddress = "from_address"
-	// FieldResendAPIKey holds the string denoting the resend_api_key field in the database.
-	FieldResendAPIKey = "resend_api_key"
 	// FieldSMTPHost holds the string denoting the smtp_host field in the database.
 	FieldSMTPHost = "smtp_host"
 	// FieldSMTPPort holds the string denoting the smtp_port field in the database.
@@ -39,7 +37,6 @@ var Columns = []string{
 	FieldEnabled,
 	FieldTransport,
 	FieldFromAddress,
-	FieldResendAPIKey,
 	FieldSMTPHost,
 	FieldSMTPPort,
 	FieldSMTPUser,
@@ -68,10 +65,6 @@ var (
 	DefaultFromAddress string
 	// FromAddressValidator is a validator for the "from_address" field. It is called by the builders before save.
 	FromAddressValidator func(string) error
-	// DefaultResendAPIKey holds the default value on creation for the "resend_api_key" field.
-	DefaultResendAPIKey string
-	// ResendAPIKeyValidator is a validator for the "resend_api_key" field. It is called by the builders before save.
-	ResendAPIKeyValidator func(string) error
 	// DefaultSMTPHost holds the default value on creation for the "smtp_host" field.
 	DefaultSMTPHost string
 	// SMTPHostValidator is a validator for the "smtp_host" field. It is called by the builders before save.
@@ -111,11 +104,6 @@ func ByTransport(opts ...sql.OrderTermOption) OrderOption {
 // ByFromAddress orders the results by the from_address field.
 func ByFromAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldFromAddress, opts...).ToFunc()
-}
-
-// ByResendAPIKey orders the results by the resend_api_key field.
-func ByResendAPIKey(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResendAPIKey, opts...).ToFunc()
 }
 
 // BySMTPHost orders the results by the smtp_host field.

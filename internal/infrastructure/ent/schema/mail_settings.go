@@ -24,11 +24,7 @@ func (MailSettings) Fields() []ent.Field {
 		field.String("transport").MaxLen(16).Default(""),
 		field.String("from_address").MaxLen(255).Default(""),
 		// smtp_password - sealed with the site's key
-		// (internal/lib/secretbox) when it has one. resend_api_key - no
-		// longer used: a data step copied its key to
-		// mail_transport_settings (the Resend module's), leaving it for
-		// an older binary; the column goes in the next minor release.
-		field.String("resend_api_key").MaxLen(512).Default(""),
+		// (internal/lib/secretbox) when it has one.
 		field.String("smtp_host").MaxLen(255).Default(""),
 		field.Int("smtp_port").SchemaType(mysqlType("int")).Default(0),
 		field.String("smtp_user").MaxLen(255).Default(""),

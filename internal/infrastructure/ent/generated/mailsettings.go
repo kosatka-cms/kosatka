@@ -22,8 +22,6 @@ type MailSettings struct {
 	Transport string `json:"transport,omitempty"`
 	// FromAddress holds the value of the "from_address" field.
 	FromAddress string `json:"from_address,omitempty"`
-	// ResendAPIKey holds the value of the "resend_api_key" field.
-	ResendAPIKey string `json:"resend_api_key,omitempty"`
 	// SMTPHost holds the value of the "smtp_host" field.
 	SMTPHost string `json:"smtp_host,omitempty"`
 	// SMTPPort holds the value of the "smtp_port" field.
@@ -46,7 +44,7 @@ func (*MailSettings) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case mailsettings.FieldID, mailsettings.FieldSMTPPort, mailsettings.FieldLogKeepDays:
 			values[i] = new(sql.NullInt64)
-		case mailsettings.FieldTransport, mailsettings.FieldFromAddress, mailsettings.FieldResendAPIKey, mailsettings.FieldSMTPHost, mailsettings.FieldSMTPUser, mailsettings.FieldSMTPPassword:
+		case mailsettings.FieldTransport, mailsettings.FieldFromAddress, mailsettings.FieldSMTPHost, mailsettings.FieldSMTPUser, mailsettings.FieldSMTPPassword:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -86,12 +84,6 @@ func (_m *MailSettings) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field from_address", values[i])
 			} else if value.Valid {
 				_m.FromAddress = value.String
-			}
-		case mailsettings.FieldResendAPIKey:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field resend_api_key", values[i])
-			} else if value.Valid {
-				_m.ResendAPIKey = value.String
 			}
 		case mailsettings.FieldSMTPHost:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -167,9 +159,6 @@ func (_m *MailSettings) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("from_address=")
 	builder.WriteString(_m.FromAddress)
-	builder.WriteString(", ")
-	builder.WriteString("resend_api_key=")
-	builder.WriteString(_m.ResendAPIKey)
 	builder.WriteString(", ")
 	builder.WriteString("smtp_host=")
 	builder.WriteString(_m.SMTPHost)

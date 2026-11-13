@@ -67,11 +67,6 @@ func FromAddress(v string) predicate.MailSettings {
 	return predicate.MailSettings(sql.FieldEQ(FieldFromAddress, v))
 }
 
-// ResendAPIKey applies equality check predicate on the "resend_api_key" field. It's identical to ResendAPIKeyEQ.
-func ResendAPIKey(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldEQ(FieldResendAPIKey, v))
-}
-
 // SMTPHost applies equality check predicate on the "smtp_host" field. It's identical to SMTPHostEQ.
 func SMTPHost(v string) predicate.MailSettings {
 	return predicate.MailSettings(sql.FieldEQ(FieldSMTPHost, v))
@@ -235,71 +230,6 @@ func FromAddressEqualFold(v string) predicate.MailSettings {
 // FromAddressContainsFold applies the ContainsFold predicate on the "from_address" field.
 func FromAddressContainsFold(v string) predicate.MailSettings {
 	return predicate.MailSettings(sql.FieldContainsFold(FieldFromAddress, v))
-}
-
-// ResendAPIKeyEQ applies the EQ predicate on the "resend_api_key" field.
-func ResendAPIKeyEQ(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldEQ(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyNEQ applies the NEQ predicate on the "resend_api_key" field.
-func ResendAPIKeyNEQ(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldNEQ(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyIn applies the In predicate on the "resend_api_key" field.
-func ResendAPIKeyIn(vs ...string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldIn(FieldResendAPIKey, vs...))
-}
-
-// ResendAPIKeyNotIn applies the NotIn predicate on the "resend_api_key" field.
-func ResendAPIKeyNotIn(vs ...string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldNotIn(FieldResendAPIKey, vs...))
-}
-
-// ResendAPIKeyGT applies the GT predicate on the "resend_api_key" field.
-func ResendAPIKeyGT(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldGT(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyGTE applies the GTE predicate on the "resend_api_key" field.
-func ResendAPIKeyGTE(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldGTE(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyLT applies the LT predicate on the "resend_api_key" field.
-func ResendAPIKeyLT(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldLT(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyLTE applies the LTE predicate on the "resend_api_key" field.
-func ResendAPIKeyLTE(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldLTE(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyContains applies the Contains predicate on the "resend_api_key" field.
-func ResendAPIKeyContains(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldContains(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyHasPrefix applies the HasPrefix predicate on the "resend_api_key" field.
-func ResendAPIKeyHasPrefix(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldHasPrefix(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyHasSuffix applies the HasSuffix predicate on the "resend_api_key" field.
-func ResendAPIKeyHasSuffix(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldHasSuffix(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyEqualFold applies the EqualFold predicate on the "resend_api_key" field.
-func ResendAPIKeyEqualFold(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldEqualFold(FieldResendAPIKey, v))
-}
-
-// ResendAPIKeyContainsFold applies the ContainsFold predicate on the "resend_api_key" field.
-func ResendAPIKeyContainsFold(v string) predicate.MailSettings {
-	return predicate.MailSettings(sql.FieldContainsFold(FieldResendAPIKey, v))
 }
 
 // SMTPHostEQ applies the EQ predicate on the "smtp_host" field.
