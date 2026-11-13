@@ -145,9 +145,13 @@ app assets export <dir>
 ```
 
 Writes the static files of the modules built into the binary to
-`<dir>/modules/<name>/`, for a web server that serves `/static/` itself
-(for example nginx with `<dir>` = `web/static`). Without such a web
-server the application serves them.
+`<dir>/modules/<name>/` and the themes' (`themes/<name>/static`) to
+`<dir>/themes/<name>/`, for a web server that serves `/static/` itself
+(for example nginx with `<dir>` = `web/static`). Each directory it writes
+replaces what was there. A `.css` or `.js` without its `.min` copy gets
+one (the same file): the pages link the minified files, and a module or
+theme may ship none. Without such a web server the application serves
+them all.
 
 ## `app config`
 

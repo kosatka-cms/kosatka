@@ -138,18 +138,14 @@ built and deployed the same way.
    stage="$(mktemp -d)"
    rsync -a ./web/static/ "$stage/"
    go run ./cmd/app assets export "$stage"
-   for dir in ./themes/*/static; do
-     theme="$(basename "$(dirname "$dir")")"
-     mkdir -p "$stage/themes/$theme"
-     rsync -a "$dir/" "$stage/themes/$theme/"
-   done
    rsync -avz --delete "$stage/" root@example.com:/opt/kosatka/web/static/
    rm -rf "$stage"
    ```
 
    `app assets export <dir>` writes the static files of the modules
-   built into the binary to `<dir>/modules/<name>/` (see
-   [`app assets`](../reference/cli.md#app-assets)).
+   built into the binary to `<dir>/modules/<name>/` and the themes' to
+   `<dir>/themes/<name>/`, with a `.min` copy of each stylesheet and
+   script that has none (see [`app assets`](../reference/cli.md#app-assets)).
 
 2. The templates and the themes:
 
