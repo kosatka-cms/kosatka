@@ -33,7 +33,7 @@ func TestAdminShellIgnoresSiteTheme(t *testing.T) {
 			t.Errorf("admin page contains %q", unwanted)
 		}
 	}
-	for _, want := range []string{`class="admin-shell"`, `class="admin-brand"`, "Example", `id="admin-sidebar"`, `class="admin-topbar"`,
+	for _, want := range []string{`class="admin-shell"`, `<a href="/admin" class="admin-brand">`, "Example", `id="admin-sidebar"`, `class="admin-topbar"`,
 		`<link rel="icon" href="/static/themes/fixture/favicon.ico" type="image/x-icon">`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("admin page lacks %q", want)
