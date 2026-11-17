@@ -11,6 +11,10 @@ type fakeBlockedIPRepo struct{ list []entity.BlockedIP }
 
 func (r *fakeBlockedIPRepo) List(context.Context) ([]entity.BlockedIP, error) { return r.list, nil }
 
+func (r *fakeBlockedIPRepo) Search(context.Context, string, int, int) ([]entity.BlockedIP, int, error) {
+	return r.list, len(r.list), nil
+}
+
 func (r *fakeBlockedIPRepo) Create(_ context.Context, ip, _ string) (*entity.BlockedIP, error) {
 	b := entity.BlockedIP{ID: len(r.list) + 1, IP: ip}
 	r.list = append(r.list, b)

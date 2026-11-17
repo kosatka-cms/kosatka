@@ -16,6 +16,9 @@ type BlockedIP struct {
 // BlockedIPRepository defines the interface for blocked IP data access
 type BlockedIPRepository interface {
 	List(ctx context.Context) ([]BlockedIP, error)
+	// Search - the blocked IPs whose address or comment contains q (any
+	// case; "" - all), newest first, limit from offset, and how many match.
+	Search(ctx context.Context, q string, offset, limit int) ([]BlockedIP, int, error)
 	Create(ctx context.Context, ip, comment string) (*BlockedIP, error)
 	Delete(ctx context.Context, id int) error
 }

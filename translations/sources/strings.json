@@ -1395,6 +1395,7 @@
   {"source":"ID @id: published by its workflow's transitions, not here."},
   {"source":"IP added."},
   {"source":"IP deleted."},
+  {"source":"IP or comment"},
   {"source":"IPs imported: @number"},
   {"source":"ISO 4217, e.g. EUR."},
   {"source":"If a field is selected, the rule page opens after creation - terms are selected there."},

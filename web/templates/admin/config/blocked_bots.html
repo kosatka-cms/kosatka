@@ -1,7 +1,8 @@
 {{/* admin/config/robots - the robots (BlockedBotList): the robots.txt
      rules added to the engine's (rows), then blocking by User-Agent and by
      IP - each adding on a card (a bulk import folded in it) over its table
-     card. */}}
+     card; the IPs with a search (ip_q) and pages (.pagination, the
+     #blocked-ips anchor). */}}
 {{template "layout.html" .}}
 
 {{define "page_body"}}{{template "content" .}}{{end}}
@@ -119,7 +120,7 @@
     </div>
 </section>
 
-<section class="admin-settings-group">
+<section class="admin-settings-group" id="blocked-ips">
     <h2 class="admin-settings-title">{{t "Blocking by IP"}}</h2>
     <div class="admin-settings-card admin-add-card">
         <form method="post" action="/admin/config/robots/ip" class="admin-add-form">
@@ -148,6 +149,14 @@
             </form>
         </details>
     </div>
+    <form method="get" action="/admin/config/robots#blocked-ips" class="admin-filters" role="search">
+        <div class="admin-filter admin-filter--wide">
+            <label for="blocked-ips-q" class="admin-filter-label">{{t "Search"}}</label>
+            <input type="search" id="blocked-ips-q" name="ip_q" value="{{.ipSearch}}" class="form-control" placeholder="{{t "IP or comment"}}">
+        </div>
+        <button type="submit" class="btn btn-primary">{{t "Find"}}</button>
+        {{if .ipSearch}}<a href="/admin/config/robots#blocked-ips" class="admin-filter-reset">{{t "Reset"}}</a>{{end}}
+    </form>
     <div class="admin-table-card">
         <div class="table-responsive">
             <table class="table admin-table">
@@ -167,11 +176,12 @@
                 </td>
             </tr>
             {{else}}
-            <tr><td colspan="4" class="admin-table-empty">{{t "No blocked IPs"}}</td></tr>
+            <tr><td colspan="4" class="admin-table-empty">{{if .ipSearch}}{{t "Nothing found"}}{{else}}{{t "No blocked IPs"}}{{end}}</td></tr>
             {{end}}
                 </tbody>
             </table>
         </div>
+        {{template "admin_list_foot" (dict "Ctx" .)}}
     </div>
 </section>
 </div>
