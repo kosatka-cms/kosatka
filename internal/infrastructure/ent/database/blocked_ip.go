@@ -35,6 +35,27 @@ func (r *BlockedIPRepository) List(ctx context.Context) ([]entity.BlockedIP, err
 	return result, nil
 }
 
+// Search - see entity.BlockedIPRepository.
+func (r *BlockedIPRepository) Search(ctx context.Context, q string, offset, limit int) ([]entity.BlockedIP, int, error) {
+	query := GetClient(ctx, r.client).BlockedIP.Query()
+	if q = strings.TrimSpace(q); q != "" {
+		query = query.Where(blockedip.Or(blockedip.IPContainsFold(q), blockedip.CommentContainsFold(q)))
+	}
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("counting blocked IPs: %w", err)
+	}
+	rows, err := query.Order(generated.Desc(blockedip.FieldCreatedAt), generated.Desc(blockedip.FieldID)).Offset(offset).Limit(limit).All(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("listing blocked IPs: %w", err)
+	}
+	out := make([]entity.BlockedIP, 0, len(rows))
+	for _, b := range rows {
+		out = append(out, entity.BlockedIP{ID: b.ID, IP: b.IP, Comment: deref(b.Comment), CreatedAt: b.CreatedAt})
+	}
+	return out, total, nil
+}
+
 // Create inserts a new, permanent, manually-added blocked IP.
 func (r *BlockedIPRepository) Create(ctx context.Context, ip, comment string) (*entity.BlockedIP, error) {
 	ip = strings.TrimSpace(ip)

@@ -2,17 +2,23 @@ package admin
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/kosatka-cms/kosatka/internal/domain/entity"
 	"github.com/kosatka-cms/kosatka/pkg/httputil"
 	"github.com/kosatka-cms/kosatka/pkg/i18n"
+	"github.com/kosatka-cms/kosatka/pkg/pagination"
 )
 
+// BlockedIPsPerPage - blocked IPs on a page of the list.
+const BlockedIPsPerPage = 50
+
 // BlockedBotList handles GET /admin/config/robots: the blocked User-Agent
-// patterns and IP addresses, their add and import forms, and the site's
-// own robots.txt rules.
+// patterns, the blocked IP addresses whose address or comment contains the
+// search (ip_q) - newest first, a page at a time - their add and import
+// forms, and the site's own robots.txt rules.
 func (c *Controller) BlockedBotList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	bots, err := c.blockedBotService.List(ctx)
@@ -21,7 +27,9 @@ func (c *Controller) BlockedBotList(w http.ResponseWriter, r *http.Request) {
 		httputil.InternalServerError(w)
 		return
 	}
-	blockedIPs, err := c.blockedIPService.List(ctx)
+	ipQuery := strings.TrimSpace(r.URL.Query().Get("ip_q"))
+	page := c.GetPageNumber(r)
+	blockedIPs, ipTotal, err := c.blockedIPService.Search(ctx, ipQuery, (page-1)*BlockedIPsPerPage, BlockedIPsPerPage)
 	if err != nil {
 		c.LogFailure(err, "error listing blocked IPs")
 		httputil.InternalServerError(w)
@@ -33,6 +41,14 @@ func (c *Controller) BlockedBotList(w http.ResponseWriter, r *http.Request) {
 	data["pageSEO"] = entity.PageSEO{Title: i18n.T(ctx, "@title - Admin panel", "@title", data["title"])}
 	data["bots"] = bots
 	data["blockedIPs"] = blockedIPs
+	data["ipSearch"] = ipQuery
+	// The IPs' pages keep the search, not the last action's notice, and
+	// open at the IP section.
+	pageQuery := url.Values{}
+	if ipQuery != "" {
+		pageQuery.Set("ip_q", ipQuery)
+	}
+	data["pagination"] = pagination.NewWithAnchor(page, ipTotal, BlockedIPsPerPage, "/admin/config/robots", pageQuery, "blocked-ips")
 	data["success"] = r.URL.Query().Get("success") == "1"
 	data["deleted"] = r.URL.Query().Get("deleted") == "1"
 	data["imported"] = r.URL.Query().Get("imported")

@@ -13,6 +13,8 @@ import (
 type BlockedIPService interface {
 	IsBlocked(clientIP string) bool
 	List(ctx context.Context) ([]entity.BlockedIP, error)
+	// Search - a page of the blocked IPs (entity.BlockedIPRepository.Search).
+	Search(ctx context.Context, q string, offset, limit int) ([]entity.BlockedIP, int, error)
 	Create(ctx context.Context, ip, comment string) error
 	Delete(ctx context.Context, id int) error
 	RefreshCache(ctx context.Context) error
@@ -90,6 +92,11 @@ func (s *DefaultBlockedIPService) IsBlocked(clientIP string) bool {
 // List returns all blocked IPs from the database.
 func (s *DefaultBlockedIPService) List(ctx context.Context) ([]entity.BlockedIP, error) {
 	return s.repo.List(ctx)
+}
+
+// Search - see BlockedIPService.
+func (s *DefaultBlockedIPService) Search(ctx context.Context, q string, offset, limit int) ([]entity.BlockedIP, int, error) {
+	return s.repo.Search(ctx, q, offset, limit)
 }
 
 // Create adds a new IP and refreshes the cache.
