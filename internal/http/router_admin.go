@@ -75,7 +75,7 @@ func RegisterAdminRoutes(
 // registerAdminContentRoutes - the admin's first page, content,
 // moderation, comments, the users' files and the bulk actions on them.
 func registerAdminContentRoutes(a adminRoutes, ac *admin.Controller) {
-	// /admin itself - the content list, the admin's first page.
+	// /admin itself - the Overview (the dashboard), the admin's first page.
 	a.handle("GET /admin", ac.Dashboard)
 	// Moderation - for who may moderate, not only the admin's users.
 	a.r.Handle("GET /admin/moderation", a.auth(middleware.PermissionMiddleware(a.userRepo, a.authService, service.PermModerateContent)(http.HandlerFunc(ac.ModerationList))))
