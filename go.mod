@@ -5,12 +5,12 @@ go 1.27
 toolchain go1.27.4
 
 require (
-	ariga.io/atlas v1.3.0
+	ariga.io/atlas v1.4.0
 	entgo.io/ent v0.14.6
 	github.com/blevesearch/snowballstem v0.9.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/gen2brain/webp v0.6.4
-	github.com/go-sql-driver/mysql v1.10.1
+	github.com/go-sql-driver/mysql v1.10.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
@@ -19,7 +19,7 @@ require (
 	golang.org/x/crypto v0.59.0
 	golang.org/x/image v0.48.0
 	golang.org/x/mod v0.43.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 	golang.org/x/oauth2 v0.38.0
 	golang.org/x/text v0.44.0
 	gopkg.in/yaml.v3 v3.0.1

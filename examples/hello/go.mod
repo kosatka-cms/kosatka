@@ -8,7 +8,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v1.3.0 // indirect
+	ariga.io/atlas v1.4.0 // indirect
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
@@ -22,7 +22,7 @@ require (
 	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/gen2brain/webp v0.6.4 // indirect
 	github.com/go-openapi/inflect v1.0.1 // indirect
-	github.com/go-sql-driver/mysql v1.10.1 // indirect
+	github.com/go-sql-driver/mysql v1.10.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
@@ -42,7 +42,7 @@ require (
 	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/image v0.48.0 // indirect
 	golang.org/x/mod v0.43.0 // indirect
-	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
 	golang.org/x/oauth2 v0.38.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
